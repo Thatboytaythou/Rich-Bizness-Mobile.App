@@ -1,1 +1,24 @@
+{
+  "name": "rich-bizness-mobile-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
 
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev",
+    "build": "echo \"Rich Bizness Mobile Build Ready\"",
+    "deploy": "vercel --prod"
+  },
+
+  "dependencies": {
+    "@livekit/client": "^2.15.7",
+    "@supabase/supabase-js": "^2.49.8",
+    "stripe": "^18.1.1",
+    "livekit-server-sdk": "^2.11.3"
+  },
+
+  "engines": {
+    "node": ">=20"
+  }
+}
