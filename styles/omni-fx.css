@@ -1,1 +1,256 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /styles/omni-fx.css
 
+   Cinematic Motion + 4D FX Layer
+========================= */
+
+.rb-home::before{
+  content:"";
+  position:fixed;
+  inset:-30%;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    conic-gradient(
+      from 180deg,
+      transparent,
+      rgba(0,255,136,.12),
+      transparent,
+      rgba(255,215,106,.12),
+      transparent
+    );
+  animation:rbCosmicRotate 28s linear infinite;
+  filter:blur(18px);
+  opacity:.75;
+}
+
+.rb-home::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:60;
+  pointer-events:none;
+  background:
+    linear-gradient(
+      rgba(255,255,255,.035) 50%,
+      rgba(0,0,0,.035) 50%
+    );
+  background-size:100% 4px;
+  mix-blend-mode:overlay;
+  opacity:.28;
+}
+
+.rb-core-portal{
+  animation:rbPortalFloat 5.5s ease-in-out infinite;
+}
+
+.rb-portal-light{
+  animation:rbPortalBreath 3.8s ease-in-out infinite;
+}
+
+.rb-home-top,
+.rb-portal-stage,
+.rb-bottom-nav,
+.rb-quick-actions button,
+.rb-main-launch{
+  transform:translateZ(0);
+}
+
+.rb-main-launch{
+  position:relative;
+  overflow:hidden;
+}
+
+.rb-main-launch::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(
+      120deg,
+      transparent,
+      rgba(255,255,255,.45),
+      transparent
+    );
+  transform:translateX(-120%);
+  animation:rbButtonShine 3.4s ease-in-out infinite;
+}
+
+.rb-icon-btn:active,
+.rb-main-launch:active,
+.rb-quick-actions button:active,
+.rb-bottom-nav button:active,
+.rb-tv-screen:active{
+  transform:scale(.96);
+}
+
+/* =========================
+   FLOATING DEPTH PARTICLES
+========================= */
+
+.rb-portal-stage .rb-core-portal::before{
+  content:"";
+  position:absolute;
+  inset:-38%;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(102,255,102,.9) 1px, transparent 2px),
+    radial-gradient(circle, rgba(255,215,106,.8) 1px, transparent 2px);
+  background-size:
+    34px 34px,
+    57px 57px;
+  opacity:.28;
+  animation:rbParticleDrift 18s linear infinite;
+  pointer-events:none;
+}
+
+.rb-portal-stage .rb-core-portal::after{
+  content:"";
+  position:absolute;
+  inset:-14%;
+  border-radius:50%;
+  border:1px solid rgba(255,215,106,.18);
+  box-shadow:
+    0 0 90px rgba(0,255,136,.22),
+    inset 0 0 90px rgba(255,215,106,.08);
+  animation:rbPortalAura 4.5s ease-in-out infinite;
+  pointer-events:none;
+}
+
+/* =========================
+   PAGE ENTER
+========================= */
+
+.rb-home-shell{
+  animation:rbPageEnter .85s cubic-bezier(.16,1,.3,1) both;
+}
+
+.rb-home-top{
+  animation:rbSlideDown .75s cubic-bezier(.16,1,.3,1) both;
+}
+
+.rb-portal-stage{
+  animation:rbScaleIn .9s cubic-bezier(.16,1,.3,1) both;
+}
+
+.rb-bottom-nav{
+  animation:rbSlideUp .8s cubic-bezier(.16,1,.3,1) both;
+}
+
+/* =========================
+   KEYFRAMES
+========================= */
+
+@keyframes rbCosmicRotate{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+@keyframes rbPortalFloat{
+  0%,100%{
+    transform:translate(-50%,-50%) translateY(0) scale(1);
+  }
+  50%{
+    transform:translate(-50%,-50%) translateY(-10px) scale(1.025);
+  }
+}
+
+@keyframes rbPortalBreath{
+  0%,100%{
+    opacity:.78;
+    filter:blur(.4px) brightness(1);
+  }
+  50%{
+    opacity:1;
+    filter:blur(.2px) brightness(1.35);
+  }
+}
+
+@keyframes rbButtonShine{
+  0%,60%{
+    transform:translateX(-130%);
+  }
+  82%,100%{
+    transform:translateX(130%);
+  }
+}
+
+@keyframes rbParticleDrift{
+  from{
+    transform:rotate(0deg) scale(1);
+  }
+  to{
+    transform:rotate(360deg) scale(1.12);
+  }
+}
+
+@keyframes rbPortalAura{
+  0%,100%{
+    opacity:.52;
+    transform:scale(1);
+  }
+  50%{
+    opacity:.92;
+    transform:scale(1.08);
+  }
+}
+
+@keyframes rbPageEnter{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes rbSlideDown{
+  from{
+    opacity:0;
+    transform:translateY(-16px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes rbSlideUp{
+  from{
+    opacity:0;
+    transform:translateY(22px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes rbScaleIn{
+  from{
+    opacity:0;
+    transform:scale(.96);
+  }
+  to{
+    opacity:1;
+    transform:scale(1);
+  }
+}
+
+/* =========================
+   ACCESSIBILITY
+========================= */
+
+@media (prefers-reduced-motion: reduce){
+  *,
+  *::before,
+  *::after{
+    animation:none!important;
+    transition:none!important;
+    scroll-behavior:auto!important;
+  }
+}
