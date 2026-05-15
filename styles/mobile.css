@@ -1,1 +1,99 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /styles/mobile.css
+   Phone Layout Lock
+========================= */
 
+@media (max-width: 720px){
+  html,
+  body{
+    width:100%;
+    overflow-x:hidden;
+  }
+
+  .rb-home-shell{
+    width:100%;
+    max-width:100%;
+    padding:14px 10px 112px;
+  }
+
+  .rb-home-top{
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+  }
+
+  .rb-profile-pill{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .rb-portal-stage{
+    min-height:620px;
+    border-radius:26px;
+  }
+
+  .rb-core-portal{
+    width:285px;
+  }
+
+  .rb-portal-copy{
+    width:76%;
+    padding:20px 14px;
+  }
+
+  .rb-portal-copy h2{
+    font-size:1.85rem;
+  }
+
+  .rb-home-actions{
+    position:relative;
+    z-index:20;
+  }
+
+  .rb-quick-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+
+  .rb-quick-actions button{
+    width:100%;
+  }
+
+  .rb-bottom-nav{
+    left:8px;
+    right:8px;
+    bottom:8px;
+    height:88px;
+    border-radius:26px;
+  }
+
+  .rb-bottom-nav button{
+    font-size:.64rem;
+  }
+}
+
+@media (max-width: 420px){
+  .rb-home-top h1{
+    font-size:2.55rem;
+  }
+
+  .rb-portal-stage{
+    min-height:600px;
+  }
+
+  .rb-core-portal{
+    width:250px;
+  }
+
+  .rb-main-launch{
+    min-height:52px;
+    padding:0 20px;
+    font-size:.78rem;
+  }
+
+  .rb-icon-btn{
+    width:46px;
+    height:46px;
+  }
+}
