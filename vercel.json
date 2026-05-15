@@ -1,1 +1,130 @@
+{
+  "version": 2,
 
+  "cleanUrls": true,
+
+  "trailingSlash": false,
+
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+
+    {
+      "source": "/auth",
+      "destination": "/auth.html"
+    },
+
+    {
+      "source": "/feed",
+      "destination": "/feed.html"
+    },
+
+    {
+      "source": "/watch",
+      "destination": "/watch.html"
+    },
+
+    {
+      "source": "/live",
+      "destination": "/live.html"
+    },
+
+    {
+      "source": "/music",
+      "destination": "/music.html"
+    },
+
+    {
+      "source": "/gaming",
+      "destination": "/gaming.html"
+    },
+
+    {
+      "source": "/sports",
+      "destination": "/sports.html"
+    },
+
+    {
+      "source": "/gallery",
+      "destination": "/gallery.html"
+    },
+
+    {
+      "source": "/upload",
+      "destination": "/upload.html"
+    },
+
+    {
+      "source": "/store",
+      "destination": "/store.html"
+    },
+
+    {
+      "source": "/meta",
+      "destination": "/meta.html"
+    },
+
+    {
+      "source": "/messages",
+      "destination": "/messages.html"
+    },
+
+    {
+      "source": "/notifications",
+      "destination": "/notifications.html"
+    },
+
+    {
+      "source": "/profile",
+      "destination": "/profile.html"
+    },
+
+    {
+      "source": "/edit",
+      "destination": "/edit.html"
+    },
+
+    {
+      "source": "/settings",
+      "destination": "/settings.html"
+    },
+
+    {
+      "source": "/games/rich-chess",
+      "destination": "/games/rich-chess/index.html"
+    },
+
+    {
+      "source": "/games/money-road-runner",
+      "destination": "/games/money-road-runner/index.html"
+    },
+
+    {
+      "source": "/games/smoke-city-hustle",
+      "destination": "/games/smoke-city-hustle/index.html"
+    },
+
+    {
+      "source": "/games/studio-showdown",
+      "destination": "/games/studio-showdown/index.html"
+    }
+  ],
+
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}
