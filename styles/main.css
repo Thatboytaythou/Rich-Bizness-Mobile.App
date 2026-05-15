@@ -1,1 +1,499 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /styles/main.css
+   Black / Emerald / Gold Cinematic Base
+========================= */
 
+:root{
+  --rb-black:#020402;
+  --rb-deep:#050b06;
+  --rb-panel:rgba(5,12,7,.72);
+  --rb-panel-2:rgba(8,18,10,.88);
+
+  --rb-green:#66ff66;
+  --rb-green-2:#00ff88;
+  --rb-gold:#ffd76a;
+  --rb-gold-2:#b8860b;
+
+  --rb-white:#f7fff7;
+  --rb-muted:rgba(247,255,247,.68);
+
+  --rb-border:rgba(255,215,106,.24);
+  --rb-green-border:rgba(102,255,102,.35);
+
+  --rb-shadow-green:0 0 34px rgba(0,255,136,.28);
+  --rb-shadow-gold:0 0 34px rgba(255,215,106,.22);
+
+  --rb-radius:24px;
+  --rb-nav-h:86px;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+  margin:0;
+  min-height:100%;
+  background:#000;
+  color:var(--rb-white);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",sans-serif;
+  overflow-x:hidden;
+}
+
+body{
+  position:relative;
+}
+
+/* =========================
+   BACKGROUND
+========================= */
+
+.rb-bg{
+  position:fixed;
+  inset:0;
+  z-index:-5;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(0,255,136,.28), transparent 28%),
+    radial-gradient(circle at 70% 70%, rgba(255,215,106,.13), transparent 30%),
+    linear-gradient(180deg,#030603 0%,#020402 48%,#000 100%);
+}
+
+.rb-bg::before{
+  content:"";
+  position:absolute;
+  inset:-20%;
+  background:
+    linear-gradient(rgba(102,255,102,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,215,106,.045) 1px, transparent 1px);
+  background-size:44px 44px;
+  transform:perspective(900px) rotateX(62deg) translateY(-12%);
+  opacity:.35;
+}
+
+.rb-vignette{
+  position:fixed;
+  inset:0;
+  z-index:-3;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at center, transparent 28%, rgba(0,0,0,.52) 72%, rgba(0,0,0,.92) 100%);
+}
+
+.rb-grid{
+  position:fixed;
+  inset:0;
+  z-index:-4;
+  pointer-events:none;
+  background:
+    linear-gradient(120deg, transparent, rgba(0,255,136,.08), transparent),
+    radial-gradient(circle at 50% 50%, rgba(255,215,106,.12), transparent 34%);
+  filter:blur(.2px);
+  animation:rbWorldPulse 7s ease-in-out infinite;
+}
+
+/* =========================
+   HOME SHELL
+========================= */
+
+.rb-home-shell{
+  width:min(100%, 1180px);
+  min-height:100vh;
+  margin:0 auto;
+  padding:22px 16px calc(var(--rb-nav-h) + 24px);
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.rb-home-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px;
+  border:1px solid var(--rb-border);
+  border-radius:var(--rb-radius);
+  background:linear-gradient(135deg, rgba(8,18,10,.78), rgba(0,0,0,.58));
+  box-shadow:var(--rb-shadow-gold);
+  backdrop-filter:blur(18px);
+}
+
+.rb-kicker{
+  margin:0 0 6px;
+  color:var(--rb-green);
+  letter-spacing:.18em;
+  font-size:.68rem;
+  font-weight:900;
+}
+
+.rb-home-top h1{
+  margin:0;
+  font-size:clamp(2.1rem, 9vw, 5.2rem);
+  line-height:.9;
+  color:var(--rb-gold);
+  text-shadow:0 0 28px rgba(255,215,106,.35);
+  letter-spacing:-.06em;
+}
+
+.rb-profile-pill{
+  border:1px solid var(--rb-green-border);
+  background:rgba(0,0,0,.45);
+  color:var(--rb-white);
+  border-radius:999px;
+  padding:8px 10px 8px 8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:144px;
+  box-shadow:var(--rb-shadow-green);
+}
+
+.rb-profile-pill img{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1px solid var(--rb-gold);
+  background:#081008;
+}
+
+.rb-profile-pill strong{
+  display:block;
+  font-size:.86rem;
+  text-align:left;
+}
+
+.rb-profile-pill small{
+  display:block;
+  color:var(--rb-green);
+  font-size:.68rem;
+  font-weight:900;
+  text-align:left;
+}
+
+/* =========================
+   PORTAL STAGE
+========================= */
+
+.rb-portal-stage{
+  position:relative;
+  min-height:620px;
+  border-radius:32px;
+  border:1px solid rgba(255,215,106,.28);
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(0,255,136,.2), transparent 22%),
+    radial-gradient(circle at 50% 58%, rgba(255,215,106,.14), transparent 36%),
+    linear-gradient(180deg, rgba(9,16,10,.82), rgba(0,0,0,.86));
+  box-shadow:
+    inset 0 0 80px rgba(0,255,136,.1),
+    0 0 60px rgba(0,0,0,.65);
+}
+
+.rb-portal-stage::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    url("/images/backgrounds/home-cinematic.jpg"),
+    radial-gradient(circle at center, rgba(255,215,106,.14), transparent 44%);
+  background-size:cover;
+  background-position:center;
+  opacity:.38;
+  filter:saturate(1.25) contrast(1.1);
+}
+
+.rb-portal-stage::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.68)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,.025) 0,
+      rgba(255,255,255,.025) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  pointer-events:none;
+}
+
+/* =========================
+   CORE PORTAL
+========================= */
+
+.rb-core-portal{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:min(82vw, 430px);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  z-index:5;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+}
+
+.rb-portal-ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:2px solid rgba(102,255,102,.62);
+  box-shadow:
+    0 0 26px rgba(0,255,136,.55),
+    inset 0 0 44px rgba(255,215,106,.18);
+  animation:rbSpin 12s linear infinite;
+}
+
+.rb-portal-ring::before,
+.rb-portal-ring::after{
+  content:"";
+  position:absolute;
+  inset:9%;
+  border-radius:50%;
+  border:1px dashed rgba(255,215,106,.65);
+}
+
+.rb-portal-ring::after{
+  inset:20%;
+  border-color:rgba(102,255,102,.55);
+  animation:rbSpinReverse 9s linear infinite;
+}
+
+.rb-portal-light{
+  position:absolute;
+  inset:20%;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,215,106,.9), rgba(0,255,136,.34) 34%, rgba(0,0,0,.9) 68%);
+  filter:blur(.2px);
+  box-shadow:0 0 80px rgba(0,255,136,.42);
+}
+
+.rb-portal-copy{
+  position:relative;
+  z-index:4;
+  width:70%;
+  text-align:center;
+  padding:26px 18px;
+  border-radius:28px;
+  border:1px solid rgba(255,215,106,.28);
+  background:rgba(0,0,0,.52);
+  backdrop-filter:blur(14px);
+}
+
+.rb-portal-copy span{
+  color:var(--rb-green);
+  font-size:.75rem;
+  font-weight:1000;
+  letter-spacing:.18em;
+}
+
+.rb-portal-copy h2{
+  margin:8px 0;
+  font-size:clamp(1.7rem, 7vw, 3.4rem);
+  line-height:.92;
+  color:var(--rb-gold);
+}
+
+.rb-portal-copy p{
+  margin:0;
+  color:var(--rb-muted);
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.rb-home-actions,
+.rb-quick-actions{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+
+.rb-icon-btn,
+.rb-main-launch,
+.rb-quick-actions button,
+.rb-bottom-nav button{
+  border:1px solid rgba(255,215,106,.28);
+  color:var(--rb-white);
+  background:linear-gradient(135deg, rgba(10,25,14,.88), rgba(0,0,0,.88));
+  border-radius:999px;
+  box-shadow:0 0 20px rgba(0,255,136,.13);
+}
+
+.rb-icon-btn{
+  width:52px;
+  height:52px;
+  font-size:1.8rem;
+}
+
+.rb-main-launch{
+  min-height:56px;
+  padding:0 28px;
+  color:#001806;
+  background:linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+  font-weight:1000;
+  letter-spacing:.1em;
+  box-shadow:
+    0 0 34px rgba(0,255,136,.45),
+    0 0 28px rgba(255,215,106,.28);
+}
+
+.rb-quick-actions button{
+  padding:13px 22px;
+  color:var(--rb-gold);
+  font-weight:900;
+}
+
+/* =========================
+   BOTTOM NAV
+========================= */
+
+.rb-bottom-nav{
+  position:fixed;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  height:var(--rb-nav-h);
+  z-index:50;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+  padding:10px;
+  border:1px solid rgba(255,215,106,.24);
+  border-radius:28px;
+  background:linear-gradient(135deg, rgba(4,9,5,.88), rgba(0,0,0,.76));
+  backdrop-filter:blur(22px);
+  box-shadow:
+    0 -12px 40px rgba(0,0,0,.55),
+    0 0 30px rgba(0,255,136,.14);
+}
+
+.rb-bottom-nav button{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--rb-muted);
+}
+
+.rb-bottom-nav button:first-child{
+  color:var(--rb-green);
+  background:linear-gradient(135deg, rgba(0,255,136,.25), rgba(255,215,106,.1));
+}
+
+/* =========================
+   TOAST BASE
+========================= */
+
+.rb-toast-root{
+  position:fixed;
+  top:18px;
+  left:12px;
+  right:12px;
+  z-index:999;
+  display:grid;
+  gap:10px;
+  pointer-events:none;
+}
+
+.rb-toast{
+  pointer-events:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(255,215,106,.28);
+  background:rgba(0,0,0,.86);
+  box-shadow:var(--rb-shadow-green);
+  transform:translateY(-10px);
+  opacity:0;
+  transition:.25s ease;
+}
+
+.rb-toast.is-visible{
+  transform:translateY(0);
+  opacity:1;
+}
+
+.rb-toast-orb{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:var(--rb-green);
+  box-shadow:0 0 18px var(--rb-green);
+}
+
+.rb-toast-copy{
+  flex:1;
+}
+
+.rb-toast-copy strong{
+  display:block;
+  color:var(--rb-gold);
+}
+
+.rb-toast-copy span{
+  display:block;
+  color:var(--rb-muted);
+  font-size:.85rem;
+}
+
+.rb-toast-close{
+  border:0;
+  background:transparent;
+  color:var(--rb-white);
+  font-size:1.3rem;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+@keyframes rbSpin{
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes rbSpinReverse{
+  to{ transform:rotate(-360deg); }
+}
+
+@keyframes rbWorldPulse{
+  0%,100%{ opacity:.55; transform:scale(1); }
+  50%{ opacity:.9; transform:scale(1.03); }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width:720px){
+  .rb-home-shell{
+    padding:14px 10px calc(var(--rb-nav-h) + 18px);
+  }
+
+  .rb-home-top{
+    align-items:flex-start;
+  }
+
+  .rb-profile-pill{
+    min-width:118px;
+  }
+
+  .rb-profile-pill img{
+    width:38px;
+    height:38px;
+  }
+
+  .rb-portal-stage{
+    min-height:610px;
+  }
+}
