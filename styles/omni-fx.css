@@ -254,3 +254,135 @@
     scroll-behavior:auto!important;
   }
 }
+
+/* =========================
+   HOLOGRAM FX LAYER
+========================= */
+
+.rb-holo-scan-layer,
+.rb-holo-spark-layer,
+.rb-holo-fog-layer{
+  position:absolute;
+  inset:0;
+  z-index:14;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.rb-holo-scan-layer::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:-30%;
+  height:35%;
+  background:linear-gradient(
+    180deg,
+    transparent,
+    rgba(102,255,102,.13),
+    rgba(255,215,106,.08),
+    transparent
+  );
+  filter:blur(6px);
+  animation:rbHoloScan 4.8s linear infinite;
+}
+
+.rb-holo-fog-layer::before,
+.rb-holo-fog-layer::after{
+  content:"";
+  position:absolute;
+  width:70%;
+  height:60%;
+  border-radius:50%;
+  background:radial-gradient(
+    circle,
+    rgba(0,255,136,.12),
+    transparent 68%
+  );
+  filter:blur(24px);
+  animation:rbHoloFog 9s ease-in-out infinite;
+}
+
+.rb-holo-fog-layer::before{
+  left:-20%;
+  top:18%;
+}
+
+.rb-holo-fog-layer::after{
+  right:-20%;
+  bottom:8%;
+  animation-delay:-4s;
+}
+
+.rb-holo-spark{
+  position:absolute;
+  display:block;
+  border-radius:50%;
+  background:var(--rb-green);
+  box-shadow:
+    0 0 10px var(--rb-green),
+    0 0 18px var(--rb-gold);
+  animation:rbSparkRise 2.2s ease-out forwards;
+}
+
+.rb-holo-pulse{
+  animation:rbScreenPulse .6s ease both!important;
+}
+
+.rb-holo-glitch{
+  animation:rbHoloGlitch .34s steps(2,end) both!important;
+}
+
+.rb-portal-flash .rb-portal-light{
+  filter:brightness(1.75) saturate(1.5);
+  box-shadow:
+    0 0 110px rgba(0,255,136,.72),
+    0 0 80px rgba(255,215,106,.42);
+}
+
+@keyframes rbHoloScan{
+  from{ transform:translateY(-20%); }
+  to{ transform:translateY(420%); }
+}
+
+@keyframes rbHoloFog{
+  0%,100%{
+    transform:translate3d(0,0,0) scale(1);
+    opacity:.38;
+  }
+  50%{
+    transform:translate3d(22px,-18px,0) scale(1.18);
+    opacity:.72;
+  }
+}
+
+@keyframes rbSparkRise{
+  0%{
+    transform:translateY(0) scale(.6);
+    opacity:0;
+  }
+  20%{
+    opacity:1;
+  }
+  100%{
+    transform:translateY(-120px) scale(1.35);
+    opacity:0;
+  }
+}
+
+@keyframes rbScreenPulse{
+  0%,100%{
+    filter:brightness(1) saturate(1.15);
+  }
+  50%{
+    filter:brightness(1.65) saturate(1.6);
+  }
+}
+
+@keyframes rbHoloGlitch{
+  0%{ transform:translateX(0) skewX(0deg); }
+  25%{ transform:translateX(3px) skewX(2deg); }
+  50%{ transform:translateX(-4px) skewX(-2deg); }
+  75%{ transform:translateX(2px) skewX(1deg); }
+  100%{ transform:translateX(0) skewX(0deg); }
+}
