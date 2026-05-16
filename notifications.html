@@ -1,1 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Rich Bizness — Notifications</title>
+
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-home rb-notifications-page">
+  <div class="rb-bg"></div>
+  <div class="rb-vignette"></div>
+  <div class="rb-grid"></div>
+
+  <main class="rb-profile-shell">
+    <header class="rb-profile-top">
+      <a href="/" class="rb-auth-home">← Portal</a>
+      <a href="/profile" class="rb-auth-home">Profile</a>
+    </header>
+
+    <section class="rb-profile-card">
+      <p class="rb-kicker">RICH BIZNESS ALERTS</p>
+
+      <h1 id="notifications-title">
+        Notifications
+      </h1>
+
+      <p
+        id="notifications-status"
+        class="rb-profile-bio"
+      >
+        Loading notification system...
+      </p>
+    </section>
+
+    <section
+      id="notifications-list"
+      class="rb-profile-grid"
+    ></section>
+  </main>
+
+  <script
+    type="module"
+    src="/core/pages/notifications.js"
+  ></script>
+</body>
+</html>
