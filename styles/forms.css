@@ -1,1 +1,138 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /styles/forms.css
+   Auth + Form Visual System
+========================= */
 
+.rb-auth-shell{
+  min-height:100vh;
+  width:min(100%, 980px);
+  margin:0 auto;
+  padding:28px 16px;
+  display:grid;
+  align-content:center;
+  gap:22px;
+}
+
+.rb-auth-hero{
+  padding:22px;
+  border:1px solid rgba(255,215,106,.24);
+  border-radius:28px;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(18px);
+  box-shadow:0 0 44px rgba(0,255,136,.16);
+}
+
+.rb-auth-hero h1{
+  margin:0;
+  font-size:clamp(2.4rem, 10vw, 5.8rem);
+  line-height:.88;
+  color:var(--rb-gold);
+  letter-spacing:-.07em;
+}
+
+.rb-auth-hero p{
+  color:var(--rb-muted);
+  max-width:680px;
+}
+
+.rb-auth-panel{
+  border:1px solid rgba(102,255,102,.32);
+  border-radius:30px;
+  padding:16px;
+  background:linear-gradient(135deg, rgba(8,18,10,.88), rgba(0,0,0,.82));
+  box-shadow:
+    0 0 42px rgba(0,255,136,.18),
+    inset 0 0 50px rgba(255,215,106,.06);
+  backdrop-filter:blur(22px);
+}
+
+.rb-auth-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.rb-auth-tabs button{
+  min-height:46px;
+  border-radius:999px;
+  border:1px solid rgba(255,215,106,.24);
+  background:rgba(0,0,0,.48);
+  color:var(--rb-muted);
+  font-weight:900;
+}
+
+body[data-auth-mode="signin"] [data-auth-mode="signin"],
+body[data-auth-mode="signup"] [data-auth-mode="signup"]{
+  color:#001806;
+  background:linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+  box-shadow:0 0 24px rgba(0,255,136,.32);
+}
+
+.rb-auth-form{
+  display:grid;
+  gap:14px;
+}
+
+.rb-auth-form h2{
+  margin:4px 0 2px;
+  color:var(--rb-gold);
+  font-size:1.5rem;
+}
+
+.rb-auth-form label{
+  display:grid;
+  gap:7px;
+  color:var(--rb-green);
+  font-size:.8rem;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.rb-auth-form input{
+  width:100%;
+  min-height:52px;
+  border-radius:18px;
+  border:1px solid rgba(255,215,106,.22);
+  outline:none;
+  padding:0 14px;
+  color:var(--rb-white);
+  background:rgba(0,0,0,.55);
+  box-shadow:inset 0 0 22px rgba(0,255,136,.06);
+}
+
+.rb-auth-form input:focus{
+  border-color:rgba(102,255,102,.72);
+  box-shadow:
+    0 0 22px rgba(0,255,136,.22),
+    inset 0 0 22px rgba(0,255,136,.08);
+}
+
+.rb-auth-panel.is-signin #rb-signup-form,
+.rb-auth-panel.is-signup #rb-signin-form{
+  display:none;
+}
+
+.rb-auth-form.is-loading{
+  opacity:.72;
+  pointer-events:none;
+}
+
+.rb-auth-home{
+  justify-self:center;
+  color:var(--rb-gold);
+  text-decoration:none;
+  font-weight:900;
+}
+
+@media (max-width:720px){
+  .rb-auth-shell{
+    padding:18px 12px;
+  }
+
+  .rb-auth-panel{
+    border-radius:24px;
+  }
+}
