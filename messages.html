@@ -1,1 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Rich Bizness — Messages</title>
+
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-home rb-messages-page">
+  <div class="rb-bg"></div>
+  <div class="rb-vignette"></div>
+  <div class="rb-grid"></div>
+
+  <main class="rb-profile-shell">
+    <header class="rb-profile-top">
+      <a href="/" class="rb-auth-home">← Portal</a>
+      <a href="/profile" class="rb-auth-home">Profile</a>
+    </header>
+
+    <section class="rb-profile-card">
+      <p class="rb-kicker">RICH BIZNESS DMS</p>
+
+      <img
+        id="messages-user-avatar"
+        src="/images/profile/default-avatar.png"
+        alt="Profile"
+        style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:1px solid var(--rb-gold);"
+      />
+
+      <h1 id="messages-user-name">Rich User</h1>
+
+      <p id="messages-status" class="rb-profile-bio">
+        Loading messages...
+      </p>
+
+      <button class="rb-main-launch" type="button">
+        MESSAGE SYSTEM COMING ONLINE
+      </button>
+    </section>
+  </main>
+
+  <script type="module" src="/core/pages/messages.js"></script>
+</body>
+</html>
