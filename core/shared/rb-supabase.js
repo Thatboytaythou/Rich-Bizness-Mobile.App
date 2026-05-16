@@ -3,18 +3,15 @@
    /core/shared/rb-supabase.js
 
    GLOBAL SUPABASE ENGINE
+   Session Persistence Locked
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import {
-  RB_CONFIG,
-  RB_SUPABASE
+  RB_SUPABASE,
+  RB_TABLES
 } from "/core/shared/rb-config.js";
-
-/* =========================
-   CLIENT
-========================= */
 
 const supabase = createClient(
   RB_SUPABASE.url,
@@ -24,15 +21,14 @@ const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: "pkce"
+      flowType: "pkce",
+      storageKey: "rich-bizness-mobile-auth"
     },
-
     realtime: {
       params: {
         eventsPerSecond: 25
       }
     },
-
     global: {
       headers: {
         "x-client-info": "rich-bizness-mobile"
@@ -41,17 +37,10 @@ const supabase = createClient(
   }
 );
 
-/* =========================
-   STATE
-========================= */
-
 let currentSession = null;
 let currentUser = null;
 let currentProfile = null;
-
-/* =========================
-   HELPERS
-========================= */
+let authBooted = false;
 
 export function getSupabase() {
   return supabase;
@@ -73,67 +62,73 @@ export function isAuthed() {
   return !!currentUser;
 }
 
-/* =========================
-   AUTH
-========================= */
-
 export async function bootAuth() {
-  try {
-    const {
-      data: { session },
-      error
-    } = await supabase.auth.getSession();
-
-    if (error) {
-      console.error("[RB AUTH SESSION ERROR]", error);
-      return null;
-    }
-
-    currentSession = session || null;
-    currentUser = session?.user || null;
-
-    if (currentUser) {
-      await loadProfile(currentUser.id);
-    }
-
+  if (authBooted) {
     return currentUser;
-  } catch (err) {
-    console.error("[RB AUTH BOOT ERROR]", err);
+  }
+
+  const {
+    data: { session },
+    error
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    console.error("[RB SESSION ERROR]", error);
+    authBooted = true;
     return null;
   }
+
+  currentSession = session || null;
+  currentUser = session?.user || null;
+
+  if (currentUser?.id) {
+    await loadProfile(currentUser.id);
+  }
+
+  authBooted = true;
+
+  return currentUser;
 }
 
-/* =========================
-   PROFILE
-========================= */
+export async function refreshSession() {
+  const {
+    data: { session },
+    error
+  } = await supabase.auth.refreshSession();
+
+  if (error) {
+    console.warn("[RB SESSION REFRESH WARNING]", error.message);
+    return null;
+  }
+
+  currentSession = session || null;
+  currentUser = session?.user || null;
+
+  if (currentUser?.id) {
+    await loadProfile(currentUser.id);
+  }
+
+  return currentSession;
+}
 
 export async function loadProfile(userId) {
   if (!userId) return null;
 
-  try {
-    const { data, error } = await supabase
-      .from(RB_CONFIG.tables.profiles)
-      .select("*")
-      .eq("id", userId)
-      .single();
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
 
-    if (error) {
-      console.warn("[RB PROFILE LOAD WARNING]", error.message);
-      return null;
-    }
-
-    currentProfile = data;
-
-    return data;
-  } catch (err) {
-    console.error("[RB PROFILE LOAD ERROR]", err);
+  if (error) {
+    console.warn("[RB PROFILE LOAD WARNING]", error.message);
+    currentProfile = null;
     return null;
   }
-}
 
-/* =========================
-   SIGN UP
-========================= */
+  currentProfile = data || null;
+  return currentProfile;
+}
 
 export async function signUp({
   email,
@@ -143,9 +138,9 @@ export async function signUp({
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-
     options: {
-      data: metadata
+      data: metadata,
+      emailRedirectTo: `${window.location.origin}/auth`
     }
   });
 
@@ -153,10 +148,6 @@ export async function signUp({
 
   return data;
 }
-
-/* =========================
-   SIGN IN
-========================= */
 
 export async function signIn({
   email,
@@ -170,19 +161,17 @@ export async function signIn({
 
   if (error) throw error;
 
-  currentSession = data.session;
-  currentUser = data.user;
+  currentSession = data.session || null;
+  currentUser = data.user || null;
 
-  if (currentUser) {
+  if (currentUser?.id) {
     await loadProfile(currentUser.id);
   }
 
+  authBooted = true;
+
   return data;
 }
-
-/* =========================
-   SIGN OUT
-========================= */
 
 export async function signOut() {
   await supabase.auth.signOut();
@@ -190,45 +179,31 @@ export async function signOut() {
   currentSession = null;
   currentUser = null;
   currentProfile = null;
-
-  window.location.href = RB_CONFIG.routes.auth;
+  authBooted = false;
 }
 
-/* =========================
-   REALTIME AUTH STATE
-========================= */
+supabase.auth.onAuthStateChange(async (_event, session) => {
+  currentSession = session || null;
+  currentUser = session?.user || null;
 
-supabase.auth.onAuthStateChange(
-  async (_event, session) => {
-    currentSession = session || null;
-    currentUser = session?.user || null;
-
-    if (currentUser) {
-      await loadProfile(currentUser.id);
-    } else {
-      currentProfile = null;
-    }
+  if (currentUser?.id) {
+    await loadProfile(currentUser.id);
+  } else {
+    currentProfile = null;
   }
-);
 
-/* =========================
-   STORAGE URL
-========================= */
+  authBooted = true;
+});
 
 export function getPublicFileUrl(bucket, path) {
   if (!bucket || !path) return null;
 
-  const { data } = supabase
-    .storage
+  const { data } = supabase.storage
     .from(bucket)
     .getPublicUrl(path);
 
   return data?.publicUrl || null;
 }
-
-/* =========================
-   FILE UPLOAD
-========================= */
 
 export async function uploadFile({
   bucket,
@@ -239,18 +214,12 @@ export async function uploadFile({
   const { data, error } =
     await supabase.storage
       .from(bucket)
-      .upload(path, file, {
-        upsert
-      });
+      .upload(path, file, { upsert });
 
   if (error) throw error;
 
   return data;
 }
-
-/* =========================
-   FILE DELETE
-========================= */
 
 export async function deleteFile({
   bucket,
@@ -266,20 +235,9 @@ export async function deleteFile({
   return data;
 }
 
-/* =========================
-   UNIVERSAL REALTIME
-========================= */
-
-export function createRealtimeChannel(
-  channelName,
-  config = {}
-) {
+export function createRealtimeChannel(channelName, config = {}) {
   return supabase.channel(channelName, config);
 }
-
-/* =========================
-   DB HELPERS
-========================= */
 
 export async function rbSelect({
   table,
@@ -290,27 +248,15 @@ export async function rbSelect({
   ascending = false,
   limit = null
 }) {
-  let query = supabase
-    .from(table)
-    .select(select);
+  let query = supabase.from(table).select(select);
 
   Object.entries(match).forEach(([key, value]) => {
     query = query.eq(key, value);
   });
 
-  if (orderBy) {
-    query = query.order(orderBy, {
-      ascending
-    });
-  }
-
-  if (limit) {
-    query = query.limit(limit);
-  }
-
-  if (single) {
-    query = query.single();
-  }
+  if (orderBy) query = query.order(orderBy, { ascending });
+  if (limit) query = query.limit(limit);
+  if (single) query = query.single();
 
   const { data, error } = await query;
 
@@ -339,16 +285,13 @@ export async function rbUpdate({
   match = {},
   values = {}
 }) {
-  let query = supabase
-    .from(table)
-    .update(values);
+  let query = supabase.from(table).update(values);
 
   Object.entries(match).forEach(([key, value]) => {
     query = query.eq(key, value);
   });
 
-  const { data, error } =
-    await query.select();
+  const { data, error } = await query.select();
 
   if (error) throw error;
 
@@ -359,33 +302,19 @@ export async function rbDelete({
   table,
   match = {}
 }) {
-  let query = supabase
-    .from(table)
-    .delete();
+  let query = supabase.from(table).delete();
 
   Object.entries(match).forEach(([key, value]) => {
     query = query.eq(key, value);
   });
 
-  const { data, error } =
-    await query.select();
+  const { data, error } = await query.select();
 
   if (error) throw error;
 
   return data;
 }
 
-/* =========================
-   BOOT
-========================= */
-
 await bootAuth();
 
-console.log(
-  "%cRICH BIZNESS MOBILE READY",
-  `
-    color:#00ff88;
-    font-weight:900;
-    font-size:14px;
-  `
-);
+console.log("RB SUPABASE SESSION LOCK READY");
