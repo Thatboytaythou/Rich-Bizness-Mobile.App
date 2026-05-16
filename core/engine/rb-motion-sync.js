@@ -4,7 +4,7 @@
 
    MOTION SYNC ENGINE
    Owns movement only
-   Orbit depth clamped
+   Balanced visible orbit
 ========================= */
 
 const portal = document.querySelector(".rb-core-portal");
@@ -25,12 +25,12 @@ function updatePointer(x, y) {
   mouseY = y / window.innerHeight - 0.5;
 }
 
-window.addEventListener("mousemove", (e) => {
-  updatePointer(e.clientX, e.clientY);
+window.addEventListener("mousemove", (event) => {
+  updatePointer(event.clientX, event.clientY);
 });
 
-window.addEventListener("touchmove", (e) => {
-  const touch = e.touches?.[0];
+window.addEventListener("touchmove", (event) => {
+  const touch = event.touches?.[0];
   if (!touch) return;
 
   updatePointer(touch.clientX, touch.clientY);
@@ -39,27 +39,31 @@ window.addEventListener("touchmove", (e) => {
 function animate() {
   const screens = getScreens();
 
-  smoothX += (mouseX - smoothX) * 0.045;
-  smoothY += (mouseY - smoothY) * 0.045;
+  smoothX += (mouseX - smoothX) * 0.04;
+  smoothY += (mouseY - smoothY) * 0.04;
 
-  orbitRotation += 0.065;
+  orbitRotation += 0.045;
 
   if (stage) {
     stage.style.transform = `
       perspective(1600px)
-      rotateX(${smoothY * -3}deg)
-      rotateY(${smoothX * 5}deg)
-      translate3d(${smoothX * 6}px, ${smoothY * 5}px, 0)
+      rotateX(${smoothY * -2.5}deg)
+      rotateY(${smoothX * 4}deg)
+      translate3d(${smoothX * 5}px, ${smoothY * 4}px, 0)
     `;
   }
 
   if (portal) {
-    const portalFloat = Math.sin(orbitRotation * 0.014) * 6;
+    const portalFloat = Math.sin(orbitRotation * 0.014) * 5;
 
     portal.style.transform = `
       translate(-50%, -50%)
-      translate3d(${smoothX * -10}px, calc(${portalFloat}px + ${smoothY * -8}px), 0)
-      scale(${1 + Math.sin(orbitRotation * 0.012) * 0.014})
+      translate3d(
+        ${smoothX * -8}px,
+        calc(${portalFloat}px + ${smoothY * -6}px),
+        0
+      )
+      scale(${1 + Math.sin(orbitRotation * 0.012) * 0.012})
     `;
   }
 
@@ -70,37 +74,21 @@ function animate() {
 
     const isMobile = window.innerWidth <= 720;
 
-    const radiusX = isMobile ? 138 : 230;
-    const radiusY = isMobile ? 58 : 96;
+    const radiusX = isMobile ? 190 : 280;
+    const radiusY = isMobile ? 118 : 155;
 
     const x = Math.cos(radians) * radiusX;
     const y = Math.sin(radians) * radiusY;
 
     const depth = Math.sin(radians);
 
-    const frontAmount = Math.max(0, depth);
-    const backAmount = Math.max(0, -depth);
+    const frontAmount = (depth + 1) / 2;
 
-    const scale =
-      0.72 +
-      frontAmount * 0.22 -
-      backAmount * 0.04;
-
-    const opacity =
-      0.08 +
-      frontAmount * 0.72;
-
-    const brightness =
-      0.58 +
-      frontAmount * 0.52;
-
-    const blur =
-      backAmount * 3.6 +
-      (1 - frontAmount) * 0.6;
-
-    const zDepth =
-      frontAmount * 90 -
-      backAmount * 120;
+    const scale = 0.72 + frontAmount * 0.22;
+    const opacity = 0.34 + frontAmount * 0.46;
+    const brightness = 0.72 + frontAmount * 0.38;
+    const blur = (1 - frontAmount) * 1.8;
+    const zDepth = depth * 85;
 
     screen.style.zIndex = String(
       Math.floor(frontAmount * 100)
@@ -111,18 +99,18 @@ function animate() {
     screen.style.filter = `
       brightness(${brightness})
       blur(${blur}px)
-      saturate(${1.05 + frontAmount * 0.28})
+      saturate(${1.08 + frontAmount * 0.2})
     `;
 
     screen.style.transform = `
       translate(-50%, -50%)
       translate3d(
-        calc(${x}px + ${smoothX * 10}px),
-        calc(${y}px + ${smoothY * 8}px),
+        calc(${x}px + ${smoothX * 8}px),
+        calc(${y}px + ${smoothY * 6}px),
         ${zDepth}px
       )
-      rotateY(${depth * -12}deg)
-      rotateX(${smoothY * -5}deg)
+      rotateY(${depth * -10}deg)
+      rotateX(${smoothY * -4}deg)
       scale(${scale})
     `;
   });
