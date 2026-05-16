@@ -1,1 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Rich Bizness — Settings</title>
+
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-home rb-settings-page">
+  <div class="rb-bg"></div>
+  <div class="rb-vignette"></div>
+  <div class="rb-grid"></div>
+
+  <main class="rb-auth-shell">
+    <section class="rb-auth-hero">
+      <p class="rb-kicker">RICH BIZNESS CONTROL</p>
+      <h1>Settings</h1>
+      <p>
+        Manage your identity, session, profile, and universe access.
+      </p>
+    </section>
+
+    <section class="rb-auth-panel">
+      <div class="rb-profile-grid">
+        <article>
+          <strong>Email</strong>
+          <span id="settings-email">Loading...</span>
+        </article>
+
+        <article>
+          <strong>Role</strong>
+          <span id="settings-role">user</span>
+        </article>
+
+        <article>
+          <strong>Status</strong>
+          <span id="settings-status">Standard</span>
+        </article>
+      </div>
+
+      <section class="rb-quick-actions" style="margin-top:16px;">
+        <button id="settings-profile-btn" type="button">
+          Profile
+        </button>
+
+        <button id="settings-edit-btn" type="button">
+          Edit
+        </button>
+      </section>
+
+      <section class="rb-quick-actions" style="margin-top:12px;">
+        <button id="settings-signout-btn" type="button">
+          Sign Out
+        </button>
+      </section>
+    </section>
+
+    <a class="rb-auth-home" href="/">
+      ← Back to Portal
+    </a>
+  </main>
+
+  <script
+    type="module"
+    src="/core/pages/settings.js"
+  ></script>
+</body>
+</html>
