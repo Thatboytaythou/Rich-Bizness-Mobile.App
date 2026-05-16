@@ -2,36 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
   />
 
-  <title>Rich Bizness — Reality Changers</title>
+  <title>
+    Rich Bizness — Reality Changers
+  </title>
 
-  <link rel="stylesheet" href="/styles/main.css" />
-  <link rel="stylesheet" href="/styles/mobile.css" />
-  <link rel="stylesheet" href="/styles/omni-dial.css" />
-  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <!-- =========================
+       STYLES
+  ========================== -->
+  <link
+    rel="stylesheet"
+    href="/styles/main.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="/styles/mobile.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="/styles/omni-dial.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="/styles/omni-fx.css"
+  />
 </head>
 
-<body class="rb-home">
+<body
+  class="rb-home"
+  data-active-section="live"
+>
+
   <!-- =========================
-       BACKGROUND FX
+       WORLD FX
   ========================== -->
   <div class="rb-bg"></div>
   <div class="rb-vignette"></div>
   <div class="rb-grid"></div>
 
   <!-- =========================
-       HOME SHELL
+       MAIN HOME
   ========================== -->
   <main class="rb-home-shell">
 
     <!-- =========================
-         TOP HERO
+         HERO
     ========================== -->
     <header class="rb-home-top">
+
       <div>
         <p class="rb-kicker">
           RICH BIZNESS MOBILE
@@ -42,11 +68,13 @@
         </h1>
       </div>
 
+      <!-- PROFILE -->
       <button
         id="rb-open-profile"
         class="rb-profile-pill"
         type="button"
       >
+
         <img
           id="rb-home-avatar"
           src="/images/profile/default-avatar.png"
@@ -62,7 +90,9 @@
             SIGN IN
           </small>
         </span>
+
       </button>
+
     </header>
 
     <!-- =========================
@@ -70,24 +100,29 @@
     ========================== -->
     <section class="rb-portal-stage">
 
-      <!-- TV ORBIT -->
+      <!-- =========================
+           TV ORBIT
+      ========================== -->
       <div
         class="rb-tv-orbit"
         id="rb-tv-orbit"
       ></div>
 
-      <!-- CORE -->
+      <!-- =========================
+           CORE PORTAL
+      ========================== -->
       <div class="rb-core-portal">
 
-        <!-- RINGS -->
+        <!-- OUTER RINGS -->
         <div class="rb-portal-ring"></div>
         <div class="rb-portal-ring-two"></div>
 
-        <!-- LIGHT -->
+        <!-- ENERGY -->
         <div class="rb-portal-light"></div>
 
-        <!-- CONTENT -->
+        <!-- ACTIVE SECTION -->
         <div class="rb-portal-copy">
+
           <span id="rb-active-label">
             LIVE
           </span>
@@ -99,12 +134,14 @@
           <p id="rb-active-meta">
             Broadcast • VIP • Realtime
           </p>
+
         </div>
       </div>
+
     </section>
 
     <!-- =========================
-         MAIN ACTIONS
+         MAIN CONTROLS
     ========================== -->
     <section class="rb-home-actions">
 
@@ -154,6 +191,7 @@
       </button>
 
     </section>
+
   </main>
 
   <!-- =========================
@@ -171,6 +209,7 @@
     <button
       data-rb-route="live"
       type="button"
+      class="active"
     >
       Live
     </button>
@@ -207,7 +246,7 @@
   ></script>
 
   <!-- =========================
-       CINEMATIC MOTION ENGINE
+       MOTION ENGINE
   ========================== -->
   <script
     type="module"
@@ -220,6 +259,14 @@
   <script
     type="module"
     src="/core/engine/rb-hologram-fx.js"
+  ></script>
+
+  <!-- =========================
+       PORTAL TRANSITIONS
+  ========================== -->
+  <script
+    type="module"
+    src="/core/engine/rb-portal-transition.js"
   ></script>
 
 </body>
