@@ -3,7 +3,8 @@
    /styles/omni-fx.css
 
    FX ONLY
-   No orbit movement ownership
+   No orbit screen visuals
+   No movement ownership
 ========================= */
 
 .rb-home::before{
@@ -44,14 +45,6 @@
 
 .rb-portal-light{
   animation:rbPortalBreath 3.8s ease-in-out infinite;
-}
-
-.rb-home-top,
-.rb-portal-stage,
-.rb-bottom-nav,
-.rb-quick-actions button,
-.rb-main-launch{
-  transform:translateZ(0);
 }
 
 .rb-main-launch{
@@ -269,109 +262,6 @@ body[data-active-section="feed"] .rb-bg{
 
 .rb-text-switch{
   opacity:0;
-}
-
-/* =========================
-   TV ORBIT SCREENS
-   VISUALS ONLY
-========================= */
-
-.rb-tv-orbit{
-  position:absolute;
-  inset:0;
-  display:block;
-  pointer-events:none;
-  transform-style:preserve-3d;
-  z-index:8;
-}
-
-.rb-tv-screen{
-  position:absolute;
-  left:50%;
-  top:50%;
-
-  width:170px;
-  min-height:108px;
-
-  border-radius:24px;
-  border:1px solid rgba(255,215,120,.22);
-
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(120,255,140,.18),
-      rgba(0,0,0,.92)
-    );
-
-  backdrop-filter:blur(18px);
-
-  box-shadow:
-    0 0 34px rgba(120,255,120,.16),
-    inset 0 0 28px rgba(120,255,140,.08);
-
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
-  gap:7px;
-
-  padding:16px;
-  text-align:left;
-  color:white;
-
-  transform-style:preserve-3d;
-  pointer-events:auto;
-  overflow:hidden;
-
-  transition:
-    opacity .35s ease,
-    filter .35s ease,
-    box-shadow .35s ease;
-}
-
-.rb-tv-screen strong{
-  font-size:1.18rem;
-  line-height:1;
-  color:#ffd86b;
-}
-
-.rb-tv-screen small{
-  font-size:.78rem;
-  opacity:.82;
-  line-height:1.25;
-}
-
-.rb-tv-label{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:24px;
-  padding:0 12px;
-  border-radius:999px;
-  font-size:.68rem;
-  letter-spacing:.2rem;
-  font-weight:900;
-  color:#001806;
-  background:linear-gradient(135deg, var(--rb-green), var(--rb-gold));
-}
-
-.rb-tv-glare{
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.14),
-      transparent 42%
-    );
-  pointer-events:none;
-}
-
-.rb-tv-screen.is-active{
-  box-shadow:
-    0 0 65px rgba(120,255,120,.32),
-    0 0 120px rgba(120,255,120,.14),
-    inset 0 0 34px rgba(255,215,106,.08);
 }
 
 /* =========================
