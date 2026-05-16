@@ -1,165 +1,105 @@
 /* =========================
-   RICH BIZNESS ROUTER CORE
+   RICH BIZNESS MOBILE
    /core/shared/rb-router.js
+
+   ROUTER + PROTECTION CORE
 ========================= */
+
+import {
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
 
 /* =========================
-   ROUTE MAP
+   ROUTE HELPERS
 ========================= */
-export const RB_ROUTES = {
-  home: "/",
-  auth: "/auth.html",
 
-  feed: "/feed.html",
-  watch: "/watch.html",
-  live: "/live.html",
-
-  music: "/music.html",
-  gaming: "/gaming.html",
-  sports: "/sports.html",
-
-  gallery: "/gallery.html",
-  store: "/store.html",
-  meta: "/meta.html",
-
-  upload: "/upload.html",
-
-  messages: "/messages.html",
-  notifications: "/notifications.html",
-
-  profile: "/profile.html",
-  edit: "/edit.html",
-  settings: "/settings.html"
-};
-
-/* =========================
-   NAVIGATE
-========================= */
 export function goTo(route = "/") {
   window.location.href = route;
 }
 
-/* =========================
-   RELOAD
-========================= */
+export function replaceTo(route = "/") {
+  window.location.replace(route);
+}
+
 export function reloadPage() {
   window.location.reload();
 }
 
-/* =========================
-   BACK
-========================= */
 export function goBack() {
   window.history.back();
 }
 
-/* =========================
-   OPEN NEW TAB
-========================= */
 export function openExternal(url = "") {
   if (!url) return;
-
-  window.open(url, "_blank");
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 /* =========================
    QUERY PARAMS
 ========================= */
-export function getQueryParam(key) {
-  const params = new URLSearchParams(
-    window.location.search
-  );
 
+export function getQueryParam(key) {
+  const params = new URLSearchParams(window.location.search);
   return params.get(key);
 }
 
-/* =========================
-   SET QUERY PARAM
-========================= */
-export function setQueryParam(
-  key,
-  value
-) {
-  const url = new URL(window.location);
-
+export function setQueryParam(key, value) {
+  const url = new URL(window.location.href);
   url.searchParams.set(key, value);
-
-  window.history.replaceState(
-    {},
-    "",
-    url
-  );
+  window.history.replaceState({}, "", url);
 }
 
-/* =========================
-   REMOVE QUERY PARAM
-========================= */
 export function removeQueryParam(key) {
-  const url = new URL(window.location);
-
+  const url = new URL(window.location.href);
   url.searchParams.delete(key);
-
-  window.history.replaceState(
-    {},
-    "",
-    url
-  );
+  window.history.replaceState({}, "", url);
 }
 
 /* =========================
-   STREAM URL
+   ROUTE BUILDERS
 ========================= */
+
 export function getWatchUrl(slug = "") {
-  return `/watch.html?slug=${slug}`;
+  return `${RB_ROUTES.watch}?slug=${encodeURIComponent(slug)}`;
+}
+
+export function getProfileUrl(username = "") {
+  if (!username) return RB_ROUTES.profile;
+  return `${RB_ROUTES.profile}?user=${encodeURIComponent(username)}`;
+}
+
+export function getEditUrl(userId = "") {
+  if (!userId) return RB_ROUTES.edit;
+  return `${RB_ROUTES.edit}?id=${encodeURIComponent(userId)}`;
 }
 
 /* =========================
-   PROFILE URL
+   PAGE STATE
 ========================= */
-export function getProfileUrl(
-  username = ""
-) {
-  return `/profile.html?user=${username}`;
+
+export function getCurrentPath() {
+  return window.location.pathname;
 }
 
-/* =========================
-   EDIT URL
-========================= */
-export function getEditUrl(
-  userId = ""
-) {
-  return `/edit.html?id=${userId}`;
-}
-
-/* =========================
-   ACTIVE PAGE
-========================= */
 export function getCurrentPage() {
-  const path = window.location.pathname;
+  const path = getCurrentPath();
 
-  return path.split("/").pop();
+  if (path === "/") return "index";
+
+  return path
+    .split("/")
+    .pop()
+    .replace(".html", "");
 }
 
-/* =========================
-   PAGE CHECK
-========================= */
 export function isPage(page = "") {
-  return getCurrentPage() === page;
+  return getCurrentPage() === page.replace(".html", "");
 }
 
-/* =========================
-   HASH
-========================= */
 export function getHash() {
-  return window.location.hash.replace(
-    "#",
-    ""
-  );
+  return window.location.hash.replace("#", "");
 }
 
-/* =========================
-   SCROLL TOP
-========================= */
 export function scrollTopSmooth() {
   window.scrollTo({
     top: 0,
@@ -168,13 +108,93 @@ export function scrollTopSmooth() {
 }
 
 /* =========================
+   ROUTE PROTECTION MAP
+========================= */
+
+export const RB_ROUTE_ACCESS = Object.freeze({
+  public: [
+    "/",
+    "/auth",
+    "/auth.html",
+    "/feed",
+    "/feed.html",
+    "/watch",
+    "/watch.html",
+    "/live",
+    "/live.html",
+    "/music",
+    "/music.html",
+    "/gaming",
+    "/gaming.html",
+    "/sports",
+    "/sports.html",
+    "/gallery",
+    "/gallery.html",
+    "/store",
+    "/store.html",
+    "/meta",
+    "/meta.html"
+  ],
+
+  protected: [
+    "/upload",
+    "/upload.html",
+    "/messages",
+    "/messages.html",
+    "/notifications",
+    "/notifications.html",
+    "/profile",
+    "/profile.html",
+    "/edit",
+    "/edit.html",
+    "/settings",
+    "/settings.html"
+  ],
+
+  creator: [
+    "/live",
+    "/live.html",
+    "/upload",
+    "/upload.html"
+  ],
+
+  seller: [
+    "/store",
+    "/store.html"
+  ],
+
+  artist: [
+    "/music",
+    "/music.html"
+  ]
+});
+
+export function isProtectedRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.protected.includes(path);
+}
+
+export function isPublicRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.public.includes(path);
+}
+
+export function isCreatorRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.creator.includes(path);
+}
+
+export function isSellerRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.seller.includes(path);
+}
+
+export function isArtistRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.artist.includes(path);
+}
+
+/* =========================
    SAFE REDIRECT
 ========================= */
-export function safeRedirect(
-  route,
-  delay = 0
-) {
-  setTimeout(() => {
+
+export function safeRedirect(route, delay = 0) {
+  window.setTimeout(() => {
     goTo(route);
   }, delay);
 }
