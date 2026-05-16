@@ -3,6 +3,7 @@
    /core/features/auth/auth-ui.js
 
    CINEMATIC AUTH UI BINDINGS
+   Hardened Auth Sync
 ========================= */
 
 import {
@@ -12,9 +13,17 @@ import {
 } from "/core/shared/rb-auth.js";
 
 import {
+  initAuthState,
   onAuthState,
-  initAuthState
+  refreshAuthProfile
 } from "/core/features/auth/auth-state.js";
+
+import {
+  profileAvatar,
+  profileName,
+  profileHandle,
+  profileBadge
+} from "/core/shared/rb-profile.js";
 
 import {
   toastError,
@@ -22,11 +31,8 @@ import {
   toastInfo
 } from "/core/shared/rb-toast.js";
 
-/* =========================
-   HELPERS
-========================= */
-
 const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => document.querySelectorAll(selector);
 
 function getFormValue(form, name) {
   return String(new FormData(form).get(name) || "").trim();
@@ -35,25 +41,51 @@ function getFormValue(form, name) {
 function setLoading(form, isLoading) {
   form?.classList.toggle("is-loading", isLoading);
 
-  form
-    ?.querySelectorAll("button, input")
-    .forEach((el) => {
-      el.disabled = isLoading;
-    });
+  form?.querySelectorAll("button, input").forEach((el) => {
+    el.disabled = isLoading;
+  });
 }
 
 function switchMode(mode = "signin") {
   document.body.dataset.authMode = mode;
 
-  $(".rb-auth-panel")?.classList.toggle(
-    "is-signup",
-    mode === "signup"
-  );
+  $(".rb-auth-panel")?.classList.toggle("is-signup", mode === "signup");
+  $(".rb-auth-panel")?.classList.toggle("is-signin", mode === "signin");
+}
 
-  $(".rb-auth-panel")?.classList.toggle(
-    "is-signin",
-    mode === "signin"
-  );
+/* =========================
+   GLOBAL IDENTITY PAINT
+========================= */
+
+export function paintAuthIdentity(state) {
+  const user = state?.user || null;
+  const profile = state?.profile || null;
+  const authed = !!user;
+
+  document.body.classList.toggle("is-authed", authed);
+  document.body.classList.toggle("is-guest", !authed);
+
+  $$("[data-rb-auth-email]").forEach((el) => {
+    el.textContent = user?.email || "Guest";
+  });
+
+  $$("[data-rb-auth-name]").forEach((el) => {
+    el.textContent = authed ? profileName(profile) : "Guest Mode";
+  });
+
+  $$("[data-rb-auth-handle]").forEach((el) => {
+    el.textContent = authed ? profileHandle(profile) : "@guest";
+  });
+
+  $$("[data-rb-auth-badge]").forEach((el) => {
+    el.textContent = authed ? profileBadge(profile) : "SIGN IN";
+  });
+
+  $$("[data-rb-auth-avatar]").forEach((img) => {
+    img.src = authed
+      ? profileAvatar(profile)
+      : "/images/profile/default-avatar.png";
+  });
 }
 
 /* =========================
@@ -122,6 +154,8 @@ export function bindSignUpForm(selector = "#rb-signup-form") {
         displayName
       });
 
+      await refreshAuthProfile();
+
       toastSuccess("Account created. Sign in when ready.");
       switchMode("signin");
     } catch (error) {
@@ -133,11 +167,11 @@ export function bindSignUpForm(selector = "#rb-signup-form") {
 }
 
 /* =========================
-   SIGN OUT BUTTONS
+   SIGN OUT
 ========================= */
 
 export function bindSignOutButtons(selector = "[data-rb-signout]") {
-  document.querySelectorAll(selector).forEach((button) => {
+  $$(selector).forEach((button) => {
     button.addEventListener("click", async () => {
       try {
         await rbSignOut({ redirectTo: "/auth" });
@@ -149,11 +183,11 @@ export function bindSignOutButtons(selector = "[data-rb-signout]") {
 }
 
 /* =========================
-   MODE TOGGLES
+   MODES
 ========================= */
 
 export function bindAuthModeToggles() {
-  document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+  $$("[data-auth-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       switchMode(button.dataset.authMode || "signin");
     });
@@ -161,25 +195,12 @@ export function bindAuthModeToggles() {
 }
 
 /* =========================
-   AUTH STATUS UI
+   STATUS SYNC
 ========================= */
 
 export function bindAuthStatus() {
   onAuthState((state) => {
-    document.body.classList.toggle("is-authed", state.isAuthed);
-    document.body.classList.toggle("is-guest", !state.isAuthed);
-
-    document.querySelectorAll("[data-rb-auth-email]").forEach((el) => {
-      el.textContent = state.user?.email || "Guest";
-    });
-
-    document.querySelectorAll("[data-rb-auth-name]").forEach((el) => {
-      el.textContent =
-        state.profile?.display_name ||
-        state.profile?.username ||
-        state.user?.email?.split("@")[0] ||
-        "Guest Mode";
-    });
+    paintAuthIdentity(state);
   });
 }
 
@@ -188,7 +209,9 @@ export function bindAuthStatus() {
 ========================= */
 
 export async function initAuthUI() {
-  await initAuthState();
+  const state = await initAuthState();
+
+  paintAuthIdentity(state);
 
   bindSignInForm();
   bindSignUpForm();
