@@ -1,0 +1,92 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/engine/rb-hologram-fx.js
+
+   HOLOGRAM FX ENGINE
+========================= */
+
+const stage = document.querySelector(".rb-portal-stage");
+const portal = document.querySelector(".rb-core-portal");
+const screens = [...document.querySelectorAll(".rb-tv-screen")];
+
+function createFxLayer(className) {
+  if (!stage) return null;
+
+  const layer = document.createElement("div");
+  layer.className = className;
+  layer.setAttribute("aria-hidden", "true");
+  stage.appendChild(layer);
+
+  return layer;
+}
+
+const scanLayer = createFxLayer("rb-holo-scan-layer");
+const sparkLayer = createFxLayer("rb-holo-spark-layer");
+const fogLayer = createFxLayer("rb-holo-fog-layer");
+
+function spawnSpark() {
+  if (!sparkLayer) return;
+
+  const spark = document.createElement("span");
+  spark.className = "rb-holo-spark";
+
+  const x = 35 + Math.random() * 30;
+  const y = 22 + Math.random() * 58;
+  const size = 2 + Math.random() * 5;
+
+  spark.style.left = `${x}%`;
+  spark.style.top = `${y}%`;
+  spark.style.width = `${size}px`;
+  spark.style.height = `${size}px`;
+  spark.style.animationDuration = `${1.4 + Math.random() * 1.8}s`;
+
+  sparkLayer.appendChild(spark);
+
+  setTimeout(() => {
+    spark.remove();
+  }, 3200);
+}
+
+function pulseScreens() {
+  screens.forEach((screen, index) => {
+    const delay = index * 140;
+
+    setTimeout(() => {
+      screen.classList.add("rb-holo-pulse");
+
+      setTimeout(() => {
+        screen.classList.remove("rb-holo-pulse");
+      }, 600);
+    }, delay);
+  });
+}
+
+function randomGlitch() {
+  const screen = screens[Math.floor(Math.random() * screens.length)];
+  if (!screen) return;
+
+  screen.classList.add("rb-holo-glitch");
+
+  setTimeout(() => {
+    screen.classList.remove("rb-holo-glitch");
+  }, 360);
+}
+
+function portalFlash() {
+  if (!portal) return;
+
+  portal.classList.add("rb-portal-flash");
+
+  setTimeout(() => {
+    portal.classList.remove("rb-portal-flash");
+  }, 520);
+}
+
+setInterval(spawnSpark, 220);
+setInterval(randomGlitch, 3800);
+setInterval(pulseScreens, 6200);
+setInterval(portalFlash, 5200);
+
+document.body.classList.add("rb-hologram-loaded");
+
+console.log("RB HOLOGRAM FX READY");
