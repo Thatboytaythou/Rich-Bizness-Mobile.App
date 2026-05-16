@@ -2,249 +2,195 @@
    RICH BIZNESS MOBILE
    /core/pages/index.js
 
-   HOME OMNI PORTAL CONTROLLER
+   CINEMATIC HOME CONTROLLER
+   Identity Hydration Locked
 ========================= */
 
 import {
-  RB_ROUTES
-} from "/core/shared/rb-config.js";
+  initAuthState,
+  onAuthState
+} from "/core/features/auth/auth-state.js";
 
 import {
-  bootAuth,
-  getUser,
-  getProfile
-} from "/core/shared/rb-supabase.js";
-
-import {
-  profileName,
   profileAvatar,
+  profileName,
   profileBadge
 } from "/core/shared/rb-profile.js";
 
 import {
-  $,
-  $$,
-  setText
-} from "/core/shared/rb-dom.js";
+  setActiveSection
+} from "/core/shared/rb-section-state.js";
 
-const SECTIONS = [
-  {
-    key: "live",
-    label: "LIVE",
-    title: "Go Live",
-    route: RB_ROUTES.live,
-    meta: "Broadcast • VIP • Realtime"
-  },
-  {
-    key: "music",
-    label: "MUSIC",
-    title: "Music Universe",
-    route: RB_ROUTES.music,
-    meta: "Tracks • Podcast • Radio"
-  },
-  {
-    key: "gaming",
-    label: "GAMES",
-    title: "Arcade District",
-    route: RB_ROUTES.gaming,
-    meta: "Chess • Runner • Scores"
-  },
-  {
-    key: "sports",
-    label: "SPORTS",
-    title: "Sports Arena",
-    route: RB_ROUTES.sports,
-    meta: "Picks • Clips • Broadcasts"
-  },
-  {
-    key: "gallery",
-    label: "ART",
-    title: "Gallery Vault",
-    route: RB_ROUTES.gallery,
-    meta: "Artwork • Collect • Showcase"
-  },
-  {
-    key: "store",
-    label: "STORE",
-    title: "Creator Market",
-    route: RB_ROUTES.store,
-    meta: "Products • Unlocks • Sellers"
-  },
-  {
-    key: "meta",
-    label: "META",
-    title: "Meta World",
-    route: RB_ROUTES.meta,
-    meta: "Avatars • Worlds • Portals"
-  },
-  {
-    key: "feed",
-    label: "FEED",
-    title: "Global Feed",
-    route: RB_ROUTES.feed,
-    meta: "Posts • Drops • Community"
-  }
+const $ = (id) => document.getElementById(id);
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const els = {
+  avatar: $("rb-home-avatar"),
+  name: $("rb-home-name"),
+  badge: $("rb-home-badge"),
+
+  profileBtn: $("rb-open-profile"),
+
+  uploadBtn: $("rb-open-upload"),
+  authBtn: $("rb-open-auth"),
+
+  launchBtn: $("rb-launch-section"),
+
+  prevBtn: $("rb-rotate-prev"),
+  nextBtn: $("rb-rotate-next")
+};
+
+/* =========================
+   ROUTES
+========================= */
+
+const SECTION_ROUTES = {
+  feed: "/feed",
+  live: "/live",
+  music: "/music",
+  gaming: "/gaming",
+  meta: "/meta"
+};
+
+const sections = [
+  "feed",
+  "live",
+  "music",
+  "gaming",
+  "meta"
 ];
 
-let activeIndex = 0;
-let rotateTimer = null;
+let activeIndex = 1;
 
-function renderScreens() {
-  const orbit = $("#rb-tv-orbit");
-  if (!orbit) return;
+/* =========================
+   IDENTITY HYDRATION
+========================= */
 
-  orbit.innerHTML = "";
+function hydrateIdentity(state) {
+  const authed = !!state?.isAuthed;
+  const profile = state?.profile || null;
 
-  SECTIONS.forEach((section, index) => {
-    const card = document.createElement("button");
-
-    card.type = "button";
-    card.className = "rb-tv-screen";
-    card.dataset.index = String(index);
-    card.dataset.section = section.key;
-
-    card.style.setProperty("--i", index);
-    card.style.setProperty("--total", SECTIONS.length);
-
-    card.innerHTML = `
-      <span class="rb-tv-glare"></span>
-      <span class="rb-tv-label">${section.label}</span>
-      <strong>${section.title}</strong>
-      <small>${section.meta}</small>
-    `;
-
-    card.addEventListener("click", () => {
-      setActiveSection(index);
-    });
-
-    orbit.appendChild(card);
-  });
-}
-
-function setActiveSection(index) {
-  activeIndex = index;
-  const active = SECTIONS[activeIndex];
-
-  $$(".rb-tv-screen").forEach((screen) => {
-    screen.classList.toggle(
-      "is-active",
-      Number(screen.dataset.index) === activeIndex
-    );
-  });
-
-  setText("#rb-active-title", active.title);
-  setText("#rb-active-meta", active.meta);
-  setText("#rb-active-label", active.label);
-
-  const launch = $("#rb-launch-section");
-  if (launch) {
-    launch.dataset.route = active.route;
+  if (els.avatar) {
+    els.avatar.src = authed
+      ? profileAvatar(profile)
+      : "/images/profile/default-avatar.png";
   }
 
-  document.body.dataset.activeSection = active.key;
+  if (els.name) {
+    els.name.textContent = authed
+      ? profileName(profile)
+      : "Guest Mode";
+  }
+
+  if (els.badge) {
+    els.badge.textContent = authed
+      ? profileBadge(profile)
+      : "SIGN IN";
+  }
+
+  if (els.authBtn) {
+    els.authBtn.textContent = authed
+      ? "PROFILE"
+      : "ENTER";
+  }
+}
+
+/* =========================
+   SECTION CONTROL
+========================= */
+
+function currentSection() {
+  return sections[activeIndex];
+}
+
+function syncSection() {
+  const section = currentSection();
+
+  setActiveSection(section);
+
+  document.body.dataset.activeSection = section;
 }
 
 function rotateNext() {
-  const next = (activeIndex + 1) % SECTIONS.length;
-  setActiveSection(next);
+  activeIndex++;
+
+  if (activeIndex >= sections.length) {
+    activeIndex = 0;
+  }
+
+  syncSection();
 }
 
-function bindControls() {
-  $("#rb-launch-section")?.addEventListener("click", (event) => {
-    const route = event.currentTarget.dataset.route || RB_ROUTES.feed;
+function rotatePrev() {
+  activeIndex--;
+
+  if (activeIndex < 0) {
+    activeIndex = sections.length - 1;
+  }
+
+  syncSection();
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+function bindActions() {
+  els.nextBtn?.addEventListener("click", rotateNext);
+
+  els.prevBtn?.addEventListener("click", rotatePrev);
+
+  els.launchBtn?.addEventListener("click", () => {
+    const route = SECTION_ROUTES[currentSection()] || "/";
     window.location.href = route;
   });
 
-  $("#rb-open-upload")?.addEventListener("click", () => {
-    window.location.href = RB_ROUTES.upload;
+  els.uploadBtn?.addEventListener("click", () => {
+    window.location.href = "/upload";
   });
 
-  $("#rb-open-profile")?.addEventListener("click", () => {
-    window.location.href = getUser() ? RB_ROUTES.profile : RB_ROUTES.auth;
+  els.authBtn?.addEventListener("click", () => {
+    const authed =
+      document.body.classList.contains("is-authed");
+
+    window.location.href = authed
+      ? "/profile"
+      : "/auth";
   });
 
-  $("#rb-open-auth")?.addEventListener("click", () => {
-    window.location.href = RB_ROUTES.auth;
-  });
+  els.profileBtn?.addEventListener("click", () => {
+    const authed =
+      document.body.classList.contains("is-authed");
 
-  $("#rb-rotate-prev")?.addEventListener("click", () => {
-    const prev =
-      activeIndex === 0
-        ? SECTIONS.length - 1
-        : activeIndex - 1;
-
-    setActiveSection(prev);
-  });
-
-  $("#rb-rotate-next")?.addEventListener("click", () => {
-    rotateNext();
+    window.location.href = authed
+      ? "/profile"
+      : "/auth";
   });
 }
 
-function bindBottomNav() {
-  $$("[data-rb-route]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const routeKey = button.dataset.rbRoute;
-      const route = RB_ROUTES[routeKey];
-
-      if (route) {
-        window.location.href = route;
-      }
-    });
-  });
-}
-
-function hydrateIdentity() {
-  const user = getUser();
-  const profile = getProfile();
-
-  const name = profileName(profile);
-  const avatar = profileAvatar(profile);
-  const badge = profileBadge(profile);
-
-  setText("#rb-home-name", user ? name : "Guest Mode");
-  setText("#rb-home-badge", user ? badge : "SIGN IN");
-
-  const avatarEl = $("#rb-home-avatar");
-  if (avatarEl) {
-    avatarEl.src = user ? avatar : "/images/profile/default-avatar.png";
-  }
-
-  const authBtn = $("#rb-open-auth");
-  if (authBtn) {
-    authBtn.textContent = user ? "Dashboard" : "Enter";
-  }
-}
-
-function startRotation() {
-  stopRotation();
-
-  rotateTimer = window.setInterval(() => {
-    rotateNext();
-  }, 4200);
-}
-
-function stopRotation() {
-  if (rotateTimer) {
-    window.clearInterval(rotateTimer);
-    rotateTimer = null;
-  }
-}
+/* =========================
+   INIT
+========================= */
 
 async function bootHome() {
-  await bootAuth();
+  const state = await initAuthState();
 
-  renderScreens();
-  bindControls();
-  bindBottomNav();
-  hydrateIdentity();
+  hydrateIdentity(state);
 
-  setActiveSection(0);
-  startRotation();
+  onAuthState((nextState) => {
+    hydrateIdentity(nextState);
+  });
+
+  bindActions();
+
+  syncSection();
 
   document.body.classList.add("rb-home-ready");
+
+  console.log("RB HOME READY");
 }
 
 bootHome();
-
-window.addEventListener("beforeunload", stopRotation);
