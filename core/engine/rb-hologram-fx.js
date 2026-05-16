@@ -3,14 +3,21 @@
    /core/engine/rb-hologram-fx.js
 
    HOLOGRAM FX ENGINE
+   FX only — no movement ownership
 ========================= */
 
 const stage = document.querySelector(".rb-portal-stage");
 const portal = document.querySelector(".rb-core-portal");
-const screens = [...document.querySelectorAll(".rb-tv-screen")];
+
+function getScreens() {
+  return [...document.querySelectorAll(".rb-tv-screen")];
+}
 
 function createFxLayer(className) {
   if (!stage) return null;
+
+  const existing = stage.querySelector(`.${className}`);
+  if (existing) return existing;
 
   const layer = document.createElement("div");
   layer.className = className;
@@ -20,9 +27,9 @@ function createFxLayer(className) {
   return layer;
 }
 
-const scanLayer = createFxLayer("rb-holo-scan-layer");
 const sparkLayer = createFxLayer("rb-holo-spark-layer");
-const fogLayer = createFxLayer("rb-holo-fog-layer");
+createFxLayer("rb-holo-scan-layer");
+createFxLayer("rb-holo-fog-layer");
 
 function spawnSpark() {
   if (!sparkLayer) return;
@@ -48,21 +55,21 @@ function spawnSpark() {
 }
 
 function pulseScreens() {
-  screens.forEach((screen, index) => {
-    const delay = index * 140;
-
+  getScreens().forEach((screen, index) => {
     setTimeout(() => {
       screen.classList.add("rb-holo-pulse");
 
       setTimeout(() => {
         screen.classList.remove("rb-holo-pulse");
       }, 600);
-    }, delay);
+    }, index * 140);
   });
 }
 
 function randomGlitch() {
+  const screens = getScreens();
   const screen = screens[Math.floor(Math.random() * screens.length)];
+
   if (!screen) return;
 
   screen.classList.add("rb-holo-glitch");
