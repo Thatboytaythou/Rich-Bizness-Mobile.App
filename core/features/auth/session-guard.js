@@ -1,13 +1,22 @@
-/* =========================
+ /* =========================
    RICH BIZNESS MOBILE
    /core/features/auth/session-guard.js
 
    SESSION + ROUTE GUARD
+   Synced With RB Router
 ========================= */
 
 import {
   RB_ROUTES
 } from "/core/shared/rb-config.js";
+
+import {
+  isProtectedRoute,
+  isCreatorRoute,
+  isSellerRoute,
+  isArtistRoute,
+  getCurrentPath
+} from "/core/shared/rb-router.js";
 
 import {
   initAuthState,
@@ -16,7 +25,7 @@ import {
 } from "/core/features/auth/auth-state.js";
 
 /* =========================
-   BASIC GUARDS
+   BASIC SESSION GUARDS
 ========================= */
 
 export async function requireSession({
@@ -62,7 +71,7 @@ export async function requireCreator({
 
   const flags = getAuthFlags();
 
-  if (!flags.isCreator) {
+  if (!flags.isCreator && !flags.isAdmin) {
     window.location.href = redirectTo;
     return null;
   }
@@ -79,7 +88,7 @@ export async function requireArtist({
 
   const flags = getAuthFlags();
 
-  if (!flags.isArtist) {
+  if (!flags.isArtist && !flags.isAdmin) {
     window.location.href = redirectTo;
     return null;
   }
@@ -96,7 +105,7 @@ export async function requireSeller({
 
   const flags = getAuthFlags();
 
-  if (!flags.isSeller) {
+  if (!flags.isSeller && !flags.isAdmin) {
     window.location.href = redirectTo;
     return null;
   }
@@ -122,30 +131,47 @@ export async function requireAdmin({
 }
 
 /* =========================
-   PAGE GUARD MAP
+   AUTO PAGE GUARD
 ========================= */
 
-export const RB_PROTECTED_ROUTES = new Set([
-  "/profile",
-  "/profile.html",
-  "/edit",
-  "/edit.html",
-  "/upload",
-  "/upload.html",
-  "/messages",
-  "/messages.html",
-  "/notifications",
-  "/notifications.html",
-  "/settings",
-  "/settings.html"
-]);
+export async function autoGuardCurrentPage() {
+  const path = getCurrentPath();
 
-export function currentPathIsProtected() {
-  return RB_PROTECTED_ROUTES.has(window.location.pathname);
+  if (isProtectedRoute(path)) {
+    return await requireSession();
+  }
+
+  if (isCreatorRoute(path)) {
+    return await requireCreator();
+  }
+
+  if (isSellerRoute(path)) {
+    return await requireSeller();
+  }
+
+  if (isArtistRoute(path)) {
+    return await requireArtist();
+  }
+
+  return await initAuthState();
 }
 
-export async function autoGuardCurrentPage() {
-  if (!currentPathIsProtected()) return null;
+/* =========================
+   PAGE STATE HELPERS
+========================= */
 
-  return await requireSession();
+export function currentPathIsProtected() {
+  return isProtectedRoute();
+}
+
+export function currentPathNeedsCreator() {
+  return isCreatorRoute();
+}
+
+export function currentPathNeedsSeller() {
+  return isSellerRoute();
+}
+
+export function currentPathNeedsArtist() {
+  return isArtistRoute();
 }
