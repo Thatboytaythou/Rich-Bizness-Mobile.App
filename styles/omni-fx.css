@@ -386,3 +386,67 @@
   75%{ transform:translateX(2px) skewX(1deg); }
   100%{ transform:translateX(0) skewX(0deg); }
 }
+
+/* =========================
+   CINEMATIC IDLE WORLD
+========================= */
+
+.rb-portal-stage{
+  transform:
+    translate3d(
+      var(--rb-idle-x, 0),
+      var(--rb-idle-y, 0),
+      0
+    )
+    scale(var(--rb-idle-scale, 1));
+}
+
+.rb-core-portal{
+  translate:
+    var(--rb-portal-idle-x, 0)
+    var(--rb-portal-idle-y, 0);
+}
+
+.rb-tv-orbit{
+  translate:
+    var(--rb-orbit-idle-x, 0)
+    var(--rb-orbit-idle-y, 0);
+}
+
+.rb-tv-screen{
+  margin-top:var(--rb-screen-float, 0);
+}
+
+/* Mood lighting */
+
+.rb-mood-live .rb-bg{
+  filter:saturate(1.25) hue-rotate(0deg);
+}
+
+.rb-mood-music .rb-bg{
+  filter:saturate(1.35) hue-rotate(18deg);
+}
+
+.rb-mood-gaming .rb-bg{
+  filter:saturate(1.45) hue-rotate(-18deg);
+}
+
+.rb-mood-sports .rb-bg{
+  filter:saturate(1.3) hue-rotate(32deg);
+}
+
+.rb-mood-gallery .rb-bg{
+  filter:saturate(1.22) hue-rotate(55deg);
+}
+
+.rb-mood-store .rb-bg{
+  filter:saturate(1.2) brightness(1.08);
+}
+
+.rb-mood-meta .rb-bg{
+  filter:saturate(1.55) hue-rotate(86deg);
+}
+
+.rb-mood-feed .rb-bg{
+  filter:saturate(1.18) hue-rotate(-36deg);
+}
