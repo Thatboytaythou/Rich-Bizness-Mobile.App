@@ -3,6 +3,7 @@
    /core/pages/auth.js
 
    AUTH PAGE CONTROLLER
+   Redirect Finalized
 ========================= */
 
 import {
@@ -13,13 +14,26 @@ import {
   blockSession
 } from "/core/features/auth/session-guard.js";
 
-/* =========================
-   BOOT
-========================= */
+function getRedirectTarget() {
+  const params = new URLSearchParams(window.location.search);
+
+  const next =
+    params.get("next") ||
+    params.get("redirect") ||
+    "/";
+
+  if (next.startsWith("http")) {
+    return "/";
+  }
+
+  return next;
+}
 
 async function bootAuthPage() {
+  const redirectTo = getRedirectTarget();
+
   await blockSession({
-    redirectTo: "/"
+    redirectTo
   });
 
   await initAuthUI();
