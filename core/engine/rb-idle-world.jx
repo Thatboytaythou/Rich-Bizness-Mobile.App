@@ -1,0 +1,69 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/engine/rb-idle-world.js
+
+   CINEMATIC IDLE WORLD ENGINE
+========================= */
+
+const body = document.body;
+const stage = document.querySelector(".rb-portal-stage");
+const portal = document.querySelector(".rb-core-portal");
+const orbit = document.querySelector("#rb-tv-orbit");
+const screens = [...document.querySelectorAll(".rb-tv-screen")];
+
+let time = 0;
+
+function setWorldMood() {
+  const activeSection = body.dataset.activeSection || "live";
+
+  body.classList.remove(
+    "rb-mood-live",
+    "rb-mood-music",
+    "rb-mood-gaming",
+    "rb-mood-sports",
+    "rb-mood-gallery",
+    "rb-mood-store",
+    "rb-mood-meta",
+    "rb-mood-feed"
+  );
+
+  body.classList.add(`rb-mood-${activeSection}`);
+}
+
+function idleLoop() {
+  time += 0.01;
+
+  const waveX = Math.sin(time) * 8;
+  const waveY = Math.cos(time * 0.72) * 6;
+  const pulse = 1 + Math.sin(time * 1.4) * 0.012;
+
+  if (stage) {
+    stage.style.setProperty("--rb-idle-x", `${waveX}px`);
+    stage.style.setProperty("--rb-idle-y", `${waveY}px`);
+    stage.style.setProperty("--rb-idle-scale", pulse);
+  }
+
+  if (portal) {
+    portal.style.setProperty("--rb-portal-idle-x", `${waveX * -0.55}px`);
+    portal.style.setProperty("--rb-portal-idle-y", `${waveY * -0.55}px`);
+  }
+
+  if (orbit) {
+    orbit.style.setProperty("--rb-orbit-idle-x", `${waveX * 0.35}px`);
+    orbit.style.setProperty("--rb-orbit-idle-y", `${waveY * 0.35}px`);
+  }
+
+  screens.forEach((screen, index) => {
+    const float = Math.sin(time * 1.5 + index) * 4;
+    screen.style.setProperty("--rb-screen-float", `${float}px`);
+  });
+
+  setWorldMood();
+  requestAnimationFrame(idleLoop);
+}
+
+idleLoop();
+
+document.body.classList.add("rb-idle-world-loaded");
+
+console.log("RB CINEMATIC IDLE WORLD READY");
