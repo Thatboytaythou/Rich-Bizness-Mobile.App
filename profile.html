@@ -1,1 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Rich Bizness — Profile</title>
+
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-home rb-profile-page">
+  <div class="rb-bg"></div>
+  <div class="rb-vignette"></div>
+  <div class="rb-grid"></div>
+
+  <main class="rb-profile-shell">
+    <header class="rb-profile-top">
+      <a href="/" class="rb-auth-home">← Portal</a>
+      <a href="/settings" class="rb-auth-home">Settings</a>
+    </header>
+
+    <section
+      id="profile-banner"
+      class="rb-profile-banner"
+    >
+      <div class="rb-profile-avatar-wrap">
+        <img
+          id="profile-avatar"
+          src="/images/profile/default-avatar.png"
+          alt="Profile avatar"
+        />
+      </div>
+    </section>
+
+    <section class="rb-profile-card">
+      <p id="profile-badge" class="rb-kicker">
+        MEMBER
+      </p>
+
+      <h1 id="profile-name">
+        Rich User
+      </h1>
+
+      <p id="profile-handle" class="rb-profile-handle">
+        @richuser
+      </p>
+
+      <p id="profile-bio" class="rb-profile-bio">
+        Loading profile...
+      </p>
+
+      <button
+        id="profile-edit-btn"
+        class="rb-main-launch"
+        type="button"
+      >
+        EDIT PROFILE
+      </button>
+    </section>
+
+    <section class="rb-profile-grid">
+      <article>
+        <strong>Identity</strong>
+        <span>Avatar • Profile • Creator status</span>
+      </article>
+
+      <article>
+        <strong>Universe</strong>
+        <span>Live • Music • Gaming • Meta</span>
+      </article>
+
+      <article>
+        <strong>Economy</strong>
+        <span>Store • Wallet • Unlocks</span>
+      </article>
+    </section>
+  </main>
+
+  <script
+    type="module"
+    src="/core/pages/profile.js"
+  ></script>
+</body>
+</html>
