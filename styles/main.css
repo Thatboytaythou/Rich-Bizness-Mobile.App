@@ -384,9 +384,18 @@ body{
   color:var(--rb-muted);
 }
 
-.rb-bottom-nav button:first-child{
+.rb-bottom-nav button.active{
   color:var(--rb-green);
-  background:linear-gradient(135deg, rgba(0,255,136,.25), rgba(255,215,106,.1));
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,255,136,.25),
+      rgba(255,215,106,.1)
+    );
+  border-color:rgba(102,255,102,.38);
+  box-shadow:
+    0 0 22px rgba(0,255,136,.22),
+    inset 0 0 14px rgba(255,215,106,.08);
 }
 
 /* =========================
