@@ -3,7 +3,7 @@
    /core/pages/index.js
 
    HOME BRAIN ONLY
-   Creates TV cards + routes + identity
+   Uses rb-section-state as section source
 ========================= */
 
 import {
@@ -18,79 +18,18 @@ import {
 } from "/core/shared/rb-profile.js";
 
 import {
+  getSections,
   setActiveSection
 } from "/core/shared/rb-section-state.js";
 
 const $ = (id) => document.getElementById(id);
 
-/* =========================
-   SECTION SOURCE
-========================= */
+const SECTIONS = getSections();
 
-const SECTIONS = [
-  {
-    key: "feed",
-    label: "FEED",
-    title: "Global Feed",
-    meta: "Posts • Drops • Community",
-    route: "/feed"
-  },
-  {
-    key: "live",
-    label: "LIVE",
-    title: "Go Live",
-    meta: "Broadcast • VIP • Realtime",
-    route: "/live"
-  },
-  {
-    key: "music",
-    label: "MUSIC",
-    title: "Music Universe",
-    meta: "Tracks • Podcast • Radio",
-    route: "/music"
-  },
-  {
-    key: "gaming",
-    label: "GAMES",
-    title: "Arcade District",
-    meta: "Chess • Runner • Scores",
-    route: "/gaming"
-  },
-  {
-    key: "sports",
-    label: "SPORTS",
-    title: "Sports Arena",
-    meta: "Picks • Clips • Broadcasts",
-    route: "/sports"
-  },
-  {
-    key: "gallery",
-    label: "ART",
-    title: "Gallery Vault",
-    meta: "Artwork • Collect • Showcase",
-    route: "/gallery"
-  },
-  {
-    key: "store",
-    label: "STORE",
-    title: "Creator Market",
-    meta: "Products • Unlocks • Sellers",
-    route: "/store"
-  },
-  {
-    key: "meta",
-    label: "META",
-    title: "Meta World",
-    meta: "Avatars • Worlds • Portals",
-    route: "/meta"
-  }
-];
-
-let activeIndex = 1;
-
-/* =========================
-   ELEMENTS
-========================= */
+let activeIndex = Math.max(
+  0,
+  SECTIONS.findIndex((section) => section.key === "live")
+);
 
 const els = {
   orbit: $("rb-tv-orbit"),
@@ -155,34 +94,27 @@ function getActiveSection() {
 
 function syncActiveSection() {
   const section = getActiveSection();
+  const syncedSection = setActiveSection(section.key);
 
-  setActiveSection(section.key);
+  document.body.dataset.activeSection = syncedSection.key;
 
-  document.body.dataset.activeSection = section.key;
-
-  if (els.label) els.label.textContent = section.label;
-  if (els.title) els.title.textContent = section.title;
-  if (els.meta) els.meta.textContent = section.meta;
+  if (els.label) els.label.textContent = syncedSection.label;
+  if (els.title) els.title.textContent = syncedSection.title;
+  if (els.meta) els.meta.textContent = syncedSection.meta;
 
   document.querySelectorAll("[data-rb-route]").forEach((button) => {
     button.classList.toggle(
       "active",
-      button.dataset.rbRoute === section.key
+      button.dataset.rbRoute === syncedSection.key
     );
   });
 
   document.querySelectorAll(".rb-tv-screen").forEach((card) => {
     card.classList.toggle(
       "is-active",
-      card.dataset.rbSection === section.key
+      card.dataset.rbSection === syncedSection.key
     );
   });
-
-  window.dispatchEvent(
-    new CustomEvent("rb:section-change", {
-      detail: section
-    })
-  );
 }
 
 function rotateNext() {
@@ -229,9 +161,7 @@ function hydrateIdentity(state) {
   }
 
   if (els.authBtn) {
-    els.authBtn.textContent = authed
-      ? "Profile"
-      : "Enter";
+    els.authBtn.textContent = authed ? "Profile" : "Enter";
   }
 }
 
