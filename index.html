@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
   <title>Rich Bizness — Reality Changers</title>
 
@@ -13,69 +16,211 @@
 </head>
 
 <body class="rb-home">
+  <!-- =========================
+       BACKGROUND FX
+  ========================== -->
   <div class="rb-bg"></div>
   <div class="rb-vignette"></div>
   <div class="rb-grid"></div>
 
+  <!-- =========================
+       HOME SHELL
+  ========================== -->
   <main class="rb-home-shell">
+
+    <!-- =========================
+         TOP HERO
+    ========================== -->
     <header class="rb-home-top">
       <div>
-        <p class="rb-kicker">RICH BIZNESS MOBILE</p>
-        <h1>Reality Changers</h1>
+        <p class="rb-kicker">
+          RICH BIZNESS MOBILE
+        </p>
+
+        <h1>
+          Reality Changers
+        </h1>
       </div>
 
-      <button id="rb-open-profile" class="rb-profile-pill" type="button">
-        <img id="rb-home-avatar" src="/images/profile/default-avatar.png" alt="Profile" />
+      <button
+        id="rb-open-profile"
+        class="rb-profile-pill"
+        type="button"
+      >
+        <img
+          id="rb-home-avatar"
+          src="/images/profile/default-avatar.png"
+          alt="Profile"
+        />
+
         <span>
-          <strong id="rb-home-name">Guest Mode</strong>
-          <small id="rb-home-badge">SIGN IN</small>
+          <strong id="rb-home-name">
+            Guest Mode
+          </strong>
+
+          <small id="rb-home-badge">
+            SIGN IN
+          </small>
         </span>
       </button>
     </header>
 
+    <!-- =========================
+         PORTAL STAGE
+    ========================== -->
     <section class="rb-portal-stage">
-      <div class="rb-tv-orbit" id="rb-tv-orbit"></div>
 
+      <!-- TV ORBIT -->
+      <div
+        class="rb-tv-orbit"
+        id="rb-tv-orbit"
+      ></div>
+
+      <!-- CORE -->
       <div class="rb-core-portal">
+
+        <!-- RINGS -->
         <div class="rb-portal-ring"></div>
+        <div class="rb-portal-ring-two"></div>
+
+        <!-- LIGHT -->
         <div class="rb-portal-light"></div>
 
+        <!-- CONTENT -->
         <div class="rb-portal-copy">
-          <span id="rb-active-label">LIVE</span>
-          <h2 id="rb-active-title">Go Live</h2>
-          <p id="rb-active-meta">Broadcast • VIP • Realtime</p>
+          <span id="rb-active-label">
+            LIVE
+          </span>
+
+          <h2 id="rb-active-title">
+            Go Live
+          </h2>
+
+          <p id="rb-active-meta">
+            Broadcast • VIP • Realtime
+          </p>
         </div>
       </div>
     </section>
 
+    <!-- =========================
+         MAIN ACTIONS
+    ========================== -->
     <section class="rb-home-actions">
-      <button id="rb-rotate-prev" class="rb-icon-btn" type="button">‹</button>
 
-      <button id="rb-launch-section" class="rb-main-launch" type="button">
+      <button
+        id="rb-rotate-prev"
+        class="rb-icon-btn"
+        type="button"
+      >
+        ‹
+      </button>
+
+      <button
+        id="rb-launch-section"
+        class="rb-main-launch"
+        type="button"
+      >
         ENTER SECTION
       </button>
 
-      <button id="rb-rotate-next" class="rb-icon-btn" type="button">›</button>
+      <button
+        id="rb-rotate-next"
+        class="rb-icon-btn"
+        type="button"
+      >
+        ›
+      </button>
+
     </section>
 
+    <!-- =========================
+         QUICK ACTIONS
+    ========================== -->
     <section class="rb-quick-actions">
-      <button id="rb-open-upload" type="button">Upload</button>
-      <button id="rb-open-auth" type="button">Enter</button>
+
+      <button
+        id="rb-open-upload"
+        type="button"
+      >
+        Upload
+      </button>
+
+      <button
+        id="rb-open-auth"
+        type="button"
+      >
+        Enter
+      </button>
+
     </section>
   </main>
 
+  <!-- =========================
+       BOTTOM NAV
+  ========================== -->
   <nav class="rb-bottom-nav">
-    <button data-rb-route="feed" type="button">Feed</button>
-    <button data-rb-route="live" type="button">Live</button>
-    <button data-rb-route="music" type="button">Music</button>
-    <button data-rb-route="gaming" type="button">Games</button>
-    <button data-rb-route="meta" type="button">Meta</button>
+
+    <button
+      data-rb-route="feed"
+      type="button"
+    >
+      Feed
+    </button>
+
+    <button
+      data-rb-route="live"
+      type="button"
+    >
+      Live
+    </button>
+
+    <button
+      data-rb-route="music"
+      type="button"
+    >
+      Music
+    </button>
+
+    <button
+      data-rb-route="gaming"
+      type="button"
+    >
+      Games
+    </button>
+
+    <button
+      data-rb-route="meta"
+      type="button"
+    >
+      Meta
+    </button>
+
   </nav>
 
-  <script type="module" src="/core/pages/index.js"></script>
-  <script type="module" src="/core/engine/rb-tv-orbit.js"></script>
-  <script type="module" src="/core/engine/rb-camera-parallax.js"></script>
-  <script type="module" src="/core/engine/rb-hologram-fx.js"></script>
-  <script type="module" src="/core/engine/rb-idle-world.js"></script>
+  <!-- =========================
+       CORE PAGE
+  ========================== -->
+  <script
+    type="module"
+    src="/core/pages/index.js"
+  ></script>
+
+  <!-- =========================
+       CINEMATIC MOTION ENGINE
+  ========================== -->
+  <script
+    type="module"
+    src="/core/engine/rb-motion-sync.js"
+  ></script>
+
+  <!-- =========================
+       HOLOGRAM FX
+  ========================== -->
+  <script
+    type="module"
+    src="/core/engine/rb-hologram-fx.js"
+  ></script>
+
 </body>
 </html>
