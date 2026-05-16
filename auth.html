@@ -1,1 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Rich Bizness — Enter</title>
+
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-home rb-auth-page" data-auth-mode="signin">
+  <div class="rb-bg"></div>
+  <div class="rb-vignette"></div>
+  <div class="rb-grid"></div>
+
+  <main class="rb-auth-shell">
+    <section class="rb-auth-hero">
+      <p class="rb-kicker">RICH BIZNESS IDENTITY</p>
+      <h1>Enter The Universe</h1>
+      <p>
+        One identity for Live, Music, Gaming, Sports, Store, Meta, Messages, and Creator payouts.
+      </p>
+    </section>
+
+    <section class="rb-auth-panel is-signin">
+      <div class="rb-auth-tabs">
+        <button type="button" data-auth-mode="signin">Sign In</button>
+        <button type="button" data-auth-mode="signup">Create</button>
+      </div>
+
+      <form id="rb-signin-form" class="rb-auth-form">
+        <h2>Welcome Back</h2>
+
+        <label>
+          Email
+          <input
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@richbizness.com"
+            required
+          />
+        </label>
+
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          />
+        </label>
+
+        <button class="rb-main-launch" type="submit">
+          ENTER
+        </button>
+      </form>
+
+      <form id="rb-signup-form" class="rb-auth-form">
+        <h2>Create Identity</h2>
+
+        <label>
+          Display Name
+          <input
+            name="display_name"
+            type="text"
+            autocomplete="name"
+            placeholder="ThatboyTayThou"
+          />
+        </label>
+
+        <label>
+          Username
+          <input
+            name="username"
+            type="text"
+            autocomplete="username"
+            placeholder="thatboytaythou"
+          />
+        </label>
+
+        <label>
+          Email
+          <input
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@richbizness.com"
+            required
+          />
+        </label>
+
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Create password"
+            required
+          />
+        </label>
+
+        <button class="rb-main-launch" type="submit">
+          CREATE ID
+        </button>
+      </form>
+    </section>
+
+    <a class="rb-auth-home" href="/">
+      ← Back to Portal
+    </a>
+  </main>
+
+  <script type="module" src="/core/pages/auth.js"></script>
+</body>
+</html>
