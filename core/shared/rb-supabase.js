@@ -3,7 +3,7 @@
    /core/shared/rb-supabase.js
 
    GLOBAL SUPABASE ENGINE
-   Session Persistence Locked
+   Session + Profile Auto-Creation Locked
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -62,6 +62,10 @@ export function isAuthed() {
   return !!currentUser;
 }
 
+/* =========================
+   AUTH BOOT
+========================= */
+
 export async function bootAuth() {
   if (authBooted) {
     return currentUser;
@@ -82,7 +86,7 @@ export async function bootAuth() {
   currentUser = session?.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    await ensureProfile(currentUser);
   }
 
   authBooted = true;
@@ -105,11 +109,15 @@ export async function refreshSession() {
   currentUser = session?.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    await ensureProfile(currentUser);
   }
 
   return currentSession;
 }
+
+/* =========================
+   PROFILE
+========================= */
 
 export async function loadProfile(userId) {
   if (!userId) return null;
@@ -130,6 +138,66 @@ export async function loadProfile(userId) {
   return currentProfile;
 }
 
+export async function ensureProfile(user = currentUser) {
+  if (!user?.id) return null;
+
+  const existingProfile = await loadProfile(user.id);
+
+  if (existingProfile) {
+    return existingProfile;
+  }
+
+  const fallbackName =
+    user.user_metadata?.display_name ||
+    user.user_metadata?.full_name ||
+    user.user_metadata?.username ||
+    user.email?.split("@")[0] ||
+    "Rich User";
+
+  const fallbackUsername =
+    (
+      user.user_metadata?.username ||
+      user.email?.split("@")[0] ||
+      `user_${user.id.slice(0, 8)}`
+    )
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "");
+
+  const profilePayload = {
+    id: user.id,
+    username: fallbackUsername,
+    display_name: fallbackName,
+    full_name: fallbackName,
+    avatar_url: "/images/profile/default-avatar.png",
+    banner_url: "/images/profile/default-banner.png",
+    role: "user",
+    is_creator: false,
+    is_artist: false,
+    is_seller: false,
+    is_verified: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .insert(profilePayload)
+    .select()
+    .single();
+
+  if (error) {
+    console.warn("[RB PROFILE CREATE WARNING]", error.message);
+    return await loadProfile(user.id);
+  }
+
+  currentProfile = data;
+  return currentProfile;
+}
+
+/* =========================
+   AUTH ACTIONS
+========================= */
+
 export async function signUp({
   email,
   password,
@@ -145,6 +213,15 @@ export async function signUp({
   });
 
   if (error) throw error;
+
+  currentSession = data.session || null;
+  currentUser = data.user || null;
+
+  if (currentUser?.id) {
+    await ensureProfile(currentUser);
+  }
+
+  authBooted = true;
 
   return data;
 }
@@ -165,7 +242,7 @@ export async function signIn({
   currentUser = data.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    await ensureProfile(currentUser);
   }
 
   authBooted = true;
@@ -182,18 +259,26 @@ export async function signOut() {
   authBooted = false;
 }
 
+/* =========================
+   AUTH LISTENER
+========================= */
+
 supabase.auth.onAuthStateChange(async (_event, session) => {
   currentSession = session || null;
   currentUser = session?.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    await ensureProfile(currentUser);
   } else {
     currentProfile = null;
   }
 
   authBooted = true;
 });
+
+/* =========================
+   STORAGE
+========================= */
 
 export function getPublicFileUrl(bucket, path) {
   if (!bucket || !path) return null;
@@ -235,9 +320,17 @@ export async function deleteFile({
   return data;
 }
 
+/* =========================
+   REALTIME
+========================= */
+
 export function createRealtimeChannel(channelName, config = {}) {
   return supabase.channel(channelName, config);
 }
+
+/* =========================
+   DATABASE HELPERS
+========================= */
 
 export async function rbSelect({
   table,
@@ -317,4 +410,4 @@ export async function rbDelete({
 
 await bootAuth();
 
-console.log("RB SUPABASE SESSION LOCK READY");
+console.log("RB SUPABASE SESSION + PROFILE LOCK READY");
