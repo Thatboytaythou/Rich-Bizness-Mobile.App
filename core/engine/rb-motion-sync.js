@@ -70,8 +70,8 @@ function animate() {
 
     const isMobile = window.innerWidth <= 720;
 
-    const radiusX = isMobile ? 178 : 255;
-    const radiusY = isMobile ? 74 : 108;
+    const radiusX = isMobile ? 138 : 230;
+    const radiusY = isMobile ? 58 : 96;
 
     const x = Math.cos(radians) * radiusX;
     const y = Math.sin(radians) * radiusY;
@@ -82,9 +82,9 @@ function animate() {
     const backAmount = Math.max(0, -depth);
 
     const scale =
-      0.58 +
-      frontAmount * 0.32 -
-      backAmount * 0.08;
+      0.72 +
+      frontAmount * 0.22 -
+      backAmount * 0.04;
 
     const opacity =
       0.08 +
