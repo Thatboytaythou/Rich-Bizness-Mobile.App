@@ -5,6 +5,7 @@
    AUTH SYSTEM
    Synced To rb-supabase.js
    Profile Upsert Locked
+   No Import-Time Auth Boot
 ========================= */
 
 import {
@@ -232,6 +233,8 @@ window.addEventListener("focus", async () => {
   }
 });
 
-document.body.classList.add("rb-auth-loaded");
+if (document.body) {
+  document.body.classList.add("rb-auth-loaded");
+}
 
 console.log("RB AUTH READY");
