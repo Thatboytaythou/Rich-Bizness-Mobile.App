@@ -1,9 +1,5 @@
 /* =========================
-   RICH BIZNESS MOBILE
    /core/pages/auth.js
-
-   AUTH PAGE CONTROLLER
-   Confirmation + Redirect Locked
 ========================= */
 
 import {
@@ -20,43 +16,24 @@ function getRedirectTarget() {
   const next =
     params.get("next") ||
     params.get("redirect") ||
-    "/";
+    "/profile";
 
-  if (!next || next.startsWith("http")) {
-    return "/";
+  if (next.startsWith("http")) {
+    return "/profile";
   }
 
   return next;
 }
 
-function isAuthCallback() {
-  const params = new URLSearchParams(window.location.search);
-
-  return (
-    params.has("code") ||
-    params.has("token_hash") ||
-    params.has("access_token") ||
-    params.has("refresh_token") ||
-    params.has("type")
-  );
-}
-
 async function bootAuthPage() {
   const redirectTo = getRedirectTarget();
 
+  /* TEMP DISABLE SESSION BLOCK */
+  // await blockSession({
+  //   redirectTo
+  // });
+
   await initAuthUI();
-
-  if (!isAuthCallback()) {
-    await blockSession({
-      redirectTo
-    });
-  }
-
-  if (isAuthCallback()) {
-    window.setTimeout(() => {
-      window.location.href = redirectTo;
-    }, 900);
-  }
 
   document.body.classList.add("rb-auth-ready");
 
