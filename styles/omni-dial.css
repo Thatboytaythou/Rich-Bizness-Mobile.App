@@ -57,7 +57,6 @@
   content:"";
   position:absolute;
   inset:0;
-
   background:
     linear-gradient(
       120deg,
@@ -65,7 +64,6 @@
       rgba(255,255,255,.18) 45%,
       transparent 60%
     );
-
   transform:translateX(-120%);
   animation:rbTvScan 5s ease-in-out infinite;
   pointer-events:none;
@@ -76,7 +74,6 @@
   position:absolute;
   inset:0;
   pointer-events:none;
-
   background:
     repeating-linear-gradient(
       0deg,
@@ -85,19 +82,16 @@
       transparent 1px,
       transparent 5px
     );
-
   opacity:.35;
   mix-blend-mode:screen;
 }
 
 .rb-tv-screen.is-active{
   border-color:rgba(102,255,102,.9);
-
   box-shadow:
     0 0 38px rgba(0,255,136,.6),
     0 0 44px rgba(255,215,106,.24),
     inset 0 0 36px rgba(102,255,102,.12);
-
   filter:saturate(1.35) contrast(1.08);
 }
 
@@ -108,7 +102,7 @@
 .rb-tv-screen[data-rb-section="live"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.16), rgba(0,0,0,.82)),
-    url("/images/live/live-bg.jpg");
+    url("/images/brand/omni-watch.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -116,7 +110,7 @@
 .rb-tv-screen[data-rb-section="music"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.14), rgba(0,0,0,.82)),
-    url("/images/music/music-bg.jpg");
+    url("/images/brand/music-log.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -124,7 +118,7 @@
 .rb-tv-screen[data-rb-section="gaming"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.14), rgba(0,0,0,.82)),
-    url("/images/gaming/gaming-bg.jpg");
+    url("/images/brand/gaming-hero.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -132,7 +126,7 @@
 .rb-tv-screen[data-rb-section="sports"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.14), rgba(0,0,0,.82)),
-    url("/images/sports/sports-bg.jpg");
+    url("/images/brand/sports-logo.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -140,7 +134,7 @@
 .rb-tv-screen[data-rb-section="gallery"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.14), rgba(0,0,0,.82)),
-    url("/images/gallery/gallery-bg.jpg");
+    url("/images/brand/hero-logo.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -148,7 +142,7 @@
 .rb-tv-screen[data-rb-section="store"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.14), rgba(0,0,0,.82)),
-    url("/images/store/store-bg.jpg");
+    url("/images/brand/project-avatar.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -156,7 +150,7 @@
 .rb-tv-screen[data-rb-section="meta"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.14), rgba(0,0,0,.82)),
-    url("/images/meta/meta-bg.jpg");
+    url("/images/brand/meta-avatar.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -164,7 +158,7 @@
 .rb-tv-screen[data-rb-section="feed"]{
   background:
     linear-gradient(135deg, rgba(0,255,136,.14), rgba(0,0,0,.82)),
-    url("/images/backgrounds/feed-bg.jpg");
+    url("/images/brand/background-v2.png.jpeg");
   background-size:cover;
   background-position:center;
 }
@@ -176,11 +170,9 @@
 .rb-tv-glare{
   position:absolute;
   inset:0;
-
   background:
     radial-gradient(circle at 20% 10%, rgba(255,255,255,.22), transparent 24%),
     linear-gradient(135deg, rgba(255,255,255,.1), transparent 42%);
-
   pointer-events:none;
 }
 
@@ -188,13 +180,10 @@
   position:relative;
   z-index:2;
   display:inline-flex;
-
   padding:4px 8px;
   border-radius:999px;
-
   color:#001806;
   background:linear-gradient(135deg, var(--rb-green), var(--rb-gold));
-
   font-size:.62rem;
   font-weight:1000;
   letter-spacing:.08em;
@@ -204,13 +193,10 @@
   position:relative;
   z-index:2;
   display:block;
-
   margin-top:14px;
-
   font-size:1rem;
   line-height:1.05;
   color:var(--rb-white);
-
   text-shadow:0 2px 12px rgba(0,0,0,.7);
 }
 
@@ -218,9 +204,7 @@
   position:relative;
   z-index:2;
   display:block;
-
   margin-top:6px;
-
   color:rgba(247,255,247,.72);
   font-size:.68rem;
 }
@@ -234,19 +218,14 @@
   position:absolute;
   left:50%;
   top:50%;
-
-  width:620px;
-  height:620px;
-
+  width:min(620px, 86vw);
+  height:min(620px, 86vw);
   transform:translate(-50%,-50%);
-
   border-radius:50%;
   border:1px solid rgba(255,215,106,.14);
-
   box-shadow:
     0 0 55px rgba(0,255,136,.1),
     inset 0 0 70px rgba(255,215,106,.07);
-
   animation:rbOrbitSpin 28s linear infinite;
 }
 
@@ -255,15 +234,11 @@
   position:absolute;
   left:50%;
   top:50%;
-
-  width:525px;
-  height:525px;
-
+  width:min(525px, 74vw);
+  height:min(525px, 74vw);
   transform:translate(-50%,-50%);
-
   border-radius:50%;
   border:1px dashed rgba(102,255,102,.2);
-
   animation:rbOrbitSpinReverse 18s linear infinite;
 }
 
@@ -288,13 +263,13 @@
   }
 
   .rb-portal-stage .rb-tv-orbit::before{
-    width:500px;
-    height:500px;
+    width:330px;
+    height:330px;
   }
 
   .rb-portal-stage .rb-tv-orbit::after{
-    width:420px;
-    height:420px;
+    width:270px;
+    height:270px;
   }
 }
 
@@ -306,6 +281,16 @@
 
   .rb-tv-label{
     font-size:.54rem;
+  }
+
+  .rb-portal-stage .rb-tv-orbit::before{
+    width:300px;
+    height:300px;
+  }
+
+  .rb-portal-stage .rb-tv-orbit::after{
+    width:245px;
+    height:245px;
   }
 }
 
