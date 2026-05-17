@@ -44,7 +44,7 @@ function syncTargetRotation() {
 
   const step = 360 / screens.length;
 
-  targetRotation = 90 - activeIndex * step;
+  targetRotation = -activeIndex * step;
 }
 
 window.addEventListener("mousemove", (event) => {
