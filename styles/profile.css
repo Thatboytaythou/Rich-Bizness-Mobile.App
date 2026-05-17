@@ -1,106 +1,269 @@
 /* =========================
    RICH BIZNESS MOBILE
    /styles/profile.css
-   Profile Foundation
+
+   PROFILE IDENTITY SYSTEM
+   Mobile Safari Locked
 ========================= */
 
 .rb-profile-shell{
-  min-height:100vh;
+  position:relative;
+  z-index:2;
   width:min(100%, 980px);
+  min-height:100svh;
   margin:0 auto;
-  padding:18px 14px 110px;
+  padding:28px 16px calc(34px + env(safe-area-inset-bottom));
   display:grid;
+  align-content:start;
   gap:18px;
 }
 
+/* =========================
+   TOP ACTIONS
+========================= */
+
 .rb-profile-top{
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+
+  padding:12px;
+  border:1px solid rgba(255,215,106,.22);
+  border-radius:24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(8,18,10,.78),
+      rgba(0,0,0,.72)
+    );
+
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+
+  box-shadow:
+    0 0 34px rgba(0,255,136,.12),
+    inset 0 0 34px rgba(255,215,106,.04);
 }
+
+.rb-profile-signout{
+  border:1px solid rgba(102,255,102,.28);
+  background:rgba(0,0,0,.42);
+  padding:10px 14px;
+  border-radius:999px;
+  font:inherit;
+  cursor:pointer;
+}
+
+/* =========================
+   BANNER
+========================= */
 
 .rb-profile-banner{
   position:relative;
-  min-height:260px;
-  border-radius:30px;
+  min-height:300px;
+  border-radius:34px;
   border:1px solid rgba(255,215,106,.28);
+  overflow:hidden;
+
   background:
-    radial-gradient(circle at 50% 20%, rgba(0,255,136,.22), transparent 35%),
-    linear-gradient(135deg, rgba(5,18,8,.9), rgba(0,0,0,.86));
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.18),
+      rgba(0,0,0,.78)
+    ),
+    url("/images/profile/default-banner.png");
+
   background-size:cover;
   background-position:center;
+
   box-shadow:
-    0 0 46px rgba(0,255,136,.18),
-    inset 0 0 60px rgba(255,215,106,.08);
-  overflow:hidden;
+    0 0 52px rgba(0,255,136,.18),
+    inset 0 0 90px rgba(0,0,0,.46);
+
+  isolation:isolate;
 }
 
-.rb-profile-banner::after{
+.rb-profile-banner::before{
   content:"";
   position:absolute;
   inset:0;
+  z-index:1;
+
   background:
-    linear-gradient(180deg, transparent, rgba(0,0,0,.72)),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,.025) 0,
-      rgba(255,255,255,.025) 1px,
-      transparent 1px,
-      transparent 8px
+    radial-gradient(
+      circle at 22% 20%,
+      rgba(0,255,136,.22),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 78% 74%,
+      rgba(255,215,106,.16),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.04),
+      rgba(0,0,0,.68)
     );
+
+  pointer-events:none;
 }
+
+.rb-profile-banner::after{
+  content:"RICH BIZNESS";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:18px;
+  z-index:2;
+
+  color:rgba(255,215,106,.12);
+  font-size:clamp(2.4rem, 10vw, 7rem);
+  line-height:.82;
+  font-weight:1000;
+  letter-spacing:-.08em;
+
+  pointer-events:none;
+}
+
+/* =========================
+   AVATAR
+========================= */
 
 .rb-profile-avatar-wrap{
   position:absolute;
-  left:22px;
-  bottom:18px;
-  z-index:3;
-  width:118px;
-  height:118px;
+  left:50%;
+  bottom:-62px;
+  transform:translateX(-50%);
+  z-index:5;
+
+  width:136px;
+  height:136px;
   border-radius:50%;
-  padding:4px;
-  background:linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+  padding:5px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--rb-green),
+      var(--rb-gold)
+    );
+
   box-shadow:
-    0 0 34px rgba(0,255,136,.44),
-    0 0 26px rgba(255,215,106,.24);
+    0 0 38px rgba(0,255,136,.5),
+    0 0 44px rgba(255,215,106,.24);
 }
 
 .rb-profile-avatar-wrap img{
   width:100%;
   height:100%;
-  display:block;
-  object-fit:cover;
   border-radius:50%;
-  background:#000;
+  object-fit:cover;
+
+  border:4px solid rgba(0,0,0,.9);
+  background:#050805;
 }
 
+/* =========================
+   CARD
+========================= */
+
 .rb-profile-card{
-  border:1px solid rgba(255,215,106,.25);
-  border-radius:30px;
-  padding:22px;
-  background:linear-gradient(135deg, rgba(8,18,10,.86), rgba(0,0,0,.78));
-  box-shadow:0 0 44px rgba(0,255,136,.14);
-  backdrop-filter:blur(18px);
+  position:relative;
+  margin-top:48px;
+  padding:78px 20px 22px;
+  border:1px solid rgba(102,255,102,.32);
+  border-radius:32px;
+  text-align:center;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(0,255,136,.14),
+      transparent 34%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(8,18,10,.86),
+      rgba(0,0,0,.86)
+    );
+
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+
+  box-shadow:
+    0 0 46px rgba(0,255,136,.16),
+    inset 0 0 54px rgba(255,215,106,.05);
+}
+
+.rb-profile-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+
+  background:
+    linear-gradient(
+      120deg,
+      transparent,
+      rgba(255,255,255,.08),
+      transparent
+    );
+
+  opacity:.45;
+}
+
+.rb-profile-card .rb-kicker{
+  margin:0 0 8px;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+
+  min-height:26px;
+  padding:0 12px;
+  border-radius:999px;
+
+  color:#001806;
+  background:
+    linear-gradient(
+      135deg,
+      var(--rb-green),
+      var(--rb-gold)
+    );
+
+  letter-spacing:.1em;
 }
 
 .rb-profile-card h1{
   margin:0;
-  font-size:clamp(2.2rem, 10vw, 5rem);
-  line-height:.9;
   color:var(--rb-gold);
+  font-size:clamp(2.2rem, 9vw, 4.8rem);
+  line-height:.9;
   letter-spacing:-.06em;
+  text-shadow:0 0 26px rgba(255,215,106,.22);
 }
 
 .rb-profile-handle{
-  margin:10px 0;
+  margin:10px 0 0;
   color:var(--rb-green);
   font-weight:900;
+  letter-spacing:.04em;
 }
 
 .rb-profile-bio{
+  margin:16px auto 20px;
+  max-width:620px;
   color:var(--rb-muted);
   line-height:1.55;
 }
+
+/* =========================
+   GRID
+========================= */
 
 .rb-profile-grid{
   display:grid;
@@ -109,35 +272,122 @@
 }
 
 .rb-profile-grid article{
-  border:1px solid rgba(102,255,102,.24);
-  border-radius:22px;
+  position:relative;
+  overflow:hidden;
+
+  min-height:128px;
   padding:16px;
-  background:rgba(0,0,0,.48);
-  box-shadow:inset 0 0 26px rgba(0,255,136,.06);
+  border-radius:24px;
+  border:1px solid rgba(255,215,106,.22);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(10,25,14,.82),
+      rgba(0,0,0,.82)
+    );
+
+  box-shadow:
+    0 0 28px rgba(0,255,136,.1),
+    inset 0 0 28px rgba(255,215,106,.04);
+}
+
+.rb-profile-grid article::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,255,136,.12),
+      transparent 60%
+    );
+  opacity:.8;
+  pointer-events:none;
 }
 
 .rb-profile-grid strong{
+  position:relative;
+  z-index:2;
   display:block;
   color:var(--rb-gold);
-  margin-bottom:6px;
+  font-size:1.08rem;
+  margin-bottom:8px;
 }
 
 .rb-profile-grid span{
+  position:relative;
+  z-index:2;
   color:var(--rb-muted);
-  font-size:.86rem;
+  line-height:1.35;
+  font-size:.9rem;
 }
 
+/* =========================
+   MOBILE
+========================= */
+
 @media (max-width:720px){
+  .rb-profile-shell{
+    padding:
+      max(18px, env(safe-area-inset-top))
+      12px
+      calc(24px + env(safe-area-inset-bottom));
+    gap:16px;
+  }
+
+  .rb-profile-top{
+    border-radius:22px;
+  }
+
   .rb-profile-banner{
-    min-height:220px;
+    min-height:260px;
+    border-radius:28px;
   }
 
   .rb-profile-avatar-wrap{
-    width:96px;
-    height:96px;
+    width:122px;
+    height:122px;
+    bottom:-56px;
+  }
+
+  .rb-profile-card{
+    margin-top:44px;
+    padding:72px 16px 20px;
+    border-radius:28px;
   }
 
   .rb-profile-grid{
     grid-template-columns:1fr;
+  }
+
+  .rb-profile-grid article{
+    min-height:108px;
+  }
+}
+
+@media (max-width:430px){
+  .rb-profile-shell{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .rb-profile-top{
+    justify-content:center;
+  }
+
+  .rb-profile-banner{
+    min-height:235px;
+  }
+
+  .rb-profile-avatar-wrap{
+    width:112px;
+    height:112px;
+    bottom:-52px;
+  }
+
+  .rb-profile-card{
+    margin-top:40px;
+    padding-top:66px;
   }
 }
