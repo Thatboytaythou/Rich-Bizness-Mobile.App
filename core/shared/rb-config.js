@@ -21,7 +21,8 @@ export const RB_CONFIG = Object.freeze({
   supabase: {
     projectRef: "xfsrqomsiulswbalgknx",
     url: "https://xfsrqomsiulswbalgknx.supabase.co",
-    publishableKey: "sb_publishable_pW8c7eWAX1GPi5HbncKjpg_CicEceV8"
+    publishableKey:
+      "sb_publishable_pW8c7eWAX1GPi5HbncKjpg_CicEceV8"
   },
 
   routes: {
@@ -191,16 +192,52 @@ export const RB_CONFIG = Object.freeze({
     theme: "black-green-gold",
     mode: "ultra-hd-cinematic",
     homeStyle: "rotating-tv-screens-around-portal",
-    brandMood: "luxury-futuristic-reality-changers"
+    brandMood:
+      "luxury-futuristic-reality-changers"
+  },
+
+  motion: {
+    mobileBreakpoint: 720,
+
+    orbit: {
+      desktopRadiusX: 210,
+      desktopRadiusY: 120,
+
+      mobileRadiusX: 145,
+      mobileRadiusY: 92,
+
+      rotationLerp: 0.055,
+      pointerLerp: 0.04
+    },
+
+    portal: {
+      floatAmount: 5,
+      scalePulse: 0.012
+    }
   }
 });
 
 export const RB_APP = RB_CONFIG.app;
-export const RB_SUPABASE = RB_CONFIG.supabase;
-export const RB_ROUTES = RB_CONFIG.routes;
-export const RB_TABLES = RB_CONFIG.tables;
-export const RB_BUCKETS = RB_CONFIG.buckets;
-export const RB_STORAGE = RB_CONFIG.storage;
-export const RB_VISUALS = RB_CONFIG.visuals;
+
+export const RB_SUPABASE =
+  RB_CONFIG.supabase;
+
+export const RB_ROUTES =
+  RB_CONFIG.routes;
+
+export const RB_TABLES =
+  RB_CONFIG.tables;
+
+export const RB_BUCKETS =
+  RB_CONFIG.buckets;
+
+export const RB_STORAGE =
+  RB_CONFIG.storage;
+
+export const RB_VISUALS =
+  RB_CONFIG.visuals;
+
+export const RB_MOTION =
+  RB_CONFIG.motion;
 
 console.log("RB CONFIG LOCKED");
