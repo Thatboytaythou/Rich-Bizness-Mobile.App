@@ -2,18 +2,23 @@
    RICH BIZNESS MOBILE
    /core/shared/rb-supabase.js
 
-   GLOBAL SUPABASE ENGINE
-   Session + Profile Auto-Creation Locked
+   LOCKED SUPABASE CORE
 ========================= */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createClient
+} from "https://esm.sh/@supabase/supabase-js@2";
 
 import {
   RB_SUPABASE,
   RB_TABLES
 } from "/core/shared/rb-config.js";
 
-const supabase = createClient(
+/* =========================
+   CLIENT
+========================= */
+
+export const supabase = createClient(
   RB_SUPABASE.url,
   RB_SUPABASE.publishableKey,
   {
@@ -21,393 +26,238 @@ const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: "pkce",
-      storageKey: "rich-bizness-mobile-auth"
+      flowType: "pkce"
     },
+
     realtime: {
       params: {
-        eventsPerSecond: 25
+        eventsPerSecond: 10
       }
     },
+
     global: {
       headers: {
-        "x-client-info": "rich-bizness-mobile"
+        "x-client-info":
+          "rich-bizness-mobile"
       }
     }
   }
 );
 
-let currentSession = null;
-let currentUser = null;
-let currentProfile = null;
-let authBooted = false;
+/* =========================
+   SESSION STATE
+========================= */
 
-export function getSupabase() {
-  return supabase;
-}
+let rbSession = null;
+let rbUser = null;
+let rbProfile = null;
 
-export function getSession() {
-  return currentSession;
-}
+/* =========================
+   PROFILE LOADER
+========================= */
 
-export function getUser() {
-  return currentUser;
-}
+export async function fetchProfile(
+  userId
+) {
+  if (!userId) return null;
 
-export function getProfile() {
-  return currentProfile;
-}
+  const { data, error } =
+    await supabase
+      .from(RB_TABLES.profiles)
+      .select("*")
+      .eq("id", userId)
+      .single();
 
-export function isAuthed() {
-  return !!currentUser;
+  if (error) {
+    console.error(
+      "RB PROFILE LOAD ERROR",
+      error
+    );
+
+    return null;
+  }
+
+  rbProfile = data || null;
+
+  return rbProfile;
 }
 
 /* =========================
-   AUTH BOOT
+   SESSION BOOT
 ========================= */
 
-export async function bootAuth() {
-  if (authBooted) {
-    return currentUser;
-  }
-
+export async function initSupabase() {
   const {
     data: { session },
     error
   } = await supabase.auth.getSession();
 
   if (error) {
-    console.error("[RB SESSION ERROR]", error);
-    authBooted = true;
-    return null;
+    console.error(
+      "RB SESSION ERROR",
+      error
+    );
   }
 
-  currentSession = session || null;
-  currentUser = session?.user || null;
+  rbSession = session || null;
+  rbUser = session?.user || null;
 
-  if (currentUser?.id) {
-    await ensureProfile(currentUser);
+  if (rbUser?.id) {
+    await fetchProfile(rbUser.id);
   }
 
-  authBooted = true;
-
-  return currentUser;
-}
-
-export async function refreshSession() {
-  const {
-    data: { session },
-    error
-  } = await supabase.auth.refreshSession();
-
-  if (error) {
-    console.warn("[RB SESSION REFRESH WARNING]", error.message);
-    return null;
-  }
-
-  currentSession = session || null;
-  currentUser = session?.user || null;
-
-  if (currentUser?.id) {
-    await ensureProfile(currentUser);
-  }
-
-  return currentSession;
+  return {
+    session: rbSession,
+    user: rbUser,
+    profile: rbProfile
+  };
 }
 
 /* =========================
-   PROFILE
+   AUTH CHANGES
 ========================= */
 
-export async function loadProfile(userId) {
-  if (!userId) return null;
+supabase.auth.onAuthStateChange(
+  async (_event, session) => {
+    rbSession = session || null;
+    rbUser = session?.user || null;
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.profiles)
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
+    if (rbUser?.id) {
+      await fetchProfile(rbUser.id);
+    } else {
+      rbProfile = null;
+    }
 
-  if (error) {
-    console.warn("[RB PROFILE LOAD WARNING]", error.message);
-    currentProfile = null;
-    return null;
+    window.dispatchEvent(
+      new CustomEvent(
+        "rb-auth-change",
+        {
+          detail: {
+            session: rbSession,
+            user: rbUser,
+            profile: rbProfile
+          }
+        }
+      )
+    );
   }
+);
 
-  currentProfile = data || null;
-  return currentProfile;
+/* =========================
+   HELPERS
+========================= */
+
+export function getSession() {
+  return rbSession;
 }
 
-export async function ensureProfile(user = currentUser) {
+export function getUser() {
+  return rbUser;
+}
+
+export function getProfile() {
+  return rbProfile;
+}
+
+export function isAuthed() {
+  return !!rbUser;
+}
+
+/* =========================
+   PROFILE UPSERT
+========================= */
+
+export async function ensureProfile(
+  user
+) {
   if (!user?.id) return null;
 
-  const existingProfile = await loadProfile(user.id);
+  const existing =
+    await fetchProfile(user.id);
 
-  if (existingProfile) {
-    return existingProfile;
+  if (existing) {
+    return existing;
   }
 
-  const fallbackName =
-    user.user_metadata?.display_name ||
-    user.user_metadata?.full_name ||
-    user.user_metadata?.username ||
-    user.email?.split("@")[0] ||
-    "Rich User";
+  const username =
+    user.email
+      ?.split("@")[0]
+      ?.replace(/[^a-zA-Z0-9_]/g, "")
+      ?.toLowerCase() ||
+    `rb_${Date.now()}`;
 
-  const fallbackUsername =
-    (
-      user.user_metadata?.username ||
-      user.email?.split("@")[0] ||
-      `user_${user.id.slice(0, 8)}`
-    )
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, "");
-
-  const profilePayload = {
+  const payload = {
     id: user.id,
-    username: fallbackUsername,
-    display_name: fallbackName,
-    full_name: fallbackName,
-    avatar_url: "/images/profile/default-avatar.png",
-    banner_url: "/images/profile/default-banner.png",
+
+    username,
+
+    display_name:
+      user.user_metadata
+        ?.display_name ||
+      username,
+
+    full_name:
+      user.user_metadata
+        ?.full_name || "",
+
+    avatar_url:
+      user.user_metadata
+        ?.avatar_url || "",
+
     role: "user",
+
     is_creator: false,
     is_artist: false,
     is_seller: false,
     is_verified: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+
+    favorite_section: "live"
   };
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from(RB_TABLES.profiles)
-    .insert(profilePayload)
-    .select()
-    .single();
+    .upsert(payload);
 
   if (error) {
-    console.warn("[RB PROFILE CREATE WARNING]", error.message);
-    return await loadProfile(user.id);
+    console.error(
+      "RB PROFILE CREATE ERROR",
+      error
+    );
+
+    return null;
   }
 
-  currentProfile = data;
-  return currentProfile;
+  return await fetchProfile(user.id);
 }
 
 /* =========================
-   AUTH ACTIONS
+   SIGN OUT
 ========================= */
-
-export async function signUp({
-  email,
-  password,
-  metadata = {}
-}) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: metadata,
-      emailRedirectTo: `${window.location.origin}/auth`
-    }
-  });
-
-  if (error) throw error;
-
-  currentSession = data.session || null;
-  currentUser = data.user || null;
-
-  if (currentUser?.id) {
-    await ensureProfile(currentUser);
-  }
-
-  authBooted = true;
-
-  return data;
-}
-
-export async function signIn({
-  email,
-  password
-}) {
-  const { data, error } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-  if (error) throw error;
-
-  currentSession = data.session || null;
-  currentUser = data.user || null;
-
-  if (currentUser?.id) {
-    await ensureProfile(currentUser);
-  }
-
-  authBooted = true;
-
-  return data;
-}
 
 export async function signOut() {
   await supabase.auth.signOut();
-
-  currentSession = null;
-  currentUser = null;
-  currentProfile = null;
-  authBooted = false;
 }
 
 /* =========================
-   AUTH LISTENER
+   REALTIME HELPERS
 ========================= */
 
-supabase.auth.onAuthStateChange(async (_event, session) => {
-  currentSession = session || null;
-  currentUser = session?.user || null;
-
-  if (currentUser?.id) {
-    await ensureProfile(currentUser);
-  } else {
-    currentProfile = null;
-  }
-
-  authBooted = true;
-});
-
-/* =========================
-   STORAGE
-========================= */
-
-export function getPublicFileUrl(bucket, path) {
-  if (!bucket || !path) return null;
-
-  const { data } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(path);
-
-  return data?.publicUrl || null;
+export function createChannel(name) {
+  return supabase.channel(name);
 }
 
-export async function uploadFile({
-  bucket,
-  path,
-  file,
-  upsert = false
-}) {
-  const { data, error } =
-    await supabase.storage
-      .from(bucket)
-      .upload(path, file, { upsert });
-
-  if (error) throw error;
-
-  return data;
-}
-
-export async function deleteFile({
-  bucket,
-  paths = []
-}) {
-  const { data, error } =
-    await supabase.storage
-      .from(bucket)
-      .remove(paths);
-
-  if (error) throw error;
-
-  return data;
+export function removeChannel(channel) {
+  return supabase.removeChannel(channel);
 }
 
 /* =========================
-   REALTIME
+   READY
 ========================= */
 
-export function createRealtimeChannel(channelName, config = {}) {
-  return supabase.channel(channelName, config);
-}
+document.body.classList.add(
+  "rb-supabase-loaded"
+);
 
-/* =========================
-   DATABASE HELPERS
-========================= */
-
-export async function rbSelect({
-  table,
-  select = "*",
-  match = {},
-  single = false,
-  orderBy = null,
-  ascending = false,
-  limit = null
-}) {
-  let query = supabase.from(table).select(select);
-
-  Object.entries(match).forEach(([key, value]) => {
-    query = query.eq(key, value);
-  });
-
-  if (orderBy) query = query.order(orderBy, { ascending });
-  if (limit) query = query.limit(limit);
-  if (single) query = query.single();
-
-  const { data, error } = await query;
-
-  if (error) throw error;
-
-  return data;
-}
-
-export async function rbInsert({
-  table,
-  values
-}) {
-  const { data, error } =
-    await supabase
-      .from(table)
-      .insert(values)
-      .select();
-
-  if (error) throw error;
-
-  return data;
-}
-
-export async function rbUpdate({
-  table,
-  match = {},
-  values = {}
-}) {
-  let query = supabase.from(table).update(values);
-
-  Object.entries(match).forEach(([key, value]) => {
-    query = query.eq(key, value);
-  });
-
-  const { data, error } = await query.select();
-
-  if (error) throw error;
-
-  return data;
-}
-
-export async function rbDelete({
-  table,
-  match = {}
-}) {
-  let query = supabase.from(table).delete();
-
-  Object.entries(match).forEach(([key, value]) => {
-    query = query.eq(key, value);
-  });
-
-  const { data, error } = await query.select();
-
-  if (error) throw error;
-
-  return data;
-}
-
-await bootAuth();
-
-console.log("RB SUPABASE SESSION + PROFILE LOCK READY");
+console.log(
+  "RB SUPABASE CORE READY"
+);
