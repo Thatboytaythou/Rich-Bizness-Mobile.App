@@ -113,9 +113,9 @@ function animate() {
     const isActive = screen.dataset.rbSection === activeSectionKey;
 
     const scale =
-      0.68 +
-      frontAmount * 0.18 +
-      (isActive ? 0.08 : 0);
+      0.62 +
+      frontAmount * 0.14 +
+      (isActive ? 0.03 : 0);
 
     const opacity =
       0.26 +
@@ -128,7 +128,7 @@ function animate() {
       (isActive ? 0.16 : 0);
 
     const blur = isActive ? 0 : (1 - frontAmount) * 1.7;
-    const zDepth = depth * 70 + (isActive ? 45 : 0);
+    const zDepth = depth * 45 + (isActive ? 8 : 0);
 
     screen.style.zIndex = String(
       Math.floor(frontAmount * 100) + (isActive ? 100 : 0)
