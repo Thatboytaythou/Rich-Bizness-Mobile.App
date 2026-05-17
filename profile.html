@@ -17,14 +17,31 @@
 </head>
 
 <body class="rb-home rb-profile-page">
+
   <div class="rb-bg"></div>
   <div class="rb-vignette"></div>
   <div class="rb-grid"></div>
 
   <main class="rb-profile-shell">
+
     <header class="rb-profile-top">
-      <a href="/" class="rb-auth-home">← Portal</a>
-      <a href="/settings" class="rb-auth-home">Settings</a>
+
+      <a href="/" class="rb-auth-home">
+        ← Portal
+      </a>
+
+      <a href="/settings" class="rb-auth-home">
+        Settings
+      </a>
+
+      <button
+        class="rb-auth-home rb-profile-signout"
+        type="button"
+        data-rb-signout
+      >
+        I’m Out ✌🏽
+      </button>
+
     </header>
 
     <section
@@ -32,15 +49,18 @@
       class="rb-profile-banner"
     >
       <div class="rb-profile-avatar-wrap">
+
         <img
           id="profile-avatar"
           src="/images/profile/default-avatar.png"
           alt="Profile avatar"
         />
+
       </div>
     </section>
 
     <section class="rb-profile-card">
+
       <p id="profile-badge" class="rb-kicker">
         MEMBER
       </p>
@@ -64,9 +84,11 @@
       >
         EDIT PROFILE
       </button>
+
     </section>
 
     <section class="rb-profile-grid">
+
       <article>
         <strong>Identity</strong>
         <span>Avatar • Profile • Creator status</span>
@@ -81,12 +103,15 @@
         <strong>Economy</strong>
         <span>Store • Wallet • Unlocks</span>
       </article>
+
     </section>
+
   </main>
 
   <script
     type="module"
     src="/core/pages/profile.js"
   ></script>
+
 </body>
 </html>
