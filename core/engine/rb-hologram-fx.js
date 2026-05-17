@@ -3,14 +3,19 @@
    /core/engine/rb-hologram-fx.js
 
    HOLOGRAM FX ENGINE
-   FX only — no movement ownership
+   Owns FX only.
+   No movement.
+   No routing.
+   No section state.
 ========================= */
 
 const stage = document.querySelector(".rb-portal-stage");
 const portal = document.querySelector(".rb-core-portal");
 
 function getScreens() {
-  return [...document.querySelectorAll(".rb-tv-screen")];
+  return [
+    ...document.querySelectorAll(".rb-tv-screen")
+  ];
 }
 
 function createFxLayer(className) {
@@ -22,12 +27,14 @@ function createFxLayer(className) {
   const layer = document.createElement("div");
   layer.className = className;
   layer.setAttribute("aria-hidden", "true");
+
   stage.appendChild(layer);
 
   return layer;
 }
 
 const sparkLayer = createFxLayer("rb-holo-spark-layer");
+
 createFxLayer("rb-holo-scan-layer");
 createFxLayer("rb-holo-fog-layer");
 
@@ -49,17 +56,17 @@ function spawnSpark() {
 
   sparkLayer.appendChild(spark);
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     spark.remove();
   }, 3200);
 }
 
 function pulseScreens() {
   getScreens().forEach((screen, index) => {
-    setTimeout(() => {
+    window.setTimeout(() => {
       screen.classList.add("rb-holo-pulse");
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         screen.classList.remove("rb-holo-pulse");
       }, 600);
     }, index * 140);
@@ -68,13 +75,15 @@ function pulseScreens() {
 
 function randomGlitch() {
   const screens = getScreens();
-  const screen = screens[Math.floor(Math.random() * screens.length)];
 
-  if (!screen) return;
+  if (!screens.length) return;
+
+  const screen =
+    screens[Math.floor(Math.random() * screens.length)];
 
   screen.classList.add("rb-holo-glitch");
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     screen.classList.remove("rb-holo-glitch");
   }, 360);
 }
@@ -84,15 +93,15 @@ function portalFlash() {
 
   portal.classList.add("rb-portal-flash");
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     portal.classList.remove("rb-portal-flash");
   }, 520);
 }
 
-setInterval(spawnSpark, 220);
-setInterval(randomGlitch, 3800);
-setInterval(pulseScreens, 6200);
-setInterval(portalFlash, 5200);
+window.setInterval(spawnSpark, 260);
+window.setInterval(randomGlitch, 4200);
+window.setInterval(pulseScreens, 6800);
+window.setInterval(portalFlash, 5600);
 
 document.body.classList.add("rb-hologram-loaded");
 
