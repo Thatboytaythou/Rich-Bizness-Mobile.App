@@ -517,3 +517,50 @@ body{
   0%,100%{ opacity:.55; transform:scale(1); }
   50%{ opacity:.9; transform:scale(1.03); }
 }
+
+/* =========================
+   RICH BIZNESS MOBILE
+   CLICK LAYER SAFETY LOCK
+========================= */
+
+.rb-bg,
+.rb-vignette,
+.rb-grid,
+.rb-portal-stage::before,
+.rb-portal-stage::after,
+.rb-portal-ring,
+.rb-portal-ring::before,
+.rb-portal-ring::after,
+.rb-portal-ring-two,
+.rb-portal-light,
+.rb-core-portal,
+.rb-holo-spark-layer,
+.rb-holo-scan-layer,
+.rb-holo-fog-layer,
+.rb-holo-spark{
+  pointer-events:none !important;
+}
+
+.rb-home-top,
+.rb-profile-pill,
+.rb-tv-screen,
+.rb-home-actions,
+.rb-icon-btn,
+.rb-main-launch,
+.rb-quick-actions,
+.rb-quick-actions button,
+.rb-bottom-nav,
+.rb-bottom-nav button{
+  pointer-events:auto !important;
+}
+
+.rb-home-actions,
+.rb-quick-actions,
+.rb-bottom-nav{
+  position:relative;
+  z-index:999 !important;
+}
+
+.rb-tv-screen{
+  z-index:auto;
+}
