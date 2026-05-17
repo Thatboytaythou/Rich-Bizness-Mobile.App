@@ -3,15 +3,15 @@
    /core/pages/settings.js
 
    SETTINGS FOUNDATION CONTROLLER
+   Correct Guard Import Locked
 ========================= */
 
 import {
   autoGuardCurrentPage
-} from "/core/shared/rb-guards.js";
+} from "/core/features/auth/session-guard.js";
 
 import {
   initAuthState,
-  getAuthState,
   onAuthState
 } from "/core/features/auth/auth-state.js";
 
@@ -36,8 +36,8 @@ const els = {
 };
 
 function paintSettings(state) {
-  const user = state?.user;
-  const profile = state?.profile;
+  const user = state?.user || null;
+  const profile = state?.profile || null;
 
   if (els.email) {
     els.email.textContent = user?.email || "Guest";
@@ -65,7 +65,10 @@ function bindSettingsActions() {
 
   els.signOutBtn?.addEventListener("click", async () => {
     try {
-      await rbSignOut({ redirectTo: "/auth" });
+      await rbSignOut({
+        redirectTo: "/auth"
+      });
+
       toastInfo("Signed out.");
     } catch (error) {
       toastError(error.message || "Sign out failed.");
@@ -91,4 +94,8 @@ async function bootSettingsPage() {
   console.log("RB SETTINGS FOUNDATION READY");
 }
 
-bootSettingsPage();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootSettingsPage);
+} else {
+  bootSettingsPage();
+}
