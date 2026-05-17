@@ -3,8 +3,12 @@
    /styles/omni-fx.css
 
    FX ONLY
-   No orbit screen visuals
-   No movement ownership
+   Matches:
+   - rb-portal-transition.js
+   - rb-hologram-fx.js
+
+   No movement ownership.
+   No transform ownership.
 ========================= */
 
 .rb-home::before{
@@ -22,9 +26,9 @@
       rgba(255,215,106,.12),
       transparent
     );
-  animation:rbCosmicRotate 28s linear infinite;
   filter:blur(18px);
-  opacity:.75;
+  opacity:.72;
+  animation:rbCosmicRotate 30s linear infinite;
 }
 
 .rb-home::after{
@@ -35,16 +39,16 @@
   pointer-events:none;
   background:
     linear-gradient(
-      rgba(255,255,255,.035) 50%,
+      rgba(255,255,255,.03) 50%,
       rgba(0,0,0,.035) 50%
     );
   background-size:100% 4px;
   mix-blend-mode:overlay;
-  opacity:.28;
+  opacity:.26;
 }
 
 .rb-portal-light{
-  animation:rbPortalBreath 3.8s ease-in-out infinite;
+  animation:rbPortalBreath 4s ease-in-out infinite;
 }
 
 .rb-main-launch{
@@ -56,6 +60,7 @@
   content:"";
   position:absolute;
   inset:0;
+  pointer-events:none;
   background:
     linear-gradient(
       120deg,
@@ -63,68 +68,20 @@
       rgba(255,255,255,.45),
       transparent
     );
-  transform:translateX(-120%);
-  animation:rbButtonShine 3.4s ease-in-out infinite;
+  transform:translateX(-130%);
+  animation:rbButtonShine 3.6s ease-in-out infinite;
 }
 
 .rb-icon-btn:active,
 .rb-main-launch:active,
 .rb-quick-actions button:active,
-.rb-bottom-nav button:active{
+.rb-bottom-nav button:active,
+.rb-profile-pill:active{
   filter:brightness(1.25);
 }
 
 /* =========================
-   FLOATING DEPTH PARTICLES
-========================= */
-
-.rb-portal-stage .rb-core-portal::before{
-  content:"";
-  position:absolute;
-  inset:-38%;
-  border-radius:50%;
-  background:
-    radial-gradient(circle, rgba(102,255,102,.9) 1px, transparent 2px),
-    radial-gradient(circle, rgba(255,215,106,.8) 1px, transparent 2px);
-  background-size:
-    34px 34px,
-    57px 57px;
-  opacity:.28;
-  animation:rbParticleDrift 18s linear infinite;
-  pointer-events:none;
-}
-
-.rb-portal-stage .rb-core-portal::after{
-  content:"";
-  position:absolute;
-  inset:-14%;
-  border-radius:50%;
-  border:1px solid rgba(255,215,106,.18);
-  box-shadow:
-    0 0 90px rgba(0,255,136,.22),
-    inset 0 0 90px rgba(255,215,106,.08);
-  animation:rbPortalAura 4.5s ease-in-out infinite;
-  pointer-events:none;
-}
-
-/* =========================
-   PAGE ENTER
-========================= */
-
-.rb-home-shell{
-  animation:rbPageEnter .85s cubic-bezier(.16,1,.3,1) both;
-}
-
-.rb-home-top{
-  animation:rbSlideDown .75s cubic-bezier(.16,1,.3,1) both;
-}
-
-.rb-bottom-nav{
-  animation:rbSlideUp .8s cubic-bezier(.16,1,.3,1) both;
-}
-
-/* =========================
-   HOLOGRAM FX LAYER
+   HOLOGRAM FX LAYERS
 ========================= */
 
 .rb-holo-scan-layer,
@@ -142,44 +99,48 @@
   position:absolute;
   left:0;
   right:0;
-  top:-30%;
-  height:35%;
-  background:linear-gradient(
-    180deg,
-    transparent,
-    rgba(102,255,102,.13),
-    rgba(255,215,106,.08),
-    transparent
-  );
-  filter:blur(6px);
-  animation:rbHoloScan 4.8s linear infinite;
+  top:-34%;
+  height:38%;
+  pointer-events:none;
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(102,255,102,.13),
+      rgba(255,215,106,.08),
+      transparent
+    );
+  filter:blur(7px);
+  animation:rbHoloScan 5s linear infinite;
 }
 
 .rb-holo-fog-layer::before,
 .rb-holo-fog-layer::after{
   content:"";
   position:absolute;
-  width:70%;
-  height:60%;
+  width:72%;
+  height:62%;
   border-radius:50%;
-  background:radial-gradient(
-    circle,
-    rgba(0,255,136,.12),
-    transparent 68%
-  );
-  filter:blur(24px);
-  animation:rbHoloFog 9s ease-in-out infinite;
+  pointer-events:none;
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,255,136,.12),
+      transparent 68%
+    );
+  filter:blur(26px);
+  animation:rbHoloFog 9.5s ease-in-out infinite;
 }
 
 .rb-holo-fog-layer::before{
-  left:-20%;
-  top:18%;
+  left:-24%;
+  top:16%;
 }
 
 .rb-holo-fog-layer::after{
-  right:-20%;
-  bottom:8%;
-  animation-delay:-4s;
+  right:-24%;
+  bottom:6%;
+  animation-delay:-4.5s;
 }
 
 .rb-holo-spark{
@@ -187,29 +148,15 @@
   display:block;
   border-radius:50%;
   background:var(--rb-green);
+  pointer-events:none;
   box-shadow:
     0 0 10px var(--rb-green),
     0 0 18px var(--rb-gold);
   animation:rbSparkRise 2.2s ease-out forwards;
 }
 
-.rb-holo-pulse{
-  animation:rbScreenPulse .6s ease both!important;
-}
-
-.rb-holo-glitch{
-  animation:rbHoloGlitch .34s steps(2,end) both!important;
-}
-
-.rb-portal-flash .rb-portal-light{
-  filter:brightness(1.75) saturate(1.5);
-  box-shadow:
-    0 0 110px rgba(0,255,136,.72),
-    0 0 80px rgba(255,215,106,.42);
-}
-
 /* =========================
-   MOOD LIGHTING
+   SECTION MOOD LIGHTING
 ========================= */
 
 body[data-active-section="live"] .rb-bg{
@@ -245,23 +192,39 @@ body[data-active-section="feed"] .rb-bg{
 }
 
 /* =========================
-   PORTAL TRANSITIONS
+   REACTION FX CLASSES
 ========================= */
+
+.rb-holo-pulse{
+  animation:rbScreenPulse .6s ease both!important;
+}
+
+.rb-holo-glitch{
+  animation:rbHoloGlitch .34s steps(2,end) both!important;
+}
+
+.rb-portal-flash .rb-portal-light{
+  filter:brightness(1.75) saturate(1.5);
+  box-shadow:
+    0 0 110px rgba(0,255,136,.72),
+    0 0 80px rgba(255,215,106,.42);
+}
 
 .rb-portal-transition{
   animation:rbPortalBurst .9s ease;
 }
 
 .rb-stage-wave{
-  animation:rbStageWave 1.4s ease;
+  animation:rbStageWave 1.2s ease;
 }
 
 .rb-tv-react{
-  animation:rbTvReact .7s ease;
+  animation:rbTvReact .65s ease;
 }
 
 .rb-text-switch{
   opacity:0;
+  transition:opacity .18s ease;
 }
 
 /* =========================
@@ -279,6 +242,7 @@ body[data-active-section="feed"] .rb-bg{
     opacity:.78;
     filter:blur(.4px) brightness(1);
   }
+
   50%{
     opacity:1;
     filter:blur(.2px) brightness(1.35);
@@ -289,61 +253,9 @@ body[data-active-section="feed"] .rb-bg{
   0%,60%{
     transform:translateX(-130%);
   }
+
   82%,100%{
     transform:translateX(130%);
-  }
-}
-
-@keyframes rbParticleDrift{
-  from{
-    transform:rotate(0deg) scale(1);
-  }
-  to{
-    transform:rotate(360deg) scale(1.12);
-  }
-}
-
-@keyframes rbPortalAura{
-  0%,100%{
-    opacity:.52;
-    transform:scale(1);
-  }
-  50%{
-    opacity:.92;
-    transform:scale(1.08);
-  }
-}
-
-@keyframes rbPageEnter{
-  from{
-    opacity:0;
-    transform:translateY(18px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-@keyframes rbSlideDown{
-  from{
-    opacity:0;
-    transform:translateY(-16px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-@keyframes rbSlideUp{
-  from{
-    opacity:0;
-    transform:translateY(22px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
   }
 }
 
@@ -351,18 +263,20 @@ body[data-active-section="feed"] .rb-bg{
   from{
     transform:translateY(-20%);
   }
+
   to{
-    transform:translateY(420%);
+    transform:translateY(430%);
   }
 }
 
 @keyframes rbHoloFog{
   0%,100%{
-    transform:translate3d(0,0,0) scale(1);
+    transform:scale(1);
     opacity:.38;
   }
+
   50%{
-    transform:translate3d(22px,-18px,0) scale(1.18);
+    transform:scale(1.16);
     opacity:.72;
   }
 }
@@ -372,9 +286,11 @@ body[data-active-section="feed"] .rb-bg{
     transform:translateY(0) scale(.6);
     opacity:0;
   }
+
   20%{
     opacity:1;
   }
+
   100%{
     transform:translateY(-120px) scale(1.35);
     opacity:0;
@@ -385,8 +301,9 @@ body[data-active-section="feed"] .rb-bg{
   0%,100%{
     filter:brightness(1) saturate(1.15);
   }
+
   50%{
-    filter:brightness(1.65) saturate(1.6);
+    filter:brightness(1.55) saturate(1.55);
   }
 }
 
@@ -402,9 +319,11 @@ body[data-active-section="feed"] .rb-bg{
   0%{
     filter:brightness(1);
   }
+
   50%{
-    filter:brightness(1.8) saturate(1.5);
+    filter:brightness(1.75) saturate(1.45);
   }
+
   100%{
     filter:brightness(1);
   }
@@ -414,9 +333,11 @@ body[data-active-section="feed"] .rb-bg{
   0%{
     filter:brightness(1);
   }
+
   40%{
-    filter:brightness(1.18);
+    filter:brightness(1.16);
   }
+
   100%{
     filter:brightness(1);
   }
@@ -426,11 +347,35 @@ body[data-active-section="feed"] .rb-bg{
   0%{
     filter:brightness(1);
   }
+
   50%{
-    filter:brightness(1.5) saturate(1.5);
+    filter:brightness(1.45) saturate(1.45);
   }
+
   100%{
     filter:brightness(1);
+  }
+}
+
+/* =========================
+   MOBILE SAFETY
+========================= */
+
+@media (max-width:720px){
+  .rb-holo-scan-layer,
+  .rb-holo-spark-layer,
+  .rb-holo-fog-layer{
+    z-index:13;
+  }
+
+  .rb-home::after{
+    opacity:.2;
+  }
+
+  .rb-portal-flash .rb-portal-light{
+    box-shadow:
+      0 0 70px rgba(0,255,136,.58),
+      0 0 48px rgba(255,215,106,.32);
   }
 }
 
