@@ -2,151 +2,314 @@
    RICH BIZNESS MOBILE
    /core/engine/rb-motion-sync.js
 
-   MOTION SYNC ENGINE
-   Stage-size math version
-   Owns movement only
-   No active-section locking
+   FINAL LOCKED ORBIT ENGINE
+   Stable Mobile Math
 ========================= */
 
-const portal = document.querySelector(".rb-core-portal");
-const stage = document.querySelector(".rb-portal-stage");
+import {
+  getSections,
+  getActiveSectionKey,
+  setActiveSection
+} from "/core/shared/rb-section-state.js";
 
-let mouseX = 0;
-let mouseY = 0;
-let smoothX = 0;
-let smoothY = 0;
-let orbitRotation = 0;
+const orbit =
+  document.getElementById("rb-tv-orbit");
 
-function getScreens() {
-  return [...document.querySelectorAll(".rb-tv-screen")];
+if (!orbit) {
+  console.warn(
+    "[RB MOTION] Missing #rb-tv-orbit"
+  );
 }
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
+const screens = [
+  ...document.querySelectorAll(".rb-tv-screen")
+];
+
+const MOBILE_BREAKPOINT = 768;
+
+let currentRotation = 0;
+let targetRotation = 0;
+let animationFrame = null;
+
+/* =========================
+   MOBILE DETECTION
+========================= */
+
+function isMobile() {
+  return window.innerWidth <= MOBILE_BREAKPOINT;
 }
 
-function updatePointer(x, y) {
-  mouseX = x / window.innerWidth - 0.5;
-  mouseY = y / window.innerHeight - 0.5;
+/* =========================
+   RADIUS
+========================= */
+
+function getRadius() {
+  if (isMobile()) {
+    return Math.min(
+      window.innerWidth * 0.38,
+      170
+    );
+  }
+
+  return Math.min(
+    window.innerWidth * 0.24,
+    320
+  );
 }
 
-function getOrbitMath() {
-  const rect = stage?.getBoundingClientRect();
+/* =========================
+   SCREEN SIZE
+========================= */
 
-  const width = rect?.width || window.innerWidth;
-  const height = rect?.height || window.innerHeight;
-
-  const isMobile = window.innerWidth <= 720;
+function getScreenSize() {
+  if (isMobile()) {
+    return {
+      width: 108,
+      height: 132
+    };
+  }
 
   return {
-    radiusX: isMobile
-      ? clamp(width * 0.24, 118, 148)
-      : clamp(width * 0.22, 170, 240),
-
-    radiusY: isMobile
-      ? clamp(height * 0.075, 58, 82)
-      : clamp(height * 0.095, 76, 120),
-
-    centerX: 0,
-
-    centerY: isMobile
-      ? clamp(height * -0.145, -112, -82)
-      : clamp(height * -0.12, -104, -68),
-
-    baseScale: isMobile ? 0.56 : 0.62,
-    scaleRange: isMobile ? 0.16 : 0.18,
-
-    zRange: isMobile ? 36 : 52
+    width: 180,
+    height: 220
   };
 }
 
-window.addEventListener("mousemove", (event) => {
-  updatePointer(event.clientX, event.clientY);
-});
+/* =========================
+   POSITION ORBIT
+========================= */
 
-window.addEventListener("touchmove", (event) => {
-  const touch = event.touches?.[0];
-  if (!touch) return;
+function updateOrbit() {
+  if (!orbit) return;
 
-  updatePointer(touch.clientX, touch.clientY);
-}, { passive: true });
+  const radius = getRadius();
 
-function animate() {
-  const screens = getScreens();
-  const orbit = getOrbitMath();
+  const {
+    width,
+    height
+  } = getScreenSize();
 
-  smoothX += (mouseX - smoothX) * 0.035;
-  smoothY += (mouseY - smoothY) * 0.035;
-
-  orbitRotation += 0.032;
-
-  if (stage) {
-    stage.style.transform = `
-      perspective(1600px)
-      rotateX(${smoothY * -1.6}deg)
-      rotateY(${smoothX * 2.4}deg)
-      translate3d(${smoothX * 2.5}px, ${smoothY * 2}px, 0)
-    `;
-  }
-
-  if (portal) {
-    const portalFloat = Math.sin(Date.now() * 0.001) * 3;
-
-    portal.style.transform = `
-      translate(-50%, -50%)
-      translate3d(
-        ${smoothX * -4}px,
-        calc(${portalFloat}px + ${smoothY * -3}px),
-        0
-      )
-      scale(${1 + Math.sin(Date.now() * 0.0009) * 0.008})
-    `;
-  }
+  const total = screens.length;
 
   screens.forEach((screen, index) => {
-    const total = screens.length || 1;
-    const angle = (360 / total) * index + orbitRotation;
-    const radians = angle * (Math.PI / 180);
+    const angle =
+      ((Math.PI * 2) / total) * index +
+      currentRotation;
 
-    const depth = Math.sin(radians);
-    const frontAmount = (depth + 1) / 2;
+    const x =
+      Math.sin(angle) * radius;
 
-    const x = orbit.centerX + Math.cos(radians) * orbit.radiusX;
-    const y = orbit.centerY + Math.sin(radians) * orbit.radiusY;
+    const y =
+      Math.cos(angle) * radius * 0.28;
 
-    const scale = orbit.baseScale + frontAmount * orbit.scaleRange;
-    const opacity = 0.24 + frontAmount * 0.56;
-    const brightness = 0.68 + frontAmount * 0.36;
-    const blur = (1 - frontAmount) * 1.35;
-    const zDepth = depth * orbit.zRange;
+    const depth =
+      Math.cos(angle);
 
-    screen.style.zIndex = String(Math.floor(frontAmount * 60) + 6);
-    screen.style.opacity = String(Math.min(opacity, 0.9));
+    const scale =
+      0.72 + ((depth + 1) / 2) * 0.48;
 
-    screen.style.filter = `
-      brightness(${brightness})
-      blur(${blur}px)
-      saturate(${1.05 + frontAmount * 0.2})
-    `;
+    const opacity =
+      0.22 + ((depth + 1) / 2) * 0.78;
+
+    const zIndex =
+      Math.floor((depth + 1) * 100);
+
+    screen.style.width =
+      `${width}px`;
+
+    screen.style.height =
+      `${height}px`;
 
     screen.style.transform = `
-      translate(-50%, -50%)
       translate3d(
-        calc(${x}px + ${smoothX * 3}px),
-        calc(${y}px + ${smoothY * 2}px),
-        ${zDepth}px
+        ${x}px,
+        ${y}px,
+        0
       )
-      rotateY(${depth * -8}deg)
-      rotateX(${smoothY * -2}deg)
       scale(${scale})
     `;
+
+    screen.style.opacity =
+      opacity;
+
+    screen.style.zIndex =
+      zIndex;
+
+    screen.style.filter = `
+      blur(${(1 - depth) * 1.2}px)
+      brightness(${0.75 + ((depth + 1) / 2) * 0.4})
+    `;
+
+    screen.classList.toggle(
+      "is-front",
+      depth > 0.92
+    );
+  });
+}
+
+/* =========================
+   ACTIVE SECTION
+========================= */
+
+function syncActiveSection() {
+  let bestScreen = null;
+  let bestDepth = -999;
+
+  screens.forEach((screen, index) => {
+    const angle =
+      ((Math.PI * 2) / screens.length) * index +
+      currentRotation;
+
+    const depth =
+      Math.cos(angle);
+
+    if (depth > bestDepth) {
+      bestDepth = depth;
+      bestScreen = screen;
+    }
   });
 
-  requestAnimationFrame(animate);
+  if (!bestScreen) return;
+
+  const key =
+    bestScreen.dataset.rbSection;
+
+  setActiveSection(key);
+
+  screens.forEach((screen) => {
+    screen.classList.toggle(
+      "is-active",
+      screen === bestScreen
+    );
+  });
 }
+
+/* =========================
+   ROTATION ENGINE
+========================= */
+
+function animate() {
+  currentRotation +=
+    (targetRotation - currentRotation) *
+    0.08;
+
+  updateOrbit();
+  syncActiveSection();
+
+  animationFrame =
+    requestAnimationFrame(animate);
+}
+
+/* =========================
+   ROTATE TO SCREEN
+========================= */
+
+function rotateToSection(key) {
+  const index =
+    screens.findIndex(
+      (screen) =>
+        screen.dataset.rbSection === key
+    );
+
+  if (index === -1) return;
+
+  const total = screens.length;
+
+  targetRotation =
+    -((Math.PI * 2) / total) * index;
+}
+
+/* =========================
+   BUTTON EVENTS
+========================= */
+
+function bindButtons() {
+  screens.forEach((screen) => {
+    screen.addEventListener(
+      "click",
+      () => {
+        const key =
+          screen.dataset.rbSection;
+
+        rotateToSection(key);
+      }
+    );
+  });
+
+  const nextBtn =
+    document.getElementById(
+      "rb-rotate-next"
+    );
+
+  const prevBtn =
+    document.getElementById(
+      "rb-rotate-prev"
+    );
+
+  nextBtn?.addEventListener(
+    "click",
+    () => {
+      targetRotation -=
+        (Math.PI * 2) /
+        screens.length;
+    }
+  );
+
+  prevBtn?.addEventListener(
+    "click",
+    () => {
+      targetRotation +=
+        (Math.PI * 2) /
+        screens.length;
+    }
+  );
+
+  document.querySelectorAll(
+    "[data-rb-route]"
+  ).forEach((button) => {
+    button.addEventListener(
+      "click",
+      () => {
+        rotateToSection(
+          button.dataset.rbRoute
+        );
+      }
+    );
+  });
+}
+
+/* =========================
+   RESIZE
+========================= */
+
+window.addEventListener(
+  "resize",
+  () => {
+    updateOrbit();
+  }
+);
+
+/* =========================
+   INITIAL
+========================= */
+
+rotateToSection(
+  getActiveSectionKey()
+);
+
+bindButtons();
+updateOrbit();
+
+cancelAnimationFrame(
+  animationFrame
+);
 
 animate();
 
-document.body.classList.add("rb-motion-sync-loaded");
+document.body.classList.add(
+  "rb-motion-ready"
+);
 
-console.log("RB MOTION SYNC STAGE-MATH READY");
+console.log(
+  "RB MOTION SYNC READY"
+);
