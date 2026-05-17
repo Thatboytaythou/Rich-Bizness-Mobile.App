@@ -3,12 +3,14 @@
    /core/shared/rb-config.js
 
    SINGLE SOURCE OF TRUTH
+   Routes + Tables + Buckets
    No secrets in this file.
 ========================= */
 
 export const RB_CONFIG = Object.freeze({
   app: {
-    name: "Rich Bizness",
+    name: "Rich Bizness Mobile",
+    brand: "Rich Bizness LLC",
     version: "1.0.0",
     environment: "production",
 
@@ -50,116 +52,155 @@ export const RB_CONFIG = Object.freeze({
   },
 
   tables: {
-    profiles: "profiles",
-
-    feedPosts: "feed_posts",
-    feedLikes: "feed_likes",
-    feedComments: "feed_comments",
-    feedReposts: "feed_reposts",
-
-    uploads: "uploads",
-
-    musicTracks: "music_tracks",
-    musicLikes: "music_likes",
-    playlists: "playlists",
-    playlistTracks: "playlist_tracks",
     artistChannels: "artist_channels",
 
-    podcastShows: "podcast_shows",
-    podcastEpisodes: "podcast_episodes",
-    radioStations: "radio_stations",
-
-    liveStreams: "live_streams",
-    liveChatMessages: "live_chat_messages",
-    liveViewSessions: "live_view_sessions",
-    liveStreamPurchases: "live_stream_purchases",
-    liveStreamBans: "live_stream_bans",
-    liveReactions: "live_reactions",
-
-    games: "games",
-    gameSessions: "game_sessions",
-    gameScores: "game_scores",
-    gameClips: "game_clips",
-    gameChallenges: "game_challenges",
+    artworkComments: "artwork_comments",
+    artworkLikes: "artwork_likes",
+    artworkPurchases: "artwork_purchases",
+    artworks: "artworks",
 
     chessMatches: "chess_matches",
     chessMoves: "chess_moves",
     chessRankings: "chess_rankings",
 
-    sportsProfiles: "sports_profiles",
-    sportsPosts: "sports_posts",
-    sportsPicks: "sports_picks",
-    sportsBrackets: "sports_brackets",
-    sportsBroadcasts: "sports_broadcasts",
+    dmMessageReactions: "dm_message_reactions",
+    dmMessages: "dm_messages",
+    dmThreadMembers: "dm_thread_members",
+    dmThreads: "dm_threads",
 
-    artworks: "artworks",
-    artworkLikes: "artwork_likes",
-    artworkComments: "artwork_comments",
-    artworkPurchases: "artwork_purchases",
+    feedComments: "feed_comments",
+    feedLikes: "feed_likes",
+    feedPosts: "feed_posts",
+    feedReposts: "feed_reposts",
 
-    products: "products",
-    storeOrders: "store_orders",
-    userProductUnlocks: "user_product_unlocks",
-    storeSellerProfiles: "store_seller_profiles",
+    gameChallenges: "game_challenges",
+    gameClips: "game_clips",
+    gameScores: "game_scores",
+    gameSessions: "game_sessions",
+    games: "games",
+
+    liveChatMessages: "live_chat_messages",
+    liveReactions: "live_reactions",
+    liveStreamBans: "live_stream_bans",
+    liveStreamPurchases: "live_stream_purchases",
+    liveStreams: "live_streams",
+    liveViewSessions: "live_view_sessions",
 
     metaAvatars: "meta_avatars",
-    metaWorlds: "meta_worlds",
     metaVisits: "meta_visits",
+    metaWorlds: "meta_worlds",
 
-    dmThreads: "dm_threads",
-    dmThreadMembers: "dm_thread_members",
-    dmMessages: "dm_messages",
-    dmMessageReactions: "dm_message_reactions",
+    musicLikes: "music_likes",
+    musicTracks: "music_tracks",
 
     notifications: "notifications",
+    payoutRequests: "payout_requests",
 
-    userWallets: "user_wallets",
-    payoutRequests: "payout_requests"
+    playlistTracks: "playlist_tracks",
+    playlists: "playlists",
+
+    podcastEpisodes: "podcast_episodes",
+    podcastShows: "podcast_shows",
+
+    products: "products",
+    profiles: "profiles",
+
+    radioStations: "radio_stations",
+
+    sportsBrackets: "sports_brackets",
+    sportsBroadcasts: "sports_broadcasts",
+    sportsPicks: "sports_picks",
+    sportsPosts: "sports_posts",
+    sportsProfiles: "sports_profiles",
+
+    storeOrders: "store_orders",
+    storeSellerProfiles: "store_seller_profiles",
+
+    uploads: "uploads",
+
+    userProductUnlocks: "user_product_unlocks",
+    userWallets: "user_wallets"
   },
 
   buckets: {
-    avatars: "avatars",
-    profileBanners: "profile-banners",
-    metaAvatars: "meta-avatars",
+    metaWorlds: "meta-worlds",
 
-    generalUploads: "general-uploads",
-
-    musicAudio: "music-audio",
-    musicCovers: "music-covers",
-
-    podcastAudio: "podcast-audio",
-    podcastCovers: "podcast-covers",
-    radioCovers: "radio-covers",
-
-    liveThumbnails: "live-thumbnails",
-    liveRecordings: "live-recordings",
-
-    gameAssets: "game-assets",
-    gameClips: "game-clips",
-    gameCovers: "game-covers",
-
-    sportsMedia: "sports-media",
-    sportsClips: "sports-clips",
-    sportsCovers: "sports-covers",
+    storeSellerMedia: "store-seller-media",
+    storeDigital: "store-digital",
+    storeProducts: "store-products",
 
     galleryMedia: "gallery-media",
 
-    storeProducts: "store-products",
-    storeDigital: "store-digital",
-    storeSellerMedia: "store-seller-media",
+    sportsCovers: "sports-covers",
+    sportsClips: "sports-clips",
+    sportsMedia: "sports-media",
 
-    metaWorlds: "meta-worlds"
+    gameCovers: "game-covers",
+    gameClips: "game-clips",
+    gameAssets: "game-assets",
+
+    liveRecordings: "live-recordings",
+    liveThumbnails: "live-thumbnails",
+
+    radioCovers: "radio-covers",
+
+    podcastCovers: "podcast-covers",
+    podcastAudio: "podcast-audio",
+
+    musicCovers: "music-covers",
+    musicAudio: "music-audio",
+
+    generalUploads: "general-uploads",
+
+    metaAvatars: "meta-avatars",
+    profileBanners: "profile-banners",
+    avatars: "avatars"
+  },
+
+  storage: {
+    publicBuckets: [
+      "avatars",
+      "profile-banners",
+      "meta-avatars",
+      "general-uploads",
+      "music-audio",
+      "music-covers",
+      "podcast-audio",
+      "podcast-covers",
+      "radio-covers",
+      "live-thumbnails",
+      "game-assets",
+      "game-clips",
+      "game-covers",
+      "sports-media",
+      "sports-clips",
+      "sports-covers",
+      "gallery-media",
+      "store-products",
+      "store-seller-media",
+      "meta-worlds"
+    ],
+
+    privateBuckets: [
+      "store-digital",
+      "live-recordings"
+    ]
   },
 
   visuals: {
     theme: "black-green-gold",
-    mode: "ultra-hd-4d-cinematic",
+    mode: "ultra-hd-cinematic",
     homeStyle: "rotating-tv-screens-around-portal",
     brandMood: "luxury-futuristic-reality-changers"
   }
 });
 
+export const RB_APP = RB_CONFIG.app;
+export const RB_SUPABASE = RB_CONFIG.supabase;
+export const RB_ROUTES = RB_CONFIG.routes;
 export const RB_TABLES = RB_CONFIG.tables;
 export const RB_BUCKETS = RB_CONFIG.buckets;
-export const RB_ROUTES = RB_CONFIG.routes;
-export const RB_SUPABASE = RB_CONFIG.supabase;
+export const RB_STORAGE = RB_CONFIG.storage;
+export const RB_VISUALS = RB_CONFIG.visuals;
+
+console.log("RB CONFIG LOCKED");
