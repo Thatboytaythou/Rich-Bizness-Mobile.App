@@ -3,15 +3,15 @@
    /core/pages/edit.js
 
    EDIT PROFILE FOUNDATION CONTROLLER
+   Correct Guard Import Locked
 ========================= */
 
 import {
   autoGuardCurrentPage
-} from "/core/shared/rb-guards.js";
+} from "/core/features/auth/session-guard.js";
 
 import {
   initAuthState,
-  getAuthState,
   onAuthState,
   refreshAuthProfile
 } from "/core/features/auth/auth-state.js";
@@ -42,43 +42,70 @@ const els = {
 };
 
 function fillForm(state) {
-  const profile = state?.profile;
+  const profile = state?.profile || null;
+
   if (!profile) return;
 
-  if (els.displayName) els.displayName.value = profile.display_name || "";
-  if (els.username) els.username.value = profile.username || "";
-  if (els.bio) els.bio.value = profile.bio || "";
+  if (els.displayName) {
+    els.displayName.value = profile.display_name || "";
+  }
+
+  if (els.username) {
+    els.username.value = profile.username || "";
+  }
+
+  if (els.bio) {
+    els.bio.value = profile.bio || "";
+  }
 }
 
 async function uploadProfileMedia() {
   const updates = {};
 
-  const avatar = els.avatarFile?.files?.[0];
-  const banner = els.bannerFile?.files?.[0];
+  const avatar = els.avatarFile?.files?.[0] || null;
+  const banner = els.bannerFile?.files?.[0] || null;
 
   if (avatar) {
     const uploaded = await uploadByRoute({
       type: "profileAvatar",
       file: avatar,
-      metadata: { purpose: "profile_avatar" },
+      metadata: {
+        purpose: "profile_avatar"
+      },
       upsert: false
     });
 
-    updates.avatar_url = uploaded.publicUrl;
+    if (uploaded?.publicUrl) {
+      updates.avatar_url = uploaded.publicUrl;
+    }
   }
 
   if (banner) {
     const uploaded = await uploadByRoute({
       type: "profileBanner",
       file: banner,
-      metadata: { purpose: "profile_banner" },
+      metadata: {
+        purpose: "profile_banner"
+      },
       upsert: false
     });
 
-    updates.banner_url = uploaded.publicUrl;
+    if (uploaded?.publicUrl) {
+      updates.banner_url = uploaded.publicUrl;
+    }
   }
 
   return updates;
+}
+
+function setLoading(isLoading) {
+  els.form?.classList.toggle("is-loading", isLoading);
+
+  els.form
+    ?.querySelectorAll("button, input, textarea")
+    .forEach((el) => {
+      el.disabled = isLoading;
+    });
 }
 
 function bindEditActions() {
@@ -90,7 +117,7 @@ function bindEditActions() {
     event.preventDefault();
 
     try {
-      els.form.classList.add("is-loading");
+      setLoading(true);
 
       const mediaUpdates = await uploadProfileMedia();
 
@@ -109,7 +136,7 @@ function bindEditActions() {
     } catch (error) {
       toastError(error.message || "Profile update failed.");
     } finally {
-      els.form.classList.remove("is-loading");
+      setLoading(false);
     }
   });
 }
@@ -132,4 +159,8 @@ async function bootEditPage() {
   console.log("RB EDIT FOUNDATION READY");
 }
 
-bootEditPage();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootEditPage);
+} else {
+  bootEditPage();
+}
