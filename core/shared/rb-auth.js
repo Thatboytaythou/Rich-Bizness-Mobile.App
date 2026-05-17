@@ -2,13 +2,9 @@
    RICH BIZNESS MOBILE
    /core/shared/rb-auth.js
 
-   AUTH CONTROLLER
+   AUTH SYSTEM
+   Synced To rb-supabase.js
 ========================= */
-
-import {
-  RB_CONFIG,
-  RB_ROUTES
-} from "/core/shared/rb-config.js";
 
 import {
   getSupabase,
@@ -16,208 +12,321 @@ import {
   getUser,
   getProfile,
   bootAuth,
-  signUp,
-  signIn,
-  signOut,
   loadProfile,
+  signUp as rbSignUp,
+  signIn as rbSignIn,
+  signOut as rbSignOut,
   isAuthed
 } from "/core/shared/rb-supabase.js";
 
 import {
-  toastSuccess,
-  toastError,
-  toastInfo
-} from "/core/shared/rb-toast.js";
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
+const supabase = getSupabase();
 
 /* =========================
-   STATE EXPORTS
+   BOOT
 ========================= */
 
-export {
-  getSupabase,
-  getSession,
-  getUser,
-  getProfile,
-  bootAuth,
-  loadProfile,
-  isAuthed
-};
+await bootAuth();
 
 /* =========================
-   AUTH ACTIONS
+   AUTH HELPERS
 ========================= */
 
-export async function rbSignUp({
+export function getAuthState() {
+  return {
+    session: getSession(),
+    user: getUser(),
+    profile: getProfile(),
+    authed: isAuthed()
+  };
+}
+
+export function requireAuth({
+  redirectTo = RB_ROUTES.auth
+} = {}) {
+  const user = getUser();
+
+  if (!user) {
+    window.location.href = redirectTo;
+    return false;
+  }
+
+  return true;
+}
+
+export function requireGuest({
+  redirectTo = RB_ROUTES.feed
+} = {}) {
+  const user = getUser();
+
+  if (user) {
+    window.location.href = redirectTo;
+    return false;
+  }
+
+  return true;
+}
+
+/* =========================
+   SIGN UP
+========================= */
+
+export async function signUp({
   email,
   password,
   username = "",
   displayName = ""
 }) {
   try {
-    const data = await signUp({
+    const data = await rbSignUp({
       email,
       password,
+
       metadata: {
         username,
         display_name: displayName
       }
     });
 
-    toastSuccess(
-      "Account created. Check your email if confirmation is required.",
-      "Welcome to Rich Bizness"
+    return {
+      ok: true,
+      data
+    };
+  } catch (error) {
+    console.error(
+      "[RB SIGNUP ERROR]",
+      error
     );
 
-    return data;
-  } catch (error) {
-    toastError(error.message || "Could not create account.");
-    throw error;
+    return {
+      ok: false,
+      error
+    };
   }
 }
 
-export async function rbSignIn({
+/* =========================
+   SIGN IN
+========================= */
+
+export async function signIn({
   email,
-  password,
-  redirectTo = RB_ROUTES.home
+  password
 }) {
   try {
-    const data = await signIn({
+    const data = await rbSignIn({
       email,
       password
     });
 
-    toastSuccess("Signed in successfully.", "Welcome back");
-
-    if (redirectTo) {
-      window.location.href = redirectTo;
-    }
-
-    return data;
+    return {
+      ok: true,
+      data
+    };
   } catch (error) {
-    toastError(error.message || "Could not sign in.");
-    throw error;
-  }
-}
+    console.error(
+      "[RB SIGNIN ERROR]",
+      error
+    );
 
-export async function rbSignOut({
-  redirectTo = RB_ROUTES.auth
-} = {}) {
-  try {
-    await signOut();
-
-    toastInfo("Signed out.");
-
-    if (redirectTo) {
-      window.location.href = redirectTo;
-    }
-  } catch (error) {
-    toastError(error.message || "Could not sign out.");
-    throw error;
+    return {
+      ok: false,
+      error
+    };
   }
 }
 
 /* =========================
-   PAGE GUARDS
+   SIGN OUT
 ========================= */
 
-export async function requireAuth({
-  redirectTo = RB_ROUTES.auth
+export async function logout({
+  redirectTo = RB_ROUTES.home
 } = {}) {
-  await bootAuth();
+  try {
+    await rbSignOut();
 
-  if (!isAuthed()) {
-    window.location.href = redirectTo;
+    window.location.href =
+      redirectTo;
+
+    return {
+      ok: true
+    };
+  } catch (error) {
+    console.error(
+      "[RB LOGOUT ERROR]",
+      error
+    );
+
+    return {
+      ok: false,
+      error
+    };
+  }
+}
+
+/* =========================
+   PASSWORD RESET
+========================= */
+
+export async function sendPasswordReset(
+  email
+) {
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo:
+            `${window.location.origin}${RB_ROUTES.settings}`
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      ok: true,
+      data
+    };
+  } catch (error) {
+    console.error(
+      "[RB PASSWORD RESET ERROR]",
+      error
+    );
+
+    return {
+      ok: false,
+      error
+    };
+  }
+}
+
+/* =========================
+   UPDATE PASSWORD
+========================= */
+
+export async function updatePassword(
+  password
+) {
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabase.auth.updateUser({
+        password
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      ok: true,
+      data
+    };
+  } catch (error) {
+    console.error(
+      "[RB UPDATE PASSWORD ERROR]",
+      error
+    );
+
+    return {
+      ok: false,
+      error
+    };
+  }
+}
+
+/* =========================
+   OAUTH
+========================= */
+
+export async function signInWithProvider(
+  provider = "google"
+) {
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabase.auth.signInWithOAuth(
+        {
+          provider,
+
+          options: {
+            redirectTo:
+              window.location.origin
+          }
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      ok: true,
+      data
+    };
+  } catch (error) {
+    console.error(
+      "[RB OAUTH ERROR]",
+      error
+    );
+
+    return {
+      ok: false,
+      error
+    };
+  }
+}
+
+/* =========================
+   SESSION REFRESH
+========================= */
+
+export async function refreshProfile() {
+  const user = getUser();
+
+  if (!user?.id) {
     return null;
   }
 
-  return getUser();
-}
-
-export async function redirectIfAuthed({
-  redirectTo = RB_ROUTES.home
-} = {}) {
-  await bootAuth();
-
-  if (isAuthed()) {
-    window.location.href = redirectTo;
-    return true;
-  }
-
-  return false;
+  return await loadProfile(
+    user.id
+  );
 }
 
 /* =========================
-   PROFILE HELPERS
+   AUTH EVENT BRIDGE
 ========================= */
 
-export async function getFreshProfile() {
-  const user = getUser();
-
-  if (!user?.id) return null;
-
-  return await loadProfile(user.id);
-}
-
-export function getDisplayIdentity() {
-  const user = getUser();
-  const profile = getProfile();
-
-  return {
-    id: user?.id || null,
-    email: user?.email || "",
-    username: profile?.username || "",
-    displayName:
-      profile?.display_name ||
-      profile?.full_name ||
-      profile?.username ||
-      user?.email?.split("@")[0] ||
-      "Rich User",
-    avatarUrl: profile?.avatar_url || "",
-    bannerUrl: profile?.banner_url || "",
-    role: profile?.role || "user",
-    isCreator: !!profile?.is_creator,
-    isArtist: !!profile?.is_artist,
-    isSeller: !!profile?.is_seller,
-    isVerified: !!profile?.is_verified
-  };
-}
+window.addEventListener(
+  "focus",
+  async () => {
+    if (getUser()?.id) {
+      await refreshProfile();
+    }
+  }
+);
 
 /* =========================
-   AUTH FORM BINDERS
+   READY
 ========================= */
 
-export function bindAuthForms({
-  signInFormSelector = "#signin-form",
-  signUpFormSelector = "#signup-form"
-} = {}) {
-  const signInForm = document.querySelector(signInFormSelector);
-  const signUpForm = document.querySelector(signUpFormSelector);
+document.body.classList.add(
+  "rb-auth-loaded"
+);
 
-  if (signInForm) {
-    signInForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const form = new FormData(signInForm);
-
-      await rbSignIn({
-        email: String(form.get("email") || "").trim(),
-        password: String(form.get("password") || "")
-      });
-    });
-  }
-
-  if (signUpForm) {
-    signUpForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const form = new FormData(signUpForm);
-
-      await rbSignUp({
-        email: String(form.get("email") || "").trim(),
-        password: String(form.get("password") || ""),
-        username: String(form.get("username") || "").trim(),
-        displayName: String(form.get("display_name") || "").trim()
-      });
-    });
-  }
-}
+console.log(
+  "RB AUTH READY"
+);
