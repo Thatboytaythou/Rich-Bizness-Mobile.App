@@ -1,7 +1,8 @@
 /* =========================
    RICH BIZNESS MOBILE
    /styles/main.css
-   Black / Emerald / Gold Cinematic Base
+
+   BASE LAYOUT LOCK
 ========================= */
 
 :root{
@@ -36,6 +37,7 @@
 html,
 body{
   margin:0;
+  width:100%;
   min-height:100%;
   background:#000;
   color:var(--rb-white);
@@ -56,8 +58,8 @@ body{
   inset:0;
   z-index:-5;
   background:
-    radial-gradient(circle at 50% 22%, rgba(0,255,136,.28), transparent 28%),
-    radial-gradient(circle at 70% 70%, rgba(255,215,106,.13), transparent 30%),
+    radial-gradient(circle at 50% 20%, rgba(0,255,136,.26), transparent 30%),
+    radial-gradient(circle at 72% 72%, rgba(255,215,106,.14), transparent 32%),
     linear-gradient(180deg,#030603 0%,#020402 48%,#000 100%);
 }
 
@@ -99,8 +101,8 @@ body{
 ========================= */
 
 .rb-home-shell{
-  width:min(100%, 1180px);
-  min-height:100vh;
+  width:min(100%,1180px);
+  min-height:100svh;
   margin:0 auto;
   padding:22px 16px calc(var(--rb-nav-h) + 24px);
   display:flex;
@@ -121,6 +123,10 @@ body{
   backdrop-filter:blur(18px);
 }
 
+.rb-brand-lock{
+  min-width:0;
+}
+
 .rb-kicker{
   margin:0 0 6px;
   color:var(--rb-green);
@@ -131,12 +137,16 @@ body{
 
 .rb-home-top h1{
   margin:0;
-  font-size:clamp(2.1rem, 9vw, 5.2rem);
+  font-size:clamp(2.1rem, 8vw, 5.2rem);
   line-height:.9;
   color:var(--rb-gold);
   text-shadow:0 0 28px rgba(255,215,106,.35);
   letter-spacing:-.06em;
 }
+
+/* =========================
+   PROFILE PILL
+========================= */
 
 .rb-profile-pill{
   border:1px solid var(--rb-green-border);
@@ -184,6 +194,7 @@ body{
   border-radius:32px;
   border:1px solid rgba(255,215,106,.28);
   overflow:hidden;
+  isolation:isolate;
   background:
     radial-gradient(circle at 50% 48%, rgba(0,255,136,.2), transparent 22%),
     radial-gradient(circle at 50% 58%, rgba(255,215,106,.14), transparent 36%),
@@ -191,18 +202,20 @@ body{
   box-shadow:
     inset 0 0 80px rgba(0,255,136,.1),
     0 0 60px rgba(0,0,0,.65);
+  transform-style:preserve-3d;
 }
 
 .rb-portal-stage::before{
   content:"";
   position:absolute;
   inset:0;
+  z-index:0;
   background:
-    url("/images/backgrounds/home-cinematic.jpg"),
+    url("/images/brand/hero-logo.png.jpeg"),
     radial-gradient(circle at center, rgba(255,215,106,.14), transparent 44%);
   background-size:cover;
   background-position:center;
-  opacity:.38;
+  opacity:.22;
   filter:saturate(1.25) contrast(1.1);
 }
 
@@ -210,6 +223,7 @@ body{
   content:"";
   position:absolute;
   inset:0;
+  z-index:1;
   background:
     linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.68)),
     repeating-linear-gradient(
@@ -222,27 +236,37 @@ body{
   pointer-events:none;
 }
 
+.rb-tv-orbit,
+.rb-core-portal{
+  position:absolute;
+}
+
 /* =========================
    CORE PORTAL
 ========================= */
 
 .rb-core-portal{
-  position:absolute;
   left:50%;
   top:50%;
-  width:min(82vw, 430px);
+  width:min(82vw,430px);
   aspect-ratio:1;
   transform:translate(-50%,-50%);
-  z-index:5;
+  z-index:6;
   display:grid;
   place-items:center;
   border-radius:50%;
+  pointer-events:none;
 }
 
-.rb-portal-ring{
+.rb-portal-ring,
+.rb-portal-ring-two{
   position:absolute;
   inset:0;
   border-radius:50%;
+  pointer-events:none;
+}
+
+.rb-portal-ring{
   border:2px solid rgba(102,255,102,.62);
   box-shadow:
     0 0 26px rgba(0,255,136,.55),
@@ -265,14 +289,21 @@ body{
   animation:rbSpinReverse 9s linear infinite;
 }
 
+.rb-portal-ring-two{
+  inset:13%;
+  border:1px solid rgba(255,215,106,.2);
+  box-shadow:inset 0 0 34px rgba(255,215,106,.08);
+}
+
 .rb-portal-light{
   position:absolute;
   inset:20%;
   border-radius:50%;
   background:
-    radial-gradient(circle, rgba(255,215,106,.9), rgba(0,255,136,.34) 34%, rgba(0,0,0,.9) 68%);
+    radial-gradient(circle, rgba(255,215,106,.86), rgba(0,255,136,.32) 34%, rgba(0,0,0,.9) 68%);
   filter:blur(.2px);
   box-shadow:0 0 80px rgba(0,255,136,.42);
+  pointer-events:none;
 }
 
 .rb-portal-copy{
@@ -296,7 +327,7 @@ body{
 
 .rb-portal-copy h2{
   margin:8px 0;
-  font-size:clamp(1.7rem, 7vw, 3.4rem);
+  font-size:clamp(1.7rem, 6vw, 3.4rem);
   line-height:.92;
   color:var(--rb-gold);
 }
@@ -478,31 +509,4 @@ body{
 @keyframes rbWorldPulse{
   0%,100%{ opacity:.55; transform:scale(1); }
   50%{ opacity:.9; transform:scale(1.03); }
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width:720px){
-  .rb-home-shell{
-    padding:14px 10px calc(var(--rb-nav-h) + 18px);
-  }
-
-  .rb-home-top{
-    align-items:flex-start;
-  }
-
-  .rb-profile-pill{
-    min-width:118px;
-  }
-
-  .rb-profile-pill img{
-    width:38px;
-    height:38px;
-  }
-
-  .rb-portal-stage{
-    min-height:610px;
-  }
 }
