@@ -3,11 +3,12 @@
    /core/pages/messages.js
 
    MESSAGES FOUNDATION CONTROLLER
+   Correct Guard Import Locked
 ========================= */
 
 import {
   autoGuardCurrentPage
-} from "/core/shared/rb-guards.js";
+} from "/core/features/auth/session-guard.js";
 
 import {
   initAuthState,
@@ -27,8 +28,12 @@ const els = {
   status: $("messages-status")
 };
 
+/* =========================
+   PAINT
+========================= */
+
 function paintMessages(state) {
-  const profile = state?.profile;
+  const profile = state?.profile || null;
 
   if (els.name) {
     els.name.textContent = profileName(profile);
@@ -39,9 +44,14 @@ function paintMessages(state) {
   }
 
   if (els.status) {
-    els.status.textContent = "Messages foundation online.";
+    els.status.textContent =
+      "Messages foundation online.";
   }
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootMessagesPage() {
   await autoGuardCurrentPage();
@@ -54,9 +64,20 @@ async function bootMessagesPage() {
     paintMessages(nextState);
   });
 
-  document.body.classList.add("rb-messages-ready");
+  document.body.classList.add(
+    "rb-messages-ready"
+  );
 
-  console.log("RB MESSAGES FOUNDATION READY");
+  console.log(
+    "RB MESSAGES FOUNDATION READY"
+  );
 }
 
-bootMessagesPage();
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    bootMessagesPage
+  );
+} else {
+  bootMessagesPage();
+}
