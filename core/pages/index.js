@@ -2,14 +2,14 @@
    RICH BIZNESS MOBILE
    /core/pages/index.js
 
-   HOME BRAIN ONLY
-   Uses rb-section-state as section source
+   HOME PAGE CONTROLLER
+   Uses locked shared chain only
 ========================= */
 
 import {
-  initAuthState,
-  onAuthState
-} from "/core/features/auth/auth-state.js";
+  getAuthState,
+  refreshProfile
+} from "/core/shared/rb-auth.js";
 
 import {
   profileAvatar,
@@ -19,17 +19,17 @@ import {
 
 import {
   getSections,
-  setActiveSection
+  getActiveSection,
+  setActiveSection,
+  nextSection,
+  prevSection
 } from "/core/shared/rb-section-state.js";
 
+import {
+  goTo
+} from "/core/shared/rb-router.js";
+
 const $ = (id) => document.getElementById(id);
-
-const SECTIONS = getSections();
-
-let activeIndex = Math.max(
-  0,
-  SECTIONS.findIndex((section) => section.key === "live")
-);
 
 const els = {
   orbit: $("rb-tv-orbit"),
@@ -51,93 +51,91 @@ const els = {
   meta: $("rb-active-meta")
 };
 
-/* =========================
-   TV CARD CREATION
-========================= */
+function getAuthed() {
+  return !!getAuthState()?.authed;
+}
 
-function renderOrbitCards() {
+function ensureOrbitScreens() {
   if (!els.orbit) return;
 
-  els.orbit.innerHTML = "";
+  const sections = getSections();
+  const existingScreens = [
+    ...els.orbit.querySelectorAll(".rb-tv-screen")
+  ];
 
-  SECTIONS.forEach((section, index) => {
-    const card = document.createElement("button");
+  if (!existingScreens.length) {
+    sections.forEach((section) => {
+      const screen = document.createElement("button");
 
-    card.type = "button";
-    card.className = "rb-tv-screen";
-    card.dataset.rbSection = section.key;
-    card.dataset.rbIndex = String(index);
+      screen.type = "button";
+      screen.className = "rb-tv-screen";
+      screen.dataset.rbSection = section.key;
 
-    card.innerHTML = `
-      <span class="rb-tv-glare"></span>
-      <span class="rb-tv-label">${section.label}</span>
-      <strong>${section.title}</strong>
-      <small>${section.meta}</small>
-    `;
+      screen.innerHTML = `
+        <span class="rb-tv-glare"></span>
+        <span class="rb-tv-label">${section.label}</span>
+        <strong>${section.title}</strong>
+        <small>${section.meta}</small>
+      `;
 
-    card.addEventListener("click", () => {
-      activeIndex = index;
-      syncActiveSection();
+      els.orbit.appendChild(screen);
     });
 
-    els.orbit.appendChild(card);
+    return;
+  }
+
+  existingScreens.forEach((screen) => {
+    const section = sections.find(
+      (item) => item.key === screen.dataset.rbSection
+    );
+
+    if (!section) return;
+
+    const label =
+      screen.querySelector(".rb-tv-label") ||
+      screen.querySelector(".rb-tv-overlay span");
+
+    const title =
+      screen.querySelector("strong") ||
+      screen.querySelector(".rb-tv-overlay h3");
+
+    const meta =
+      screen.querySelector("small");
+
+    if (label) label.textContent = section.label;
+    if (title) title.textContent = section.title;
+    if (meta) meta.textContent = section.meta;
   });
 }
 
-/* =========================
-   SECTION STATE
-========================= */
+function paintSection(section = getActiveSection()) {
+  if (!section) return;
 
-function getActiveSection() {
-  return SECTIONS[activeIndex] || SECTIONS[0];
-}
+  document.body.dataset.activeSection = section.key;
 
-function syncActiveSection() {
-  const section = getActiveSection();
-  const syncedSection = setActiveSection(section.key);
-
-  document.body.dataset.activeSection = syncedSection.key;
-
-  if (els.label) els.label.textContent = syncedSection.label;
-  if (els.title) els.title.textContent = syncedSection.title;
-  if (els.meta) els.meta.textContent = syncedSection.meta;
+  if (els.label) els.label.textContent = section.label;
+  if (els.title) els.title.textContent = section.title;
+  if (els.meta) els.meta.textContent = section.meta;
 
   document.querySelectorAll("[data-rb-route]").forEach((button) => {
     button.classList.toggle(
       "active",
-      button.dataset.rbRoute === syncedSection.key
+      button.dataset.rbRoute === section.key
     );
   });
 
-  document.querySelectorAll(".rb-tv-screen").forEach((card) => {
-    card.classList.toggle(
+  document.querySelectorAll(".rb-tv-screen").forEach((screen) => {
+    screen.classList.toggle(
       "is-active",
-      card.dataset.rbSection === syncedSection.key
+      screen.dataset.rbSection === section.key
     );
   });
 }
 
-function rotateNext() {
-  activeIndex = (activeIndex + 1) % SECTIONS.length;
-  syncActiveSection();
-}
-
-function rotatePrev() {
-  activeIndex =
-    activeIndex === 0
-      ? SECTIONS.length - 1
-      : activeIndex - 1;
-
-  syncActiveSection();
-}
-
-/* =========================
-   IDENTITY HYDRATION
-========================= */
-
-function hydrateIdentity(state) {
-  const authed = !!state?.isAuthed;
+function hydrateIdentity() {
+  const state = getAuthState();
   const profile = state?.profile || null;
+  const authed = !!state?.authed;
 
   document.body.classList.toggle("is-authed", authed);
   document.body.classList.toggle("is-guest", !authed);
@@ -165,68 +163,69 @@ function hydrateIdentity(state) {
   }
 }
 
-/* =========================
-   ACTIONS
-========================= */
-
 function bindActions() {
-  els.nextBtn?.addEventListener("click", rotateNext);
-  els.prevBtn?.addEventListener("click", rotatePrev);
+  els.nextBtn?.addEventListener("click", () => {
+    const section = nextSection();
+    paintSection(section);
+  });
+
+  els.prevBtn?.addEventListener("click", () => {
+    const section = prevSection();
+    paintSection(section);
+  });
 
   els.launchBtn?.addEventListener("click", () => {
-    window.location.href = getActiveSection().route;
+    goTo(getActiveSection().route);
   });
 
   els.uploadBtn?.addEventListener("click", () => {
-    window.location.href = "/upload";
+    goTo("/upload");
   });
 
   els.authBtn?.addEventListener("click", () => {
-    window.location.href = document.body.classList.contains("is-authed")
-      ? "/profile"
-      : "/auth";
+    goTo(getAuthed() ? "/profile" : "/auth");
   });
 
   els.profileBtn?.addEventListener("click", () => {
-    window.location.href = document.body.classList.contains("is-authed")
-      ? "/profile"
-      : "/auth";
+    goTo(getAuthed() ? "/profile" : "/auth");
   });
 
   document.querySelectorAll("[data-rb-route]").forEach((button) => {
     button.addEventListener("click", () => {
-      const index = SECTIONS.findIndex(
-        (section) => section.key === button.dataset.rbRoute
-      );
+      const key = button.dataset.rbRoute;
+      const section = setActiveSection(key);
+      paintSection(section);
+    });
+  });
 
-      if (index < 0) return;
-
-      activeIndex = index;
-      syncActiveSection();
+  document.querySelectorAll(".rb-tv-screen").forEach((screen) => {
+    screen.addEventListener("click", () => {
+      const key = screen.dataset.rbSection;
+      const section = setActiveSection(key);
+      paintSection(section);
     });
   });
 }
 
-/* =========================
-   INIT
-========================= */
-
 async function bootHome() {
-  renderOrbitCards();
-  syncActiveSection();
+  ensureOrbitScreens();
+
+  const section = setActiveSection("live");
+  paintSection(section);
+
+  await refreshProfile();
+  hydrateIdentity();
+
   bindActions();
 
-  const state = await initAuthState();
-
-  hydrateIdentity(state);
-
-  onAuthState((nextState) => {
-    hydrateIdentity(nextState);
+  window.addEventListener("focus", async () => {
+    await refreshProfile();
+    hydrateIdentity();
   });
 
   document.body.classList.add("rb-home-ready");
 
-  console.log("RB HOME BRAIN READY");
+  console.log("RB INDEX READY");
 }
 
 bootHome();
