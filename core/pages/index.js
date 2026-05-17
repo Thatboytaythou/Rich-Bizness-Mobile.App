@@ -3,11 +3,12 @@
    /core/pages/index.js
 
    HOME PAGE CONTROLLER
-   Uses locked shared chain only
+   Auth Paint + Click Lock Fixed
 ========================= */
 
 import {
   getAuthState,
+  bootAuth,
   refreshProfile
 } from "/core/shared/rb-auth.js";
 
@@ -51,6 +52,8 @@ const els = {
   meta: $("rb-active-meta")
 };
 
+let actionsBound = false;
+
 function getAuthed() {
   return !!getAuthState()?.authed;
 }
@@ -72,10 +75,15 @@ function ensureOrbitScreens() {
       screen.dataset.rbSection = section.key;
 
       screen.innerHTML = `
-        <span class="rb-tv-glare"></span>
-        <span class="rb-tv-label">${section.label}</span>
-        <strong>${section.title}</strong>
-        <small>${section.meta}</small>
+        <img
+          src="/images/sections/${section.key}.jpg"
+          alt="${section.title}"
+        />
+
+        <div class="rb-tv-overlay">
+          <span>${section.label}</span>
+          <h3>${section.title}</h3>
+        </div>
       `;
 
       els.orbit.appendChild(screen);
@@ -163,7 +171,15 @@ function hydrateIdentity() {
   }
 }
 
+function safeGo(route) {
+  if (!route) return;
+  window.location.href = route;
+}
+
 function bindActions() {
+  if (actionsBound) return;
+  actionsBound = true;
+
   els.nextBtn?.addEventListener("click", () => {
     const section = nextSection();
     paintSection(section);
@@ -175,19 +191,19 @@ function bindActions() {
   });
 
   els.launchBtn?.addEventListener("click", () => {
-    goTo(getActiveSection().route);
+    safeGo(getActiveSection().route);
   });
 
   els.uploadBtn?.addEventListener("click", () => {
-    goTo("/upload");
+    safeGo("/upload");
   });
 
   els.authBtn?.addEventListener("click", () => {
-    goTo(getAuthed() ? "/profile" : "/auth");
+    safeGo(getAuthed() ? "/profile" : "/auth");
   });
 
   els.profileBtn?.addEventListener("click", () => {
-    goTo(getAuthed() ? "/profile" : "/auth");
+    safeGo(getAuthed() ? "/profile" : "/auth");
   });
 
   document.querySelectorAll("[data-rb-route]").forEach((button) => {
@@ -207,20 +223,27 @@ function bindActions() {
   });
 }
 
+async function syncIdentity() {
+  await bootAuth();
+  await refreshProfile();
+  hydrateIdentity();
+}
+
 async function bootHome() {
   ensureOrbitScreens();
 
-  const section = setActiveSection("live");
-  paintSection(section);
+  const section = setActiveSection(
+    document.body.dataset.activeSection || "live"
+  );
 
-  await refreshProfile();
-  hydrateIdentity();
+  paintSection(section);
 
   bindActions();
 
+  await syncIdentity();
+
   window.addEventListener("focus", async () => {
-    await refreshProfile();
-    hydrateIdentity();
+    await syncIdentity();
   });
 
   document.body.classList.add("rb-home-ready");
@@ -228,4 +251,8 @@ async function bootHome() {
   console.log("RB INDEX READY");
 }
 
-bootHome();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootHome);
+} else {
+  bootHome();
+}
