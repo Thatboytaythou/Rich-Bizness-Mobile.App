@@ -4,8 +4,13 @@
 
    MOTION SYNC ENGINE
    Owns movement only
-   Balanced visible orbit
+   Synced to rb-section-state
 ========================= */
+
+import {
+  getActiveSection,
+  onSectionChange
+} from "/core/shared/rb-section-state.js";
 
 const portal = document.querySelector(".rb-core-portal");
 const stage = document.querySelector(".rb-portal-stage");
@@ -14,7 +19,11 @@ let mouseX = 0;
 let mouseY = 0;
 let smoothX = 0;
 let smoothY = 0;
+
 let orbitRotation = 0;
+let targetRotation = 0;
+
+let activeSectionKey = getActiveSection()?.key || "live";
 
 function getScreens() {
   return [...document.querySelectorAll(".rb-tv-screen")];
@@ -23,6 +32,19 @@ function getScreens() {
 function updatePointer(x, y) {
   mouseX = x / window.innerWidth - 0.5;
   mouseY = y / window.innerHeight - 0.5;
+}
+
+function syncTargetRotation() {
+  const screens = getScreens();
+  const activeIndex = screens.findIndex(
+    (screen) => screen.dataset.rbSection === activeSectionKey
+  );
+
+  if (activeIndex < 0 || !screens.length) return;
+
+  const step = 360 / screens.length;
+
+  targetRotation = 90 - activeIndex * step;
 }
 
 window.addEventListener("mousemove", (event) => {
@@ -36,13 +58,18 @@ window.addEventListener("touchmove", (event) => {
   updatePointer(touch.clientX, touch.clientY);
 }, { passive: true });
 
+onSectionChange((section) => {
+  activeSectionKey = section.key;
+  syncTargetRotation();
+});
+
 function animate() {
   const screens = getScreens();
 
   smoothX += (mouseX - smoothX) * 0.04;
   smoothY += (mouseY - smoothY) * 0.04;
 
-  orbitRotation += 0.045;
+  orbitRotation += (targetRotation - orbitRotation) * 0.055;
 
   if (stage) {
     stage.style.transform = `
@@ -54,7 +81,7 @@ function animate() {
   }
 
   if (portal) {
-    const portalFloat = Math.sin(orbitRotation * 0.014) * 5;
+    const portalFloat = Math.sin(Date.now() * 0.0012) * 5;
 
     portal.style.transform = `
       translate(-50%, -50%)
@@ -63,7 +90,7 @@ function animate() {
         calc(${portalFloat}px + ${smoothY * -6}px),
         0
       )
-      scale(${1 + Math.sin(orbitRotation * 0.012) * 0.012})
+      scale(${1 + Math.sin(Date.now() * 0.001) * 0.012})
     `;
   }
 
@@ -81,20 +108,33 @@ function animate() {
     const y = Math.sin(radians) * radiusY;
 
     const depth = Math.sin(radians);
-
     const frontAmount = (depth + 1) / 2;
 
-    const scale = 0.72 + frontAmount * 0.22;
-    const opacity = 0.34 + frontAmount * 0.46;
-    const brightness = 0.72 + frontAmount * 0.38;
-    const blur = (1 - frontAmount) * 1.8;
-    const zDepth = depth * 85;
+    const isActive = screen.dataset.rbSection === activeSectionKey;
+
+    const scale =
+      0.68 +
+      frontAmount * 0.18 +
+      (isActive ? 0.08 : 0);
+
+    const opacity =
+      0.26 +
+      frontAmount * 0.42 +
+      (isActive ? 0.22 : 0);
+
+    const brightness =
+      0.7 +
+      frontAmount * 0.34 +
+      (isActive ? 0.16 : 0);
+
+    const blur = isActive ? 0 : (1 - frontAmount) * 1.7;
+    const zDepth = depth * 70 + (isActive ? 45 : 0);
 
     screen.style.zIndex = String(
-      Math.floor(frontAmount * 100)
+      Math.floor(frontAmount * 100) + (isActive ? 100 : 0)
     );
 
-    screen.style.opacity = String(opacity);
+    screen.style.opacity = String(Math.min(opacity, 1));
 
     screen.style.filter = `
       brightness(${brightness})
@@ -118,6 +158,7 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
+syncTargetRotation();
 animate();
 
 document.body.classList.add("rb-motion-sync-loaded");
