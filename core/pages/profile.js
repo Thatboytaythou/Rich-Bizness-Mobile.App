@@ -7,11 +7,10 @@
 
 import {
   autoGuardCurrentPage
-} from "/core/shared/rb-guards.js";
+} from "/core/features/auth/session-guard.js";
 
 import {
   initAuthState,
-  getAuthState,
   onAuthState
 } from "/core/features/auth/auth-state.js";
 
@@ -23,9 +22,9 @@ import {
   profileBadge
 } from "/core/shared/rb-profile.js";
 
-/* =========================
-   ELEMENTS
-========================= */
+import {
+  bindSignOutButtons
+} from "/core/features/auth/auth-ui.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -39,12 +38,9 @@ const els = {
   editBtn: $("profile-edit-btn")
 };
 
-/* =========================
-   PAINT
-========================= */
-
 function paintProfile(state) {
   const profile = state?.profile;
+
   if (!profile) return;
 
   if (els.avatar) {
@@ -70,23 +66,18 @@ function paintProfile(state) {
 
   if (els.bio) {
     els.bio.textContent =
-      profile.bio || "No bio yet. Build your Rich Bizness identity.";
+      profile.bio ||
+      "No bio yet. Build your Rich Bizness identity.";
   }
 }
-
-/* =========================
-   ACTIONS
-========================= */
 
 function bindProfileActions() {
   els.editBtn?.addEventListener("click", () => {
     window.location.href = "/edit";
   });
-}
 
-/* =========================
-   BOOT
-========================= */
+  bindSignOutButtons();
+}
 
 async function bootProfilePage() {
   await autoGuardCurrentPage();
