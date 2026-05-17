@@ -4,6 +4,7 @@
 
    AUTH SYSTEM
    Synced To rb-supabase.js
+   Profile Upsert Locked
 ========================= */
 
 import {
@@ -20,7 +21,8 @@ import {
 } from "/core/shared/rb-supabase.js";
 
 import {
-  RB_ROUTES
+  RB_ROUTES,
+  RB_TABLES
 } from "/core/shared/rb-config.js";
 
 const supabase = getSupabase();
@@ -46,13 +48,75 @@ export function getAuthState() {
   };
 }
 
+function cleanUsername(username = "") {
+  return String(username || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 24);
+}
+
+function fallbackName(email = "") {
+  return String(email || "")
+    .split("@")[0]
+    .replace(/[^a-zA-Z0-9_ ]/g, "")
+    .trim() || "Rich User";
+}
+
+async function upsertProfileFromAuth({
+  user,
+  email,
+  username = "",
+  displayName = ""
+}) {
+  if (!user?.id) return null;
+
+  const finalUsername =
+    cleanUsername(username) ||
+    cleanUsername(email.split("@")[0]) ||
+    `rich_${user.id.slice(0, 8)}`;
+
+  const finalDisplayName =
+    String(displayName || "").trim() ||
+    fallbackName(email);
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .upsert(
+      {
+        id: user.id,
+        username: finalUsername,
+        display_name: finalDisplayName,
+        full_name: finalDisplayName,
+        avatar_url: "/images/profile/default-avatar.png",
+        banner_url: "/images/profile/default-banner.png",
+        role: "user",
+        updated_at: new Date().toISOString()
+      },
+      {
+        onConflict: "id"
+      }
+    )
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB PROFILE UPSERT WARNING]", error.message);
+    return null;
+  }
+
+  await loadProfile(user.id);
+
+  return data;
+}
+
 export async function rbSignUp({
   email,
   password,
   username = "",
   displayName = ""
 }) {
-  return await signUp({
+  const data = await signUp({
     email,
     password,
     metadata: {
@@ -60,6 +124,22 @@ export async function rbSignUp({
       display_name: displayName
     }
   });
+
+  const user =
+    data?.user ||
+    data?.session?.user ||
+    null;
+
+  if (user?.id) {
+    await upsertProfileFromAuth({
+      user,
+      email,
+      username,
+      displayName
+    });
+  }
+
+  return data;
 }
 
 export async function rbSignIn({
@@ -71,6 +151,23 @@ export async function rbSignIn({
     email,
     password
   });
+
+  const user =
+    data?.user ||
+    data?.session?.user ||
+    getUser();
+
+  if (user?.id) {
+    await upsertProfileFromAuth({
+      user,
+      email,
+      username: user.user_metadata?.username || "",
+      displayName:
+        user.user_metadata?.display_name ||
+        user.user_metadata?.full_name ||
+        ""
+    });
+  }
 
   if (redirectTo) {
     window.location.href = redirectTo;
