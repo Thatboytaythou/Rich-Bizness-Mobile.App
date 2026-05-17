@@ -4,6 +4,7 @@
 
    AUTH + FORM VISUAL SYSTEM
    HERO LOGO LOCKED
+   Safari Form Switch Fixed
 ========================= */
 
 .rb-auth-shell{
@@ -25,78 +26,58 @@
 .rb-auth-hero{
   position:relative;
   overflow:hidden;
-
   padding:26px;
   border:1px solid rgba(255,215,106,.24);
   border-radius:32px;
-
   background:
     linear-gradient(
       135deg,
       rgba(8,18,10,.86),
       rgba(0,0,0,.82)
     );
-
   backdrop-filter:blur(18px);
-
+  -webkit-backdrop-filter:blur(18px);
   box-shadow:
     0 0 44px rgba(0,255,136,.16),
     inset 0 0 80px rgba(255,215,106,.04);
 }
 
-/* HERO LOGO */
-
 .rb-auth-hero::before{
   content:"";
-
   position:absolute;
   inset:0;
-
-  background:
-    url("/images/brand/hero-logo.png.jpeg");
-
+  background:url("/images/brand/hero-logo.png.jpeg");
   background-size:cover;
   background-position:center;
-
   opacity:.12;
-
   transform:scale(1.08);
-
   filter:
     saturate(1.25)
     contrast(1.12)
     brightness(.92);
-
   pointer-events:none;
 }
 
-/* GREEN + GOLD GLOW */
-
 .rb-auth-hero::after{
   content:"";
-
   position:absolute;
   inset:0;
-
   background:
     radial-gradient(
       circle at 20% 20%,
       rgba(0,255,136,.14),
       transparent 34%
     ),
-
     radial-gradient(
       circle at 80% 70%,
       rgba(255,215,106,.12),
       transparent 36%
     ),
-
     linear-gradient(
       180deg,
       rgba(0,0,0,.08),
       rgba(0,0,0,.42)
     );
-
   pointer-events:none;
 }
 
@@ -107,15 +88,10 @@
 
 .rb-auth-hero h1{
   margin:0;
-
   font-size:clamp(2.4rem, 10vw, 5.8rem);
-
   line-height:.88;
-
   color:var(--rb-gold);
-
   letter-spacing:-.07em;
-
   text-shadow:
     0 0 26px rgba(255,215,106,.22),
     0 0 48px rgba(0,255,136,.08);
@@ -123,11 +99,8 @@
 
 .rb-auth-hero p{
   margin-top:12px;
-
   color:var(--rb-muted);
-
   max-width:680px;
-
   line-height:1.5;
 }
 
@@ -138,41 +111,38 @@
 .rb-auth-panel{
   position:relative;
   overflow:hidden;
-
   border:1px solid rgba(102,255,102,.32);
-
   border-radius:30px;
-
   padding:16px;
-
   background:
     linear-gradient(
       135deg,
       rgba(8,18,10,.88),
       rgba(0,0,0,.82)
     );
-
   box-shadow:
     0 0 42px rgba(0,255,136,.18),
     inset 0 0 50px rgba(255,215,106,.06);
-
   backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
 }
 
 .rb-auth-panel::before{
   content:"";
-
   position:absolute;
   inset:0;
-
   background:
     radial-gradient(
       circle at top,
       rgba(0,255,136,.08),
       transparent 34%
     );
-
   pointer-events:none;
+}
+
+.rb-auth-panel > *{
+  position:relative;
+  z-index:2;
 }
 
 /* =========================
@@ -188,19 +158,14 @@
 
 .rb-auth-tabs button{
   min-height:48px;
-
   border-radius:999px;
-
   border:1px solid rgba(255,215,106,.24);
-
   background:rgba(0,0,0,.48);
-
   color:var(--rb-muted);
-
   font-weight:1000;
-
   letter-spacing:.06em;
-
+  cursor:pointer;
+  touch-action:manipulation;
   transition:
     transform .18s ease,
     box-shadow .18s ease,
@@ -214,16 +179,13 @@
 body[data-auth-mode="signin"] [data-auth-mode="signin"],
 body[data-auth-mode="signup"] [data-auth-mode="signup"]{
   color:#001806;
-
   background:
     linear-gradient(
       135deg,
       var(--rb-green),
       var(--rb-gold)
     );
-
-  box-shadow:
-    0 0 24px rgba(0,255,136,.32);
+  box-shadow:0 0 24px rgba(0,255,136,.32);
 }
 
 /* =========================
@@ -231,61 +193,54 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"]{
 ========================= */
 
 .rb-auth-form{
-  display:grid;
   gap:14px;
+}
+
+#rb-signin-form,
+#rb-signup-form{
+  display:none;
+}
+
+.rb-auth-panel.is-signin #rb-signin-form{
+  display:grid;
+}
+
+.rb-auth-panel.is-signup #rb-signup-form{
+  display:grid;
 }
 
 .rb-auth-form h2{
   margin:4px 0 2px;
-
   color:var(--rb-gold);
-
   font-size:1.5rem;
-
-  text-shadow:
-    0 0 20px rgba(255,215,106,.14);
+  text-shadow:0 0 20px rgba(255,215,106,.14);
 }
 
 .rb-auth-form label{
   display:grid;
   gap:7px;
-
   color:var(--rb-green);
-
   font-size:.8rem;
-
   font-weight:900;
-
   letter-spacing:.08em;
-
   text-transform:uppercase;
 }
 
 .rb-auth-form input{
   width:100%;
-
   min-height:54px;
-
   border-radius:18px;
-
   border:1px solid rgba(255,215,106,.22);
-
   outline:none;
-
   padding:0 16px;
-
   color:var(--rb-white);
-
   background:
     linear-gradient(
       180deg,
       rgba(0,0,0,.72),
       rgba(5,12,7,.88)
     );
-
-  box-shadow:
-    inset 0 0 22px rgba(0,255,136,.06);
-
+  box-shadow:inset 0 0 22px rgba(0,255,136,.06);
   transition:
     border-color .18s ease,
     box-shadow .18s ease,
@@ -298,59 +253,36 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"]{
 
 .rb-auth-form input:focus{
   border-color:rgba(102,255,102,.72);
-
   box-shadow:
     0 0 22px rgba(0,255,136,.22),
     inset 0 0 22px rgba(0,255,136,.08);
-
   transform:translateY(-1px);
 }
 
 .rb-auth-form textarea{
   width:100%;
-
   min-height:120px;
-
   resize:vertical;
-
   border-radius:18px;
-
   border:1px solid rgba(255,215,106,.22);
-
   outline:none;
-
   padding:14px;
-
   color:var(--rb-white);
-
   background:
     linear-gradient(
       180deg,
       rgba(0,0,0,.72),
       rgba(5,12,7,.88)
     );
-
-  box-shadow:
-    inset 0 0 22px rgba(0,255,136,.06);
-
+  box-shadow:inset 0 0 22px rgba(0,255,136,.06);
   font:inherit;
 }
 
 .rb-auth-form textarea:focus{
   border-color:rgba(102,255,102,.72);
-
   box-shadow:
     0 0 22px rgba(0,255,136,.22),
     inset 0 0 22px rgba(0,255,136,.08);
-}
-
-/* =========================
-   SIGN IN / SIGN UP SWITCH
-========================= */
-
-.rb-auth-panel.is-signin #rb-signup-form,
-.rb-auth-panel.is-signup #rb-signin-form{
-  display:none;
 }
 
 .rb-auth-form.is-loading{
@@ -364,15 +296,10 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"]{
 
 .rb-auth-home{
   justify-self:center;
-
   color:var(--rb-gold);
-
   text-decoration:none;
-
   font-weight:1000;
-
   letter-spacing:.06em;
-
   transition:
     transform .18s ease,
     opacity .18s ease;
@@ -391,7 +318,6 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"]{
 ========================= */
 
 @media (max-width:720px){
-
   .rb-auth-shell{
     padding:
       max(18px, env(safe-area-inset-top))
@@ -411,5 +337,4 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"]{
   .rb-auth-hero h1{
     font-size:clamp(2.3rem, 12vw, 4.4rem);
   }
-
 }
