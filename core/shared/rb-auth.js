@@ -27,8 +27,6 @@ import {
 
 const supabase = getSupabase();
 
-await bootAuth();
-
 export {
   getSupabase,
   getSession,
