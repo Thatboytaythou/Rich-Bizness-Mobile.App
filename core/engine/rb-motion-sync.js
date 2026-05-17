@@ -74,8 +74,8 @@ function animate() {
 
     const isMobile = window.innerWidth <= 720;
 
-    const radiusX = isMobile ? 190 : 280;
-    const radiusY = isMobile ? 118 : 155;
+    const radiusX = isMobile ? 135 : 280;
+    const radiusY = isMobile ? 92 : 155;
 
     const x = Math.cos(radians) * radiusX;
     const y = Math.sin(radians) * radiusY;
