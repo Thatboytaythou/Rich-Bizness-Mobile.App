@@ -3,11 +3,12 @@
    /core/pages/notifications.js
 
    NOTIFICATIONS FOUNDATION CONTROLLER
+   Correct Guard Import Locked
 ========================= */
 
 import {
   autoGuardCurrentPage
-} from "/core/shared/rb-guards.js";
+} from "/core/features/auth/session-guard.js";
 
 import {
   initAuthState,
@@ -26,8 +27,12 @@ const els = {
   list: $("notifications-list")
 };
 
+/* =========================
+   PAINT
+========================= */
+
 function paintNotifications(state) {
-  const profile = state?.profile;
+  const profile = state?.profile || null;
 
   if (els.title) {
     els.title.textContent =
@@ -43,6 +48,7 @@ function paintNotifications(state) {
     els.list.innerHTML = `
       <article class="rb-notification-card">
         <strong>System Ready</strong>
+
         <p>
           Your Rich Bizness notification engine
           is connected to the identity layer.
@@ -51,6 +57,10 @@ function paintNotifications(state) {
     `;
   }
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootNotificationsPage() {
   await autoGuardCurrentPage();
@@ -63,9 +73,20 @@ async function bootNotificationsPage() {
     paintNotifications(nextState);
   });
 
-  document.body.classList.add("rb-notifications-ready");
+  document.body.classList.add(
+    "rb-notifications-ready"
+  );
 
-  console.log("RB NOTIFICATIONS FOUNDATION READY");
+  console.log(
+    "RB NOTIFICATIONS FOUNDATION READY"
+  );
 }
 
-bootNotificationsPage();
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    bootNotificationsPage
+  );
+} else {
+  bootNotificationsPage();
+}
