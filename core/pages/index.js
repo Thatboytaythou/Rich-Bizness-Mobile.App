@@ -3,7 +3,8 @@
    /core/pages/index.js
 
    HOME PAGE CONTROLLER
-   Auth Paint + Click Lock Fixed
+   SAFE INDEX RESTORE
+   Clicks + Identity + Portal Locked
 ========================= */
 
 import {
@@ -26,48 +27,51 @@ import {
   prevSection
 } from "/core/shared/rb-section-state.js";
 
-import {
-  goTo
-} from "/core/shared/rb-router.js";
-
 const $ = (id) => document.getElementById(id);
-
-const els = {
-  orbit: $("rb-tv-orbit"),
-
-  avatar: $("rb-home-avatar"),
-  name: $("rb-home-name"),
-  badge: $("rb-home-badge"),
-
-  profileBtn: $("rb-open-profile"),
-  uploadBtn: $("rb-open-upload"),
-  authBtn: $("rb-open-auth"),
-
-  launchBtn: $("rb-launch-section"),
-  prevBtn: $("rb-rotate-prev"),
-  nextBtn: $("rb-rotate-next"),
-
-  label: $("rb-active-label"),
-  title: $("rb-active-title"),
-  meta: $("rb-active-meta")
-};
 
 let actionsBound = false;
 
-function getAuthed() {
+function getEls() {
+  return {
+    orbit: $("rb-tv-orbit"),
+
+    avatar: $("rb-home-avatar"),
+    name: $("rb-home-name"),
+    badge: $("rb-home-badge"),
+
+    profileBtn: $("rb-open-profile"),
+    uploadBtn: $("rb-open-upload"),
+    authBtn: $("rb-open-auth"),
+
+    launchBtn: $("rb-launch-section"),
+    prevBtn: $("rb-rotate-prev"),
+    nextBtn: $("rb-rotate-next"),
+
+    label: $("rb-active-label"),
+    title: $("rb-active-title"),
+    meta: $("rb-active-meta")
+  };
+}
+
+function safeGo(route) {
+  if (!route) return;
+  window.location.assign(route);
+}
+
+function isAuthedNow() {
   return !!getAuthState()?.authed;
 }
 
 function ensureOrbitScreens() {
+  const els = getEls();
   if (!els.orbit) return;
 
-  const sections = getSections();
   const existingScreens = [
     ...els.orbit.querySelectorAll(".rb-tv-screen")
   ];
 
   if (!existingScreens.length) {
-    sections.forEach((section) => {
+    getSections().forEach((section) => {
       const screen = document.createElement("button");
 
       screen.type = "button";
@@ -93,7 +97,7 @@ function ensureOrbitScreens() {
   }
 
   existingScreens.forEach((screen) => {
-    const section = sections.find(
+    const section = getSections().find(
       (item) => item.key === screen.dataset.rbSection
     );
 
@@ -117,6 +121,7 @@ function ensureOrbitScreens() {
 }
 
 function paintSection(section = getActiveSection()) {
+  const els = getEls();
   if (!section) return;
 
   document.body.dataset.activeSection = section.key;
@@ -141,6 +146,7 @@ function paintSection(section = getActiveSection()) {
 }
 
 function hydrateIdentity() {
+  const els = getEls();
   const state = getAuthState();
   const profile = state?.profile || null;
   const authed = !!state?.authed;
@@ -171,80 +177,88 @@ function hydrateIdentity() {
   }
 }
 
-function safeGo(route) {
-  if (!route) return;
-  window.location.href = route;
+async function syncIdentity() {
+  try {
+    await bootAuth();
+    await refreshProfile();
+  } catch (error) {
+    console.warn("[RB INDEX AUTH WARNING]", error?.message || error);
+  }
+
+  hydrateIdentity();
 }
 
 function bindActions() {
   if (actionsBound) return;
   actionsBound = true;
 
-  els.nextBtn?.addEventListener("click", () => {
-    const section = nextSection();
-    paintSection(section);
-  });
+  document.addEventListener("click", (event) => {
+    const clickable = event.target.closest("button, a, .rb-tv-screen");
+    if (!clickable) return;
 
-  els.prevBtn?.addEventListener("click", () => {
-    const section = prevSection();
-    paintSection(section);
-  });
+    if (clickable.id === "rb-rotate-next") {
+      event.preventDefault();
+      paintSection(nextSection());
+      return;
+    }
 
-  els.launchBtn?.addEventListener("click", () => {
-    safeGo(getActiveSection().route);
-  });
+    if (clickable.id === "rb-rotate-prev") {
+      event.preventDefault();
+      paintSection(prevSection());
+      return;
+    }
 
-  els.uploadBtn?.addEventListener("click", () => {
-    safeGo("/upload");
-  });
+    if (clickable.id === "rb-launch-section") {
+      event.preventDefault();
+      safeGo(getActiveSection().route);
+      return;
+    }
 
-  els.authBtn?.addEventListener("click", () => {
-    safeGo(getAuthed() ? "/profile" : "/auth");
-  });
+    if (clickable.id === "rb-open-upload") {
+      event.preventDefault();
+      safeGo("/upload");
+      return;
+    }
 
-  els.profileBtn?.addEventListener("click", () => {
-    safeGo(getAuthed() ? "/profile" : "/auth");
-  });
+    if (
+      clickable.id === "rb-open-auth" ||
+      clickable.id === "rb-open-profile"
+    ) {
+      event.preventDefault();
+      safeGo(isAuthedNow() ? "/profile" : "/auth");
+      return;
+    }
 
-  document.querySelectorAll("[data-rb-route]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const key = button.dataset.rbRoute;
-      const section = setActiveSection(key);
-      paintSection(section);
-    });
-  });
+    if (clickable.dataset?.rbRoute) {
+      event.preventDefault();
+      paintSection(setActiveSection(clickable.dataset.rbRoute));
+      return;
+    }
 
-  document.querySelectorAll(".rb-tv-screen").forEach((screen) => {
-    screen.addEventListener("click", () => {
-      const key = screen.dataset.rbSection;
-      const section = setActiveSection(key);
-      paintSection(section);
-    });
-  });
-}
+    const screen = clickable.closest(".rb-tv-screen");
 
-async function syncIdentity() {
-  await bootAuth();
-  await refreshProfile();
-  hydrateIdentity();
+    if (screen?.dataset?.rbSection) {
+      event.preventDefault();
+      paintSection(setActiveSection(screen.dataset.rbSection));
+    }
+  });
 }
 
 async function bootHome() {
   ensureOrbitScreens();
 
-  const section = setActiveSection(
+  const startSection = setActiveSection(
     document.body.dataset.activeSection || "live"
   );
 
-  paintSection(section);
+  paintSection(startSection);
 
   bindActions();
 
   await syncIdentity();
 
-  window.addEventListener("focus", async () => {
-    await syncIdentity();
-  });
+  window.addEventListener("focus", syncIdentity);
+  window.addEventListener("pageshow", syncIdentity);
 
   document.body.classList.add("rb-home-ready");
 
