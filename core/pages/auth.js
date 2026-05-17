@@ -3,7 +3,7 @@
    /core/pages/auth.js
 
    AUTH PAGE CONTROLLER
-   Redirect Finalized
+   Confirmation + Redirect Locked
 ========================= */
 
 import {
@@ -22,21 +22,41 @@ function getRedirectTarget() {
     params.get("redirect") ||
     "/";
 
-  if (next.startsWith("http")) {
+  if (!next || next.startsWith("http")) {
     return "/";
   }
 
   return next;
 }
 
+function isAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+
+  return (
+    params.has("code") ||
+    params.has("token_hash") ||
+    params.has("access_token") ||
+    params.has("refresh_token") ||
+    params.has("type")
+  );
+}
+
 async function bootAuthPage() {
   const redirectTo = getRedirectTarget();
 
-  await blockSession({
-    redirectTo
-  });
-
   await initAuthUI();
+
+  if (!isAuthCallback()) {
+    await blockSession({
+      redirectTo
+    });
+  }
+
+  if (isAuthCallback()) {
+    window.setTimeout(() => {
+      window.location.href = redirectTo;
+    }, 900);
+  }
 
   document.body.classList.add("rb-auth-ready");
 
