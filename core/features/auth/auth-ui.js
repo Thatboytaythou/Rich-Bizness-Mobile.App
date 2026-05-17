@@ -4,6 +4,7 @@
 
    CINEMATIC AUTH UI BINDINGS
    Hardened Auth Sync
+   Safari Form Switch Fixed
 ========================= */
 
 import {
@@ -47,10 +48,28 @@ function setLoading(form, isLoading) {
 }
 
 function switchMode(mode = "signin") {
-  document.body.dataset.authMode = mode;
+  const nextMode = mode === "signup" ? "signup" : "signin";
 
-  $(".rb-auth-panel")?.classList.toggle("is-signup", mode === "signup");
-  $(".rb-auth-panel")?.classList.toggle("is-signin", mode === "signin");
+  document.body.dataset.authMode = nextMode;
+
+  const panel = $(".rb-auth-panel");
+
+  if (!panel) return;
+
+  panel.classList.remove("is-signin", "is-signup");
+
+  panel.classList.add(
+    nextMode === "signup"
+      ? "is-signup"
+      : "is-signin"
+  );
+
+  $$("[data-auth-mode]").forEach((button) => {
+    button.classList.toggle(
+      "is-active",
+      button.dataset.authMode === nextMode
+    );
+  });
 }
 
 /* =========================
@@ -219,7 +238,9 @@ export async function initAuthUI() {
   bindAuthModeToggles();
   bindAuthStatus();
 
-  switchMode("signin");
+  switchMode(
+    document.body.dataset.authMode || "signin"
+  );
 
   toastInfo("Identity system online.", "Rich Bizness");
 }
