@@ -5,6 +5,7 @@
    CINEMATIC AUTH UI BINDINGS
    Hardened Auth Sync
    Safari Form Switch Fixed
+   Sign In Redirects To Profile
 ========================= */
 
 import {
@@ -132,7 +133,7 @@ export function bindSignInForm(selector = "#rb-signin-form") {
       await rbSignIn({
         email,
         password,
-        redirectTo: "/"
+        redirectTo: "/profile"
       });
     } catch (error) {
       toastError(error.message || "Sign in failed.");
