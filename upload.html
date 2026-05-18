@@ -1,1 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Rich Bizness — Upload</title>
+
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+</head>
+
+<body class="rb-page rb-upload-page">
+  <div class="rb-page-bg">
+    <img src="/images/brand/hero-banner.png" alt="" />
+  </div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/index.html">
+      <span>RICH</span>
+      <strong>BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav">
+      <a href="/feed.html">Feed</a>
+      <a href="/music.html">Music</a>
+      <a href="/gaming.html">Gaming</a>
+      <a href="/sports.html">Sports</a>
+      <a href="/gallery.html">Gallery</a>
+      <a class="is-active" href="/upload.html">Upload</a>
+      <a href="/profile.html">Profile</a>
+    </nav>
+  </header>
+
+  <main class="rb-section-shell">
+    <section class="rb-hero-panel">
+      <div>
+        <p class="rb-kicker">RICH BIZNESS UPLOAD CORE</p>
+        <h1>Drop Anything Into The Right Section</h1>
+        <p>
+          Upload once. The system routes it to the correct bucket, records it in uploads,
+          and creates the matching section record.
+        </p>
+      </div>
+
+      <div class="rb-stat-grid">
+        <article>
+          <strong id="upload-status-label">READY</strong>
+          <span>Status</span>
+        </article>
+        <article>
+          <strong id="upload-route-label">general</strong>
+          <span>Route</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="rb-panel is-active">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">CREATE DROP</p>
+          <h2>Upload Router</h2>
+        </div>
+      </div>
+
+      <form class="rb-form" id="rb-upload-form">
+        <label>
+          Upload Route
+          <select name="route_key" id="routeKey">
+            <option value="general">General Feed</option>
+            <option value="feed">Feed Post</option>
+            <option value="gallery">Gallery</option>
+            <option value="music">Music Track</option>
+            <option value="podcast">Podcast Episode</option>
+            <option value="radio">Radio Station Cover</option>
+            <option value="sports">Sports Clip</option>
+            <option value="gaming">Game Clip</option>
+            <option value="store-product">Store Product</option>
+            <option value="store-digital">Store Digital</option>
+            <option value="live-thumbnail">Live Thumbnail</option>
+            <option value="live-recording">Live Recording</option>
+            <option value="profile-avatar">Profile Avatar</option>
+            <option value="profile-banner">Profile Banner</option>
+            <option value="meta-avatar">Meta Avatar</option>
+          </select>
+        </label>
+
+        <label>
+          Title
+          <input name="title" id="uploadTitle" type="text" placeholder="Drop title" />
+        </label>
+
+        <label>
+          Description / Caption
+          <textarea name="description" id="uploadDescription" rows="4" placeholder="Write the caption..."></textarea>
+        </label>
+
+        <div class="rb-form-grid">
+          <label>
+            Category / Genre / Sport
+            <input name="category" id="uploadCategory" type="text" placeholder="general" />
+          </label>
+
+          <label>
+            Team / Game / Mood
+            <input name="tag" id="uploadTag" type="text" placeholder="optional" />
+          </label>
+        </div>
+
+        <label>
+          File
+          <input name="file" id="uploadFile" type="file" />
+        </label>
+
+        <div class="rb-upload-preview" id="uploadPreview">
+          <span>No file selected</span>
+        </div>
+
+        <button class="rb-main-launch" type="submit" id="uploadSubmitBtn">
+          UPLOAD DROP
+        </button>
+
+        <p class="rb-form-note" id="uploadMessage"></p>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="/core/pages/upload.js"></script>
+</body>
+</html>
