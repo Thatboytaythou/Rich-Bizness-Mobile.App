@@ -3,7 +3,7 @@
    /core/features/auth/auth-state.js
 
    UNIVERSAL AUTH STATE
-   FINAL LOCKED VERSION
+   SCHEMA LOCKED VERSION
 ========================= */
 
 import {
@@ -14,49 +14,32 @@ import {
   loadProfile
 } from "/core/shared/rb-supabase.js";
 
-/* =========================
-   INTERNAL STATE
-========================= */
-
 let authReady = false;
+let refreshRunning = false;
 
 const listeners = new Set();
-
-/* =========================
-   INIT AUTH
-========================= */
 
 export async function initAuthState() {
   await bootAuth();
 
   authReady = true;
-
   notifyAuthListeners();
 
   return getAuthState();
 }
 
-/* =========================
-   MAIN AUTH STATE
-========================= */
-
 export function getAuthState() {
+  const user = getUser();
+  const profile = getProfile();
+
   return {
     ready: authReady,
-
     session: getSession(),
-
-    user: getUser(),
-
-    profile: getProfile(),
-
-    isAuthed: !!getUser()
+    user,
+    profile,
+    isAuthed: !!user?.id
   };
 }
-
-/* =========================
-   REFRESH PROFILE
-========================= */
 
 export async function refreshAuthProfile() {
   const user = getUser();
@@ -66,16 +49,24 @@ export async function refreshAuthProfile() {
     return null;
   }
 
-  const profile = await loadProfile(user.id);
+  if (refreshRunning) {
+    return getProfile();
+  }
 
-  notifyAuthListeners();
+  refreshRunning = true;
 
-  return profile;
+  try {
+    const profile = await loadProfile(user.id);
+    notifyAuthListeners();
+    return profile;
+  } catch (error) {
+    console.warn("[RB AUTH PROFILE REFRESH SKIPPED]", error);
+    notifyAuthListeners();
+    return getProfile();
+  } finally {
+    refreshRunning = false;
+  }
 }
-
-/* =========================
-   AUTH LISTENERS
-========================= */
 
 export function onAuthState(callback) {
   if (typeof callback !== "function") {
@@ -84,7 +75,11 @@ export function onAuthState(callback) {
 
   listeners.add(callback);
 
-  callback(getAuthState());
+  try {
+    callback(getAuthState());
+  } catch (error) {
+    console.warn("[RB AUTH LISTENER ERROR]", error);
+  }
 
   return () => {
     listeners.delete(callback);
@@ -95,36 +90,30 @@ export function notifyAuthListeners() {
   const state = getAuthState();
 
   listeners.forEach((callback) => {
-    callback(state);
+    try {
+      callback(state);
+    } catch (error) {
+      console.warn("[RB AUTH LISTENER ERROR]", error);
+    }
   });
 }
-
-/* =========================
-   REQUIRE AUTH
-========================= */
 
 export function requireAuthState() {
   const state = getAuthState();
 
   if (!state.isAuthed) {
-    throw new Error(
-      "User is not authenticated."
-    );
+    throw new Error("User is not authenticated.");
   }
 
   return state;
 }
-
-/* =========================
-   QUICK HELPERS
-========================= */
 
 export function authIsReady() {
   return authReady;
 }
 
 export function isAuthed() {
-  return !!getUser();
+  return !!getUser()?.id;
 }
 
 export function getAuthUserId() {
@@ -136,11 +125,7 @@ export function getAuthEmail() {
 }
 
 export function getAuthProfileId() {
-  return (
-    getProfile()?.id ||
-    getUser()?.id ||
-    null
-  );
+  return getProfile()?.id || getUser()?.id || null;
 }
 
 export function getAuthRole() {
@@ -148,10 +133,7 @@ export function getAuthRole() {
 }
 
 export function getAuthUsername() {
-  return (
-    getProfile()?.username ||
-    ""
-  );
+  return getProfile()?.username || "";
 }
 
 export function getAuthDisplayName() {
@@ -172,75 +154,50 @@ export function getAuthAvatar() {
 
   return (
     profile?.avatar_url ||
-    profile?.meta_avatar_url ||
-    "/images/profile/default-avatar.png"
+    "/images/brand/project-avatar.png.jpeg"
   );
 }
 
-/* =========================
-   AUTH FLAGS
-========================= */
-
 export function getAuthFlags() {
   const user = getUser();
-
   const profile = getProfile();
-
-  const role =
-    profile?.role || "guest";
-
-  const adminRoles = [
-    "admin",
-    "owner",
-    "super_admin",
-    "founder",
-    "rich_admin"
-  ];
+  const role = profile?.role || "guest";
 
   return {
-    isGuest: !user,
-
-    isAuthed: !!user,
-
-    isCreator:
-      !!profile?.is_creator,
-
-    isArtist:
-      !!profile?.is_artist,
-
-    isSeller:
-      !!profile?.is_seller,
-
-    isVerified:
-      !!profile?.is_verified,
-
-    isAdmin:
-      adminRoles.includes(role),
-
-    isModerator:
-      [
-        "moderator",
-        "elite_mod",
-        "support"
-      ].includes(role),
-
+    isGuest: !user?.id,
+    isAuthed: !!user?.id,
+    isCreator: !!profile?.is_creator,
+    isArtist: !!profile?.is_artist,
+    isSeller: !!profile?.is_seller,
+    isVerified: !!profile?.is_verified,
+    isAdmin: [
+      "admin",
+      "owner",
+      "super_admin",
+      "founder",
+      "rich_admin"
+    ].includes(role),
+    isModerator: [
+      "moderator",
+      "elite_mod",
+      "support"
+    ].includes(role),
     role
   };
 }
 
-/* =========================
-   WINDOW FOCUS REFRESH
-========================= */
+if (!window.__RB_AUTH_STATE_FOCUS_BOUND__) {
+  window.__RB_AUTH_STATE_FOCUS_BOUND__ = true;
 
-window.addEventListener(
-  "focus",
-  async () => {
-    if (getUser()?.id) {
+  window.addEventListener("focus", async () => {
+    if (!getUser()?.id) return;
+
+    try {
       await refreshAuthProfile();
+    } catch (error) {
+      console.warn("[RB AUTH FOCUS REFRESH SKIPPED]", error);
     }
-  }
-);
+  });
+}
 
-console.log(
-  "RB AUTH STATE READY"
-);
+console.log("RB AUTH STATE READY");
