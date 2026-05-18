@@ -564,3 +564,21 @@ body{
 .rb-tv-screen{
   z-index:auto;
 }
+
+/* =========================
+   INDEX TAP REPAIR
+========================= */
+
+.rb-portal-copy,
+.rb-portal-copy *,
+.rb-portal-copy a,
+.rb-portal-copy button{
+  pointer-events:auto !important;
+}
+
+.rb-core-portal .rb-main-launch,
+.rb-core-portal [data-route],
+.rb-core-portal a,
+.rb-core-portal button{
+  pointer-events:auto !important;
+}
