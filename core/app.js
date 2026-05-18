@@ -3,7 +3,8 @@
    /core/app.js
 
    APP ORCHESTRATOR
-   Uses locked shared engines only.
+   Safe boot lock.
+   Does not force profile binding on index.
 ========================= */
 
 import { RB_APP } from "/core/shared/rb-config.js";
@@ -26,10 +27,6 @@ import {
 } from "/core/features/auth/session-guard.js";
 
 import {
-  bindProfileShell
-} from "/core/shared/rb-profile.js";
-
-import {
   unsubscribeAllChannels
 } from "/core/shared/rb-realtime.js";
 
@@ -40,43 +37,76 @@ import {
 
 let appReady = false;
 let appBooting = false;
+let appBootPromise = null;
 
 export async function initApp({
   guard = true,
   bindProfile = true,
   toast = false
 } = {}) {
-  if (appReady || appBooting) {
+  if (appReady) {
+    return getAppState();
+  }
+
+  if (appBooting && appBootPromise) {
+    await appBootPromise;
     return getAppState();
   }
 
   appBooting = true;
 
-  document.body.classList.add("rb-app-booting");
+  appBootPromise = bootApp({
+    guard,
+    bindProfile,
+    toast
+  });
 
-  await bootAuth();
-
-  if (guard) {
-    await autoGuardCurrentPage();
-  }
-
-  if (bindProfile) {
-    bindProfileShell();
-  }
-
-  bindRuntimeEvents();
-
-  appReady = true;
-  appBooting = false;
-
-  document.body.classList.remove("rb-app-booting");
-  document.body.classList.add("rb-app-ready");
-
-  if (toast) {
-    toastInfo("App system online.", RB_APP.name);
-  }
+  await appBootPromise;
 
   return getAppState();
+}
+
+async function bootApp({
+  guard,
+  bindProfile,
+  toast
+}) {
+  try {
+    document.body.classList.add("rb-app-booting");
+
+    await bootAuth();
+
+    if (guard) {
+      await autoGuardCurrentPage();
+    }
+
+    if (bindProfile) {
+      const profileModule = await import("/core/shared/rb-profile.js");
+
+      if (typeof profileModule.bindProfileShell === "function") {
+        profileModule.bindProfileShell();
+      }
+    }
+
+    bindRuntimeEvents();
+
+    appReady = true;
+
+    document.body.classList.remove("rb-app-booting");
+    document.body.classList.add("rb-app-ready");
+
+    if (toast) {
+      toastInfo("App system online.", RB_APP.name);
+    }
+  } catch (error) {
+    appReady = false;
+    document.body.classList.remove("rb-app-booting");
+    document.body.classList.add("rb-app-error");
+    console.error("[RB APP BOOT ERROR]", error);
+    throw error;
+  } finally {
+    appBooting = false;
+  }
 }
 
 export function getAppState() {
@@ -98,7 +128,17 @@ export function isAppReady() {
 
 export async function refreshAppIdentity() {
   await refreshAuthProfile();
-  bindProfileShell();
+
+  try {
+    const profileModule = await import("/core/shared/rb-profile.js");
+
+    if (typeof profileModule.bindProfileShell === "function") {
+      profileModule.bindProfileShell();
+    }
+  } catch (error) {
+    console.warn("[RB PROFILE BIND SKIPPED]", error);
+  }
+
   return getAppState();
 }
 
@@ -119,8 +159,13 @@ function bindRuntimeEvents() {
   });
 
   document.addEventListener("visibilitychange", async () => {
-    if (document.visibilityState === "visible" && getUser()?.id) {
+    if (document.visibilityState !== "visible") return;
+    if (!getUser()?.id) return;
+
+    try {
       await refreshAppIdentity();
+    } catch (error) {
+      console.warn("[RB VISIBILITY REFRESH SKIPPED]", error);
     }
   });
 
@@ -131,6 +176,7 @@ function bindRuntimeEvents() {
 
 export function markPageReady(pageName = "") {
   document.body.classList.add("rb-page-ready");
+  document.body.classList.remove("rb-page-error");
 
   if (pageName) {
     document.body.dataset.page = pageName;
