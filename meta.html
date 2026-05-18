@@ -1,1 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Bizness — Meta</title>
 
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/meta.css" />
+</head>
+
+<body class="rb-body meta-body">
+  <div class="rb-bg">
+    <div class="rb-bg-glow"></div>
+    <div class="rb-bg-smoke"></div>
+    <div class="rb-bg-grid"></div>
+  </div>
+
+  <header class="rb-topbar">
+    <a class="rb-back" href="/index.html">← Dial</a>
+
+    <div class="rb-brand">
+      <span>RICH</span>
+      <strong>BIZNESS</strong>
+      <small>LLC</small>
+    </div>
+
+    <a class="rb-profile-pill" href="/profile.html">
+      <img id="metaUserAvatar" src="/images/brand/project-avatar.png.jpeg" alt="Avatar" />
+      <span id="metaUserName">Loading...</span>
+    </a>
+  </header>
+
+  <main class="meta-shell">
+    <section class="meta-hero">
+      <div class="meta-hero-copy">
+        <p class="rb-kicker">META PORTAL</p>
+        <h1>Step Into The Rich Bizness Universe</h1>
+        <p>
+          Build worlds, enter lounges, connect your avatar, jump into live rooms,
+          games, music drops, sports hubs, stores, and creator portals.
+        </p>
+
+        <div class="meta-actions">
+          <button id="createAvatarBtn" class="rb-btn primary">Sync Avatar</button>
+          <button id="createWorldBtn" class="rb-btn gold">Create World</button>
+          <button id="refreshMetaBtn" class="rb-btn ghost">Refresh</button>
+        </div>
+      </div>
+
+      <div class="meta-avatar-card">
+        <div class="meta-avatar-ring">
+          <img id="heroAvatar" src="/images/brand/project-avatar.png.jpeg" alt="Meta Avatar" />
+        </div>
+
+        <h2 id="heroName">Meta Traveler</h2>
+        <p id="heroRank">Traveler • Level 1</p>
+
+        <div class="meta-stat-row">
+          <div>
+            <strong id="worldCount">0</strong>
+            <span>Worlds</span>
+          </div>
+          <div>
+            <strong id="roomCount">0</strong>
+            <span>Rooms</span>
+          </div>
+          <div>
+            <strong id="visitCount">0</strong>
+            <span>Visits</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="meta-create-panel">
+      <h2>Create Meta World</h2>
+
+      <form id="worldForm" class="meta-form">
+        <input id="worldTitle" type="text" placeholder="World title" required />
+        <input id="worldSlug" type="text" placeholder="world-slug" required />
+
+        <select id="worldType">
+          <option value="portal">Portal</option>
+          <option value="lounge">Lounge</option>
+          <option value="arcade">Arcade</option>
+          <option value="concert">Concert</option>
+          <option value="gallery">Gallery</option>
+          <option value="store">Store</option>
+          <option value="sports">Sports</option>
+          <option value="gaming">Gaming</option>
+          <option value="live">Live</option>
+          <option value="custom">Custom</option>
+        </select>
+
+        <select id="worldAccess">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+          <option value="vip">VIP</option>
+          <option value="paid">Paid</option>
+          <option value="members">Members</option>
+        </select>
+
+        <textarea id="worldDescription" placeholder="World description"></textarea>
+        <input id="worldCover" type="url" placeholder="Cover image URL" />
+        <input id="worldBackground" type="url" placeholder="Background image URL" />
+
+        <button class="rb-btn primary" type="submit">Launch World</button>
+      </form>
+    </section>
+
+    <section class="meta-grid-section">
+      <div class="section-head">
+        <div>
+          <p class="rb-kicker">LIVE WORLDS</p>
+          <h2>Meta Worlds</h2>
+        </div>
+
+        <select id="worldFilter">
+          <option value="all">All</option>
+          <option value="portal">Portal</option>
+          <option value="lounge">Lounge</option>
+          <option value="arcade">Arcade</option>
+          <option value="concert">Concert</option>
+          <option value="gallery">Gallery</option>
+          <option value="store">Store</option>
+          <option value="sports">Sports</option>
+          <option value="gaming">Gaming</option>
+          <option value="live">Live</option>
+        </select>
+      </div>
+
+      <div id="worldGrid" class="meta-world-grid">
+        <div class="rb-empty">Loading worlds...</div>
+      </div>
+    </section>
+
+    <section class="meta-grid-section">
+      <div class="section-head">
+        <div>
+          <p class="rb-kicker">ACTIVE ROOMS</p>
+          <h2>Rooms</h2>
+        </div>
+      </div>
+
+      <div id="roomGrid" class="meta-room-grid">
+        <div class="rb-empty">Loading rooms...</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="rb-bottom-nav">
+    <a href="/feed.html">Feed</a>
+    <a href="/live.html">Live</a>
+    <a href="/music.html">Music</a>
+    <a class="active" href="/meta.html">Meta</a>
+    <a href="/profile.html">Profile</a>
+  </nav>
+
+  <script type="module" src="/core/pages/meta.js"></script>
+</body>
+</html>
