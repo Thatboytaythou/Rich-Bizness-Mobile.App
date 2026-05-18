@@ -3,7 +3,7 @@
    /styles/main.css
 
    BASE LAYOUT LOCK
-   Portal copy opacity fixed
+   CLEAN CLICK LAYER FIXED
 ========================= */
 
 :root{
@@ -58,6 +58,7 @@ body{
   position:fixed;
   inset:0;
   z-index:-5;
+  pointer-events:none;
   background:
     radial-gradient(circle at 50% 20%, rgba(0,255,136,.26), transparent 30%),
     radial-gradient(circle at 72% 72%, rgba(255,215,106,.14), transparent 32%),
@@ -68,6 +69,7 @@ body{
   content:"";
   position:absolute;
   inset:-20%;
+  pointer-events:none;
   background:
     linear-gradient(rgba(102,255,102,.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,215,106,.045) 1px, transparent 1px);
@@ -102,6 +104,8 @@ body{
 ========================= */
 
 .rb-home-shell{
+  position:relative;
+  z-index:2;
   width:min(100%,1180px);
   min-height:100svh;
   margin:0 auto;
@@ -112,6 +116,8 @@ body{
 }
 
 .rb-home-top{
+  position:relative;
+  z-index:30;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -161,6 +167,8 @@ body{
   gap:10px;
   min-width:144px;
   box-shadow:var(--rb-shadow-green);
+  cursor:pointer;
+  touch-action:manipulation;
 }
 
 .rb-profile-pill img{
@@ -192,6 +200,7 @@ body{
 
 .rb-portal-stage{
   position:relative;
+  z-index:5;
   min-height:620px;
   border-radius:32px;
   border:1px solid rgba(255,215,106,.28);
@@ -212,8 +221,10 @@ body{
   position:absolute;
   inset:0;
   z-index:0;
+  pointer-events:none;
   background:
-    url("/images/brand/hero-logo.png.jpeg"),
+    url("/images/brand/hero-banner.png"),
+    url("/images/brand/Avatar-hero-Banner.png.jpeg"),
     radial-gradient(circle at center, rgba(255,215,106,.14), transparent 44%);
   background-size:cover;
   background-position:center;
@@ -226,6 +237,7 @@ body{
   position:absolute;
   inset:0;
   z-index:1;
+  pointer-events:none;
   background:
     linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.68)),
     repeating-linear-gradient(
@@ -235,25 +247,37 @@ body{
       transparent 1px,
       transparent 8px
     );
-  pointer-events:none;
-}
-
-.rb-tv-orbit,
-.rb-core-portal{
-  position:absolute;
 }
 
 /* =========================
-   CORE PORTAL
+   ORBIT CLICK LAYER
+========================= */
+
+.rb-tv-orbit{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+}
+
+.rb-tv-screen{
+  pointer-events:auto;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+/* =========================
+   CORE PORTAL VISUAL ONLY
 ========================= */
 
 .rb-core-portal{
+  position:absolute;
   left:50%;
   top:50%;
   width:min(82vw,430px);
   aspect-ratio:1;
   transform:translate(-50%,-50%);
-  z-index:6;
+  z-index:10;
   display:grid;
   place-items:center;
   border-radius:50%;
@@ -283,6 +307,7 @@ body{
   inset:9%;
   border-radius:50%;
   border:1px dashed rgba(255,215,106,.65);
+  pointer-events:none;
 }
 
 .rb-portal-ring::after{
@@ -322,6 +347,7 @@ body{
   box-shadow:
     0 0 38px rgba(0,0,0,.72),
     inset 0 0 26px rgba(0,255,136,.08);
+  pointer-events:none;
 }
 
 .rb-portal-copy span{
@@ -349,10 +375,13 @@ body{
 
 .rb-home-actions,
 .rb-quick-actions{
+  position:relative;
+  z-index:40;
   display:flex;
   justify-content:center;
   align-items:center;
   gap:12px;
+  pointer-events:auto;
 }
 
 .rb-icon-btn,
@@ -364,6 +393,8 @@ body{
   background:linear-gradient(135deg, rgba(10,25,14,.88), rgba(0,0,0,.88));
   border-radius:999px;
   box-shadow:0 0 20px rgba(0,255,136,.13);
+  cursor:pointer;
+  touch-action:manipulation;
 }
 
 .rb-icon-btn{
@@ -400,7 +431,7 @@ body{
   right:12px;
   bottom:12px;
   height:var(--rb-nav-h);
-  z-index:50;
+  z-index:100;
   display:grid;
   grid-template-columns:repeat(5,1fr);
   gap:6px;
@@ -413,6 +444,7 @@ body{
   box-shadow:
     0 -12px 40px rgba(0,0,0,.55),
     0 0 30px rgba(0,255,136,.14);
+  pointer-events:auto;
 }
 
 .rb-bottom-nav button{
@@ -499,6 +531,19 @@ body{
   background:transparent;
   color:var(--rb-white);
   font-size:1.3rem;
+  cursor:pointer;
+}
+
+/* =========================
+   GLOBAL TAP SAFETY
+========================= */
+
+button,
+a,
+[role="button"],
+[data-rb-route],
+[data-rb-section]{
+  touch-action:manipulation;
 }
 
 /* =========================
@@ -516,126 +561,4 @@ body{
 @keyframes rbWorldPulse{
   0%,100%{ opacity:.55; transform:scale(1); }
   50%{ opacity:.9; transform:scale(1.03); }
-}
-
-/* =========================
-   RICH BIZNESS MOBILE
-   CLICK LAYER SAFETY LOCK
-========================= */
-
-.rb-bg,
-.rb-vignette,
-.rb-grid,
-.rb-portal-stage::before,
-.rb-portal-stage::after,
-.rb-portal-ring,
-.rb-portal-ring::before,
-.rb-portal-ring::after,
-.rb-portal-ring-two,
-.rb-portal-light,
-.rb-core-portal,
-.rb-holo-spark-layer,
-.rb-holo-scan-layer,
-.rb-holo-fog-layer,
-.rb-holo-spark{
-  pointer-events:none !important;
-}
-
-.rb-home-top,
-.rb-profile-pill,
-.rb-tv-screen,
-.rb-home-actions,
-.rb-icon-btn,
-.rb-main-launch,
-.rb-quick-actions,
-.rb-quick-actions button,
-.rb-bottom-nav,
-.rb-bottom-nav button{
-  pointer-events:auto !important;
-}
-
-.rb-home-actions,
-.rb-quick-actions,
-.rb-bottom-nav{
-  position:relative;
-  z-index:999 !important;
-}
-
-.rb-tv-screen{
-  z-index:auto;
-}
-
-/* =========================
-   INDEX TAP REPAIR
-========================= */
-
-.rb-portal-copy,
-.rb-portal-copy *,
-.rb-portal-copy a,
-.rb-portal-copy button{
-  pointer-events:auto !important;
-}
-
-.rb-core-portal .rb-main-launch,
-.rb-core-portal [data-route],
-.rb-core-portal a,
-.rb-core-portal button{
-  pointer-events:auto !important;
-}
-
-/* =========================
-   RICH BIZNESS CLICK FIX
-========================= */
-
-.rb-portal-stage{
-  position:relative;
-  overflow:hidden;
-}
-
-#rb-tv-orbit{
-  position:absolute;
-  inset:0;
-  z-index:20;
-  pointer-events:none;
-}
-
-.rb-tv-screen{
-  pointer-events:auto !important;
-  position:absolute;
-  z-index:25;
-  cursor:pointer;
-  touch-action:manipulation;
-}
-
-.rb-core-portal{
-  pointer-events:none !important;
-  z-index:10 !important;
-}
-
-.rb-portal-copy{
-  pointer-events:none !important;
-}
-
-.rb-home-actions,
-.rb-home-actions *{
-  pointer-events:auto !important;
-  z-index:40;
-  position:relative;
-}
-
-.rb-quick-actions,
-.rb-quick-actions *{
-  pointer-events:auto !important;
-  z-index:40;
-  position:relative;
-}
-
-.rb-bottom-nav,
-.rb-bottom-nav *{
-  pointer-events:auto !important;
-}
-
-button,
-a{
-  touch-action:manipulation;
 }
