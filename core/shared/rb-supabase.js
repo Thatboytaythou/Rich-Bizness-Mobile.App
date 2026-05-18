@@ -26,7 +26,7 @@ const supabase = createClient(
     },
     realtime: {
       params: {
-        eventsPerSecond: 25
+        eventsPerSecond: 15
       }
     },
     global: {
@@ -41,6 +41,7 @@ let currentSession = null;
 let currentUser = null;
 let currentProfile = null;
 let authBooted = false;
+let authBooting = null;
 
 export function getSupabase() {
   return supabase;
@@ -63,31 +64,38 @@ export function isAuthed() {
 }
 
 export async function bootAuth() {
-  if (authBooted) {
-    return currentUser;
-  }
+  if (authBooted) return currentUser;
+  if (authBooting) return authBooting;
 
-  const {
-    data: { session },
-    error
-  } = await supabase.auth.getSession();
+  authBooting = (async () => {
+    const {
+      data: { session },
+      error
+    } = await supabase.auth.getSession();
 
-  if (error) {
-    console.error("[RB SESSION ERROR]", error);
+    if (error) {
+      console.error("[RB SESSION ERROR]", error.message);
+      authBooted = true;
+      authBooting = null;
+      return null;
+    }
+
+    currentSession = session || null;
+    currentUser = session?.user || null;
+
+    if (currentUser?.id) {
+      await loadProfile(currentUser.id);
+    } else {
+      currentProfile = null;
+    }
+
     authBooted = true;
-    return null;
-  }
+    authBooting = null;
 
-  currentSession = session || null;
-  currentUser = session?.user || null;
+    return currentUser;
+  })();
 
-  if (currentUser?.id) {
-    await loadProfile(currentUser.id);
-  }
-
-  authBooted = true;
-
-  return currentUser;
+  return authBooting;
 }
 
 export async function refreshSession() {
@@ -106,6 +114,8 @@ export async function refreshSession() {
 
   if (currentUser?.id) {
     await loadProfile(currentUser.id);
+  } else {
+    currentProfile = null;
   }
 
   return currentSession;
@@ -180,14 +190,17 @@ export async function signOut() {
   currentUser = null;
   currentProfile = null;
   authBooted = false;
+  authBooting = null;
 }
 
-supabase.auth.onAuthStateChange(async (_event, session) => {
+supabase.auth.onAuthStateChange((_event, session) => {
   currentSession = session || null;
   currentUser = session?.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    setTimeout(() => {
+      loadProfile(currentUser.id);
+    }, 0);
   } else {
     currentProfile = null;
   }
@@ -244,6 +257,7 @@ export async function rbSelect({
   select = "*",
   match = {},
   single = false,
+  maybeSingle = false,
   orderBy = null,
   ascending = false,
   limit = null
@@ -257,6 +271,7 @@ export async function rbSelect({
   if (orderBy) query = query.order(orderBy, { ascending });
   if (limit) query = query.limit(limit);
   if (single) query = query.single();
+  if (maybeSingle) query = query.maybeSingle();
 
   const { data, error } = await query;
 
@@ -315,6 +330,4 @@ export async function rbDelete({
   return data;
 }
 
-await bootAuth();
-
-console.log("RB SUPABASE SESSION LOCK READY");
+console.log("RB SUPABASE ENGINE READY");
