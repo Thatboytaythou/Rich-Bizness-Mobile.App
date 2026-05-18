@@ -224,7 +224,6 @@ body{
   pointer-events:none;
   background:
     url("/images/brand/hero-banner.png"),
-    url("/images/brand/Avatar-hero-Banner.png.jpeg"),
     radial-gradient(circle at center, rgba(255,215,106,.14), transparent 44%);
   background-size:cover;
   background-position:center;
