@@ -3,12 +3,8 @@
    /styles/omni-fx.css
 
    FX ONLY
-   Matches:
-   - rb-portal-transition.js
-   - rb-hologram-fx.js
-
-   No movement ownership.
-   No transform ownership.
+   No layout ownership
+   No orbit movement ownership
 ========================= */
 
 .rb-home::before{
@@ -27,7 +23,7 @@
       transparent
     );
   filter:blur(18px);
-  opacity:.72;
+  opacity:.62;
   animation:rbCosmicRotate 30s linear infinite;
 }
 
@@ -39,12 +35,12 @@
   pointer-events:none;
   background:
     linear-gradient(
-      rgba(255,255,255,.03) 50%,
-      rgba(0,0,0,.035) 50%
+      rgba(255,255,255,.025) 50%,
+      rgba(0,0,0,.03) 50%
     );
   background-size:100% 4px;
   mix-blend-mode:overlay;
-  opacity:.26;
+  opacity:.18;
 }
 
 .rb-portal-light{
@@ -65,7 +61,7 @@
     linear-gradient(
       120deg,
       transparent,
-      rgba(255,255,255,.45),
+      rgba(255,255,255,.42),
       transparent
     );
   transform:translateX(-130%);
@@ -77,7 +73,7 @@
 .rb-quick-actions button:active,
 .rb-bottom-nav button:active,
 .rb-profile-pill:active{
-  filter:brightness(1.25);
+  filter:brightness(1.2);
 }
 
 /* =========================
@@ -316,45 +312,21 @@ body[data-active-section="feed"] .rb-bg{
 }
 
 @keyframes rbPortalBurst{
-  0%{
-    filter:brightness(1);
-  }
-
-  50%{
-    filter:brightness(1.75) saturate(1.45);
-  }
-
-  100%{
-    filter:brightness(1);
-  }
+  0%{ filter:brightness(1); }
+  50%{ filter:brightness(1.75) saturate(1.45); }
+  100%{ filter:brightness(1); }
 }
 
 @keyframes rbStageWave{
-  0%{
-    filter:brightness(1);
-  }
-
-  40%{
-    filter:brightness(1.16);
-  }
-
-  100%{
-    filter:brightness(1);
-  }
+  0%{ filter:brightness(1); }
+  40%{ filter:brightness(1.16); }
+  100%{ filter:brightness(1); }
 }
 
 @keyframes rbTvReact{
-  0%{
-    filter:brightness(1);
-  }
-
-  50%{
-    filter:brightness(1.45) saturate(1.45);
-  }
-
-  100%{
-    filter:brightness(1);
-  }
+  0%{ filter:brightness(1); }
+  50%{ filter:brightness(1.45) saturate(1.45); }
+  100%{ filter:brightness(1); }
 }
 
 /* =========================
@@ -369,7 +341,7 @@ body[data-active-section="feed"] .rb-bg{
   }
 
   .rb-home::after{
-    opacity:.2;
+    opacity:.16;
   }
 
   .rb-portal-flash .rb-portal-light{
