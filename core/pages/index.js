@@ -3,15 +3,18 @@
    /core/pages/index.js
 
    HOME PAGE CONTROLLER
-   SAFE INDEX RESTORE
-   Clicks + Identity + Portal Locked
+   LOCKED TO /core/app.js
 ========================= */
 
 import {
-  getAuthState,
-  bootAuth,
-  refreshProfile
-} from "/core/shared/rb-auth.js";
+  initApp,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
+
+import {
+  getAuthState
+} from "/core/features/auth/auth-state.js";
 
 import {
   profileAvatar,
@@ -31,22 +34,18 @@ const $ = (id) => document.getElementById(id);
 
 let actionsBound = false;
 
-function getEls() {
+function els() {
   return {
     orbit: $("rb-tv-orbit"),
-
     avatar: $("rb-home-avatar"),
     name: $("rb-home-name"),
     badge: $("rb-home-badge"),
-
     profileBtn: $("rb-open-profile"),
     uploadBtn: $("rb-open-upload"),
     authBtn: $("rb-open-auth"),
-
     launchBtn: $("rb-launch-section"),
     prevBtn: $("rb-rotate-prev"),
     nextBtn: $("rb-rotate-next"),
-
     label: $("rb-active-label"),
     title: $("rb-active-title"),
     meta: $("rb-active-meta")
@@ -54,138 +53,55 @@ function getEls() {
 }
 
 function safeGo(route) {
-  if (!route) return;
-  window.location.assign(route);
+  if (route) window.location.href = route;
 }
 
-function isAuthedNow() {
-  return !!getAuthState()?.authed;
-}
-
-function ensureOrbitScreens() {
-  const els = getEls();
-  if (!els.orbit) return;
-
-  const existingScreens = [
-    ...els.orbit.querySelectorAll(".rb-tv-screen")
-  ];
-
-  if (!existingScreens.length) {
-    getSections().forEach((section) => {
-      const screen = document.createElement("button");
-
-      screen.type = "button";
-      screen.className = "rb-tv-screen";
-      screen.dataset.rbSection = section.key;
-
-      screen.innerHTML = `
-        <img
-          src="/images/sections/${section.key}.jpg"
-          alt="${section.title}"
-        />
-
-        <div class="rb-tv-overlay">
-          <span>${section.label}</span>
-          <h3>${section.title}</h3>
-        </div>
-      `;
-
-      els.orbit.appendChild(screen);
-    });
-
-    return;
-  }
-
-  existingScreens.forEach((screen) => {
-    const section = getSections().find(
-      (item) => item.key === screen.dataset.rbSection
-    );
-
-    if (!section) return;
-
-    const label =
-      screen.querySelector(".rb-tv-label") ||
-      screen.querySelector(".rb-tv-overlay span");
-
-    const title =
-      screen.querySelector("strong") ||
-      screen.querySelector(".rb-tv-overlay h3");
-
-    const meta =
-      screen.querySelector("small");
-
-    if (label) label.textContent = section.label;
-    if (title) title.textContent = section.title;
-    if (meta) meta.textContent = section.meta;
-  });
-}
-
-function paintSection(section = getActiveSection()) {
-  const els = getEls();
-  if (!section) return;
-
-  document.body.dataset.activeSection = section.key;
-
-  if (els.label) els.label.textContent = section.label;
-  if (els.title) els.title.textContent = section.title;
-  if (els.meta) els.meta.textContent = section.meta;
-
-  document.querySelectorAll("[data-rb-route]").forEach((button) => {
-    button.classList.toggle(
-      "active",
-      button.dataset.rbRoute === section.key
-    );
-  });
-
-  document.querySelectorAll(".rb-tv-screen").forEach((screen) => {
-    screen.classList.toggle(
-      "is-active",
-      screen.dataset.rbSection === section.key
-    );
-  });
-}
-
-function hydrateIdentity() {
-  const els = getEls();
+function paintIdentity() {
   const state = getAuthState();
-  const profile = state?.profile || null;
-  const authed = !!state?.authed;
+  const profile = state.profile;
+  const authed = state.isAuthed;
+  const e = els();
 
   document.body.classList.toggle("is-authed", authed);
   document.body.classList.toggle("is-guest", !authed);
 
-  if (els.avatar) {
-    els.avatar.src = authed
+  if (e.avatar) {
+    e.avatar.src = authed
       ? profileAvatar(profile)
-      : "/images/profile/default-avatar.png";
+      : "/images/brand/project-avatar.png.jpeg";
   }
 
-  if (els.name) {
-    els.name.textContent = authed
-      ? profileName(profile)
-      : "Guest Mode";
+  if (e.name) {
+    e.name.textContent = authed ? profileName(profile) : "Guest Mode";
   }
 
-  if (els.badge) {
-    els.badge.textContent = authed
-      ? profileBadge(profile)
-      : "SIGN IN";
+  if (e.badge) {
+    e.badge.textContent = authed ? profileBadge(profile) : "SIGN IN";
   }
 
-  if (els.authBtn) {
-    els.authBtn.textContent = authed ? "Profile" : "Enter";
+  if (e.authBtn) {
+    e.authBtn.textContent = authed ? "Profile" : "Enter";
   }
 }
 
-async function syncIdentity() {
-  try {
-    await bootAuth();
-    await refreshProfile();
-  } catch (error) {
-    console.warn("[RB INDEX AUTH WARNING]", error?.message || error);
-  }
+function paintSection(section = getActiveSection()) {
+  if (!section) return;
 
-  hydrateIdentity();
+  const e = els();
+
+  document.body.dataset.activeSection = section.key;
+
+  if (e.label) e.label.textContent = section.label;
+  if (e.title) e.title.textContent = section.title;
+  if (e.meta) e.meta.textContent = section.meta;
+
+  document.querySelectorAll("[data-rb-route]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.rbRoute === section.key);
+  });
+
+  document.querySelectorAll(".rb-tv-screen").forEach((screen) => {
+    screen.classList.toggle("is-active", screen.dataset.rbSection === section.key);
+  });
 }
 
 function bindActions() {
@@ -193,49 +109,46 @@ function bindActions() {
   actionsBound = true;
 
   document.addEventListener("click", (event) => {
-    const clickable = event.target.closest("button, a, .rb-tv-screen");
-    if (!clickable) return;
+    const target = event.target.closest("button, a, .rb-tv-screen");
+    if (!target) return;
 
-    if (clickable.id === "rb-rotate-next") {
+    if (target.id === "rb-rotate-next") {
       event.preventDefault();
       paintSection(nextSection());
       return;
     }
 
-    if (clickable.id === "rb-rotate-prev") {
+    if (target.id === "rb-rotate-prev") {
       event.preventDefault();
       paintSection(prevSection());
       return;
     }
 
-    if (clickable.id === "rb-launch-section") {
+    if (target.id === "rb-launch-section") {
       event.preventDefault();
-      safeGo(getActiveSection().route);
+      safeGo(getActiveSection()?.route);
       return;
     }
 
-    if (clickable.id === "rb-open-upload") {
+    if (target.id === "rb-open-upload") {
       event.preventDefault();
       safeGo("/upload");
       return;
     }
 
-    if (
-      clickable.id === "rb-open-auth" ||
-      clickable.id === "rb-open-profile"
-    ) {
+    if (target.id === "rb-open-auth" || target.id === "rb-open-profile") {
       event.preventDefault();
-      safeGo(isAuthedNow() ? "/profile" : "/auth");
+      safeGo(getAuthState().isAuthed ? "/profile" : "/auth");
       return;
     }
 
-    if (clickable.dataset?.rbRoute) {
+    if (target.dataset?.rbRoute) {
       event.preventDefault();
-      paintSection(setActiveSection(clickable.dataset.rbRoute));
+      paintSection(setActiveSection(target.dataset.rbRoute));
       return;
     }
 
-    const screen = clickable.closest(".rb-tv-screen");
+    const screen = target.closest(".rb-tv-screen");
 
     if (screen?.dataset?.rbSection) {
       event.preventDefault();
@@ -245,24 +158,31 @@ function bindActions() {
 }
 
 async function bootHome() {
-  ensureOrbitScreens();
+  try {
+    await initApp({
+      guard: false,
+      bindProfile: false,
+      toast: false
+    });
 
-  const startSection = setActiveSection(
-    document.body.dataset.activeSection || "live"
-  );
+    const startSection = setActiveSection(
+      document.body.dataset.activeSection || "live"
+    );
 
-  paintSection(startSection);
+    paintSection(startSection);
+    paintIdentity();
+    bindActions();
 
-  bindActions();
+    window.addEventListener("focus", paintIdentity);
+    window.addEventListener("pageshow", paintIdentity);
 
-  await syncIdentity();
+    document.body.classList.add("rb-home-ready");
+    markPageReady("index");
 
-  window.addEventListener("focus", syncIdentity);
-  window.addEventListener("pageshow", syncIdentity);
-
-  document.body.classList.add("rb-home-ready");
-
-  console.log("RB INDEX READY");
+    console.log("RB INDEX READY");
+  } catch (error) {
+    markPageError(error);
+  }
 }
 
 if (document.readyState === "loading") {
