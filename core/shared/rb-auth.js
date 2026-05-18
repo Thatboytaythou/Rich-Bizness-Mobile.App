@@ -5,7 +5,6 @@
    AUTH SYSTEM
    Synced To rb-supabase.js
    Profile Upsert Locked
-   No Import-Time Auth Boot
 ========================= */
 
 import {
@@ -27,6 +26,12 @@ import {
 } from "/core/shared/rb-config.js";
 
 const supabase = getSupabase();
+
+const DEFAULT_AVATAR =
+  "/images/brand/project-avatar.png.jpeg";
+
+const DEFAULT_BANNER =
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 export {
   getSupabase,
@@ -56,10 +61,12 @@ function cleanUsername(username = "") {
 }
 
 function fallbackName(email = "") {
-  return String(email || "")
-    .split("@")[0]
-    .replace(/[^a-zA-Z0-9_ ]/g, "")
-    .trim() || "Rich User";
+  return (
+    String(email || "")
+      .split("@")[0]
+      .replace(/[^a-zA-Z0-9_ ]/g, "")
+      .trim() || "Rich User"
+  );
 }
 
 async function upsertProfileFromAuth({
@@ -72,7 +79,7 @@ async function upsertProfileFromAuth({
 
   const finalUsername =
     cleanUsername(username) ||
-    cleanUsername(email.split("@")[0]) ||
+    cleanUsername(String(email || "").split("@")[0]) ||
     `rich_${user.id.slice(0, 8)}`;
 
   const finalDisplayName =
@@ -87,14 +94,14 @@ async function upsertProfileFromAuth({
         username: finalUsername,
         display_name: finalDisplayName,
         full_name: finalDisplayName,
-        avatar_url: "/images/profile/default-avatar.png",
-        banner_url: "/images/profile/default-banner.png",
+        avatar_url: DEFAULT_AVATAR,
+        banner_url: DEFAULT_BANNER,
         role: "user",
+        online_status: "online",
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
-      {
-        onConflict: "id"
-      }
+      { onConflict: "id" }
     )
     .select()
     .maybeSingle();
@@ -105,7 +112,6 @@ async function upsertProfileFromAuth({
   }
 
   await loadProfile(user.id);
-
   return data;
 }
 
@@ -146,10 +152,7 @@ export async function rbSignIn({
   password,
   redirectTo = RB_ROUTES.home
 }) {
-  const data = await signIn({
-    email,
-    password
-  });
+  const data = await signIn({ email, password });
 
   const user =
     data?.user ||
@@ -192,7 +195,6 @@ export async function sendPasswordReset(email) {
     });
 
   if (error) throw error;
-
   return data;
 }
 
@@ -201,7 +203,6 @@ export async function updatePassword(password) {
     await supabase.auth.updateUser({ password });
 
   if (error) throw error;
-
   return data;
 }
 
@@ -215,15 +216,12 @@ export async function signInWithProvider(provider = "google") {
     });
 
   if (error) throw error;
-
   return data;
 }
 
 export async function refreshProfile() {
   const user = getUser();
-
   if (!user?.id) return null;
-
   return await loadProfile(user.id);
 }
 
