@@ -13,21 +13,26 @@
   <link rel="stylesheet" href="/styles/main.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
 <body class="rb-home rb-notifications-page">
+
   <div class="rb-bg"></div>
   <div class="rb-vignette"></div>
   <div class="rb-grid"></div>
 
   <main class="rb-profile-shell">
+
     <header class="rb-profile-top">
       <a href="/" class="rb-auth-home">← Portal</a>
       <a href="/profile" class="rb-auth-home">Profile</a>
+      <a href="/settings" class="rb-auth-home">Settings</a>
     </header>
 
     <section class="rb-profile-card">
+
       <p class="rb-kicker">RICH BIZNESS ALERTS</p>
 
       <h1 id="notifications-title">
@@ -40,17 +45,47 @@
       >
         Loading notification system...
       </p>
+
+      <button
+        id="notifications-refresh-btn"
+        class="rb-main-launch"
+        type="button"
+      >
+        REFRESH ALERTS
+      </button>
+
+    </section>
+
+    <section class="rb-profile-grid">
+
+      <article>
+        <strong>Unread</strong>
+        <span id="notifications-unread-count">0 alerts</span>
+      </article>
+
+      <article>
+        <strong>Status</strong>
+        <span id="notifications-sync-status">Realtime ready</span>
+      </article>
+
+      <article>
+        <strong>Identity</strong>
+        <span id="notifications-identity-status">Profile synced</span>
+      </article>
+
     </section>
 
     <section
       id="notifications-list"
       class="rb-profile-grid"
     ></section>
+
   </main>
 
   <script
     type="module"
     src="/core/pages/notifications.js"
   ></script>
+
 </body>
 </html>
