@@ -2,17 +2,20 @@
    RICH BIZNESS MOBILE
    /styles/profile.css
 
-   PROFILE IDENTITY SYSTEM
-   Mobile Safari Locked
+   PROFILE / MESSAGES / NOTIFICATIONS LAYOUT ONLY
+   No index ownership
 ========================= */
 
 .rb-profile-shell{
   position:relative;
   z-index:2;
+
   width:min(100%, 980px);
   min-height:100svh;
+
   margin:0 auto;
   padding:28px 16px calc(34px + env(safe-area-inset-bottom));
+
   display:grid;
   align-content:start;
   gap:18px;
@@ -23,6 +26,9 @@
 ========================= */
 
 .rb-profile-top{
+  position:relative;
+  z-index:20;
+
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -30,6 +36,7 @@
   flex-wrap:wrap;
 
   padding:12px;
+
   border:1px solid rgba(255,215,106,.22);
   border-radius:24px;
 
@@ -50,11 +57,18 @@
 
 .rb-profile-signout{
   border:1px solid rgba(102,255,102,.28);
-  background:rgba(0,0,0,.42);
-  padding:10px 14px;
   border-radius:999px;
+
+  padding:10px 14px;
+
+  background:rgba(0,0,0,.42);
+  color:var(--rb-gold);
+
   font:inherit;
+  font-weight:900;
+
   cursor:pointer;
+  touch-action:manipulation;
 }
 
 /* =========================
@@ -63,9 +77,13 @@
 
 .rb-profile-banner{
   position:relative;
+  isolation:isolate;
+
   min-height:300px;
+
   border-radius:34px;
   border:1px solid rgba(255,215,106,.28);
+
   overflow:hidden;
 
   background:
@@ -74,7 +92,7 @@
       rgba(0,0,0,.18),
       rgba(0,0,0,.78)
     ),
-    url("/images/profile/default-banner.png");
+    url("/images/brand/Avatar-hero-Banner.png.jpeg");
 
   background-size:cover;
   background-position:center;
@@ -82,15 +100,16 @@
   box-shadow:
     0 0 52px rgba(0,255,136,.18),
     inset 0 0 90px rgba(0,0,0,.46);
-
-  isolation:isolate;
 }
 
 .rb-profile-banner::before{
   content:"";
+
   position:absolute;
   inset:0;
   z-index:1;
+
+  pointer-events:none;
 
   background:
     radial-gradient(
@@ -108,12 +127,11 @@
       rgba(0,0,0,.04),
       rgba(0,0,0,.68)
     );
-
-  pointer-events:none;
 }
 
 .rb-profile-banner::after{
   content:"RICH BIZNESS";
+
   position:absolute;
   left:18px;
   right:18px;
@@ -121,6 +139,7 @@
   z-index:2;
 
   color:rgba(255,215,106,.12);
+
   font-size:clamp(2.4rem, 10vw, 7rem);
   line-height:.82;
   font-weight:1000;
@@ -142,7 +161,9 @@
 
   width:136px;
   height:136px;
+
   border-radius:50%;
+
   padding:5px;
 
   background:
@@ -160,7 +181,9 @@
 .rb-profile-avatar-wrap img{
   width:100%;
   height:100%;
+
   border-radius:50%;
+
   object-fit:cover;
 
   border:4px solid rgba(0,0,0,.9);
@@ -173,10 +196,13 @@
 
 .rb-profile-card{
   position:relative;
+
   margin-top:48px;
   padding:78px 20px 22px;
+
   border:1px solid rgba(102,255,102,.32);
   border-radius:32px;
+
   text-align:center;
 
   background:
@@ -201,10 +227,15 @@
 
 .rb-profile-card::before{
   content:"";
+
   position:absolute;
   inset:0;
+
   border-radius:inherit;
+
   pointer-events:none;
+
+  opacity:.45;
 
   background:
     linear-gradient(
@@ -213,21 +244,27 @@
       rgba(255,255,255,.08),
       transparent
     );
+}
 
-  opacity:.45;
+.rb-profile-card > *{
+  position:relative;
+  z-index:2;
 }
 
 .rb-profile-card .rb-kicker{
   margin:0 0 8px;
+
   display:inline-flex;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
 
   min-height:26px;
   padding:0 12px;
+
   border-radius:999px;
 
   color:#001806;
+
   background:
     linear-gradient(
       135deg,
@@ -240,24 +277,33 @@
 
 .rb-profile-card h1{
   margin:0;
+
   color:var(--rb-gold);
+
   font-size:clamp(2.2rem, 9vw, 4.8rem);
   line-height:.9;
   letter-spacing:-.06em;
-  text-shadow:0 0 26px rgba(255,215,106,.22);
+
+  text-shadow:
+    0 0 26px rgba(255,215,106,.22);
 }
 
 .rb-profile-handle{
   margin:10px 0 0;
+
   color:var(--rb-green);
+
   font-weight:900;
   letter-spacing:.04em;
 }
 
 .rb-profile-bio{
-  margin:16px auto 20px;
   max-width:620px;
+
+  margin:16px auto 20px;
+
   color:var(--rb-muted);
+
   line-height:1.55;
 }
 
@@ -276,7 +322,9 @@
   overflow:hidden;
 
   min-height:128px;
+
   padding:16px;
+
   border-radius:24px;
   border:1px solid rgba(255,215,106,.22);
 
@@ -294,33 +342,60 @@
 
 .rb-profile-grid article::before{
   content:"";
+
   position:absolute;
   inset:-40%;
+
+  pointer-events:none;
+
+  opacity:.8;
+
   background:
     radial-gradient(
       circle,
       rgba(0,255,136,.12),
       transparent 60%
     );
-  opacity:.8;
-  pointer-events:none;
+}
+
+.rb-profile-grid article > *{
+  position:relative;
+  z-index:2;
 }
 
 .rb-profile-grid strong{
-  position:relative;
-  z-index:2;
   display:block;
-  color:var(--rb-gold);
-  font-size:1.08rem;
+
   margin-bottom:8px;
+
+  color:var(--rb-gold);
+
+  font-size:1.08rem;
 }
 
-.rb-profile-grid span{
-  position:relative;
-  z-index:2;
+.rb-profile-grid span,
+.rb-profile-grid p,
+.rb-profile-grid small{
   color:var(--rb-muted);
+
   line-height:1.35;
   font-size:.9rem;
+}
+
+/* =========================
+   SHARED NOTIFICATION / MESSAGE CARDS
+========================= */
+
+.rb-notification-card{
+  display:grid;
+  gap:8px;
+}
+
+.rb-notification-card small{
+  color:var(--rb-green);
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
 }
 
 /* =========================
