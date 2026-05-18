@@ -2,18 +2,20 @@
    RICH BIZNESS MOBILE
    /core/pages/edit.js
 
-   EDIT PROFILE FOUNDATION CONTROLLER
-   Correct Guard Import Locked
+   EDIT PROFILE CONTROLLER
+   LOCKED TO /core/app.js
 ========================= */
 
 import {
-  autoGuardCurrentPage
-} from "/core/features/auth/session-guard.js";
+  initApp,
+  markPageReady,
+  markPageError,
+  refreshAppIdentity
+} from "/core/app.js";
 
 import {
-  initAuthState,
-  onAuthState,
-  refreshAuthProfile
+  getAuthState,
+  onAuthState
 } from "/core/features/auth/auth-state.js";
 
 import {
@@ -21,7 +23,7 @@ import {
 } from "/core/shared/rb-profile.js";
 
 import {
-  uploadByRoute
+  createContentWithUpload
 } from "/core/shared/rb-upload-router.js";
 
 import {
@@ -41,7 +43,7 @@ const els = {
   backBtn: $("edit-back-btn")
 };
 
-function fillForm(state) {
+function fillForm(state = getAuthState()) {
   const profile = state?.profile || null;
 
   if (!profile) return;
@@ -59,53 +61,74 @@ function fillForm(state) {
   }
 }
 
+function setLoading(isLoading) {
+  els.form?.classList.toggle("is-loading", isLoading);
+
+  els.form
+    ?.querySelectorAll("button,input,textarea,select")
+    .forEach((el) => {
+      el.disabled = isLoading;
+    });
+}
+
 async function uploadProfileMedia() {
   const updates = {};
 
-  const avatar = els.avatarFile?.files?.[0] || null;
-  const banner = els.bannerFile?.files?.[0] || null;
+  const avatar =
+    els.avatarFile?.files?.[0] || null;
+
+  const banner =
+    els.bannerFile?.files?.[0] || null;
 
   if (avatar) {
-    const uploaded = await uploadByRoute({
+    const result = await createContentWithUpload({
       type: "profileAvatar",
       file: avatar,
+      values: {},
       metadata: {
-        purpose: "profile_avatar"
+        purpose: "profile_avatar",
+        source: "edit_profile"
       },
-      upsert: false
+      upsert: true
     });
 
-    if (uploaded?.publicUrl) {
-      updates.avatar_url = uploaded.publicUrl;
+    const url =
+      result?.uploaded?.publicUrl || null;
+
+    if (url) {
+      updates.avatar_url = url;
     }
   }
 
   if (banner) {
-    const uploaded = await uploadByRoute({
+    const result = await createContentWithUpload({
       type: "profileBanner",
       file: banner,
+      values: {},
       metadata: {
-        purpose: "profile_banner"
+        purpose: "profile_banner",
+        source: "edit_profile"
       },
-      upsert: false
+      upsert: true
     });
 
-    if (uploaded?.publicUrl) {
-      updates.banner_url = uploaded.publicUrl;
+    const url =
+      result?.uploaded?.publicUrl || null;
+
+    if (url) {
+      updates.banner_url = url;
     }
   }
 
   return updates;
 }
 
-function setLoading(isLoading) {
-  els.form?.classList.toggle("is-loading", isLoading);
-
-  els.form
-    ?.querySelectorAll("button, input, textarea")
-    .forEach((el) => {
-      el.disabled = isLoading;
-    });
+function cleanUsername(username = "") {
+  return String(username || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 24);
 }
 
 function bindEditActions() {
@@ -119,22 +142,36 @@ function bindEditActions() {
     try {
       setLoading(true);
 
-      const mediaUpdates = await uploadProfileMedia();
+      const mediaUpdates =
+        await uploadProfileMedia();
 
       await updateMyProfile({
-        display_name: els.displayName?.value?.trim() || "",
-        username: els.username?.value?.trim() || "",
-        bio: els.bio?.value?.trim() || "",
+        display_name:
+          els.displayName?.value?.trim() || "",
+        full_name:
+          els.displayName?.value?.trim() || "",
+        username:
+          cleanUsername(els.username?.value || ""),
+        bio:
+          els.bio?.value?.trim() || "",
         ...mediaUpdates
       });
 
-      await refreshAuthProfile();
+      await refreshAppIdentity();
 
-      toastSuccess("Profile updated.", "Rich Bizness");
+      toastSuccess(
+        "Profile updated.",
+        "Rich Bizness"
+      );
 
       window.location.href = "/profile";
     } catch (error) {
-      toastError(error.message || "Profile update failed.");
+      console.error(error);
+
+      toastError(
+        error?.message ||
+          "Profile update failed."
+      );
     } finally {
       setLoading(false);
     }
@@ -142,21 +179,29 @@ function bindEditActions() {
 }
 
 async function bootEditPage() {
-  await autoGuardCurrentPage();
+  try {
+    const appState = await initApp({
+      guard: true,
+      bindProfile: true,
+      toast: false
+    });
 
-  const state = await initAuthState();
+    fillForm(appState.auth);
 
-  fillForm(state);
+    onAuthState((nextState) => {
+      fillForm(nextState);
+    });
 
-  onAuthState((nextState) => {
-    fillForm(nextState);
-  });
+    bindEditActions();
 
-  bindEditActions();
+    document.body.classList.add("rb-edit-ready");
 
-  document.body.classList.add("rb-edit-ready");
+    markPageReady("edit");
 
-  console.log("RB EDIT FOUNDATION READY");
+    console.log("RB EDIT READY");
+  } catch (error) {
+    markPageError(error);
+  }
 }
 
 if (document.readyState === "loading") {
