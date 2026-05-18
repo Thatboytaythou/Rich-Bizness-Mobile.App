@@ -24,6 +24,10 @@
 
   <main class="rb-profile-shell">
 
+    <!-- =========================
+         TOPBAR
+    ========================== -->
+
     <header class="rb-profile-top">
 
       <a href="/" class="rb-auth-home">
@@ -44,24 +48,40 @@
 
     </header>
 
+    <!-- =========================
+         BANNER
+    ========================== -->
+
     <section
       id="profile-banner"
       class="rb-profile-banner"
+      style="background-image:url('/images/profile/default-banner.png')"
     >
+
+      <div class="rb-profile-banner-overlay"></div>
+
       <div class="rb-profile-avatar-wrap">
 
         <img
           id="profile-avatar"
-          src="/images/profile/default-avatar.png"
+          src="/images/brand/project-avatar.png.jpeg"
           alt="Profile avatar"
         />
 
       </div>
+
     </section>
+
+    <!-- =========================
+         PROFILE CARD
+    ========================== -->
 
     <section class="rb-profile-card">
 
-      <p id="profile-badge" class="rb-kicker">
+      <p
+        id="profile-badge"
+        class="rb-kicker"
+      >
         MEMBER
       </p>
 
@@ -69,44 +89,71 @@
         Rich User
       </h1>
 
-      <p id="profile-handle" class="rb-profile-handle">
+      <p
+        id="profile-handle"
+        class="rb-profile-handle"
+      >
         @richuser
       </p>
 
-      <p id="profile-bio" class="rb-profile-bio">
+      <p
+        id="profile-bio"
+        class="rb-profile-bio"
+      >
         Loading profile...
       </p>
 
-      <button
-        id="profile-edit-btn"
-        class="rb-main-launch"
-        type="button"
-      >
-        EDIT PROFILE
-      </button>
+      <div class="rb-profile-actions">
+
+        <button
+          id="profile-edit-btn"
+          class="rb-main-launch"
+          type="button"
+        >
+          EDIT PROFILE
+        </button>
+
+      </div>
 
     </section>
 
+    <!-- =========================
+         GRID
+    ========================== -->
+
     <section class="rb-profile-grid">
 
-      <article>
+      <article class="rb-profile-box">
         <strong>Identity</strong>
-        <span>Avatar • Profile • Creator status</span>
+
+        <span>
+          Avatar • Profile • Creator status
+        </span>
       </article>
 
-      <article>
+      <article class="rb-profile-box">
         <strong>Universe</strong>
-        <span>Live • Music • Gaming • Meta</span>
+
+        <span>
+          Live • Music • Gaming • Meta
+        </span>
       </article>
 
-      <article>
+      <article class="rb-profile-box">
         <strong>Economy</strong>
-        <span>Store • Wallet • Unlocks</span>
+
+        <span>
+          Store • Wallet • Unlocks
+        </span>
       </article>
 
     </section>
 
   </main>
+
+  <!-- =========================
+       PAGE
+  ========================== -->
 
   <script
     type="module"
