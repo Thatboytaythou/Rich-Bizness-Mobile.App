@@ -2,23 +2,30 @@
    RICH BIZNESS MOBILE
    /styles/omni-dial.css
 
-   ORBIT CARD VISUAL LOCK
-   Mobile Safari Safe
+   ORBIT VISUAL LAYER ONLY
+   No layout ownership
    No movement ownership
 ========================= */
 
 .rb-tv-orbit{
   position:absolute;
   inset:0;
-  z-index:4;
+  z-index:20;
   pointer-events:none;
+
   transform-style:preserve-3d;
   perspective:1400px;
+
   overflow:visible;
 }
 
+/* =========================
+   TV SCREEN
+========================= */
+
 .rb-tv-screen{
   position:absolute;
+
   left:50%;
   top:50%;
 
@@ -28,16 +35,17 @@
   margin-left:-90px;
   margin-top:-110px;
 
-  border:1px solid rgba(255,215,106,.36);
   border-radius:24px;
+  border:1px solid rgba(255,215,106,.36);
 
-  padding:0;
   overflow:hidden;
+  padding:0;
 
-  color:var(--rb-white);
   background:#050805;
+  color:var(--rb-white);
 
   pointer-events:auto;
+
   transform-style:preserve-3d;
   transform-origin:center center;
 
@@ -49,27 +57,43 @@
   transition:
     border-color .25s ease,
     box-shadow .25s ease,
-    filter .25s ease;
+    filter .25s ease,
+    opacity .25s ease;
 }
+
+/* =========================
+   IMAGE
+========================= */
 
 .rb-tv-screen img{
   position:absolute;
   inset:0;
+
   width:100%;
   height:100%;
+
   object-fit:cover;
   object-position:center;
+
   display:block;
+
   z-index:1;
+
   transform:scale(1.02);
 }
+
+/* =========================
+   GLASS FX
+========================= */
 
 .rb-tv-screen::before{
   content:"";
   position:absolute;
   inset:0;
+
   z-index:2;
   pointer-events:none;
+
   background:
     linear-gradient(
       180deg,
@@ -88,8 +112,14 @@
   content:"";
   position:absolute;
   inset:0;
+
   z-index:3;
   pointer-events:none;
+
+  opacity:.32;
+
+  mix-blend-mode:screen;
+
   background:
     repeating-linear-gradient(
       0deg,
@@ -98,15 +128,19 @@
       transparent 1px,
       transparent 5px
     );
-  opacity:.32;
-  mix-blend-mode:screen;
 }
+
+/* =========================
+   OVERLAY
+========================= */
 
 .rb-tv-overlay{
   position:absolute;
+
   left:10px;
   right:10px;
   bottom:10px;
+
   z-index:5;
 
   display:flex;
@@ -117,16 +151,24 @@
 .rb-tv-overlay span,
 .rb-tv-label{
   align-self:flex-start;
+
   display:inline-flex;
   align-items:center;
   justify-content:center;
 
   min-height:22px;
   padding:0 9px;
+
   border-radius:999px;
 
   color:#001806;
-  background:linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--rb-green),
+      var(--rb-gold)
+    );
 
   font-size:.58rem;
   line-height:1;
@@ -137,36 +179,34 @@
 .rb-tv-overlay h3,
 .rb-tv-screen strong{
   margin:0;
+
   color:var(--rb-white);
+
   font-size:.94rem;
   line-height:1.02;
   font-weight:1000;
-  text-shadow:0 2px 14px rgba(0,0,0,.85);
+
+  text-shadow:
+    0 2px 14px rgba(0,0,0,.85);
 }
 
 .rb-tv-screen small{
   position:relative;
   z-index:5;
+
   color:rgba(247,255,247,.72);
+
   font-size:.68rem;
 }
 
-.rb-tv-glare{
-  position:absolute;
-  inset:0;
-  z-index:4;
-  pointer-events:none;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.13),
-      transparent 42%
-    );
-}
+/* =========================
+   ACTIVE STATE
+========================= */
 
 .rb-tv-screen.is-active,
 .rb-tv-screen.is-front{
   border-color:rgba(102,255,102,.8);
+
   box-shadow:
     0 0 36px rgba(0,255,136,.42),
     0 0 52px rgba(255,215,106,.18),
@@ -177,9 +217,11 @@
    ORBIT RAILS
 ========================= */
 
-.rb-portal-stage .rb-tv-orbit::before{
+.rb-tv-orbit::before{
   content:"";
+
   position:absolute;
+
   left:50%;
   top:50%;
 
@@ -189,19 +231,23 @@
   transform:translate(-50%,-50%);
 
   border-radius:50%;
+
   border:1px solid rgba(255,215,106,.13);
+
+  pointer-events:none;
 
   box-shadow:
     0 0 42px rgba(0,255,136,.08),
     inset 0 0 58px rgba(255,215,106,.06);
 
-  pointer-events:none;
   animation:rbOrbitRailSpin 34s linear infinite;
 }
 
-.rb-portal-stage .rb-tv-orbit::after{
+.rb-tv-orbit::after{
   content:"";
+
   position:absolute;
+
   left:50%;
   top:50%;
 
@@ -211,28 +257,26 @@
   transform:translate(-50%,-50%);
 
   border-radius:50%;
+
   border:1px dashed rgba(102,255,102,.16);
 
   pointer-events:none;
+
   animation:rbOrbitRailSpinReverse 24s linear infinite;
 }
 
 /* =========================
-   MOBILE SAFARI LOCK
+   MOBILE
 ========================= */
 
 @media (max-width:720px){
-  .rb-tv-orbit{
-    z-index:4;
-    overflow:visible;
-  }
 
   .rb-tv-screen{
-    width:clamp(92px, 25vw, 112px);
-    height:clamp(112px, 31vw, 136px);
+    width:112px;
+    height:136px;
 
-    margin-left:calc(clamp(92px, 25vw, 112px) / -2);
-    margin-top:calc(clamp(112px, 31vw, 136px) / -2);
+    margin-left:-56px;
+    margin-top:-68px;
 
     border-radius:18px;
   }
@@ -248,6 +292,7 @@
   .rb-tv-label{
     min-height:18px;
     padding:0 7px;
+
     font-size:.48rem;
     letter-spacing:.06em;
   }
@@ -258,32 +303,33 @@
     line-height:1;
   }
 
-  .rb-portal-stage .rb-tv-orbit::before{
-    width:min(330px, 78vw);
-    height:min(330px, 78vw);
+  .rb-tv-orbit::before{
+    width:330px;
+    height:330px;
   }
 
-  .rb-portal-stage .rb-tv-orbit::after{
-    width:min(260px, 62vw);
-    height:min(260px, 62vw);
+  .rb-tv-orbit::after{
+    width:260px;
+    height:260px;
   }
 }
 
 @media (max-width:430px){
-  .rb-tv-screen{
-    width:clamp(88px, 24vw, 104px);
-    height:clamp(108px, 30vw, 126px);
 
-    margin-left:calc(clamp(88px, 24vw, 104px) / -2);
-    margin-top:calc(clamp(108px, 30vw, 126px) / -2);
+  .rb-tv-screen{
+    width:104px;
+    height:126px;
+
+    margin-left:-52px;
+    margin-top:-63px;
   }
 
-  .rb-portal-stage .rb-tv-orbit::before{
+  .rb-tv-orbit::before{
     width:300px;
     height:300px;
   }
 
-  .rb-portal-stage .rb-tv-orbit::after{
+  .rb-tv-orbit::after{
     width:235px;
     height:235px;
   }
@@ -295,12 +341,16 @@
 
 @keyframes rbOrbitRailSpin{
   to{
-    transform:translate(-50%,-50%) rotate(360deg);
+    transform:
+      translate(-50%,-50%)
+      rotate(360deg);
   }
 }
 
 @keyframes rbOrbitRailSpinReverse{
   to{
-    transform:translate(-50%,-50%) rotate(-360deg);
+    transform:
+      translate(-50%,-50%)
+      rotate(-360deg);
   }
 }
