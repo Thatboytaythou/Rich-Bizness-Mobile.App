@@ -2,15 +2,18 @@
    RICH BIZNESS MOBILE
    /core/pages/profile.js
 
-   PROFILE PAGE FOUNDATION CONTROLLER
+   PROFILE PAGE CONTROLLER
+   LOCKED TO /core/app.js
 ========================= */
 
 import {
-  autoGuardCurrentPage
-} from "/core/features/auth/session-guard.js";
+  initApp,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
 
 import {
-  initAuthState,
+  getAuthState,
   onAuthState
 } from "/core/features/auth/auth-state.js";
 
@@ -28,6 +31,12 @@ import {
 
 const $ = (id) => document.getElementById(id);
 
+const DEFAULT_AVATAR =
+  "/images/brand/project-avatar.png.jpeg";
+
+const DEFAULT_BANNER =
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
+
 const els = {
   avatar: $("profile-avatar"),
   banner: $("profile-banner"),
@@ -38,30 +47,35 @@ const els = {
   editBtn: $("profile-edit-btn")
 };
 
-function paintProfile(state) {
-  const profile = state?.profile;
+function paintProfile(state = getAuthState()) {
+  const profile = state?.profile || null;
 
   if (!profile) return;
 
   if (els.avatar) {
-    els.avatar.src = profileAvatar(profile);
+    els.avatar.src =
+      profileAvatar(profile) ||
+      DEFAULT_AVATAR;
   }
 
   if (els.banner) {
     els.banner.style.backgroundImage =
-      `url("${profileBanner(profile)}")`;
+      `url("${profileBanner(profile) || DEFAULT_BANNER}")`;
   }
 
   if (els.name) {
-    els.name.textContent = profileName(profile);
+    els.name.textContent =
+      profileName(profile);
   }
 
   if (els.handle) {
-    els.handle.textContent = profileHandle(profile);
+    els.handle.textContent =
+      profileHandle(profile);
   }
 
   if (els.badge) {
-    els.badge.textContent = profileBadge(profile);
+    els.badge.textContent =
+      profileBadge(profile);
   }
 
   if (els.bio) {
@@ -80,21 +94,33 @@ function bindProfileActions() {
 }
 
 async function bootProfilePage() {
-  await autoGuardCurrentPage();
+  try {
+    const appState = await initApp({
+      guard: true,
+      bindProfile: true,
+      toast: false
+    });
 
-  const state = await initAuthState();
+    paintProfile(appState.auth);
 
-  paintProfile(state);
+    onAuthState((nextState) => {
+      paintProfile(nextState);
+    });
 
-  onAuthState((nextState) => {
-    paintProfile(nextState);
-  });
+    bindProfileActions();
 
-  bindProfileActions();
+    document.body.classList.add("rb-profile-ready");
 
-  document.body.classList.add("rb-profile-ready");
+    markPageReady("profile");
 
-  console.log("RB PROFILE FOUNDATION READY");
+    console.log("RB PROFILE READY");
+  } catch (error) {
+    markPageError(error);
+  }
 }
 
-bootProfilePage();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootProfilePage);
+} else {
+  bootProfilePage();
+}
