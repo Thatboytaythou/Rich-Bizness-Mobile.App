@@ -1,1 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Bizness — Sports</title>
 
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+</head>
+
+<body class="rb-page rb-sports-page">
+  <div class="rb-page-bg">
+    <img src="/images/brand/hero-banner.png" alt="" />
+  </div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/index.html">
+      <span>RICH</span>
+      <strong>BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav">
+      <a href="/feed.html">Feed</a>
+      <a href="/live.html">Live</a>
+      <a href="/music.html">Music</a>
+      <a href="/gaming.html">Gaming</a>
+      <a class="is-active" href="/sports.html">Sports</a>
+      <a href="/profile.html">Profile</a>
+    </nav>
+  </header>
+
+  <main class="rb-section-shell">
+    <section class="rb-hero-panel rb-sports-hero">
+      <div>
+        <p class="rb-kicker">RICH BIZNESS SPORTS</p>
+        <h1>Sports Central</h1>
+        <p>
+          Picks, highlights, fan posts, broadcasts, teams, leagues, and sports profiles all synced from Supabase.
+        </p>
+
+        <div class="rb-hero-actions">
+          <a class="rb-main-launch" href="/upload.html?section=sports">UPLOAD SPORTS CLIP</a>
+          <a class="rb-ghost-btn" href="/live.html">GO LIVE</a>
+        </div>
+      </div>
+
+      <div class="rb-stat-grid">
+        <article>
+          <strong id="sports-post-count">0</strong>
+          <span>Posts</span>
+        </article>
+        <article>
+          <strong id="sports-pick-count">0</strong>
+          <span>Picks</span>
+        </article>
+        <article>
+          <strong id="sports-broadcast-count">0</strong>
+          <span>Broadcasts</span>
+        </article>
+        <article>
+          <strong id="sports-upload-count">0</strong>
+          <span>Uploads</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="rb-tab-bar">
+      <button class="is-active" type="button" data-sports-tab="posts">Posts</button>
+      <button type="button" data-sports-tab="picks">Picks</button>
+      <button type="button" data-sports-tab="uploads">Uploads</button>
+      <button type="button" data-sports-tab="broadcasts">Broadcasts</button>
+      <button type="button" data-sports-tab="profiles">Fans</button>
+      <button type="button" data-sports-tab="teams">Teams</button>
+    </section>
+
+    <section class="rb-panel is-active" data-sports-panel="posts">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">LOCKER ROOM</p>
+          <h2>Sports Posts</h2>
+        </div>
+      </div>
+      <div class="rb-card-grid" id="sports-posts-list"></div>
+    </section>
+
+    <section class="rb-panel" data-sports-panel="picks">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">PREDICTIONS</p>
+          <h2>Sports Picks</h2>
+        </div>
+      </div>
+      <div class="rb-card-grid" id="sports-picks-list"></div>
+    </section>
+
+    <section class="rb-panel" data-sports-panel="uploads">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">HIGHLIGHTS</p>
+          <h2>Sports Uploads</h2>
+        </div>
+      </div>
+      <div class="rb-card-grid" id="sports-uploads-list"></div>
+    </section>
+
+    <section class="rb-panel" data-sports-panel="broadcasts">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">LIVE SPORTS</p>
+          <h2>Broadcasts</h2>
+        </div>
+      </div>
+      <div class="rb-card-grid" id="sports-broadcasts-list"></div>
+    </section>
+
+    <section class="rb-panel" data-sports-panel="profiles">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">FAN PROFILES</p>
+          <h2>Sports Fans</h2>
+        </div>
+      </div>
+      <div class="rb-card-grid" id="sports-profiles-list"></div>
+    </section>
+
+    <section class="rb-panel" data-sports-panel="teams">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">LEAGUES + TEAMS</p>
+          <h2>Teams</h2>
+        </div>
+      </div>
+      <div class="rb-card-grid" id="sports-teams-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/core/pages/sports.js"></script>
+</body>
+</html>
