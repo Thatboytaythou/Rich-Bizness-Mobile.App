@@ -2,8 +2,9 @@
    RICH BIZNESS MOBILE
    /styles/mobile.css
 
-   iPHONE SAFARI LOCK
-   Mobile Layout Only
+   MOBILE SIZING ONLY
+   No background ownership
+   No orbit movement ownership
 ========================= */
 
 @media (max-width:720px){
@@ -73,12 +74,10 @@
     width:100%;
     min-height:clamp(520px, 62svh, 640px);
     border-radius:26px;
-    overflow:hidden;
   }
 
   .rb-core-portal{
     width:clamp(250px, 72vw, 315px);
-    z-index:6;
   }
 
   .rb-portal-copy{
@@ -101,8 +100,6 @@
   }
 
   .rb-home-actions{
-    position:relative;
-    z-index:20;
     gap:10px;
   }
 
