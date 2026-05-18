@@ -18,57 +18,70 @@
 </head>
 
 <body class="rb-home rb-edit-page">
+
   <div class="rb-bg"></div>
   <div class="rb-vignette"></div>
   <div class="rb-grid"></div>
 
   <main class="rb-auth-shell">
+
     <section class="rb-auth-hero">
       <p class="rb-kicker">RICH BIZNESS IDENTITY</p>
+
       <h1>Edit Profile</h1>
+
       <p>
         Update your display name, handle, bio, avatar, and banner across the whole Rich Bizness universe.
       </p>
     </section>
 
     <section class="rb-auth-panel">
+
       <form
         id="edit-profile-form"
         class="rb-auth-form"
       >
+
         <h2>Identity Settings</h2>
 
         <label>
           Display Name
+
           <input
             id="edit-display-name"
             name="display_name"
             type="text"
+            autocomplete="name"
             placeholder="Your display name"
           />
         </label>
 
         <label>
           Username
+
           <input
             id="edit-username"
             name="username"
             type="text"
+            autocomplete="username"
             placeholder="yourhandle"
           />
         </label>
 
         <label>
           Bio
+
           <textarea
             id="edit-bio"
             name="bio"
+            rows="5"
             placeholder="Tell the universe who you are..."
           ></textarea>
         </label>
 
         <label>
           Avatar
+
           <input
             id="edit-avatar-file"
             name="avatar"
@@ -79,6 +92,7 @@
 
         <label>
           Banner
+
           <input
             id="edit-banner-file"
             name="banner"
@@ -96,22 +110,26 @@
 
         <button
           id="edit-back-btn"
-          class="rb-icon-btn"
+          class="rb-auth-home"
           type="button"
         >
-          ←
+          ← Back
         </button>
+
       </form>
+
     </section>
 
     <a class="rb-auth-home" href="/profile">
       ← Back to Profile
     </a>
+
   </main>
 
   <script
     type="module"
     src="/core/pages/edit.js"
   ></script>
+
 </body>
 </html>
