@@ -2,16 +2,18 @@
    RICH BIZNESS MOBILE
    /core/pages/settings.js
 
-   SETTINGS FOUNDATION CONTROLLER
-   Correct Guard Import Locked
+   SETTINGS CONTROLLER
+   LOCKED TO /core/app.js
 ========================= */
 
 import {
-  autoGuardCurrentPage
-} from "/core/features/auth/session-guard.js";
+  initApp,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
 
 import {
-  initAuthState,
+  getAuthState,
   onAuthState
 } from "/core/features/auth/auth-state.js";
 
@@ -35,7 +37,7 @@ const els = {
   signOutBtn: $("settings-signout-btn")
 };
 
-function paintSettings(state) {
+function paintSettings(state = getAuthState()) {
   const user = state?.user || null;
   const profile = state?.profile || null;
 
@@ -48,9 +50,13 @@ function paintSettings(state) {
   }
 
   if (els.status) {
-    els.status.textContent = profile?.is_verified
-      ? "Verified"
-      : "Standard";
+    if (profile?.is_verified) {
+      els.status.textContent = "Verified";
+    } else if (profile?.is_creator || profile?.is_artist || profile?.is_seller) {
+      els.status.textContent = "Creator Access";
+    } else {
+      els.status.textContent = "Standard";
+    }
   }
 }
 
@@ -71,27 +77,40 @@ function bindSettingsActions() {
 
       toastInfo("Signed out.");
     } catch (error) {
-      toastError(error.message || "Sign out failed.");
+      console.error(error);
+
+      toastError(
+        error?.message ||
+          "Sign out failed."
+      );
     }
   });
 }
 
 async function bootSettingsPage() {
-  await autoGuardCurrentPage();
+  try {
+    const appState = await initApp({
+      guard: true,
+      bindProfile: true,
+      toast: false
+    });
 
-  const state = await initAuthState();
+    paintSettings(appState.auth);
 
-  paintSettings(state);
+    onAuthState((nextState) => {
+      paintSettings(nextState);
+    });
 
-  onAuthState((nextState) => {
-    paintSettings(nextState);
-  });
+    bindSettingsActions();
 
-  bindSettingsActions();
+    document.body.classList.add("rb-settings-ready");
 
-  document.body.classList.add("rb-settings-ready");
+    markPageReady("settings");
 
-  console.log("RB SETTINGS FOUNDATION READY");
+    console.log("RB SETTINGS READY");
+  } catch (error) {
+    markPageError(error);
+  }
 }
 
 if (document.readyState === "loading") {
