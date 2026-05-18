@@ -2,49 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
   <title>Rich Bizness — Messages</title>
 
   <link rel="stylesheet" href="/styles/main.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
 <body class="rb-home rb-messages-page">
+
   <div class="rb-bg"></div>
   <div class="rb-vignette"></div>
   <div class="rb-grid"></div>
 
   <main class="rb-profile-shell">
+
     <header class="rb-profile-top">
       <a href="/" class="rb-auth-home">← Portal</a>
       <a href="/profile" class="rb-auth-home">Profile</a>
+      <a href="/settings" class="rb-auth-home">Settings</a>
     </header>
 
     <section class="rb-profile-card">
+
       <p class="rb-kicker">RICH BIZNESS DMS</p>
 
-      <img
-        id="messages-user-avatar"
-        src="/images/profile/default-avatar.png"
-        alt="Profile"
-        style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:1px solid var(--rb-gold);"
-      />
+      <div class="rb-profile-avatar-wrap" style="position:relative;left:auto;bottom:auto;transform:none;margin:0 auto 18px;">
+        <img
+          id="messages-user-avatar"
+          src="/images/brand/Avatar-hero-Banner.png.jpeg"
+          alt="Profile"
+        />
+      </div>
 
       <h1 id="messages-user-name">Rich User</h1>
+
+      <p id="messages-user-handle" class="rb-profile-handle">
+        @richuser
+      </p>
 
       <p id="messages-status" class="rb-profile-bio">
         Loading messages...
       </p>
 
-      <button class="rb-main-launch" type="button">
-        MESSAGE SYSTEM COMING ONLINE
+      <button
+        id="messages-new-btn"
+        class="rb-main-launch"
+        type="button"
+      >
+        START MESSAGE
       </button>
+
     </section>
+
+    <section class="rb-profile-grid">
+
+      <article>
+        <strong>Threads</strong>
+        <span id="messages-thread-count">0 active conversations</span>
+      </article>
+
+      <article>
+        <strong>Status</strong>
+        <span id="messages-sync-status">Realtime ready</span>
+      </article>
+
+      <article>
+        <strong>Identity</strong>
+        <span id="messages-identity-status">Profile synced</span>
+      </article>
+
+    </section>
+
   </main>
 
-  <script type="module" src="/core/pages/messages.js"></script>
+  <script
+    type="module"
+    src="/core/pages/messages.js"
+  ></script>
+
 </body>
 </html>
