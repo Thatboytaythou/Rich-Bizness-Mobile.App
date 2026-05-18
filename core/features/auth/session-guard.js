@@ -1,4 +1,4 @@
- /* =========================
+/* =========================
    RICH BIZNESS MOBILE
    /core/features/auth/session-guard.js
 
@@ -6,9 +6,7 @@
    Synced With RB Router
 ========================= */
 
-import {
-  RB_ROUTES
-} from "/core/shared/rb-config.js";
+import { RB_ROUTES } from "/core/shared/rb-config.js";
 
 import {
   isProtectedRoute,
@@ -137,10 +135,6 @@ export async function requireAdmin({
 export async function autoGuardCurrentPage() {
   const path = getCurrentPath();
 
-  if (isProtectedRoute(path)) {
-    return await requireSession();
-  }
-
   if (isCreatorRoute(path)) {
     return await requireCreator();
   }
@@ -153,6 +147,10 @@ export async function autoGuardCurrentPage() {
     return await requireArtist();
   }
 
+  if (isProtectedRoute(path)) {
+    return await requireSession();
+  }
+
   return await initAuthState();
 }
 
@@ -161,17 +159,17 @@ export async function autoGuardCurrentPage() {
 ========================= */
 
 export function currentPathIsProtected() {
-  return isProtectedRoute();
+  return isProtectedRoute(getCurrentPath());
 }
 
 export function currentPathNeedsCreator() {
-  return isCreatorRoute();
+  return isCreatorRoute(getCurrentPath());
 }
 
 export function currentPathNeedsSeller() {
-  return isSellerRoute();
+  return isSellerRoute(getCurrentPath());
 }
 
 export function currentPathNeedsArtist() {
-  return isArtistRoute();
+  return isArtistRoute(getCurrentPath());
 }
