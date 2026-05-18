@@ -5,9 +5,7 @@
    GLOBAL PROFILE + IDENTITY ENGINE
 ========================= */
 
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
+import { RB_TABLES } from "/core/shared/rb-config.js";
 
 import {
   getSupabase,
@@ -16,12 +14,18 @@ import {
   loadProfile
 } from "/core/shared/rb-supabase.js";
 
-export function getProfileIdentity() {
+const DEFAULT_AVATAR =
+  "/images/brand/project-avatar.png.jpeg";
+
+const DEFAULT_BANNER =
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+export function getProfileIdentity(profileOverride = null) {
   const user = getUser();
-  const profile = getProfile();
+  const profile = profileOverride || getProfile();
 
   return {
-    id: user?.id || null,
+    id: profile?.id || user?.id || null,
     email: user?.email || "",
     username: profile?.username || "",
     displayName:
@@ -31,10 +35,13 @@ export function getProfileIdentity() {
       user?.email?.split("@")[0] ||
       "Rich User",
     bio: profile?.bio || "",
-    avatarUrl: profile?.avatar_url || "",
-    bannerUrl: profile?.banner_url || "",
-    metaAvatarUrl: profile?.meta_avatar_url || "",
+    avatarUrl: profileAvatar(profile),
+    bannerUrl: profileBanner(profile),
     role: profile?.role || "user",
+    richLevel: profile?.rich_level || 1,
+    rankTitle: profile?.rank_title || "Member",
+    richPoints: profile?.rich_points || 0,
+    onlineStatus: profile?.online_status || "offline",
     isCreator: !!profile?.is_creator,
     isArtist: !!profile?.is_artist,
     isSeller: !!profile?.is_seller,
@@ -45,65 +52,63 @@ export function getProfileIdentity() {
 export async function refreshMyProfile() {
   const user = getUser();
   if (!user?.id) return null;
-
   return await loadProfile(user.id);
 }
 
 export async function getProfileById(userId) {
   if (!userId) return null;
 
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from(RB_TABLES.profiles)
     .select("*")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
-
-  return data;
+  return data || null;
 }
 
 export async function getProfileByUsername(username) {
   if (!username) return null;
 
-  const supabase = getSupabase();
+  const cleanUsername = String(username)
+    .replace("@", "")
+    .trim()
+    .toLowerCase();
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from(RB_TABLES.profiles)
     .select("*")
-    .eq("username", username)
-    .single();
+    .eq("username", cleanUsername)
+    .maybeSingle();
 
   if (error) throw error;
-
-  return data;
+  return data || null;
 }
 
 export async function updateMyProfile(values = {}) {
   const user = getUser();
   if (!user?.id) throw new Error("You must be signed in.");
 
-  const supabase = getSupabase();
-
   const cleanValues = {
     ...values,
     updated_at: new Date().toISOString()
   };
 
-  const { data, error } = await supabase
+  delete cleanValues.id;
+  delete cleanValues.created_at;
+
+  const { data, error } = await getSupabase()
     .from(RB_TABLES.profiles)
     .update(cleanValues)
     .eq("id", user.id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
 
   await loadProfile(user.id);
-
-  return data;
+  return data || null;
 }
 
 export function profileAvatar(profile = null) {
@@ -111,8 +116,7 @@ export function profileAvatar(profile = null) {
 
   return (
     active?.avatar_url ||
-    active?.meta_avatar_url ||
-    "/images/profile/default-avatar.png"
+    DEFAULT_AVATAR
   );
 }
 
@@ -121,7 +125,7 @@ export function profileBanner(profile = null) {
 
   return (
     active?.banner_url ||
-    "/images/profile/default-banner.png"
+    DEFAULT_BANNER
   );
 }
 
@@ -142,7 +146,6 @@ export function profileHandle(profile = null) {
   const active = profile || getProfile();
 
   if (active?.username) return `@${active.username}`;
-
   return "@richuser";
 }
 
@@ -154,7 +157,12 @@ export function profileBadge(profile = null) {
   if (active?.is_seller) return "SELLER";
   if (active?.is_creator) return "CREATOR";
 
-  return "MEMBER";
+  return active?.rank_title || "MEMBER";
+}
+
+export function profileLevel(profile = null) {
+  const active = profile || getProfile();
+  return active?.rich_level || 1;
 }
 
 export function buildProfileUrl(profile = null) {
@@ -176,12 +184,20 @@ export function bindProfileShell({
   bannerSelector = "[data-rb-banner]",
   nameSelector = "[data-rb-name]",
   handleSelector = "[data-rb-handle]",
-  badgeSelector = "[data-rb-badge]"
+  badgeSelector = "[data-rb-badge]",
+  levelSelector = "[data-rb-level]"
 } = {}) {
   const profile = getProfile();
 
   document.querySelectorAll(avatarSelector).forEach((el) => {
-    el.src = profileAvatar(profile);
+    const url = profileAvatar(profile);
+
+    if (el.tagName === "IMG") {
+      el.src = url;
+      el.alt = profileName(profile);
+    } else {
+      el.style.backgroundImage = `url("${url}")`;
+    }
   });
 
   document.querySelectorAll(bannerSelector).forEach((el) => {
@@ -199,4 +215,10 @@ export function bindProfileShell({
   document.querySelectorAll(badgeSelector).forEach((el) => {
     el.textContent = profileBadge(profile);
   });
+
+  document.querySelectorAll(levelSelector).forEach((el) => {
+    el.textContent = `LVL ${profileLevel(profile)}`;
+  });
 }
+
+console.log("RB PROFILE READY");
