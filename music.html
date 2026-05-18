@@ -1,1 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Rich Bizness — Music</title>
+
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/music.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-home rb-music-page">
+
+  <div class="rb-bg"></div>
+  <div class="rb-vignette"></div>
+  <div class="rb-grid"></div>
+
+  <main class="rb-music-shell">
+
+    <header class="rb-music-top">
+      <a href="/" class="rb-auth-home">← Portal</a>
+      <a href="/profile" class="rb-auth-home">Profile</a>
+      <a href="/upload" class="rb-auth-home">Upload</a>
+    </header>
+
+    <section class="rb-music-hero">
+      <p class="rb-kicker">RICH BIZNESS MUSIC</p>
+
+      <h1>Soundtrack The Empire</h1>
+
+      <p>
+        Tracks, podcasts, radio, playlists, creators, plays, likes, and real-time drops.
+      </p>
+    </section>
+
+    <section class="rb-now-playing">
+      <div class="rb-now-cover">
+        <img
+          id="music-now-cover"
+          src="/images/brand/hero-banner.png"
+          alt="Now playing cover"
+        />
+      </div>
+
+      <div class="rb-now-info">
+        <p id="music-now-type" class="rb-kicker">READY</p>
+        <h2 id="music-now-title">Choose something to play</h2>
+        <p id="music-now-meta">Rich Bizness audio system online.</p>
+
+        <audio
+          id="music-audio-player"
+          controls
+          preload="metadata"
+        ></audio>
+      </div>
+    </section>
+
+    <section class="rb-music-stats">
+      <article>
+        <strong id="music-track-count">0</strong>
+        <span>Tracks</span>
+      </article>
+
+      <article>
+        <strong id="music-podcast-count">0</strong>
+        <span>Episodes</span>
+      </article>
+
+      <article>
+        <strong id="music-radio-count">0</strong>
+        <span>Stations</span>
+      </article>
+    </section>
+
+    <nav class="rb-music-tabs">
+      <button type="button" class="is-active" data-music-tab="tracks">
+        Tracks
+      </button>
+
+      <button type="button" data-music-tab="podcasts">
+        Podcasts
+      </button>
+
+      <button type="button" data-music-tab="radio">
+        Radio
+      </button>
+
+      <button type="button" data-music-tab="playlists">
+        Playlists
+      </button>
+    </nav>
+
+    <section class="rb-music-panel is-active" data-music-panel="tracks">
+      <div class="rb-section-head">
+        <div>
+          <p class="rb-kicker">TRACKS</p>
+          <h2>Latest Music Drops</h2>
+        </div>
+      </div>
+
+      <div id="music-tracks-list" class="rb-music-list">
+        <p class="rb-empty">Loading tracks...</p>
+      </div>
+    </section>
+
+    <section class="rb-music-panel" data-music-panel="podcasts">
+      <div class="rb-section-head">
+        <div>
+          <p class="rb-kicker">PODCASTS</p>
+          <h2>Episodes & Shows</h2>
+        </div>
+      </div>
+
+      <div id="music-podcasts-list" class="rb-music-list">
+        <p class="rb-empty">Loading podcast episodes...</p>
+      </div>
+    </section>
+
+    <section class="rb-music-panel" data-music-panel="radio">
+      <div class="rb-section-head">
+        <div>
+          <p class="rb-kicker">RADIO</p>
+          <h2>Live Stations</h2>
+        </div>
+      </div>
+
+      <div id="music-radio-list" class="rb-music-list">
+        <p class="rb-empty">Loading radio stations...</p>
+      </div>
+    </section>
+
+    <section class="rb-music-panel" data-music-panel="playlists">
+      <div class="rb-section-head">
+        <div>
+          <p class="rb-kicker">PLAYLISTS</p>
+          <h2>Rich Playlists</h2>
+        </div>
+      </div>
+
+      <div id="music-playlists-list" class="rb-music-list">
+        <p class="rb-empty">Loading playlists...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script
+    type="module"
+    src="/core/pages/music.js"
+  ></script>
+
+</body>
+</html>
