@@ -35,7 +35,7 @@ import {
 } from "/core/shared/rb-toast.js";
 
 const DEFAULT_AVATAR =
-  "/images/brand/project-avatar.png.jpeg";
+  "/images/brand/hero-banner.png";
 
 const $ = (selector) =>
   document.querySelector(selector);
