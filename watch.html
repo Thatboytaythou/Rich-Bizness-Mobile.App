@@ -1,1 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch Live | Rich Bizness Mobile</title>
 
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/live.css" />
+</head>
+
+<body class="rb-page rb-watch-page">
+  <div class="rb-bg">
+    <div class="rb-smoke"></div>
+    <div class="rb-glow rb-glow-green"></div>
+    <div class="rb-glow rb-glow-gold"></div>
+  </div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/">
+      <span>RICH</span>
+      <strong>BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-nav">
+      <a href="/feed">Feed</a>
+      <a href="/live">Go Live</a>
+      <a href="/watch" class="active">Watch</a>
+      <a href="/profile">Profile</a>
+    </nav>
+  </header>
+
+  <main class="watch-shell">
+    <section class="watch-hero">
+      <div class="watch-copy">
+        <p class="rb-kicker">LIVE WATCH ROOM</p>
+        <h1 id="watchTitle">Loading live stream...</h1>
+        <p id="watchDescription">Connecting Rich Bizness live/watch sync.</p>
+
+        <div class="watch-meta">
+          <span id="watchBadge" class="live-badge off">OFF AIR</span>
+          <span id="watchAccess">FREE</span>
+          <span id="watchCreator">Rich Bizness Creator</span>
+        </div>
+
+        <p id="watchStatus" class="watch-status">Loading...</p>
+      </div>
+
+      <div class="watch-actions">
+        <button id="joinWatchBtn" class="rb-btn rb-btn-primary" disabled>Join Live</button>
+        <button id="leaveWatchBtn" class="rb-btn" disabled>Leave</button>
+        <button id="payWatchBtn" class="rb-btn rb-btn-gold" style="display:none;">Unlock</button>
+        <button id="copyWatchBtn" class="rb-btn">Copy Link</button>
+      </div>
+    </section>
+
+    <section class="watch-grid">
+      <div class="watch-main">
+        <div id="watchStage" class="watch-stage">
+          <div id="reactionLayer" class="reaction-layer"></div>
+
+          <div id="watchVideoGrid" class="watch-video-grid"></div>
+
+          <div id="watchEmpty" class="watch-empty">
+            <h2>Waiting for the creator...</h2>
+            <p>When live starts, the room will open right here.</p>
+          </div>
+        </div>
+
+        <div class="watch-stats">
+          <article>
+            <span id="watchViewers">0</span>
+            <small>Viewers</small>
+          </article>
+          <article>
+            <span id="watchPeak">0</span>
+            <small>Peak</small>
+          </article>
+          <article>
+            <span id="watchChatCount">0</span>
+            <small>Chat</small>
+          </article>
+          <article>
+            <span id="watchReactions">0</span>
+            <small>Reactions</small>
+          </article>
+          <article>
+            <span id="watchRevenue">$0.00</span>
+            <small>Revenue</small>
+          </article>
+        </div>
+      </div>
+
+      <aside class="watch-side">
+        <section class="watch-panel">
+          <div class="panel-head">
+            <h2>Live Chat</h2>
+            <button id="sendReactionBtn" class="icon-btn">🔥</button>
+          </div>
+
+          <div id="watchChatList" class="chat-list"></div>
+
+          <form id="watchChatForm" class="chat-form">
+            <input id="watchChatInput" type="text" placeholder="Say something rich..." autocomplete="off" />
+            <button type="submit">Send</button>
+          </form>
+        </section>
+
+        <section class="watch-panel">
+          <h2>Support Creator</h2>
+          <div class="tip-row">
+            <input id="tipAmount" type="number" min="1" step="1" value="1" />
+            <input id="tipMessage" type="text" placeholder="Message" />
+            <button id="sendTipBtn" type="button">Tip</button>
+          </div>
+          <div id="watchTipList" class="tip-list"></div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="watch-panel watch-discover">
+      <div class="panel-head">
+        <h2>More Live Rooms</h2>
+        <a href="/live">Start Yours</a>
+      </div>
+      <div id="watchStreamList" class="watch-stream-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/core/pages/watch.js"></script>
+</body>
+</html>
