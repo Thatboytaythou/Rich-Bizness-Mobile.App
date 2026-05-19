@@ -1,1 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feed | Rich Bizness Mobile</title>
 
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+</head>
+
+<body class="rb-page rb-feed-page">
+  <main class="rb-shell">
+    <header class="rb-section-hero">
+      <a class="rb-back" href="/">← Home</a>
+
+      <div>
+        <p class="rb-kicker">RICH BIZNESS LLC</p>
+        <h1>Feed</h1>
+        <p class="rb-subtitle">Post, react, comment, and keep the whole Rich Bizness Mobile world synced.</p>
+      </div>
+
+      <nav class="rb-section-nav">
+        <a href="/watch">Watch</a>
+        <a href="/live">Live</a>
+        <a href="/music">Music</a>
+        <a href="/gaming">Gaming</a>
+        <a href="/sports">Sports</a>
+        <a href="/profile">Profile</a>
+      </nav>
+    </header>
+
+    <section class="rb-grid rb-feed-layout">
+      <aside class="rb-card rb-composer-card">
+        <div class="rb-user-strip">
+          <img id="composerAvatar" src="/images/brand/project-avatar.png.jpeg" alt="" />
+          <div>
+            <strong id="composerName">Rich Bizness User</strong>
+            <small id="feedStatus">Loading feed...</small>
+          </div>
+        </div>
+
+        <form id="feedForm" class="rb-form">
+          <label>
+            Title
+            <input id="feedTitle" type="text" placeholder="What’s the headline?" />
+          </label>
+
+          <label>
+            Post
+            <textarea id="feedBody" rows="5" placeholder="Say what’s happening in Rich Bizness..."></textarea>
+          </label>
+
+          <label>
+            Media URL
+            <input id="feedMediaUrl" type="url" placeholder="Image, video, or audio URL" />
+          </label>
+
+          <div class="rb-form-row">
+            <label>
+              Media Type
+              <select id="feedMediaType">
+                <option value="">None</option>
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+                <option value="audio">Audio</option>
+              </select>
+            </label>
+
+            <label>
+              Section
+              <select id="feedSection">
+                <option value="feed">Feed</option>
+                <option value="music">Music</option>
+                <option value="live">Live</option>
+                <option value="gaming">Gaming</option>
+                <option value="sports">Sports</option>
+                <option value="gallery">Gallery</option>
+                <option value="store">Store</option>
+                <option value="meta">Meta</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Visibility
+            <select id="feedVisibility">
+              <option value="public">Public</option>
+              <option value="followers">Followers</option>
+              <option value="private">Private</option>
+            </select>
+          </label>
+
+          <button id="feedSubmitBtn" type="submit" class="rb-btn rb-btn-primary">Post to Feed</button>
+          <button id="feedRefreshBtn" type="button" class="rb-btn rb-btn-ghost">Refresh</button>
+        </form>
+      </aside>
+
+      <section class="rb-feed-main">
+        <div id="feedEmpty" class="rb-card rb-empty" style="display:none;">
+          <h2>No posts yet</h2>
+          <p>Drop the first Rich Bizness post and start the motion.</p>
+        </div>
+
+        <div id="feedList" class="rb-feed-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="/core/pages/feed.js"></script>
+</body>
+</html>
