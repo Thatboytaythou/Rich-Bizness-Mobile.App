@@ -1,1 +1,53 @@
+<!-- store.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Bizness Store</title>
 
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/store.css" />
+</head>
+
+<body data-section="store">
+  <main class="rb-section rb-store-page">
+    <header class="rb-section-hero">
+      <p class="rb-kicker">RICH BIZNESS MARKETPLACE</p>
+      <h1>Store</h1>
+      <p>Shop drops, digital unlocks, VIP access, creator merch, game items, meta items, and exclusives.</p>
+
+      <div class="rb-store-actions">
+        <input id="storeSearch" type="search" placeholder="Search products..." />
+        <select id="storeCategory">
+          <option value="all">All categories</option>
+        </select>
+        <select id="storeType">
+          <option value="all">All types</option>
+          <option value="physical">Physical</option>
+          <option value="digital">Digital</option>
+          <option value="vip">VIP</option>
+          <option value="subscription">Subscription</option>
+          <option value="ticket">Ticket</option>
+          <option value="download">Download</option>
+          <option value="game_item">Game Item</option>
+          <option value="meta_item">Meta Item</option>
+          <option value="music_exclusive">Music Exclusive</option>
+          <option value="podcast_exclusive">Podcast Exclusive</option>
+          <option value="collectible">Collectible</option>
+          <option value="bundle">Bundle</option>
+        </select>
+      </div>
+    </header>
+
+    <section class="rb-store-status" id="storeStatus">Loading store...</section>
+
+    <section class="rb-store-grid" id="storeGrid"></section>
+  </main>
+
+  <script type="module" src="/core/pages/store.js"></script>
+</body>
+</html>
