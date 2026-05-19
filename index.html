@@ -5,27 +5,56 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>Rich Bizness Mobile</title>
+  <title>Rich Bizness LLC</title>
+
+  <meta
+    name="theme-color"
+    content="#050805"
+  />
 
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/omni-dial.css" />
+  <link rel="stylesheet" href="/styles/omni-portal.css" />
 </head>
 
-<body class="rb-home" data-active-section="live">
+<body class="rb-index-page" data-active-section="live">
 
-  <div class="rb-bg"></div>
-  <div class="rb-vignette"></div>
-  <div class="rb-grid"></div>
+  <!-- BG FX -->
+  <div class="rb-bg-layer"></div>
+  <div class="rb-bg-noise"></div>
+  <div class="rb-bg-vignette"></div>
+  <div class="rb-bg-grid"></div>
 
-  <main class="rb-home-shell">
+  <!-- FLOAT FX -->
+  <div class="rb-floating-orb orb-1"></div>
+  <div class="rb-floating-orb orb-2"></div>
+  <div class="rb-floating-orb orb-3"></div>
 
-    <header class="rb-home-top">
+  <!-- APP -->
+  <main class="rb-app-shell">
+
+    <!-- TOP -->
+    <header class="rb-topbar">
 
       <div class="rb-brand-lock">
-        <p class="rb-kicker">RICH BIZNESS LLC</p>
-        <h1>Reality Changers</h1>
+
+        <p class="rb-brand-kicker">
+          WELCOME BACK
+        </p>
+
+        <h1 class="rb-brand-title">
+          <span>RICH</span>
+          <strong>BIZNESS</strong>
+        </h1>
+
+        <small class="rb-brand-sub">
+          LLC
+        </small>
+
       </div>
 
       <button
@@ -34,126 +63,328 @@
         type="button"
         aria-label="Open profile"
       >
+
         <img
           id="rb-home-avatar"
           src="/images/brand/Avatar-hero-Banner.png.jpeg"
-          alt="Profile"
+          alt="Profile avatar"
         />
 
-        <span>
-          <strong id="rb-home-name">Guest Mode</strong>
-          <small id="rb-home-badge">SIGN IN</small>
+        <span class="rb-profile-copy">
+
+          <strong id="rb-home-name">
+            Guest Mode
+          </strong>
+
+          <small id="rb-home-badge">
+            ENTER REALITY
+          </small>
+
         </span>
+
       </button>
 
     </header>
 
-    <section class="rb-portal-stage" aria-label="Rich Bizness portal">
+    <!-- PORTAL AREA -->
+    <section
+      class="rb-portal-stage"
+      aria-label="Omni Dial Portal"
+    >
 
-      <div id="rb-tv-orbit" class="rb-tv-orbit">
+      <!-- DIAL -->
+      <div
+        id="rb-tv-orbit"
+        class="rb-tv-orbit"
+      >
 
-        <button class="rb-tv-screen" data-rb-section="feed" type="button">
-          <img src="/images/brand/project-avatar.png.jpeg" alt="Feed" />
+        <!-- FEED -->
+        <button
+          class="rb-tv-screen"
+          data-rb-section="feed"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/project-avatar.png.jpeg"
+            alt="Feed"
+          />
+
           <div class="rb-tv-overlay">
             <span>FEED</span>
             <h3>Global Feed</h3>
           </div>
+
         </button>
 
-        <button class="rb-tv-screen is-active" data-rb-section="live" type="button">
-          <img src="/images/brand/omni-watch.png.jpeg" alt="Live" />
+        <!-- LIVE -->
+        <button
+          class="rb-tv-screen is-active"
+          data-rb-section="live"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/omni-watch.png.jpeg"
+            alt="Live"
+          />
+
           <div class="rb-tv-overlay">
             <span>LIVE</span>
             <h3>Go Live</h3>
           </div>
+
         </button>
 
-        <button class="rb-tv-screen" data-rb-section="music" type="button">
-          <img src="/images/brand/music-log.png.jpeg" alt="Music" />
+        <!-- MUSIC -->
+        <button
+          class="rb-tv-screen"
+          data-rb-section="music"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/music-log.png.jpeg"
+            alt="Music"
+          />
+
           <div class="rb-tv-overlay">
             <span>MUSIC</span>
             <h3>Music Universe</h3>
           </div>
+
         </button>
 
-        <button class="rb-tv-screen" data-rb-section="gaming" type="button">
-          <img src="/images/brand/chess-gaming-logo.png.jpeg" alt="Gaming" />
+        <!-- GAMING -->
+        <button
+          class="rb-tv-screen"
+          data-rb-section="gaming"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/chess-gaming-logo.png.jpeg"
+            alt="Gaming"
+          />
+
           <div class="rb-tv-overlay">
             <span>GAMES</span>
             <h3>Arcade District</h3>
           </div>
+
         </button>
 
-        <button class="rb-tv-screen" data-rb-section="sports" type="button">
-          <img src="/images/brand/sports-logo.png.jpeg" alt="Sports" />
+        <!-- SPORTS -->
+        <button
+          class="rb-tv-screen"
+          data-rb-section="sports"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/sports-logo.png.jpeg"
+            alt="Sports"
+          />
+
           <div class="rb-tv-overlay">
             <span>SPORTS</span>
             <h3>Sports Arena</h3>
           </div>
+
         </button>
 
-        <button class="rb-tv-screen" data-rb-section="gallery" type="button">
-          <img src="/images/brand/hero-logo.png.jpeg" alt="Gallery" />
+        <!-- GALLERY -->
+        <button
+          class="rb-tv-screen"
+          data-rb-section="gallery"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/hero-logo.png.jpeg"
+            alt="Gallery"
+          />
+
           <div class="rb-tv-overlay">
             <span>ART</span>
             <h3>Gallery Vault</h3>
           </div>
+
         </button>
 
-        <button class="rb-tv-screen" data-rb-section="store" type="button">
-          <img src="/images/brand/gta-studio.png.jpeg" alt="Store" />
+        <!-- STORE -->
+        <button
+          class="rb-tv-screen"
+          data-rb-section="store"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/gta-studio.png.jpeg"
+            alt="Store"
+          />
+
           <div class="rb-tv-overlay">
             <span>STORE</span>
             <h3>Creator Market</h3>
           </div>
+
         </button>
 
-        <button class="rb-tv-screen" data-rb-section="meta" type="button">
-          <img src="/images/brand/meta-avatar.png.jpeg" alt="Meta" />
+        <!-- META -->
+        <button
+          class="rb-tv-screen"
+          data-rb-section="meta"
+          type="button"
+        >
+
+          <img
+            src="/images/brand/meta-avatar.png.jpeg"
+            alt="Meta"
+          />
+
           <div class="rb-tv-overlay">
             <span>META</span>
             <h3>Meta World</h3>
           </div>
+
         </button>
 
       </div>
 
-      <div class="rb-core-portal" aria-hidden="true">
+      <!-- CORE PORTAL -->
+      <div
+        class="rb-core-portal"
+        aria-hidden="true"
+      >
+
         <div class="rb-portal-ring"></div>
         <div class="rb-portal-ring-two"></div>
+        <div class="rb-portal-ring-three"></div>
+
+        <div class="rb-portal-glow"></div>
         <div class="rb-portal-light"></div>
 
         <div class="rb-portal-copy">
-          <span id="rb-active-label">LIVE</span>
-          <h2 id="rb-active-title">Go Live</h2>
-          <p id="rb-active-meta">Broadcast • VIP • Realtime</p>
+
+          <span id="rb-active-label">
+            LIVE
+          </span>
+
+          <h2 id="rb-active-title">
+            Go Live
+          </h2>
+
+          <p id="rb-active-meta">
+            Broadcast • VIP • Realtime
+          </p>
+
         </div>
+
       </div>
 
     </section>
 
+    <!-- CONTROLS -->
     <section class="rb-home-actions">
-      <button id="rb-rotate-prev" class="rb-icon-btn" type="button" aria-label="Previous section">‹</button>
-      <button id="rb-launch-section" class="rb-main-launch" type="button">ENTER SECTION</button>
-      <button id="rb-rotate-next" class="rb-icon-btn" type="button" aria-label="Next section">›</button>
+
+      <button
+        id="rb-rotate-prev"
+        class="rb-icon-btn"
+        type="button"
+        aria-label="Previous section"
+      >
+        ‹
+      </button>
+
+      <button
+        id="rb-launch-section"
+        class="rb-main-launch"
+        type="button"
+      >
+        ENTER SECTION
+      </button>
+
+      <button
+        id="rb-rotate-next"
+        class="rb-icon-btn"
+        type="button"
+        aria-label="Next section"
+      >
+        ›
+      </button>
+
     </section>
 
+    <!-- QUICK ACTIONS -->
     <section class="rb-quick-actions">
-      <button id="rb-open-upload" type="button">Upload</button>
-      <button id="rb-open-auth" type="button">Enter</button>
+
+      <button
+        id="rb-open-upload"
+        type="button"
+      >
+        Upload
+      </button>
+
+      <button
+        id="rb-open-auth"
+        type="button"
+      >
+        Enter
+      </button>
+
     </section>
 
   </main>
 
-  <nav class="rb-bottom-nav" aria-label="Main sections">
-    <button data-rb-route="feed" type="button">Feed</button>
-    <button data-rb-route="live" type="button" class="active">Live</button>
-    <button data-rb-route="music" type="button">Music</button>
-    <button data-rb-route="gaming" type="button">Games</button>
-    <button data-rb-route="meta" type="button">Meta</button>
+  <!-- BOTTOM NAV -->
+  <nav
+    class="rb-bottom-nav"
+    aria-label="Main sections"
+  >
+
+    <button
+      data-rb-route="feed"
+      type="button"
+    >
+      Feed
+    </button>
+
+    <button
+      data-rb-route="live"
+      type="button"
+      class="active"
+    >
+      Live
+    </button>
+
+    <button
+      data-rb-route="music"
+      type="button"
+    >
+      Music
+    </button>
+
+    <button
+      data-rb-route="gaming"
+      type="button"
+    >
+      Games
+    </button>
+
+    <button
+      data-rb-route="meta"
+      type="button"
+    >
+      Meta
+    </button>
+
   </nav>
 
-  <script type="module" src="/core/pages/index.js"></script>
+  <script
+    type="module"
+    src="/core/pages/index.js"
+  ></script>
 
 </body>
 </html>
