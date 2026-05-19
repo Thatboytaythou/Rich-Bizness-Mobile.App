@@ -1,356 +1,330 @@
-/* =========================
-   RICH BIZNESS MOBILE
+/* =========================================
+   RICH BIZNESS LLC
    /styles/omni-dial.css
+   OMNI TV ORBIT / DIAL LAYER
+========================================= */
 
-   ORBIT VISUAL LAYER ONLY
-   No layout ownership
-   No movement ownership
+.rb-portal-stage{
+  position:relative;
+  min-height:clamp(430px,62svh,760px);
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  perspective:1400px;
+}
+
+/* =========================
+   ORBIT
 ========================= */
 
 .rb-tv-orbit{
   position:absolute;
   inset:0;
-  z-index:20;
-  pointer-events:none;
-
+  margin:auto;
+  width:min(92vw,720px);
+  height:min(92vw,720px);
+  max-height:62svh;
   transform-style:preserve-3d;
-  perspective:1400px;
-
-  overflow:visible;
+  pointer-events:none;
 }
 
 /* =========================
-   TV SCREEN
+   TV CARDS
 ========================= */
 
 .rb-tv-screen{
   position:absolute;
-
   left:50%;
   top:50%;
 
-  width:180px;
-  height:220px;
+  width:clamp(118px,30vw,190px);
+  height:clamp(132px,34vw,215px);
 
-  margin-left:-90px;
-  margin-top:-110px;
+  margin-left:calc(clamp(118px,30vw,190px) / -2);
+  margin-top:calc(clamp(132px,34vw,215px) / -2);
 
-  border-radius:24px;
-  border:1px solid rgba(255,215,106,.36);
+  border:1px solid rgba(255,215,106,.28);
+  border-radius:22px;
 
   overflow:hidden;
   padding:0;
 
-  background:#050805;
-  color:var(--rb-white);
+  color:#fff;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),
+    rgba(3,8,4,.82);
 
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.48),
+    inset 0 1px 0 rgba(255,255,255,.10);
+
+  cursor:pointer;
   pointer-events:auto;
 
   transform-style:preserve-3d;
-  transform-origin:center center;
-
-  box-shadow:
-    0 0 24px rgba(0,255,136,.22),
-    0 0 34px rgba(255,215,106,.12),
-    inset 0 0 26px rgba(255,255,255,.04);
-
   transition:
-    border-color .25s ease,
-    box-shadow .25s ease,
-    filter .25s ease,
-    opacity .25s ease;
+    transform .45s ease,
+    opacity .35s ease,
+    filter .35s ease,
+    border-color .35s ease,
+    box-shadow .35s ease;
 }
 
 /* =========================
-   IMAGE
+   ORBIT POSITIONS
+========================= */
+
+.rb-tv-screen:nth-child(1){
+  transform:rotateZ(270deg) translateY(-44%) rotateZ(-270deg) scale(.72);
+}
+
+.rb-tv-screen:nth-child(2){
+  transform:rotateZ(315deg) translateY(-44%) rotateZ(-315deg) scale(.86);
+}
+
+.rb-tv-screen:nth-child(3){
+  transform:rotateZ(0deg) translateY(-44%) rotateZ(0deg) scale(.72);
+}
+
+.rb-tv-screen:nth-child(4){
+  transform:rotateZ(45deg) translateY(-44%) rotateZ(-45deg) scale(.66);
+}
+
+.rb-tv-screen:nth-child(5){
+  transform:rotateZ(90deg) translateY(-44%) rotateZ(-90deg) scale(.72);
+}
+
+.rb-tv-screen:nth-child(6){
+  transform:rotateZ(135deg) translateY(-44%) rotateZ(-135deg) scale(.66);
+}
+
+.rb-tv-screen:nth-child(7){
+  transform:rotateZ(180deg) translateY(-44%) rotateZ(-180deg) scale(.72);
+}
+
+.rb-tv-screen:nth-child(8){
+  transform:rotateZ(225deg) translateY(-44%) rotateZ(-225deg) scale(.66);
+}
+
+/* =========================
+   CARD MEDIA
 ========================= */
 
 .rb-tv-screen img{
-  position:absolute;
-  inset:0;
-
   width:100%;
-  height:100%;
-
-  object-fit:cover;
-  object-position:center;
-
+  height:68%;
   display:block;
-
-  z-index:1;
-
-  transform:scale(1.02);
+  object-fit:cover;
+  transform:scale(1.04);
+  filter:saturate(1.12) contrast(1.08);
 }
 
-/* =========================
-   GLASS FX
-========================= */
-
-.rb-tv-screen::before{
-  content:"";
+.rb-tv-overlay{
   position:absolute;
-  inset:0;
+  inset:auto 0 0 0;
 
-  z-index:2;
-  pointer-events:none;
+  padding:12px 12px 14px;
 
   background:
     linear-gradient(
       180deg,
-      rgba(0,0,0,.05) 0%,
-      rgba(0,0,0,.2) 44%,
-      rgba(0,0,0,.82) 100%
-    ),
-    radial-gradient(
-      circle at 28% 18%,
-      rgba(255,255,255,.2),
-      transparent 28%
+      transparent,
+      rgba(0,0,0,.84) 34%,
+      rgba(0,0,0,.96)
     );
 }
 
-.rb-tv-screen::after{
-  content:"";
-  position:absolute;
-  inset:0;
+.rb-tv-overlay span{
+  display:block;
+  margin-bottom:3px;
 
-  z-index:3;
-  pointer-events:none;
+  font-size:.66rem;
+  font-weight:900;
+  letter-spacing:.18em;
 
-  opacity:.32;
-
-  mix-blend-mode:screen;
-
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,.045) 0,
-      rgba(255,255,255,.045) 1px,
-      transparent 1px,
-      transparent 5px
-    );
+  color:#7cff7c;
 }
 
-/* =========================
-   OVERLAY
-========================= */
-
-.rb-tv-overlay{
-  position:absolute;
-
-  left:10px;
-  right:10px;
-  bottom:10px;
-
-  z-index:5;
-
-  display:flex;
-  flex-direction:column;
-  gap:5px;
-}
-
-.rb-tv-overlay span,
-.rb-tv-label{
-  align-self:flex-start;
-
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-
-  min-height:22px;
-  padding:0 9px;
-
-  border-radius:999px;
-
-  color:#001806;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-green),
-      var(--rb-gold)
-    );
-
-  font-size:.58rem;
-  line-height:1;
-  font-weight:1000;
-  letter-spacing:.08em;
-}
-
-.rb-tv-overlay h3,
-.rb-tv-screen strong{
+.rb-tv-overlay h3{
   margin:0;
 
-  color:var(--rb-white);
-
-  font-size:.94rem;
-  line-height:1.02;
-  font-weight:1000;
-
-  text-shadow:
-    0 2px 14px rgba(0,0,0,.85);
-}
-
-.rb-tv-screen small{
-  position:relative;
-  z-index:5;
-
-  color:rgba(247,255,247,.72);
-
-  font-size:.68rem;
+  font-size:clamp(.9rem,2.6vw,1.15rem);
+  line-height:1.05;
+  letter-spacing:-.03em;
 }
 
 /* =========================
-   ACTIVE STATE
+   ACTIVE CARD
 ========================= */
 
-.rb-tv-screen.is-active,
-.rb-tv-screen.is-front{
-  border-color:rgba(102,255,102,.8);
+.rb-tv-screen.is-active{
+  z-index:10;
+
+  opacity:1;
+  filter:saturate(1.22) contrast(1.1);
+
+  border-color:rgba(102,255,102,.68);
 
   box-shadow:
-    0 0 36px rgba(0,255,136,.42),
-    0 0 52px rgba(255,215,106,.18),
-    inset 0 0 32px rgba(102,255,102,.1);
+    0 0 0 1px rgba(102,255,102,.42),
+    0 28px 90px rgba(0,0,0,.65),
+    0 0 55px rgba(102,255,102,.24),
+    0 0 120px rgba(255,215,106,.10);
+}
+
+.rb-tv-screen:not(.is-active){
+  opacity:.58;
+  filter:saturate(.82) brightness(.82);
 }
 
 /* =========================
-   ORBIT RAILS
+   HOVER / TAP
 ========================= */
 
-.rb-tv-orbit::before{
-  content:"";
-
-  position:absolute;
-
-  left:50%;
-  top:50%;
-
-  width:min(560px, 76vw);
-  height:min(560px, 76vw);
-
-  transform:translate(-50%,-50%);
-
-  border-radius:50%;
-
-  border:1px solid rgba(255,215,106,.13);
-
-  pointer-events:none;
-
-  box-shadow:
-    0 0 42px rgba(0,255,136,.08),
-    inset 0 0 58px rgba(255,215,106,.06);
-
-  animation:rbOrbitRailSpin 34s linear infinite;
+.rb-tv-screen:hover{
+  opacity:1;
+  filter:saturate(1.12) brightness(1.08);
+  border-color:rgba(255,215,106,.55);
 }
 
-.rb-tv-orbit::after{
-  content:"";
-
-  position:absolute;
-
-  left:50%;
-  top:50%;
-
-  width:min(450px, 62vw);
-  height:min(450px, 62vw);
-
-  transform:translate(-50%,-50%);
-
-  border-radius:50%;
-
-  border:1px dashed rgba(102,255,102,.16);
-
-  pointer-events:none;
-
-  animation:rbOrbitRailSpinReverse 24s linear infinite;
+.rb-tv-screen:active{
+  transform:scale(.96);
 }
 
 /* =========================
-   MOBILE
+   ACTIVE SECTION ROTATION
+========================= */
+
+body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
+body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
+body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
+body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
+body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
+body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
+body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
+body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
+  transform:
+    translate3d(-50%,-56%,160px)
+    scale(1.16);
+}
+
+/* =========================
+   MOBILE SAFE ORBIT
 ========================= */
 
 @media (max-width:720px){
 
+  .rb-portal-stage{
+    min-height:560px;
+  }
+
+  .rb-tv-orbit{
+    width:min(96vw,430px);
+    height:min(96vw,430px);
+    max-height:none;
+  }
+
   .rb-tv-screen{
-    width:112px;
-    height:136px;
-
-    margin-left:-56px;
-    margin-top:-68px;
-
+    width:122px;
+    height:146px;
     border-radius:18px;
   }
 
-  .rb-tv-overlay{
-    left:7px;
-    right:7px;
-    bottom:7px;
-    gap:4px;
+  .rb-tv-screen:nth-child(1){
+    transform:rotateZ(270deg) translateY(-58%) rotateZ(-270deg) scale(.66);
   }
 
-  .rb-tv-overlay span,
-  .rb-tv-label{
-    min-height:18px;
-    padding:0 7px;
-
-    font-size:.48rem;
-    letter-spacing:.06em;
+  .rb-tv-screen:nth-child(2){
+    transform:rotateZ(315deg) translateY(-58%) rotateZ(-315deg) scale(.76);
   }
 
-  .rb-tv-overlay h3,
-  .rb-tv-screen strong{
-    font-size:.68rem;
-    line-height:1;
+  .rb-tv-screen:nth-child(3){
+    transform:rotateZ(0deg) translateY(-58%) rotateZ(0deg) scale(.66);
   }
 
-  .rb-tv-orbit::before{
-    width:330px;
-    height:330px;
+  .rb-tv-screen:nth-child(4){
+    transform:rotateZ(45deg) translateY(-58%) rotateZ(-45deg) scale(.62);
   }
 
-  .rb-tv-orbit::after{
-    width:260px;
-    height:260px;
-  }
-}
-
-@media (max-width:430px){
-
-  .rb-tv-screen{
-    width:104px;
-    height:126px;
-
-    margin-left:-52px;
-    margin-top:-63px;
+  .rb-tv-screen:nth-child(5){
+    transform:rotateZ(90deg) translateY(-58%) rotateZ(-90deg) scale(.66);
   }
 
-  .rb-tv-orbit::before{
-    width:300px;
-    height:300px;
+  .rb-tv-screen:nth-child(6){
+    transform:rotateZ(135deg) translateY(-58%) rotateZ(-135deg) scale(.62);
   }
 
-  .rb-tv-orbit::after{
-    width:235px;
-    height:235px;
+  .rb-tv-screen:nth-child(7){
+    transform:rotateZ(180deg) translateY(-58%) rotateZ(-180deg) scale(.66);
   }
+
+  .rb-tv-screen:nth-child(8){
+    transform:rotateZ(225deg) translateY(-58%) rotateZ(-225deg) scale(.62);
+  }
+
+  body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
+  body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
+  body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
+  body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
+  body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
+  body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
+  body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
+  body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
+    transform:
+      translate3d(-50%,-62%,120px)
+      scale(1.04);
+  }
+
 }
 
 /* =========================
-   ANIMATIONS
+   SMALL IPHONE
 ========================= */
 
-@keyframes rbOrbitRailSpin{
-  to{
-    transform:
-      translate(-50%,-50%)
-      rotate(360deg);
+@media (max-width:390px){
+
+  .rb-portal-stage{
+    min-height:520px;
   }
+
+  .rb-tv-orbit{
+    width:390px;
+    height:390px;
+  }
+
+  .rb-tv-screen{
+    width:110px;
+    height:134px;
+  }
+
+  .rb-tv-overlay{
+    padding:9px 10px 11px;
+  }
+
+  .rb-tv-overlay h3{
+    font-size:.84rem;
+  }
+
 }
 
-@keyframes rbOrbitRailSpinReverse{
-  to{
-    transform:
-      translate(-50%,-50%)
-      rotate(-360deg);
+/* =========================
+   LANDSCAPE SAFETY
+========================= */
+
+@media (max-height:620px) and (orientation:landscape){
+
+  .rb-portal-stage{
+    min-height:430px;
   }
+
+  .rb-tv-orbit{
+    width:430px;
+    height:430px;
+  }
+
+  .rb-tv-screen{
+    width:112px;
+    height:132px;
+  }
+
 }
