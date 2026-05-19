@@ -1,51 +1,273 @@
-/* =========================
-   RICH BIZNESS MOBILE
+/* =========================================
+   RICH BIZNESS LLC
    /styles/omni-fx.css
+   CINEMA FX LAYER
+========================================= */
 
-   FX ONLY
-   No layout ownership
-   No orbit movement ownership
+/* =========================
+   GLOBAL FX
 ========================= */
 
-.rb-home::before{
-  content:"";
-  position:fixed;
-  inset:-30%;
-  z-index:-2;
-  pointer-events:none;
-  background:
-    conic-gradient(
-      from 180deg,
-      transparent,
-      rgba(0,255,136,.12),
-      transparent,
-      rgba(255,215,106,.12),
-      transparent
-    );
-  filter:blur(18px);
-  opacity:.62;
-  animation:rbCosmicRotate 30s linear infinite;
+.rb-index-page{
+  position:relative;
+  isolation:isolate;
 }
 
-.rb-home::after{
+/* =========================
+   CINEMA OVERLAY
+========================= */
+
+.rb-index-page::before{
   content:"";
+
   position:fixed;
   inset:0;
-  z-index:60;
+
+  z-index:-5;
   pointer-events:none;
+
   background:
-    linear-gradient(
-      rgba(255,255,255,.025) 50%,
-      rgba(0,0,0,.03) 50%
+    radial-gradient(
+      circle at top,
+      rgba(102,255,102,.08),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at bottom,
+      rgba(255,215,106,.06),
+      transparent 45%
     );
-  background-size:100% 4px;
-  mix-blend-mode:overlay;
-  opacity:.18;
+
+  mix-blend-mode:screen;
 }
 
-.rb-portal-light{
-  animation:rbPortalBreath 4s ease-in-out infinite;
+/* =========================
+   SCREEN GLOW
+========================= */
+
+.rb-index-page::after{
+  content:"";
+
+  position:fixed;
+  inset:0;
+
+  z-index:-4;
+  pointer-events:none;
+
+  opacity:.22;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.02),
+      rgba(255,255,255,0)
+    );
+
+  animation:
+    rbScreenPulse 8s ease-in-out infinite;
 }
+
+@keyframes rbScreenPulse{
+
+  0%{
+    opacity:.12;
+  }
+
+  50%{
+    opacity:.24;
+  }
+
+  100%{
+    opacity:.12;
+  }
+
+}
+
+/* =========================
+   FLOATING SMOKE
+========================= */
+
+.rb-floating-orb{
+  animation:
+    rbOrbFloat 14s ease-in-out infinite;
+}
+
+.rb-floating-orb.orb-2{
+  animation-duration:18s;
+}
+
+.rb-floating-orb.orb-3{
+  animation-duration:22s;
+}
+
+@keyframes rbOrbFloat{
+
+  0%{
+    transform:
+      translate3d(0,0,0)
+      scale(1);
+  }
+
+  50%{
+    transform:
+      translate3d(0,-30px,0)
+      scale(1.08);
+  }
+
+  100%{
+    transform:
+      translate3d(0,0,0)
+      scale(1);
+  }
+
+}
+
+/* =========================
+   AMBIENT GLOW
+========================= */
+
+.rb-portal-stage::before{
+  content:"";
+
+  position:absolute;
+
+  inset:-8%;
+
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(102,255,102,.12) 0%,
+      rgba(255,215,106,.06) 28%,
+      transparent 65%
+    );
+
+  filter:blur(70px);
+
+  pointer-events:none;
+
+  z-index:-1;
+
+  animation:
+    rbAmbientGlow 10s ease-in-out infinite;
+}
+
+@keyframes rbAmbientGlow{
+
+  0%{
+    opacity:.4;
+    transform:scale(.96);
+  }
+
+  50%{
+    opacity:.9;
+    transform:scale(1.04);
+  }
+
+  100%{
+    opacity:.4;
+    transform:scale(.96);
+  }
+
+}
+
+/* =========================
+   GLASS FX
+========================= */
+
+.rb-tv-screen,
+.rb-core-portal,
+.rb-profile-pill,
+.rb-bottom-nav{
+  backdrop-filter:
+    blur(20px)
+    saturate(140%);
+}
+
+/* =========================
+   GOLD EDGE SHIMMER
+========================= */
+
+.rb-tv-screen::before,
+.rb-core-portal::before{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  border-radius:inherit;
+
+  pointer-events:none;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.12),
+      transparent 20%,
+      transparent 80%,
+      rgba(255,215,106,.10)
+    );
+
+  opacity:.55;
+}
+
+/* =========================
+   TV SCREEN SHINE
+========================= */
+
+.rb-tv-screen::after{
+  content:"";
+
+  position:absolute;
+
+  top:0;
+  left:-120%;
+
+  width:80%;
+  height:100%;
+
+  transform:
+    skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.08),
+      transparent
+    );
+
+  animation:
+    rbTvSweep 8s linear infinite;
+}
+
+@keyframes rbTvSweep{
+
+  0%{
+    left:-120%;
+  }
+
+  100%{
+    left:160%;
+  }
+
+}
+
+/* =========================
+   ACTIVE SCREEN GLOW
+========================= */
+
+.rb-tv-screen.is-active{
+  box-shadow:
+    0 0 0 1px rgba(102,255,102,.4),
+    0 0 34px rgba(102,255,102,.22),
+    0 0 70px rgba(102,255,102,.12);
+}
+
+/* =========================
+   BUTTON FX
+========================= */
 
 .rb-main-launch{
   position:relative;
@@ -54,313 +276,154 @@
 
 .rb-main-launch::before{
   content:"";
+
   position:absolute;
-  inset:0;
-  pointer-events:none;
+
+  top:0;
+  left:-120%;
+
+  width:60%;
+  height:100%;
+
   background:
     linear-gradient(
-      120deg,
+      90deg,
       transparent,
-      rgba(255,255,255,.42),
+      rgba(255,255,255,.45),
       transparent
     );
-  transform:translateX(-130%);
-  animation:rbButtonShine 3.6s ease-in-out infinite;
+
+  transform:
+    skewX(-20deg);
+
+  animation:
+    rbLaunchSweep 4.6s linear infinite;
 }
 
-.rb-icon-btn:active,
-.rb-main-launch:active,
-.rb-quick-actions button:active,
-.rb-bottom-nav button:active,
-.rb-profile-pill:active{
-  filter:brightness(1.2);
-}
+@keyframes rbLaunchSweep{
 
-/* =========================
-   HOLOGRAM FX LAYERS
-========================= */
-
-.rb-holo-scan-layer,
-.rb-holo-spark-layer,
-.rb-holo-fog-layer{
-  position:absolute;
-  inset:0;
-  z-index:14;
-  pointer-events:none;
-  overflow:hidden;
-}
-
-.rb-holo-scan-layer::before{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  top:-34%;
-  height:38%;
-  pointer-events:none;
-  background:
-    linear-gradient(
-      180deg,
-      transparent,
-      rgba(102,255,102,.13),
-      rgba(255,215,106,.08),
-      transparent
-    );
-  filter:blur(7px);
-  animation:rbHoloScan 5s linear infinite;
-}
-
-.rb-holo-fog-layer::before,
-.rb-holo-fog-layer::after{
-  content:"";
-  position:absolute;
-  width:72%;
-  height:62%;
-  border-radius:50%;
-  pointer-events:none;
-  background:
-    radial-gradient(
-      circle,
-      rgba(0,255,136,.12),
-      transparent 68%
-    );
-  filter:blur(26px);
-  animation:rbHoloFog 9.5s ease-in-out infinite;
-}
-
-.rb-holo-fog-layer::before{
-  left:-24%;
-  top:16%;
-}
-
-.rb-holo-fog-layer::after{
-  right:-24%;
-  bottom:6%;
-  animation-delay:-4.5s;
-}
-
-.rb-holo-spark{
-  position:absolute;
-  display:block;
-  border-radius:50%;
-  background:var(--rb-green);
-  pointer-events:none;
-  box-shadow:
-    0 0 10px var(--rb-green),
-    0 0 18px var(--rb-gold);
-  animation:rbSparkRise 2.2s ease-out forwards;
-}
-
-/* =========================
-   SECTION MOOD LIGHTING
-========================= */
-
-body[data-active-section="live"] .rb-bg{
-  filter:saturate(1.25) hue-rotate(0deg);
-}
-
-body[data-active-section="music"] .rb-bg{
-  filter:saturate(1.35) hue-rotate(18deg);
-}
-
-body[data-active-section="gaming"] .rb-bg{
-  filter:saturate(1.45) hue-rotate(-18deg);
-}
-
-body[data-active-section="sports"] .rb-bg{
-  filter:saturate(1.3) hue-rotate(32deg);
-}
-
-body[data-active-section="gallery"] .rb-bg{
-  filter:saturate(1.22) hue-rotate(55deg);
-}
-
-body[data-active-section="store"] .rb-bg{
-  filter:saturate(1.2) brightness(1.08);
-}
-
-body[data-active-section="meta"] .rb-bg{
-  filter:saturate(1.55) hue-rotate(86deg);
-}
-
-body[data-active-section="feed"] .rb-bg{
-  filter:saturate(1.18) hue-rotate(-36deg);
-}
-
-/* =========================
-   REACTION FX CLASSES
-========================= */
-
-.rb-holo-pulse{
-  animation:rbScreenPulse .6s ease both!important;
-}
-
-.rb-holo-glitch{
-  animation:rbHoloGlitch .34s steps(2,end) both!important;
-}
-
-.rb-portal-flash .rb-portal-light{
-  filter:brightness(1.75) saturate(1.5);
-  box-shadow:
-    0 0 110px rgba(0,255,136,.72),
-    0 0 80px rgba(255,215,106,.42);
-}
-
-.rb-portal-transition{
-  animation:rbPortalBurst .9s ease;
-}
-
-.rb-stage-wave{
-  animation:rbStageWave 1.2s ease;
-}
-
-.rb-tv-react{
-  animation:rbTvReact .65s ease;
-}
-
-.rb-text-switch{
-  opacity:0;
-  transition:opacity .18s ease;
-}
-
-/* =========================
-   KEYFRAMES
-========================= */
-
-@keyframes rbCosmicRotate{
-  to{
-    transform:rotate(360deg);
-  }
-}
-
-@keyframes rbPortalBreath{
-  0%,100%{
-    opacity:.78;
-    filter:blur(.4px) brightness(1);
-  }
-
-  50%{
-    opacity:1;
-    filter:blur(.2px) brightness(1.35);
-  }
-}
-
-@keyframes rbButtonShine{
-  0%,60%{
-    transform:translateX(-130%);
-  }
-
-  82%,100%{
-    transform:translateX(130%);
-  }
-}
-
-@keyframes rbHoloScan{
-  from{
-    transform:translateY(-20%);
-  }
-
-  to{
-    transform:translateY(430%);
-  }
-}
-
-@keyframes rbHoloFog{
-  0%,100%{
-    transform:scale(1);
-    opacity:.38;
-  }
-
-  50%{
-    transform:scale(1.16);
-    opacity:.72;
-  }
-}
-
-@keyframes rbSparkRise{
   0%{
-    transform:translateY(0) scale(.6);
-    opacity:0;
-  }
-
-  20%{
-    opacity:1;
+    left:-120%;
   }
 
   100%{
-    transform:translateY(-120px) scale(1.35);
-    opacity:0;
+    left:180%;
   }
+
 }
 
-@keyframes rbScreenPulse{
-  0%,100%{
-    filter:brightness(1) saturate(1.15);
+/* =========================
+   BUTTON HOVER
+========================= */
+
+.rb-icon-btn:hover,
+.rb-main-launch:hover,
+.rb-quick-actions button:hover,
+.rb-bottom-nav button:hover,
+.rb-profile-pill:hover{
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(102,255,102,.34);
+}
+
+/* =========================
+   PORTAL BREATHING
+========================= */
+
+.rb-core-portal{
+  animation:
+    rbPortalBreath 7s ease-in-out infinite;
+}
+
+@keyframes rbPortalBreath{
+
+  0%{
+    transform:scale(1);
   }
 
   50%{
-    filter:brightness(1.55) saturate(1.55);
+    transform:scale(1.015);
   }
-}
 
-@keyframes rbHoloGlitch{
-  0%{ opacity:1; }
-  25%{ opacity:.82; }
-  50%{ opacity:1; }
-  75%{ opacity:.9; }
-  100%{ opacity:1; }
-}
+  100%{
+    transform:scale(1);
+  }
 
-@keyframes rbPortalBurst{
-  0%{ filter:brightness(1); }
-  50%{ filter:brightness(1.75) saturate(1.45); }
-  100%{ filter:brightness(1); }
-}
-
-@keyframes rbStageWave{
-  0%{ filter:brightness(1); }
-  40%{ filter:brightness(1.16); }
-  100%{ filter:brightness(1); }
-}
-
-@keyframes rbTvReact{
-  0%{ filter:brightness(1); }
-  50%{ filter:brightness(1.45) saturate(1.45); }
-  100%{ filter:brightness(1); }
 }
 
 /* =========================
-   MOBILE SAFETY
+   TEXT FX
 ========================= */
 
-@media (max-width:720px){
-  .rb-holo-scan-layer,
-  .rb-holo-spark-layer,
-  .rb-holo-fog-layer{
-    z-index:13;
-  }
+.rb-brand-title strong,
+#rb-active-label{
+  text-shadow:
+    0 0 20px rgba(102,255,102,.24);
+}
 
-  .rb-home::after{
-    opacity:.16;
-  }
-
-  .rb-portal-flash .rb-portal-light{
-    box-shadow:
-      0 0 70px rgba(0,255,136,.58),
-      0 0 48px rgba(255,215,106,.32);
-  }
+#rb-active-title{
+  text-shadow:
+    0 8px 30px rgba(0,0,0,.5);
 }
 
 /* =========================
-   ACCESSIBILITY
+   SCAN LINES
 ========================= */
 
-@media (prefers-reduced-motion: reduce){
+.rb-portal-stage::after{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  border-radius:inherit;
+
+  pointer-events:none;
+
+  opacity:.06;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.08) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    100% 4px;
+
+  mix-blend-mode:screen;
+}
+
+/* =========================
+   IOS SAFETY
+========================= */
+
+@media (max-width:768px){
+
+  .rb-tv-screen::after,
+  .rb-main-launch::before{
+    animation-duration:10s;
+  }
+
+  .rb-floating-orb{
+    filter:blur(60px);
+  }
+
+}
+
+/* =========================
+   LOW POWER MODE
+========================= */
+
+@media (prefers-reduced-motion:reduce){
+
   *,
   *::before,
   *::after{
-    animation:none!important;
-    transition:none!important;
-    scroll-behavior:auto!important;
+    animation:none !important;
+    transition:none !important;
   }
+
 }
