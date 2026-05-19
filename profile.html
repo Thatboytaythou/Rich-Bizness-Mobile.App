@@ -2,159 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile | Rich Bizness LLC</title>
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
 
-  <title>Rich Bizness — Profile</title>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
-<body class="rb-home rb-profile-page">
+<body class="rb-body rb-profile-page">
+  <div class="rb-bg-fx"></div>
 
-  <div class="rb-bg"></div>
-  <div class="rb-vignette"></div>
-  <div class="rb-grid"></div>
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/">
+      <span>RICH</span>
+      <strong>BIZNESS</strong>
+      <small>LLC</small>
+    </a>
 
-  <main class="rb-profile-shell">
+    <nav class="rb-nav">
+      <a href="/feed">Feed</a>
+      <a href="/watch">Watch</a>
+      <a href="/live">Live</a>
+      <a href="/music">Music</a>
+      <a href="/gaming">Gaming</a>
+      <a href="/sports">Sports</a>
+      <a href="/store">Store</a>
+      <a href="/upload">Upload</a>
+    </nav>
+  </header>
 
-    <!-- =========================
-         TOPBAR
-    ========================== -->
+  <main class="rb-page-shell">
+    <section class="rb-profile-hero">
+      <div id="profileBanner" class="rb-profile-banner"></div>
 
-    <header class="rb-profile-top">
+      <div class="rb-profile-card">
+        <img id="profileAvatar" class="rb-profile-avatar" src="/images/brand/project-avatar.png.jpeg" alt="Profile avatar" />
 
-      <a href="/" class="rb-auth-home">
-        ← Portal
-      </a>
+        <div class="rb-profile-main">
+          <p id="profileStatus" class="rb-kicker">Loading profile...</p>
+          <h1 id="profileName">Rich Bizness User</h1>
+          <p id="profileUsername">@richbizness</p>
+          <p id="profileBio">Building the Rich Bizness universe.</p>
 
-      <a href="/settings" class="rb-auth-home">
-        Settings
-      </a>
+          <div class="rb-profile-tags">
+            <span id="profileRank">Member</span>
+            <span id="profileLevel">Level 1</span>
+            <span id="profilePoints">0 pts</span>
+            <span id="profileBalance">$0.00</span>
+          </div>
+        </div>
 
-      <button
-        class="rb-auth-home rb-profile-signout"
-        type="button"
-        data-rb-signout
-      >
-        I’m Out ✌🏽
-      </button>
+        <div class="rb-profile-actions">
+          <button id="profileEditBtn" class="rb-btn rb-btn-gold">Edit Profile</button>
+          <button id="profileFollowBtn" class="rb-btn rb-btn-green">Follow</button>
+          <button id="profileMessageBtn" class="rb-btn rb-btn-ghost">Message</button>
+        </div>
+      </div>
+    </section>
 
-    </header>
+    <section class="rb-profile-stats">
+      <article>
+        <strong id="profileFollowers">0</strong>
+        <span>Followers</span>
+      </article>
+      <article>
+        <strong id="profileFollowing">0</strong>
+        <span>Following</span>
+      </article>
+      <article>
+        <strong id="profilePostsCount">0</strong>
+        <span>Posts</span>
+      </article>
+    </section>
 
-    <!-- =========================
-         BANNER
-    ========================== -->
+    <section class="rb-profile-links">
+      <a id="profileWebsite" href="#" target="_blank" rel="noreferrer" style="display:none;"></a>
+      <div id="profileSocials" class="rb-social-links"></div>
+    </section>
 
-    <section
-      id="profile-banner"
-      class="rb-profile-banner"
-      style="background-image:url('/images/profile/default-banner.png')"
-    >
+    <section class="rb-tabs">
+      <button class="is-active" data-profile-tab="feed">Posts</button>
+      <button data-profile-tab="creator">Creator</button>
+      <button data-profile-tab="store">Store</button>
+      <button data-profile-tab="gaming">Gaming</button>
+      <button data-profile-tab="sports">Sports</button>
+      <button data-profile-tab="meta">Meta</button>
+    </section>
 
-      <div class="rb-profile-banner-overlay"></div>
-
-      <div class="rb-profile-avatar-wrap">
-
-        <img
-          id="profile-avatar"
-          src="/images/brand/project-avatar.png.jpeg"
-          alt="Profile avatar"
-        />
-
+    <section class="rb-profile-panels">
+      <div data-profile-panel="feed">
+        <div id="profileEmpty" class="rb-empty" style="display:none;">
+          No posts yet. Upload something and build the universe.
+        </div>
+        <div id="profileFeed" class="rb-feed-grid"></div>
       </div>
 
+      <div id="profileCreatorPanel" data-profile-panel="creator" style="display:none;"></div>
+      <div id="profileStorePanel" data-profile-panel="store" style="display:none;"></div>
+      <div id="profileGamingPanel" data-profile-panel="gaming" style="display:none;"></div>
+      <div id="profileSportsPanel" data-profile-panel="sports" style="display:none;"></div>
+      <div id="profileMetaPanel" data-profile-panel="meta" style="display:none;"></div>
+
+      <div id="profileMusicPanel" hidden></div>
+      <div id="profileLivePanel" hidden></div>
     </section>
-
-    <!-- =========================
-         PROFILE CARD
-    ========================== -->
-
-    <section class="rb-profile-card">
-
-      <p
-        id="profile-badge"
-        class="rb-kicker"
-      >
-        MEMBER
-      </p>
-
-      <h1 id="profile-name">
-        Rich User
-      </h1>
-
-      <p
-        id="profile-handle"
-        class="rb-profile-handle"
-      >
-        @richuser
-      </p>
-
-      <p
-        id="profile-bio"
-        class="rb-profile-bio"
-      >
-        Loading profile...
-      </p>
-
-      <div class="rb-profile-actions">
-
-        <button
-          id="profile-edit-btn"
-          class="rb-main-launch"
-          type="button"
-        >
-          EDIT PROFILE
-        </button>
-
-      </div>
-
-    </section>
-
-    <!-- =========================
-         GRID
-    ========================== -->
-
-    <section class="rb-profile-grid">
-
-      <article class="rb-profile-box">
-        <strong>Identity</strong>
-
-        <span>
-          Avatar • Profile • Creator status
-        </span>
-      </article>
-
-      <article class="rb-profile-box">
-        <strong>Universe</strong>
-
-        <span>
-          Live • Music • Gaming • Meta
-        </span>
-      </article>
-
-      <article class="rb-profile-box">
-        <strong>Economy</strong>
-
-        <span>
-          Store • Wallet • Unlocks
-        </span>
-      </article>
-
-    </section>
-
   </main>
 
-  <!-- =========================
-       PAGE
-  ========================== -->
+  <footer class="rb-footer">
+    <span>© Rich Bizness LLC</span>
+    <a href="/settings">Settings</a>
+  </footer>
 
-  <script
-    type="module"
-    src="/core/pages/profile.js"
-  ></script>
-
+  <script src="/core/shared/config.js"></script>
+  <script src="/core/shared/supabase.js"></script>
+  <script src="/core/shared/nav.js"></script>
+  <script type="module" src="/core/pages/profile.js"></script>
 </body>
 </html>
