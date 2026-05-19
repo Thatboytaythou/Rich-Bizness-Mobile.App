@@ -1,1 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Bizness — Live Studio</title>
 
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/live.css" />
+</head>
+
+<body class="rb-body live-body">
+  <div class="rb-bg"></div>
+  <div id="elite-platform-nav"></div>
+
+  <main class="live-shell">
+    <section class="live-hero">
+      <p class="eyebrow">RICH BIZNESS LIVE</p>
+      <h1>Go Live. Build the Room. Send Watch the Signal.</h1>
+      <p class="hero-copy">
+        Start a synced live stream with LiveKit, Supabase realtime chat, viewer sessions, reactions,
+        tips, paid/VIP access, and watch-ready routing.
+      </p>
+
+      <div class="live-actions">
+        <button id="createStreamBtn" class="rb-btn primary">Create Stream</button>
+        <button id="startLiveBtn" class="rb-btn gold" disabled>WE LIT 🔥</button>
+        <button id="endLiveBtn" class="rb-btn danger" disabled>End Live</button>
+        <a id="watchLink" class="rb-btn ghost" href="/watch.html">Open Watch</a>
+      </div>
+
+      <div id="liveStatus" class="live-status">Checking auth...</div>
+    </section>
+
+    <section class="live-grid">
+      <aside class="live-panel setup-panel">
+        <h2>Studio Setup</h2>
+
+        <label>
+          Title
+          <input id="streamTitle" type="text" value="Family Bizness" />
+        </label>
+
+        <label>
+          Description
+          <textarea id="streamDescription" rows="4" placeholder="Tell viewers what this live is about..."></textarea>
+        </label>
+
+        <label>
+          Category
+          <select id="streamCategory">
+            <option value="general">General</option>
+            <option value="music">Music</option>
+            <option value="gaming">Gaming</option>
+            <option value="sports">Sports</option>
+            <option value="store">Store</option>
+            <option value="meta">Meta</option>
+            <option value="gallery">Gallery</option>
+            <option value="podcast">Podcast</option>
+          </select>
+        </label>
+
+        <label>
+          Access
+          <select id="streamAccess">
+            <option value="free">Free</option>
+            <option value="paid">Paid</option>
+            <option value="vip">VIP</option>
+            <option value="subscriber">Subscriber</option>
+            <option value="private">Private</option>
+          </select>
+        </label>
+
+        <label>
+          Price Cents
+          <input id="streamPrice" type="number" min="0" step="100" value="0" />
+        </label>
+
+        <label>
+          Thumbnail URL
+          <input id="streamThumbnail" type="url" placeholder="/images/brand/live-cover.png" />
+        </label>
+
+        <label>
+          Cover URL
+          <input id="streamCover" type="url" placeholder="/images/brand/live-stage.png" />
+        </label>
+
+        <div class="toggle-row">
+          <label><input id="chatEnabled" type="checkbox" checked /> Chat</label>
+          <label><input id="cohostEnabled" type="checkbox" checked /> Cohost</label>
+          <label><input id="vipEnabled" type="checkbox" checked /> VIP</label>
+        </div>
+      </aside>
+
+      <section class="live-stage-panel">
+        <div class="stage-top">
+          <div>
+            <p class="eyebrow">LIVEKIT ROOM</p>
+            <h2 id="stageTitle">No stream created</h2>
+          </div>
+          <div id="liveBadge" class="live-badge off">OFF AIR</div>
+        </div>
+
+        <div id="videoStage" class="video-stage">
+          <video id="localVideo" autoplay muted playsinline></video>
+          <div id="remoteVideos" class="remote-videos"></div>
+          <div id="stageEmpty" class="stage-empty">
+            Create a stream, then press WE LIT 🔥.
+          </div>
+          <div id="reactionLayer" class="reaction-layer"></div>
+        </div>
+
+        <div class="control-row">
+          <button id="toggleMicBtn" class="rb-btn ghost" disabled>Mic On</button>
+          <button id="toggleCamBtn" class="rb-btn ghost" disabled>Cam On</button>
+          <button id="copyWatchBtn" class="rb-btn ghost" disabled>Copy Watch Link</button>
+        </div>
+      </section>
+
+      <aside class="live-panel stats-panel">
+        <h2>Live Stats</h2>
+
+        <div class="stat-list">
+          <div><span>Status</span><strong id="statStatus">draft</strong></div>
+          <div><span>Viewers</span><strong id="statViewers">0</strong></div>
+          <div><span>Peak</span><strong id="statPeak">0</strong></div>
+          <div><span>Chat</span><strong id="statChat">0</strong></div>
+          <div><span>Reactions</span><strong id="statReactions">0</strong></div>
+          <div><span>Revenue</span><strong id="statRevenue">$0.00</strong></div>
+        </div>
+
+        <h3>Participants</h3>
+        <div id="participantList" class="mini-list"></div>
+
+        <h3>Recent Tips</h3>
+        <div id="tipList" class="mini-list"></div>
+      </aside>
+
+      <section class="live-panel chat-panel">
+        <div class="panel-head">
+          <h2>Live Chat</h2>
+          <button id="sendReactionBtn" class="rb-btn mini">🔥</button>
+        </div>
+
+        <div id="chatList" class="chat-list"></div>
+
+        <form id="chatForm" class="chat-form">
+          <input id="chatInput" type="text" placeholder="Say something live..." maxlength="300" />
+          <button class="rb-btn primary" type="submit">Send</button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="/core/pages/live.js"></script>
+</body>
+</html>
