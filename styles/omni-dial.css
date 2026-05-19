@@ -181,3 +181,50 @@ body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
     font-size:.82rem;
   }
 }
+
+/* =========================================
+   FRONT STACK FIX
+   Keeps active TV card above portal
+========================================= */
+
+.rb-tv-orbit{
+  z-index:35;
+}
+
+.rb-core-portal{
+  z-index:25;
+}
+
+.rb-tv-screen{
+  z-index:12;
+}
+
+.rb-tv-screen.is-active{
+  z-index:80;
+}
+
+body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
+body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
+body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
+body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
+body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
+body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
+body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
+body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
+  z-index:90;
+  pointer-events:auto;
+  transform:translate(-50%,-205px) scale(1.05);
+}
+
+@media (max-width:720px){
+  body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
+  body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
+  body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
+  body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
+  body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
+  body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
+  body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
+  body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
+    transform:translate(-50%,-175px) scale(.98);
+  }
+}
