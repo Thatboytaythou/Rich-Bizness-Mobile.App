@@ -14,64 +14,70 @@
 }
 
 .rb-tv-orbit{
+  --rb-orbit-rotation:0deg;
+  --rb-orbit-radius:-255px;
+
   position:absolute;
   left:50%;
   top:50%;
+
   width:min(92vw,700px);
   height:min(92vw,700px);
-  transform:translate(-50%,-50%) rotate(var(--rb-orbit-rotation,0deg));
+
+  transform:
+    translate(-50%,-50%)
+    rotate(var(--rb-orbit-rotation));
+
   transform-style:preserve-3d;
   pointer-events:none;
   z-index:35;
-  transition:transform .55s cubic-bezier(.2,.9,.2,1);
+
+  transition:transform .7s cubic-bezier(.18,.9,.18,1);
+  will-change:transform;
 }
 
 .rb-tv-screen{
-  --rb-radius:-255px;
   position:absolute;
   left:50%;
   top:50%;
+
   width:clamp(116px,25vw,176px);
   height:clamp(132px,29vw,204px);
+
   margin-left:calc(clamp(116px,25vw,176px) / -2);
   margin-top:calc(clamp(132px,29vw,204px) / -2);
+
   border:1px solid rgba(255,215,106,.30);
   border-radius:22px;
+
   overflow:hidden;
   padding:0;
+
   color:#fff;
   background:rgba(3,8,4,.9);
+
   box-shadow:0 22px 60px rgba(0,0,0,.52);
+
   cursor:pointer;
   pointer-events:auto;
   transform-style:preserve-3d;
+
   z-index:12;
-  transition:opacity .28s ease, filter .28s ease, border-color .28s ease, box-shadow .28s ease;
-}
 
-.rb-tv-screen:nth-child(1){ --rb-angle:0deg; }
-.rb-tv-screen:nth-child(2){ --rb-angle:45deg; }
-.rb-tv-screen:nth-child(3){ --rb-angle:90deg; }
-.rb-tv-screen:nth-child(4){ --rb-angle:135deg; }
-.rb-tv-screen:nth-child(5){ --rb-angle:180deg; }
-.rb-tv-screen:nth-child(6){ --rb-angle:225deg; }
-.rb-tv-screen:nth-child(7){ --rb-angle:270deg; }
-.rb-tv-screen:nth-child(8){ --rb-angle:315deg; }
-
-.rb-tv-screen{
   transform:
-    rotate(var(--rb-angle))
-    translateY(var(--rb-radius))
-    rotate(calc((var(--rb-angle) + var(--rb-orbit-rotation,0deg)) * -1))
+    rotate(var(--rb-card-angle,0deg))
+    translateY(var(--rb-orbit-radius))
+    rotate(var(--rb-card-counter,0deg))
     scale(.76);
-}
 
-.rb-tv-screen.is-active{
-  transform:
-    rotate(var(--rb-angle))
-    translateY(var(--rb-radius))
-    rotate(calc((var(--rb-angle) + var(--rb-orbit-rotation,0deg)) * -1))
-    scale(.98);
+  transition:
+    transform .7s cubic-bezier(.18,.9,.18,1),
+    opacity .28s ease,
+    filter .28s ease,
+    border-color .28s ease,
+    box-shadow .28s ease;
+
+  will-change:transform;
 }
 
 .rb-tv-screen img{
@@ -86,21 +92,32 @@
 .rb-tv-overlay{
   position:absolute;
   inset:auto 0 0 0;
+
   padding:12px 12px 14px;
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.88) 35%,rgba(0,0,0,.98));
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(0,0,0,.88) 35%,
+      rgba(0,0,0,.98)
+    );
 }
 
 .rb-tv-overlay span{
   display:block;
   margin-bottom:3px;
+
   font-size:.66rem;
   font-weight:950;
   letter-spacing:.18em;
+
   color:#7cff7c;
 }
 
 .rb-tv-overlay h3{
   margin:0;
+
   font-size:clamp(.88rem,2.4vw,1.1rem);
   line-height:1.05;
   letter-spacing:-.03em;
@@ -109,8 +126,16 @@
 .rb-tv-screen.is-active{
   z-index:90;
   opacity:1;
+
+  transform:
+    rotate(var(--rb-card-angle,0deg))
+    translateY(var(--rb-orbit-radius))
+    rotate(var(--rb-card-counter,0deg))
+    scale(.98);
+
   filter:saturate(1.24) contrast(1.12) brightness(1.05);
   border-color:rgba(102,255,102,.82);
+
   box-shadow:
     0 0 0 1px rgba(102,255,102,.46),
     0 28px 90px rgba(0,0,0,.68),
@@ -138,14 +163,16 @@
   }
 
   .rb-tv-orbit{
+    --rb-orbit-radius:-160px;
     width:390px;
     height:390px;
   }
 
   .rb-tv-screen{
-    --rb-radius:-160px;
     width:112px;
     height:136px;
+    margin-left:-56px;
+    margin-top:-68px;
     border-radius:18px;
   }
 }
@@ -156,14 +183,16 @@
   }
 
   .rb-tv-orbit{
+    --rb-orbit-radius:-148px;
     width:360px;
     height:360px;
   }
 
   .rb-tv-screen{
-    --rb-radius:-148px;
     width:104px;
     height:128px;
+    margin-left:-52px;
+    margin-top:-64px;
   }
 
   .rb-tv-overlay{
