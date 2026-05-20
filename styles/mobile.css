@@ -1,15 +1,12 @@
 /* =========================
    RICH BIZNESS MOBILE
    /styles/mobile.css
-
    MOBILE SIZING ONLY
-   No background ownership
-   No orbit movement ownership
 ========================= */
 
 @media (max-width:720px){
   :root{
-    --rb-nav-h:84px;
+    --rb-nav-h:82px;
   }
 
   html,
@@ -22,104 +19,136 @@
 
   body{
     min-height:100svh;
-    padding:
-      env(safe-area-inset-top)
-      0
-      env(safe-area-inset-bottom);
+    padding:0;
   }
 
-  .rb-home-shell,
-  .rb-app-shell{
+  .rb-app-shell,
+  .rb-home-shell{
     width:100%;
     max-width:100%;
     min-height:100svh;
-
     padding:
-      max(12px, env(safe-area-inset-top))
-      10px
-      calc(var(--rb-nav-h) + 24px + env(safe-area-inset-bottom));
-
+      calc(12px + env(safe-area-inset-top))
+      14px
+      calc(var(--rb-nav-h) + 118px + env(safe-area-inset-bottom));
     gap:14px;
   }
 
-  .rb-home-top,
-  .rb-topbar{
+  .rb-topbar,
+  .rb-home-top{
     width:100%;
     flex-direction:column;
     align-items:stretch;
     gap:12px;
-    padding:12px;
-    border-radius:22px;
+    padding:0;
+    margin-bottom:8px;
   }
 
-  .rb-home-top h1,
   .rb-brand-title{
-    font-size:clamp(2.35rem, 12vw, 3.55rem);
-    line-height:.88;
-    max-width:100%;
+    font-size:clamp(2.25rem,11vw,3.25rem);
+    line-height:.9;
   }
 
-  .rb-kicker,
   .rb-brand-kicker{
     font-size:.62rem;
-    letter-spacing:.16em;
+    letter-spacing:.18em;
   }
 
   .rb-profile-pill{
     width:100%;
     min-width:0;
     justify-content:flex-start;
+    padding:10px 12px;
   }
 
   .rb-profile-pill img{
-    width:40px;
-    height:40px;
+    width:44px;
+    height:44px;
   }
 
   .rb-portal-stage{
     width:100%;
-    min-height:clamp(520px, 62svh, 640px);
+    min-height:clamp(430px,54svh,540px);
     border-radius:26px;
   }
 
-  .rb-core-portal{
-    width:clamp(250px, 72vw, 315px);
-    height:clamp(250px, 72vw, 315px);
+  .rb-tv-orbit{
+    width:min(88vw,360px);
+    height:min(88vw,360px);
+    --rb-orbit-radius:-135px;
   }
 
-  .rb-portal-copy{
-    width:74%;
-    padding:18px 14px;
-    border-radius:24px;
+  .rb-tv-screen{
+    width:104px;
+    height:126px;
+    margin-left:-52px;
+    margin-top:-63px;
+    border-radius:17px;
   }
 
-  .rb-portal-copy span{
-    font-size:.62rem;
+  .rb-tv-screen.is-active{
+    transform:
+      rotate(var(--rb-card-angle,0deg))
+      translateY(var(--rb-orbit-radius))
+      rotate(var(--rb-card-counter,0deg))
+      scale(.96);
+  }
+
+  .rb-tv-overlay{
+    padding:8px 9px 10px;
+  }
+
+  .rb-tv-overlay span{
+    font-size:.58rem;
     letter-spacing:.14em;
   }
 
+  .rb-tv-overlay h3{
+    font-size:.82rem;
+  }
+
+  .rb-core-portal{
+    width:clamp(230px,68vw,285px);
+    height:clamp(230px,68vw,285px);
+  }
+
+  .rb-portal-copy{
+    width:76%;
+    padding:15px 12px;
+    border-radius:22px;
+  }
+
+  .rb-portal-copy span{
+    font-size:.6rem;
+    letter-spacing:.15em;
+  }
+
   .rb-portal-copy h2{
-    font-size:clamp(1.65rem, 8vw, 2.25rem);
+    font-size:clamp(1.55rem,7.5vw,2.15rem);
   }
 
   .rb-portal-copy p{
-    font-size:.82rem;
+    font-size:.78rem;
   }
 
   .rb-home-actions{
     gap:10px;
+    margin-top:14px;
   }
 
   .rb-main-launch{
     min-height:52px;
-    padding:0 20px;
+    flex:1;
+    min-width:0;
+    padding:0 18px;
     font-size:.78rem;
     letter-spacing:.08em;
   }
 
   .rb-icon-btn{
-    width:46px;
-    height:46px;
+    width:48px;
+    height:48px;
+    padding:0;
     font-size:1.55rem;
     flex:0 0 auto;
   }
@@ -129,11 +158,12 @@
     grid-template-columns:1fr 1fr;
     gap:10px;
     width:100%;
+    margin-top:12px;
   }
 
   .rb-quick-actions button{
     width:100%;
-    min-height:46px;
+    min-height:48px;
     padding:0 14px;
   }
 
@@ -141,73 +171,89 @@
     left:max(8px, env(safe-area-inset-left));
     right:max(8px, env(safe-area-inset-right));
     bottom:max(8px, env(safe-area-inset-bottom));
-
-    height:84px;
+    height:82px;
     padding:9px;
-    border-radius:26px;
+    border-radius:24px;
   }
 
   .rb-bottom-nav button{
     font-size:.62rem;
-    letter-spacing:.04em;
+    letter-spacing:.03em;
   }
 }
 
 @media (max-width:430px){
   :root{
-    --rb-nav-h:82px;
+    --rb-nav-h:80px;
   }
 
-  .rb-home-shell,
-  .rb-app-shell{
-    padding-left:8px;
-    padding-right:8px;
+  .rb-app-shell,
+  .rb-home-shell{
+    padding-left:12px;
+    padding-right:12px;
     gap:12px;
   }
 
-  .rb-home-top,
-  .rb-topbar{
-    padding:11px;
-    border-radius:20px;
-  }
-
-  .rb-home-top h1,
   .rb-brand-title{
-    font-size:clamp(2.25rem, 12.8vw, 3.15rem);
+    font-size:clamp(2rem,10.8vw,2.85rem);
   }
 
   .rb-portal-stage{
-    min-height:clamp(500px, 61svh, 610px);
-    border-radius:24px;
+    min-height:clamp(415px,52svh,510px);
+  }
+
+  .rb-tv-orbit{
+    width:min(86vw,340px);
+    height:min(86vw,340px);
+    --rb-orbit-radius:-126px;
+  }
+
+  .rb-tv-screen{
+    width:96px;
+    height:118px;
+    margin-left:-48px;
+    margin-top:-59px;
   }
 
   .rb-core-portal{
-    width:clamp(238px, 72vw, 292px);
-    height:clamp(238px, 72vw, 292px);
-  }
-
-  .rb-portal-copy{
-    width:76%;
-    padding:16px 12px;
+    width:clamp(220px,66vw,270px);
+    height:clamp(220px,66vw,270px);
   }
 
   .rb-main-launch{
     min-height:50px;
-    padding:0 18px;
     font-size:.72rem;
   }
 
   .rb-icon-btn{
-    width:44px;
-    height:44px;
+    width:46px;
+    height:46px;
   }
 
   .rb-bottom-nav{
-    height:82px;
-    border-radius:24px;
+    height:80px;
   }
 
   .rb-bottom-nav button{
     font-size:.58rem;
+  }
+}
+
+@media (max-width:380px){
+  .rb-tv-orbit{
+    width:320px;
+    height:320px;
+    --rb-orbit-radius:-118px;
+  }
+
+  .rb-tv-screen{
+    width:90px;
+    height:112px;
+    margin-left:-45px;
+    margin-top:-56px;
+  }
+
+  .rb-portal-stage{
+    min-height:400px;
   }
 }
