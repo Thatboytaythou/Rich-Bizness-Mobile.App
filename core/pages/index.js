@@ -1,52 +1,67 @@
 /* =========================================
    RICH BIZNESS LLC
    /core/pages/index.js
-   FINAL OMNI INDEX CONTROLLER
+   OMNI HUB CONTROLLER
    No Supabase. No imports. No freeze.
 ========================================= */
 
 const SECTIONS = [
-  { key: "feed", label: "FEED", title: "Global Feed", meta: "Posts • Drops • Community", route: "/feed" },
-  { key: "live", label: "LIVE", title: "Go Live", meta: "Broadcast • VIP • Realtime", route: "/live" },
-  { key: "music", label: "MUSIC", title: "Music Universe", meta: "Tracks • Radio • Podcasts", route: "/music" },
-  { key: "gaming", label: "GAMES", title: "Arcade District", meta: "Play • Scores • Challenges", route: "/gaming" },
-  { key: "sports", label: "SPORTS", title: "Sports Arena", meta: "Picks • Clips • Broadcasts", route: "/sports" },
-  { key: "gallery", label: "ART", title: "Gallery Vault", meta: "Art • Visuals • Showcase", route: "/gallery" },
-  { key: "store", label: "STORE", title: "Creator Market", meta: "Products • Drops • Unlocks", route: "/store" },
-  { key: "meta", label: "META", title: "Meta World", meta: "Worlds • Avatars • Portals", route: "/meta" }
+  { key:"feed", label:"FEED", title:"Global Feed", meta:"Posts • Drops • Community", route:"/feed" },
+  { key:"live", label:"LIVE", title:"Go Live", meta:"Broadcast • VIP • Realtime", route:"/live" },
+  { key:"music", label:"MUSIC", title:"Music Universe", meta:"Tracks • Radio • Podcasts", route:"/music" },
+  { key:"gaming", label:"GAMES", title:"Arcade District", meta:"Play • Scores • Challenges", route:"/gaming" },
+  { key:"sports", label:"SPORTS", title:"Sports Arena", meta:"Picks • Clips • Broadcasts", route:"/sports" },
+  { key:"gallery", label:"ART", title:"Gallery Vault", meta:"Art • Visuals • Showcase", route:"/gallery" },
+  { key:"store", label:"STORE", title:"Creator Market", meta:"Products • Drops • Unlocks", route:"/store" },
+  { key:"meta", label:"META", title:"Meta World", meta:"Worlds • Avatars • Portals", route:"/meta" }
 ];
 
 const $ = (id) => document.getElementById(id);
 
-let activeIndex = SECTIONS.findIndex(
-  (section) => section.key === document.body.dataset.activeSection
-);
-
+let activeIndex = SECTIONS.findIndex(s => s.key === document.body.dataset.activeSection);
 if (activeIndex < 0) activeIndex = 1;
 
-function activeSection() {
+function mod(n, m){
+  return ((n % m) + m) % m;
+}
+
+function activeSection(){
   return SECTIONS[activeIndex] || SECTIONS[1];
 }
 
-function setOrbitCards() {
-  const orbit = $("rb-tv-orbit");
-  const cards = document.querySelectorAll(".rb-tv-screen");
-  const orbitRotation = activeIndex * -45;
+function paintCards(){
+  const cards = [...document.querySelectorAll("[data-rb-section]")];
 
-  if (orbit) {
-    orbit.style.setProperty("--rb-orbit-rotation", `${orbitRotation}deg`);
-  }
+  cards.forEach((card) => {
+    const cardIndex = SECTIONS.findIndex(s => s.key === card.dataset.rbSection);
+    const diff = mod(cardIndex - activeIndex, SECTIONS.length);
 
-  cards.forEach((card, index) => {
-    const cardAngle = index * 45;
-    const counterAngle = -(cardAngle + orbitRotation);
+    card.classList.remove(
+      "is-active",
+      "rb-pos-left",
+      "rb-pos-right",
+      "rb-pos-back-left",
+      "rb-pos-back-right",
+      "rb-pos-hidden"
+    );
 
-    card.style.setProperty("--rb-card-angle", `${cardAngle}deg`);
-    card.style.setProperty("--rb-card-counter", `${counterAngle}deg`);
+    if (diff === 0) {
+      card.classList.add("is-active");
+    } else if (diff === 1) {
+      card.classList.add("rb-pos-right");
+    } else if (diff === 7) {
+      card.classList.add("rb-pos-left");
+    } else if (diff === 2) {
+      card.classList.add("rb-pos-back-right");
+    } else if (diff === 6) {
+      card.classList.add("rb-pos-back-left");
+    } else {
+      card.classList.add("rb-pos-hidden");
+    }
   });
 }
 
-function paintSection() {
+function paintSection(){
   const section = activeSection();
 
   document.body.dataset.activeSection = section.key;
@@ -61,40 +76,35 @@ function paintSection() {
   if (meta) meta.textContent = section.meta;
   if (launch) launch.textContent = `ENTER ${section.label}`;
 
-  document.querySelectorAll("[data-rb-section]").forEach((card) => {
-    card.classList.toggle("is-active", card.dataset.rbSection === section.key);
-  });
-
   document.querySelectorAll("[data-rb-route]").forEach((button) => {
     button.classList.toggle("active", button.dataset.rbRoute === section.key);
   });
 
-  setOrbitCards();
+  paintCards();
 }
 
-function moveNext() {
-  activeIndex = (activeIndex + 1) % SECTIONS.length;
+function moveNext(){
+  activeIndex = mod(activeIndex + 1, SECTIONS.length);
   paintSection();
 }
 
-function movePrev() {
-  activeIndex = (activeIndex - 1 + SECTIONS.length) % SECTIONS.length;
+function movePrev(){
+  activeIndex = mod(activeIndex - 1, SECTIONS.length);
   paintSection();
 }
 
-function setActiveByKey(key) {
-  const index = SECTIONS.findIndex((section) => section.key === key);
-  if (index < 0) return;
-
-  activeIndex = index;
+function setActiveByKey(key){
+  const nextIndex = SECTIONS.findIndex(s => s.key === key);
+  if (nextIndex < 0) return;
+  activeIndex = nextIndex;
   paintSection();
 }
 
-function go(route) {
+function go(route){
   if (route) window.location.href = route;
 }
 
-function bindClicks() {
+function bindClicks(){
   document.addEventListener("click", (event) => {
     const target = event.target.closest("button,a");
     if (!target) return;
@@ -142,7 +152,7 @@ function bindClicks() {
   });
 }
 
-function boot() {
+function boot(){
   paintSection();
   bindClicks();
   document.body.classList.add("rb-index-ready");
