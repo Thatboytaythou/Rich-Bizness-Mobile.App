@@ -14,58 +14,43 @@
 }
 
 .rb-tv-orbit{
-  --rb-orbit-rotation:0deg;
-
   position:absolute;
   left:50%;
   top:50%;
-
   width:min(92vw,700px);
   height:min(92vw,700px);
-
   transform:translate(-50%,-50%);
   transform-style:preserve-3d;
-
   pointer-events:none;
   z-index:35;
+  filter:drop-shadow(0 40px 90px rgba(0,0,0,.58));
 }
 
 .rb-tv-screen{
   position:absolute;
   left:50%;
   top:50%;
-
   width:clamp(122px,28vw,180px);
   height:clamp(138px,31vw,210px);
-
   margin-left:calc(clamp(122px,28vw,180px) / -2);
   margin-top:calc(clamp(138px,31vw,210px) / -2);
-
   border:1px solid rgba(255,215,106,.30);
   border-radius:22px;
-
   overflow:hidden;
   padding:0;
-
   color:#fff;
   background:rgba(3,8,4,.92);
-
-  box-shadow:
-    0 24px 70px rgba(0,0,0,.58),
-    inset 0 1px 0 rgba(255,255,255,.08);
-
+  box-shadow:0 24px 70px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.08);
   cursor:pointer;
   pointer-events:auto;
-
   transform-style:preserve-3d;
-  transition:
-    transform .55s cubic-bezier(.18,.9,.18,1),
-    opacity .3s ease,
-    filter .3s ease,
-    border-color .3s ease,
-    box-shadow .3s ease;
-
+  backdrop-filter:blur(16px) saturate(140%);
+  transition:transform .55s cubic-bezier(.18,.9,.18,1), opacity .3s ease, filter .3s ease, border-color .3s ease, box-shadow .3s ease;
   will-change:transform;
+  opacity:0;
+  filter:saturate(.78) brightness(.72);
+  transform:translate(-50%,-50%) scale(.45);
+  z-index:1;
 }
 
 .rb-tv-screen img{
@@ -81,12 +66,7 @@
   position:absolute;
   inset:auto 0 0 0;
   padding:12px 12px 14px;
-  background:linear-gradient(
-    180deg,
-    transparent,
-    rgba(0,0,0,.86) 35%,
-    rgba(0,0,0,.98)
-  );
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.86) 35%,rgba(0,0,0,.98));
 }
 
 .rb-tv-overlay span{
@@ -105,27 +85,15 @@
   letter-spacing:-.03em;
 }
 
-.rb-tv-screen{
-  opacity:0;
-  filter:saturate(.78) brightness(.72);
-  transform:translate(-50%,-50%) scale(.45);
-  z-index:1;
-}
-
-/* active front */
 .rb-tv-screen.is-active{
   opacity:1;
   z-index:90;
   filter:saturate(1.25) contrast(1.12) brightness(1.06);
   border-color:rgba(102,255,102,.86);
   transform:translate(-50%,-18%) scale(1);
-  box-shadow:
-    0 0 0 1px rgba(102,255,102,.48),
-    0 30px 90px rgba(0,0,0,.7),
-    0 0 60px rgba(102,255,102,.30);
+  box-shadow:0 0 0 1px rgba(102,255,102,.48), 0 30px 90px rgba(0,0,0,.7), 0 0 60px rgba(102,255,102,.30);
 }
 
-/* default 8-card positions, JS updates visible cards with rb-pos classes */
 .rb-tv-screen.rb-pos-left{
   opacity:.92;
   z-index:60;
@@ -163,15 +131,11 @@
 }
 
 .rb-core-portal{
-  z-index:25;
+  z-index:40;
+  transform:translateZ(0) scale(1.04);
 }
 
-/* =========================
-   IPHONE SAFETY
-========================= */
-
 @media (max-width:720px){
-
   .rb-portal-stage{
     min-height:560px;
   }
@@ -209,10 +173,28 @@
     transform:translate(105%,-24%) rotate(9deg) scale(.66);
   }
 
+  .rb-core-portal{
+    width:min(78vw,360px);
+    height:min(78vw,360px);
+  }
+}
+
+@media (max-width:430px){
+  .rb-core-portal{
+    width:min(82vw,330px);
+    height:min(82vw,330px);
+  }
+
+  .rb-tv-screen.rb-pos-left{
+    transform:translate(-140%,-4%) rotate(-4deg) scale(.86);
+  }
+
+  .rb-tv-screen.rb-pos-right{
+    transform:translate(40%,-4%) rotate(4deg) scale(.86);
+  }
 }
 
 @media (max-width:390px){
-
   .rb-portal-stage{
     min-height:535px;
   }
@@ -236,83 +218,4 @@
   .rb-tv-overlay h3{
     font-size:.84rem;
   }
-
-  .rb-tv-screen.rb-pos-left{
-    transform:translate(-140%,-4%) rotate(-4deg) scale(.86);
-  }
-
-  .rb-tv-screen.rb-pos-right{
-    transform:translate(40%,-4%) rotate(4deg) scale(.86);
-  }
-
-}
-
-/* =========================================
-   RICH BIZNESS LLC
-   OMNI HUB DEPTH PATCH
-========================================= */
-
-.rb-tv-orbit{
-  filter:
-    drop-shadow(0 40px 90px rgba(0,0,0,.58));
-}
-
-.rb-core-portal{
-  transform:
-    translateZ(0)
-    scale(1.04);
-
-  z-index:40;
-}
-
-.rb-tv-screen{
-  backdrop-filter:
-    blur(16px)
-    saturate(140%);
-}
-
-/* =========================
-   DESKTOP HUB TIGHTEN
-========================= */
-
-@media (min-width:721px){
-
-  .rb-tv-orbit{
-    --rb-orbit-radius:-235px;
-  }
-
-}
-
-/* =========================
-   MOBILE HUB TIGHTEN
-========================= */
-
-@media (max-width:720px){
-
-  .rb-tv-orbit{
-    --rb-orbit-radius:-138px;
-  }
-
-  .rb-core-portal{
-    width:min(78vw,360px);
-    height:min(78vw,360px);
-  }
-
-}
-
-/* =========================
-   SMALL IPHONE
-========================= */
-
-@media (max-width:430px){
-
-  .rb-tv-orbit{
-    --rb-orbit-radius:-128px;
-  }
-
-  .rb-core-portal{
-    width:min(82vw,330px);
-    height:min(82vw,330px);
-  }
-
 }
