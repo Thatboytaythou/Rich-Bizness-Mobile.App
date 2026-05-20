@@ -1,143 +1,326 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/omni-dial.css
-   3-CARD CINEMA OMNI DIAL ROLLBACK
+   FINAL CENTERED 3-CARD OMNI DIAL
 ========================================= */
 
 .rb-portal-stage{
   position:relative;
+
   min-height:clamp(520px,66svh,760px);
+
   display:grid;
   place-items:center;
+
   overflow:hidden;
   perspective:1400px;
+
+  /* HUB ALIGNMENT */
+  --rb-hub-x:34px;
+  --rb-hub-y:0px;
 }
+
+/* =========================================
+   ORBIT
+========================================= */
 
 .rb-tv-orbit{
   position:absolute;
+
   left:50%;
   top:50%;
+
   width:min(92vw,700px);
   height:min(92vw,700px);
-  transform:translate(-50%,-50%);
+
+  transform:
+    translate(
+      calc(-50% + var(--rb-hub-x)),
+      calc(-50% + var(--rb-hub-y))
+    );
+
   transform-style:preserve-3d;
+
   pointer-events:none;
+
   z-index:35;
-  filter:drop-shadow(0 40px 90px rgba(0,0,0,.58));
+
+  filter:
+    drop-shadow(0 40px 90px rgba(0,0,0,.58));
+
+  will-change:transform;
 }
+
+/* =========================================
+   TV CARD
+========================================= */
 
 .rb-tv-screen{
   position:absolute;
+
   left:50%;
   top:50%;
+
   width:clamp(122px,28vw,180px);
   height:clamp(138px,31vw,210px);
+
   margin-left:calc(clamp(122px,28vw,180px) / -2);
   margin-top:calc(clamp(138px,31vw,210px) / -2);
-  border:1px solid rgba(255,215,106,.30);
+
+  border:
+    1px solid rgba(255,215,106,.30);
+
   border-radius:22px;
+
   overflow:hidden;
   padding:0;
+
   color:#fff;
-  background:rgba(3,8,4,.92);
-  box-shadow:0 24px 70px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.08);
+
+  background:
+    rgba(3,8,4,.92);
+
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.58),
+    inset 0 1px 0 rgba(255,255,255,.08);
+
   cursor:pointer;
   pointer-events:auto;
+
   transform-style:preserve-3d;
-  backdrop-filter:blur(16px) saturate(140%);
-  transition:transform .55s cubic-bezier(.18,.9,.18,1), opacity .3s ease, filter .3s ease, border-color .3s ease, box-shadow .3s ease;
+
+  backdrop-filter:
+    blur(16px)
+    saturate(140%);
+
+  transition:
+    transform .55s cubic-bezier(.18,.9,.18,1),
+    opacity .3s ease,
+    filter .3s ease,
+    border-color .3s ease,
+    box-shadow .3s ease;
+
   will-change:transform;
+
   opacity:0;
-  filter:saturate(.78) brightness(.72);
-  transform:translate(-50%,-50%) scale(.45);
+
+  filter:
+    saturate(.78)
+    brightness(.72);
+
+  transform:
+    translate(-50%,-50%)
+    scale(.45);
+
   z-index:1;
 }
+
+/* =========================================
+   CARD IMAGE
+========================================= */
 
 .rb-tv-screen img{
   width:100%;
   height:68%;
+
   display:block;
+
   object-fit:cover;
+
   transform:scale(1.04);
-  filter:saturate(1.14) contrast(1.08);
+
+  filter:
+    saturate(1.14)
+    contrast(1.08);
 }
+
+/* =========================================
+   CARD OVERLAY
+========================================= */
 
 .rb-tv-overlay{
   position:absolute;
+
   inset:auto 0 0 0;
+
   padding:12px 12px 14px;
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.86) 35%,rgba(0,0,0,.98));
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(0,0,0,.86) 35%,
+      rgba(0,0,0,.98)
+    );
 }
 
 .rb-tv-overlay span{
   display:block;
+
   margin-bottom:4px;
+
   font-size:.66rem;
   font-weight:950;
   letter-spacing:.18em;
+
   color:#7cff7c;
 }
 
 .rb-tv-overlay h3{
   margin:0;
-  font-size:clamp(.9rem,2.5vw,1.12rem);
+
+  font-size:
+    clamp(.9rem,2.5vw,1.12rem);
+
   line-height:1.05;
   letter-spacing:-.03em;
 }
 
+/* =========================================
+   ACTIVE CENTER CARD
+========================================= */
+
 .rb-tv-screen.is-active{
   opacity:1;
+
   z-index:90;
-  filter:saturate(1.25) contrast(1.12) brightness(1.06);
-  border-color:rgba(102,255,102,.86);
-  transform:translate(-50%,-18%) scale(1);
-  box-shadow:0 0 0 1px rgba(102,255,102,.48), 0 30px 90px rgba(0,0,0,.7), 0 0 60px rgba(102,255,102,.30);
+
+  filter:
+    saturate(1.25)
+    contrast(1.12)
+    brightness(1.06);
+
+  border-color:
+    rgba(102,255,102,.86);
+
+  transform:
+    translate(-50%,-18%)
+    scale(1);
+
+  box-shadow:
+    0 0 0 1px rgba(102,255,102,.48),
+    0 30px 90px rgba(0,0,0,.7),
+    0 0 60px rgba(102,255,102,.30);
 }
+
+/* =========================================
+   LEFT CARD
+========================================= */
 
 .rb-tv-screen.rb-pos-left{
   opacity:.92;
+
   z-index:60;
-  transform:translate(-178%,-10%) rotate(-4deg) scale(.86);
+
+  transform:
+    translate(-178%,-10%)
+    rotate(-4deg)
+    scale(.86);
 }
+
+/* =========================================
+   RIGHT CARD
+========================================= */
 
 .rb-tv-screen.rb-pos-right{
   opacity:.92;
+
   z-index:60;
-  transform:translate(78%,-10%) rotate(4deg) scale(.86);
+
+  transform:
+    translate(78%,-10%)
+    rotate(4deg)
+    scale(.86);
 }
+
+/* =========================================
+   BACK LEFT
+========================================= */
 
 .rb-tv-screen.rb-pos-back-left{
   opacity:.38;
+
   z-index:20;
-  transform:translate(-250%,-32%) rotate(-9deg) scale(.68);
+
+  transform:
+    translate(-250%,-32%)
+    rotate(-9deg)
+    scale(.68);
 }
+
+/* =========================================
+   BACK RIGHT
+========================================= */
 
 .rb-tv-screen.rb-pos-back-right{
   opacity:.38;
+
   z-index:20;
-  transform:translate(150%,-32%) rotate(9deg) scale(.68);
+
+  transform:
+    translate(150%,-32%)
+    rotate(9deg)
+    scale(.68);
 }
+
+/* =========================================
+   HIDDEN
+========================================= */
 
 .rb-tv-screen.rb-pos-hidden{
   opacity:0;
+
   pointer-events:none;
-  transform:translate(-50%,-50%) scale(.35);
+
+  transform:
+    translate(-50%,-50%)
+    scale(.35);
 }
+
+/* =========================================
+   HOVER
+========================================= */
 
 .rb-tv-screen:hover{
   opacity:1;
-  filter:saturate(1.18) brightness(1.08);
-  border-color:rgba(255,215,106,.62);
+
+  filter:
+    saturate(1.18)
+    brightness(1.08);
+
+  border-color:
+    rgba(255,215,106,.62);
 }
+
+/* =========================================
+   CORE PORTAL
+========================================= */
 
 .rb-core-portal{
   z-index:40;
-  transform:translateZ(0) scale(1.04);
+
+  position:relative;
+
+  transform:
+    translate(
+      var(--rb-hub-x),
+      var(--rb-hub-y)
+    )
+    translateZ(0)
+    scale(1.04);
 }
 
+/* =========================================
+   TABLET / MOBILE
+========================================= */
+
 @media (max-width:720px){
+
   .rb-portal-stage{
     min-height:560px;
+
+    --rb-hub-x:34px;
+    --rb-hub-y:0px;
   }
 
   .rb-tv-orbit{
@@ -148,29 +331,45 @@
   .rb-tv-screen{
     width:122px;
     height:146px;
+
     margin-left:-61px;
     margin-top:-73px;
+
     border-radius:18px;
   }
 
   .rb-tv-screen.is-active{
-    transform:translate(-50%,-14%) scale(1);
+    transform:
+      translate(-50%,-14%)
+      scale(1);
   }
 
   .rb-tv-screen.rb-pos-left{
-    transform:translate(-148%,-4%) rotate(-4deg) scale(.88);
+    transform:
+      translate(-148%,-4%)
+      rotate(-4deg)
+      scale(.88);
   }
 
   .rb-tv-screen.rb-pos-right{
-    transform:translate(48%,-4%) rotate(4deg) scale(.88);
+    transform:
+      translate(48%,-4%)
+      rotate(4deg)
+      scale(.88);
   }
 
   .rb-tv-screen.rb-pos-back-left{
-    transform:translate(-205%,-24%) rotate(-9deg) scale(.66);
+    transform:
+      translate(-205%,-24%)
+      rotate(-9deg)
+      scale(.66);
   }
 
   .rb-tv-screen.rb-pos-back-right{
-    transform:translate(105%,-24%) rotate(9deg) scale(.66);
+    transform:
+      translate(105%,-24%)
+      rotate(9deg)
+      scale(.66);
   }
 
   .rb-core-portal{
@@ -179,24 +378,48 @@
   }
 }
 
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
 @media (max-width:430px){
+
+  .rb-portal-stage{
+    --rb-hub-x:28px;
+    --rb-hub-y:0px;
+  }
+
   .rb-core-portal{
     width:min(82vw,330px);
     height:min(82vw,330px);
   }
 
   .rb-tv-screen.rb-pos-left{
-    transform:translate(-140%,-4%) rotate(-4deg) scale(.86);
+    transform:
+      translate(-140%,-4%)
+      rotate(-4deg)
+      scale(.86);
   }
 
   .rb-tv-screen.rb-pos-right{
-    transform:translate(40%,-4%) rotate(4deg) scale(.86);
+    transform:
+      translate(40%,-4%)
+      rotate(4deg)
+      scale(.86);
   }
 }
 
+/* =========================================
+   SMALL IPHONE
+========================================= */
+
 @media (max-width:390px){
+
   .rb-portal-stage{
     min-height:535px;
+
+    --rb-hub-x:24px;
+    --rb-hub-y:0px;
   }
 
   .rb-tv-orbit{
@@ -207,6 +430,7 @@
   .rb-tv-screen{
     width:112px;
     height:136px;
+
     margin-left:-56px;
     margin-top:-68px;
   }
@@ -217,42 +441,5 @@
 
   .rb-tv-overlay h3{
     font-size:.84rem;
-  }
-}
-
-/* =========================================
-   HUB ALIGNMENT PATCH
-   Move whole Omni hub without breaking cards
-========================================= */
-
-.rb-portal-stage{
-  --rb-hub-x: 34px;
-  --rb-hub-y: 0px;
-}
-
-.rb-tv-orbit{
-  transform:
-    translate(calc(-50% + var(--rb-hub-x)), calc(-50% + var(--rb-hub-y)));
-}
-
-.rb-core-portal{
-  transform:
-    translate(var(--rb-hub-x), var(--rb-hub-y))
-    translateZ(0)
-    scale(1.04);
-}
-
-/* iPhone Safari tune */
-@media (max-width:720px){
-  .rb-portal-stage{
-    --rb-hub-x: 34px;
-    --rb-hub-y: 0px;
-  }
-}
-
-@media (max-width:390px){
-  .rb-portal-stage{
-    --rb-hub-x: 28px;
-    --rb-hub-y: 0px;
   }
 }
