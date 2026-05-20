@@ -28,18 +28,22 @@
       env(safe-area-inset-bottom);
   }
 
-  .rb-home-shell{
+  .rb-home-shell,
+  .rb-app-shell{
     width:100%;
     max-width:100%;
     min-height:100svh;
+
     padding:
       max(12px, env(safe-area-inset-top))
       10px
       calc(var(--rb-nav-h) + 24px + env(safe-area-inset-bottom));
+
     gap:14px;
   }
 
-  .rb-home-top{
+  .rb-home-top,
+  .rb-topbar{
     width:100%;
     flex-direction:column;
     align-items:stretch;
@@ -48,13 +52,15 @@
     border-radius:22px;
   }
 
-  .rb-home-top h1{
+  .rb-home-top h1,
+  .rb-brand-title{
     font-size:clamp(2.35rem, 12vw, 3.55rem);
     line-height:.88;
     max-width:100%;
   }
 
-  .rb-kicker{
+  .rb-kicker,
+  .rb-brand-kicker{
     font-size:.62rem;
     letter-spacing:.16em;
   }
@@ -78,6 +84,7 @@
 
   .rb-core-portal{
     width:clamp(250px, 72vw, 315px);
+    height:clamp(250px, 72vw, 315px);
   }
 
   .rb-portal-copy{
@@ -134,6 +141,7 @@
     left:max(8px, env(safe-area-inset-left));
     right:max(8px, env(safe-area-inset-right));
     bottom:max(8px, env(safe-area-inset-bottom));
+
     height:84px;
     padding:9px;
     border-radius:26px;
@@ -150,18 +158,21 @@
     --rb-nav-h:82px;
   }
 
-  .rb-home-shell{
+  .rb-home-shell,
+  .rb-app-shell{
     padding-left:8px;
     padding-right:8px;
     gap:12px;
   }
 
-  .rb-home-top{
+  .rb-home-top,
+  .rb-topbar{
     padding:11px;
     border-radius:20px;
   }
 
-  .rb-home-top h1{
+  .rb-home-top h1,
+  .rb-brand-title{
     font-size:clamp(2.25rem, 12.8vw, 3.15rem);
   }
 
@@ -172,6 +183,7 @@
 
   .rb-core-portal{
     width:clamp(238px, 72vw, 292px);
+    height:clamp(238px, 72vw, 292px);
   }
 
   .rb-portal-copy{
