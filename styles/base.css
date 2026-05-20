@@ -30,10 +30,6 @@
   --rb-bottom-safe:env(safe-area-inset-bottom);
 }
 
-/* =========================
-   RESET
-========================= */
-
 *,
 *::before,
 *::after{
@@ -58,14 +54,7 @@ body{
   background:var(--rb-bg);
   color:var(--rb-white);
   position:relative;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Display",
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
@@ -95,10 +84,6 @@ button{
 a{
   text-decoration:none;
 }
-
-/* =========================
-   BACKGROUND LAYERS
-========================= */
 
 .rb-bg-layer,
 .rb-bg-noise,
@@ -140,10 +125,6 @@ a{
   mask-image:linear-gradient(to bottom,transparent,black 14%,black 76%,transparent);
 }
 
-/* =========================
-   APP SHELL
-========================= */
-
 .rb-app-shell{
   width:min(100%,var(--rb-shell-width));
   min-height:100svh;
@@ -155,10 +136,6 @@ a{
   position:relative;
   z-index:2;
 }
-
-/* =========================
-   TOPBAR
-========================= */
 
 .rb-topbar{
   display:flex;
@@ -215,10 +192,6 @@ a{
   color:rgba(255,215,106,.82);
 }
 
-/* =========================
-   PROFILE PILL
-========================= */
-
 .rb-profile-pill{
   display:flex;
   align-items:center;
@@ -228,11 +201,8 @@ a{
   padding:10px 14px;
   border-radius:999px;
   border:1px solid var(--rb-border-green);
-  background:
-    linear-gradient(180deg,rgba(5,14,7,.68),rgba(0,0,0,.48));
-  box-shadow:
-    var(--rb-shadow),
-    inset 0 1px 0 rgba(255,255,255,.06);
+  background:linear-gradient(180deg,rgba(5,14,7,.68),rgba(0,0,0,.48));
+  box-shadow:var(--rb-shadow),inset 0 1px 0 rgba(255,255,255,.06);
   color:var(--rb-white);
 }
 
@@ -243,9 +213,7 @@ a{
   border-radius:50%;
   object-fit:cover;
   border:2px solid rgba(255,215,106,.24);
-  box-shadow:
-    0 0 0 1px rgba(102,255,102,.22),
-    0 0 24px rgba(102,255,102,.18);
+  box-shadow:0 0 0 1px rgba(102,255,102,.22),0 0 24px rgba(102,255,102,.18);
 }
 
 .rb-profile-copy{
@@ -271,10 +239,6 @@ a{
   text-transform:uppercase;
   color:rgba(255,215,106,.88);
 }
-
-/* =========================
-   CONTROLS
-========================= */
 
 .rb-home-actions,
 .rb-quick-actions{
@@ -303,11 +267,8 @@ a{
   padding:0 22px;
   color:var(--rb-white);
   border:1px solid var(--rb-border);
-  background:
-    linear-gradient(180deg,rgba(24,24,22,.94),rgba(5,6,5,.95));
-  box-shadow:
-    0 16px 40px rgba(0,0,0,.44),
-    inset 0 1px 0 rgba(255,255,255,.06);
+  background:linear-gradient(180deg,rgba(24,24,22,.94),rgba(5,6,5,.95));
+  box-shadow:0 16px 40px rgba(0,0,0,.44),inset 0 1px 0 rgba(255,255,255,.06);
 }
 
 .rb-icon-btn{
@@ -323,11 +284,8 @@ a{
   font-weight:950;
   letter-spacing:.13em;
   text-transform:uppercase;
-  background:
-    linear-gradient(135deg,#66ff66 0%,#baff7c 45%,#ffd76a 100%);
-  box-shadow:
-    0 0 36px rgba(102,255,102,.30),
-    0 22px 52px rgba(0,0,0,.50);
+  background:linear-gradient(135deg,#66ff66 0%,#baff7c 45%,#ffd76a 100%);
+  box-shadow:0 0 36px rgba(102,255,102,.30),0 22px 52px rgba(0,0,0,.50);
 }
 
 .rb-quick-actions button{
@@ -335,10 +293,6 @@ a{
   min-width:92px;
   color:rgba(255,245,210,.92);
 }
-
-/* =========================
-   BOTTOM NAV
-========================= */
 
 .rb-bottom-nav{
   position:fixed;
@@ -352,11 +306,8 @@ a{
   padding:10px;
   border-radius:26px;
   border:1px solid rgba(255,255,255,.08);
-  background:
-    linear-gradient(180deg,rgba(7,12,8,.86),rgba(0,0,0,.86));
-  box-shadow:
-    0 -18px 50px rgba(0,0,0,.52),
-    inset 0 1px 0 rgba(255,255,255,.05);
+  background:linear-gradient(180deg,rgba(7,12,8,.86),rgba(0,0,0,.86));
+  box-shadow:0 -18px 50px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.05);
 }
 
 .rb-bottom-nav button{
@@ -370,16 +321,9 @@ a{
 .rb-bottom-nav button.active{
   color:var(--rb-green-soft);
   border-color:rgba(102,255,102,.42);
-  background:
-    linear-gradient(180deg,rgba(24,70,32,.95),rgba(8,34,15,.95));
-  box-shadow:
-    0 0 22px rgba(102,255,102,.18),
-    inset 0 1px 0 rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(24,70,32,.95),rgba(8,34,15,.95));
+  box-shadow:0 0 22px rgba(102,255,102,.18),inset 0 1px 0 rgba(255,255,255,.07);
 }
-
-/* =========================
-   RESPONSIVE
-========================= */
 
 @media (max-width:900px){
   .rb-topbar{
