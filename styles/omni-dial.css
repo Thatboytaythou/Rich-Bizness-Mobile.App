@@ -1,7 +1,7 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/omni-dial.css
-   OMNI TV ORBIT / DIAL LAYER - FIXED
+   FINAL ROTATING OMNI TV DIAL
 ========================================= */
 
 .rb-portal-stage{
@@ -19,10 +19,13 @@
   top:50%;
   width:min(92vw,700px);
   height:min(92vw,700px);
-  transform:translate(-50%,-50%);
+  transform:
+    translate(-50%,-50%)
+    rotate(var(--rb-orbit-rotation,0deg));
   transform-style:preserve-3d;
   pointer-events:none;
-  z-index:14;
+  z-index:35;
+  transition:transform .55s cubic-bezier(.2,.9,.2,1);
 }
 
 .rb-tv-screen{
@@ -43,17 +46,45 @@
   cursor:pointer;
   pointer-events:auto;
   transform-style:preserve-3d;
-  transition:transform .42s ease, opacity .28s ease, filter .28s ease, border-color .28s ease, box-shadow .28s ease;
+  z-index:12;
+  transition:
+    opacity .28s ease,
+    filter .28s ease,
+    border-color .28s ease,
+    box-shadow .28s ease;
 }
 
-.rb-tv-screen:nth-child(1){ transform:translate(-215px,-82px) rotate(-12deg) scale(.78); }
-.rb-tv-screen:nth-child(2){ transform:translate(-68px,-170px) rotate(0deg) scale(.92); }
-.rb-tv-screen:nth-child(3){ transform:translate(150px,-82px) rotate(12deg) scale(.78); }
-.rb-tv-screen:nth-child(4){ transform:translate(210px,62px) rotate(13deg) scale(.72); }
-.rb-tv-screen:nth-child(5){ transform:translate(70px,148px) rotate(8deg) scale(.76); }
-.rb-tv-screen:nth-child(6){ transform:translate(-78px,148px) rotate(-8deg) scale(.76); }
-.rb-tv-screen:nth-child(7){ transform:translate(-220px,62px) rotate(-13deg) scale(.72); }
-.rb-tv-screen:nth-child(8){ transform:translate(-255px,-12px) rotate(-16deg) scale(.70); }
+.rb-tv-screen:nth-child(1){
+  transform:rotate(0deg) translateY(-255px) rotate(0deg) scale(.78);
+}
+
+.rb-tv-screen:nth-child(2){
+  transform:rotate(45deg) translateY(-255px) rotate(-45deg) scale(.92);
+}
+
+.rb-tv-screen:nth-child(3){
+  transform:rotate(90deg) translateY(-255px) rotate(-90deg) scale(.78);
+}
+
+.rb-tv-screen:nth-child(4){
+  transform:rotate(135deg) translateY(-255px) rotate(-135deg) scale(.72);
+}
+
+.rb-tv-screen:nth-child(5){
+  transform:rotate(180deg) translateY(-255px) rotate(-180deg) scale(.76);
+}
+
+.rb-tv-screen:nth-child(6){
+  transform:rotate(225deg) translateY(-255px) rotate(-225deg) scale(.76);
+}
+
+.rb-tv-screen:nth-child(7){
+  transform:rotate(270deg) translateY(-255px) rotate(-270deg) scale(.72);
+}
+
+.rb-tv-screen:nth-child(8){
+  transform:rotate(315deg) translateY(-255px) rotate(-315deg) scale(.70);
+}
 
 .rb-tv-screen img{
   width:100%;
@@ -68,7 +99,13 @@
   position:absolute;
   inset:auto 0 0 0;
   padding:12px 12px 14px;
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.88) 35%,rgba(0,0,0,.98));
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(0,0,0,.88) 35%,
+      rgba(0,0,0,.98)
+    );
 }
 
 .rb-tv-overlay span{
@@ -88,7 +125,7 @@
 }
 
 .rb-tv-screen.is-active{
-  z-index:40;
+  z-index:90;
   opacity:1;
   filter:saturate(1.24) contrast(1.12) brightness(1.05);
   border-color:rgba(102,255,102,.82);
@@ -99,7 +136,7 @@
 }
 
 .rb-tv-screen:not(.is-active){
-  opacity:.76;
+  opacity:.72;
   filter:saturate(.88) brightness(.84);
 }
 
@@ -109,18 +146,10 @@
   border-color:rgba(255,215,106,.58);
 }
 
-body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
-body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
-body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
-body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
-body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
-body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
-body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
-body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
-  transform:translate(-50%,-185px) scale(1.02);
+.rb-core-portal{
+  z-index:25;
 }
 
-/* iPhone / Safari */
 @media (max-width:720px){
   .rb-portal-stage{
     min-height:560px;
@@ -137,24 +166,36 @@ body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
     border-radius:18px;
   }
 
-  .rb-tv-screen:nth-child(1){ transform:translate(-166px,-54px) rotate(-13deg) scale(.74); }
-  .rb-tv-screen:nth-child(2){ transform:translate(-56px,-158px) rotate(0deg) scale(.86); }
-  .rb-tv-screen:nth-child(3){ transform:translate(108px,-54px) rotate(13deg) scale(.74); }
-  .rb-tv-screen:nth-child(4){ transform:translate(150px,54px) rotate(12deg) scale(.70); }
-  .rb-tv-screen:nth-child(5){ transform:translate(52px,136px) rotate(8deg) scale(.72); }
-  .rb-tv-screen:nth-child(6){ transform:translate(-62px,136px) rotate(-8deg) scale(.72); }
-  .rb-tv-screen:nth-child(7){ transform:translate(-170px,54px) rotate(-12deg) scale(.70); }
-  .rb-tv-screen:nth-child(8){ transform:translate(-190px,-2px) rotate(-15deg) scale(.68); }
+  .rb-tv-screen:nth-child(1){
+    transform:rotate(0deg) translateY(-160px) rotate(0deg) scale(.74);
+  }
 
-  body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
-  body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
-  body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
-  body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
-  body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
-  body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
-  body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
-  body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
-    transform:translate(-50%,-154px) scale(.92);
+  .rb-tv-screen:nth-child(2){
+    transform:rotate(45deg) translateY(-160px) rotate(-45deg) scale(.86);
+  }
+
+  .rb-tv-screen:nth-child(3){
+    transform:rotate(90deg) translateY(-160px) rotate(-90deg) scale(.74);
+  }
+
+  .rb-tv-screen:nth-child(4){
+    transform:rotate(135deg) translateY(-160px) rotate(-135deg) scale(.70);
+  }
+
+  .rb-tv-screen:nth-child(5){
+    transform:rotate(180deg) translateY(-160px) rotate(-180deg) scale(.72);
+  }
+
+  .rb-tv-screen:nth-child(6){
+    transform:rotate(225deg) translateY(-160px) rotate(-225deg) scale(.72);
+  }
+
+  .rb-tv-screen:nth-child(7){
+    transform:rotate(270deg) translateY(-160px) rotate(-270deg) scale(.70);
+  }
+
+  .rb-tv-screen:nth-child(8){
+    transform:rotate(315deg) translateY(-160px) rotate(-315deg) scale(.68);
   }
 }
 
@@ -180,51 +221,47 @@ body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
   .rb-tv-overlay h3{
     font-size:.82rem;
   }
-}
 
-/* =========================================
-   FRONT STACK FIX
-   Keeps active TV card above portal
-========================================= */
+  .rb-tv-screen:nth-child(1),
+  .rb-tv-screen:nth-child(2),
+  .rb-tv-screen:nth-child(3),
+  .rb-tv-screen:nth-child(4),
+  .rb-tv-screen:nth-child(5),
+  .rb-tv-screen:nth-child(6),
+  .rb-tv-screen:nth-child(7),
+  .rb-tv-screen:nth-child(8){
+    --rb-small-radius:-148px;
+  }
 
-.rb-tv-orbit{
-  z-index:35;
-}
+  .rb-tv-screen:nth-child(1){
+    transform:rotate(0deg) translateY(var(--rb-small-radius)) rotate(0deg) scale(.74);
+  }
 
-.rb-core-portal{
-  z-index:25;
-}
+  .rb-tv-screen:nth-child(2){
+    transform:rotate(45deg) translateY(var(--rb-small-radius)) rotate(-45deg) scale(.86);
+  }
 
-.rb-tv-screen{
-  z-index:12;
-}
+  .rb-tv-screen:nth-child(3){
+    transform:rotate(90deg) translateY(var(--rb-small-radius)) rotate(-90deg) scale(.74);
+  }
 
-.rb-tv-screen.is-active{
-  z-index:80;
-}
+  .rb-tv-screen:nth-child(4){
+    transform:rotate(135deg) translateY(var(--rb-small-radius)) rotate(-135deg) scale(.70);
+  }
 
-body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
-body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
-body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
-body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
-body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
-body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
-body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
-body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
-  z-index:90;
-  pointer-events:auto;
-  transform:translate(-50%,-205px) scale(1.05);
-}
+  .rb-tv-screen:nth-child(5){
+    transform:rotate(180deg) translateY(var(--rb-small-radius)) rotate(-180deg) scale(.72);
+  }
 
-@media (max-width:720px){
-  body[data-active-section="feed"] .rb-tv-screen[data-rb-section="feed"],
-  body[data-active-section="live"] .rb-tv-screen[data-rb-section="live"],
-  body[data-active-section="music"] .rb-tv-screen[data-rb-section="music"],
-  body[data-active-section="gaming"] .rb-tv-screen[data-rb-section="gaming"],
-  body[data-active-section="sports"] .rb-tv-screen[data-rb-section="sports"],
-  body[data-active-section="gallery"] .rb-tv-screen[data-rb-section="gallery"],
-  body[data-active-section="store"] .rb-tv-screen[data-rb-section="store"],
-  body[data-active-section="meta"] .rb-tv-screen[data-rb-section="meta"]{
-    transform:translate(-50%,-175px) scale(.98);
+  .rb-tv-screen:nth-child(6){
+    transform:rotate(225deg) translateY(var(--rb-small-radius)) rotate(-225deg) scale(.72);
+  }
+
+  .rb-tv-screen:nth-child(7){
+    transform:rotate(270deg) translateY(var(--rb-small-radius)) rotate(-270deg) scale(.70);
+  }
+
+  .rb-tv-screen:nth-child(8){
+    transform:rotate(315deg) translateY(var(--rb-small-radius)) rotate(-315deg) scale(.68);
   }
 }
