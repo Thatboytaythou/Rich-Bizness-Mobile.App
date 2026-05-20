@@ -1,37 +1,33 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/base.css
-   FOUNDATION LAYER
+   FINAL FOUNDATION LAYER
 ========================================= */
 
 :root{
-
-  --rb-bg:#050805;
-  --rb-bg-soft:#081008;
-  --rb-panel:#0c160f;
-  --rb-card:#101c13;
+  --rb-bg:#020602;
+  --rb-bg-soft:#061008;
+  --rb-panel:#08120b;
+  --rb-card:#0d1710;
 
   --rb-green:#66ff66;
-  --rb-green-soft:#3cff8f;
+  --rb-green-soft:#9cff7d;
   --rb-gold:#ffd76a;
-  --rb-white:#f5fff7;
+  --rb-gold-soft:#fff0a8;
+  --rb-white:#f7fff8;
+  --rb-muted:rgba(235,255,230,.68);
 
-  --rb-border:rgba(255,215,106,.18);
-  --rb-border-strong:rgba(102,255,102,.35);
+  --rb-border:rgba(255,215,106,.20);
+  --rb-border-green:rgba(102,255,102,.36);
 
-  --rb-shadow:
-    0 10px 40px rgba(0,0,0,.45);
+  --rb-shadow:0 20px 70px rgba(0,0,0,.52);
+  --rb-glow:0 0 34px rgba(102,255,102,.24);
 
-  --rb-glow:
-    0 0 24px rgba(102,255,102,.28);
-
-  --rb-radius:28px;
-
+  --rb-radius:30px;
   --rb-shell-width:1400px;
 
   --rb-top-safe:env(safe-area-inset-top);
   --rb-bottom-safe:env(safe-area-inset-bottom);
-
 }
 
 /* =========================
@@ -48,7 +44,9 @@ html{
   margin:0;
   padding:0;
   min-height:100%;
+  background:var(--rb-bg);
   scroll-behavior:smooth;
+  -webkit-text-size-adjust:100%;
 }
 
 body{
@@ -56,62 +54,50 @@ body{
   padding:0;
   min-height:100vh;
   min-height:100svh;
-
+  overflow-x:hidden;
   background:var(--rb-bg);
   color:var(--rb-white);
-
-  overflow-x:hidden;
-
   position:relative;
-
   font-family:
     Inter,
     -apple-system,
     BlinkMacSystemFont,
     "SF Pro Display",
+    "Helvetica Neue",
+    Arial,
     sans-serif;
-
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
 
-/* =========================
-   MEDIA
-========================= */
-
-img{
+img,
+video,
+canvas,
+svg{
   max-width:100%;
   display:block;
 }
 
-video{
-  max-width:100%;
-  display:block;
-}
-
-/* =========================
-   BUTTONS
-========================= */
-
-button{
-  border:none;
-  outline:none;
-  cursor:pointer;
-
+button,
+a{
   font:inherit;
-
-  touch-action:manipulation;
-
+  color:inherit;
   -webkit-tap-highlight-color:transparent;
 }
 
+button{
+  border:0;
+  outline:0;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
 a{
-  color:inherit;
   text-decoration:none;
 }
 
 /* =========================
-   BG LAYERS
+   BACKGROUND LAYERS
 ========================= */
 
 .rb-bg-layer,
@@ -125,95 +111,33 @@ a{
 
 .rb-bg-layer{
   z-index:-10;
-
   background:
-    linear-gradient(
-      180deg,
-      rgba(12,25,15,.92) 0%,
-      rgba(4,7,5,.98) 100%
-    );
+    radial-gradient(circle at 50% 0%,rgba(102,255,102,.13),transparent 36%),
+    radial-gradient(circle at 70% 38%,rgba(255,215,106,.08),transparent 34%),
+    linear-gradient(180deg,#061108 0%,#020602 74%,#000 100%);
 }
 
 .rb-bg-noise{
   z-index:-9;
-  opacity:.05;
-
-  background-image:
-    url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity:.055;
+  background-image:url("https://grainy-gradients.vercel.app/noise.svg");
+  mix-blend-mode:overlay;
 }
 
 .rb-bg-vignette{
   z-index:-8;
-
   background:
-    radial-gradient(
-      circle at center,
-      transparent 10%,
-      rgba(0,0,0,.65) 100%
-    );
+    radial-gradient(circle at 50% 35%,transparent 0 30%,rgba(0,0,0,.36) 62%,rgba(0,0,0,.84) 100%);
 }
 
 .rb-bg-grid{
   z-index:-7;
-  opacity:.08;
-
+  opacity:.10;
   background-image:
-    linear-gradient(
-      rgba(255,255,255,.08) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255,255,255,.08) 1px,
-      transparent 1px
-    );
-
-  background-size:40px 40px;
-}
-
-/* =========================
-   FLOATING ORBS
-========================= */
-
-.rb-floating-orb{
-  position:fixed;
-  border-radius:999px;
-  filter:blur(80px);
-  pointer-events:none;
-  z-index:-6;
-}
-
-.rb-floating-orb.orb-1{
-  width:260px;
-  height:260px;
-
-  top:-60px;
-  left:-80px;
-
-  background:
-    rgba(102,255,102,.16);
-}
-
-.rb-floating-orb.orb-2{
-  width:320px;
-  height:320px;
-
-  right:-120px;
-  top:25%;
-
-  background:
-    rgba(255,215,106,.14);
-}
-
-.rb-floating-orb.orb-3{
-  width:220px;
-  height:220px;
-
-  bottom:-80px;
-  left:40%;
-
-  background:
-    rgba(70,255,160,.12);
+    linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:linear-gradient(to bottom,transparent,black 14%,black 76%,transparent);
 }
 
 /* =========================
@@ -222,15 +146,14 @@ a{
 
 .rb-app-shell{
   width:min(100%,var(--rb-shell-width));
-
+  min-height:100svh;
   margin:0 auto;
-
   padding:
     calc(18px + var(--rb-top-safe))
-    16px
-    calc(120px + var(--rb-bottom-safe));
-
+    clamp(14px,3vw,28px)
+    calc(136px + var(--rb-bottom-safe));
   position:relative;
+  z-index:2;
 }
 
 /* =========================
@@ -239,78 +162,57 @@ a{
 
 .rb-topbar{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
   gap:18px;
-
-  margin-bottom:20px;
+  margin-bottom:clamp(24px,5svh,54px);
 }
-
-/* =========================
-   BRAND
-========================= */
 
 .rb-brand-lock{
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:5px;
+  min-width:0;
 }
 
 .rb-brand-kicker{
   margin:0;
-
-  font-size:.72rem;
-  letter-spacing:.24em;
+  font-size:clamp(.64rem,1.7vw,.82rem);
+  letter-spacing:.36em;
   text-transform:uppercase;
-
-  color:
-    rgba(255,255,255,.65);
+  color:rgba(245,255,247,.68);
 }
 
 .rb-brand-title{
   margin:0;
-
-  line-height:.95;
-
   display:flex;
   flex-wrap:wrap;
   align-items:center;
   gap:10px;
-
-  font-size:
-    clamp(2rem,6vw,4.4rem);
-
-  letter-spacing:-.06em;
+  line-height:.88;
+  font-size:clamp(2.3rem,7vw,5.2rem);
+  letter-spacing:-.075em;
 }
 
 .rb-brand-title span{
   font-weight:200;
-
-  color:
-    rgba(255,255,255,.92);
+  color:rgba(255,255,255,.94);
 }
 
 .rb-brand-title strong{
-  font-weight:900;
-
-  background:
-    linear-gradient(
-      135deg,
-      #66ff66 0%,
-      #ffd76a 100%
-    );
-
+  font-weight:950;
+  background:linear-gradient(135deg,#ffffff 0%,#66ff66 34%,#ffd76a 76%,#ffffff 100%);
+  background-size:180% 180%;
   -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  color:transparent;
 }
 
 .rb-brand-sub{
-  font-size:.82rem;
-  letter-spacing:.45em;
+  font-size:clamp(.75rem,1.7vw,.95rem);
+  letter-spacing:.62em;
   text-transform:uppercase;
-
-  color:
-    rgba(255,215,106,.82);
+  color:rgba(255,215,106,.82);
 }
 
 /* =========================
@@ -320,76 +222,64 @@ a{
 .rb-profile-pill{
   display:flex;
   align-items:center;
-  gap:12px;
-
-  min-width:0;
-
-  padding:10px 12px;
-
+  gap:13px;
+  min-width:min(330px,42vw);
+  max-width:460px;
+  padding:10px 14px;
   border-radius:999px;
-
-  border:
-    1px solid var(--rb-border-strong);
-
+  border:1px solid var(--rb-border-green);
   background:
-    rgba(0,0,0,.38);
-
-  backdrop-filter:blur(16px);
-
+    linear-gradient(180deg,rgba(5,14,7,.68),rgba(0,0,0,.48));
   box-shadow:
     var(--rb-shadow),
-    inset 0 1px 0 rgba(255,255,255,.05);
-
+    inset 0 1px 0 rgba(255,255,255,.06);
   color:var(--rb-white);
-
-  transition:
-    transform .2s ease,
-    border-color .2s ease;
-}
-
-.rb-profile-pill:active{
-  transform:scale(.97);
 }
 
 .rb-profile-pill img{
-  width:52px;
-  height:52px;
-
+  width:56px;
+  height:56px;
+  flex:0 0 auto;
   border-radius:50%;
   object-fit:cover;
-
-  border:
-    2px solid rgba(255,255,255,.14);
+  border:2px solid rgba(255,215,106,.24);
+  box-shadow:
+    0 0 0 1px rgba(102,255,102,.22),
+    0 0 24px rgba(102,255,102,.18);
 }
 
 .rb-profile-copy{
   display:flex;
   flex-direction:column;
-  gap:2px;
-
+  gap:3px;
+  min-width:0;
   text-align:left;
 }
 
 .rb-profile-copy strong{
-  font-size:.95rem;
-  font-weight:700;
+  font-size:clamp(.88rem,2vw,1.08rem);
+  font-weight:850;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 .rb-profile-copy small{
-  font-size:.7rem;
-  letter-spacing:.16em;
+  font-size:clamp(.62rem,1.6vw,.74rem);
+  font-weight:850;
+  letter-spacing:.22em;
   text-transform:uppercase;
-
-  color:
-    rgba(255,215,106,.82);
+  color:rgba(255,215,106,.88);
 }
 
 /* =========================
-   ACTIONS
+   CONTROLS
 ========================= */
 
 .rb-home-actions,
 .rb-quick-actions{
+  position:relative;
+  z-index:70;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -397,72 +287,53 @@ a{
 }
 
 .rb-home-actions{
-  margin-top:22px;
+  margin-top:clamp(16px,3svh,28px);
 }
 
 .rb-quick-actions{
-  margin-top:18px;
+  margin-top:16px;
 }
-
-/* =========================
-   BUTTON STYLES
-========================= */
 
 .rb-icon-btn,
 .rb-main-launch,
 .rb-quick-actions button,
 .rb-bottom-nav button{
   min-height:52px;
-
   border-radius:999px;
-
   padding:0 22px;
-
   color:var(--rb-white);
-
-  border:
-    1px solid var(--rb-border);
-
+  border:1px solid var(--rb-border);
   background:
-    linear-gradient(
-      180deg,
-      rgba(22,22,22,.94),
-      rgba(10,10,10,.94)
-    );
-
+    linear-gradient(180deg,rgba(24,24,22,.94),rgba(5,6,5,.95));
   box-shadow:
-    var(--rb-shadow);
-
-  transition:
-    transform .2s ease,
-    border-color .2s ease,
-    background .2s ease;
+    0 16px 40px rgba(0,0,0,.44),
+    inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-.rb-icon-btn:active,
-.rb-main-launch:active,
-.rb-quick-actions button:active,
-.rb-bottom-nav button:active{
-  transform:scale(.96);
+.rb-icon-btn{
+  width:54px;
+  padding:0;
+  font-size:1.45rem;
+  color:var(--rb-gold);
 }
 
 .rb-main-launch{
-  min-width:220px;
-
-  font-weight:900;
-  letter-spacing:.08em;
-
-  color:#041106;
-
+  min-width:min(64vw,340px);
+  color:#031006;
+  font-weight:950;
+  letter-spacing:.13em;
+  text-transform:uppercase;
   background:
-    linear-gradient(
-      135deg,
-      #66ff66,
-      #ffd76a
-    );
-
+    linear-gradient(135deg,#66ff66 0%,#baff7c 45%,#ffd76a 100%);
   box-shadow:
-    0 0 40px rgba(102,255,102,.24);
+    0 0 36px rgba(102,255,102,.30),
+    0 22px 52px rgba(0,0,0,.50);
+}
+
+.rb-quick-actions button{
+  min-height:48px;
+  min-width:92px;
+  color:rgba(255,245,210,.92);
 }
 
 /* =========================
@@ -471,53 +342,39 @@ a{
 
 .rb-bottom-nav{
   position:fixed;
-
   left:10px;
   right:10px;
-  bottom:10px;
-
-  z-index:120;
-
+  bottom:calc(10px + var(--rb-bottom-safe));
+  z-index:140;
   display:grid;
   grid-template-columns:repeat(5,1fr);
   gap:8px;
-
   padding:10px;
-
-  border-radius:24px;
-
-  border:
-    1px solid rgba(255,255,255,.08);
-
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.08);
   background:
-    rgba(5,8,5,.82);
-
-  backdrop-filter:blur(20px);
-
+    linear-gradient(180deg,rgba(7,12,8,.86),rgba(0,0,0,.86));
   box-shadow:
-    0 -10px 40px rgba(0,0,0,.45);
+    0 -18px 50px rgba(0,0,0,.52),
+    inset 0 1px 0 rgba(255,255,255,.05);
 }
 
 .rb-bottom-nav button{
-  min-height:48px;
-
-  padding:0 10px;
-
-  font-size:.78rem;
-  font-weight:700;
+  min-height:50px;
+  padding:0 8px;
+  font-size:.82rem;
+  font-weight:850;
+  border-color:rgba(255,215,106,.18);
 }
 
 .rb-bottom-nav button.active{
-  color:var(--rb-green);
-
-  border-color:
-    rgba(102,255,102,.35);
-
+  color:var(--rb-green-soft);
+  border-color:rgba(102,255,102,.42);
   background:
-    rgba(14,40,20,.94);
-
+    linear-gradient(180deg,rgba(24,70,32,.95),rgba(8,34,15,.95));
   box-shadow:
-    0 0 20px rgba(102,255,102,.16);
+    0 0 22px rgba(102,255,102,.18),
+    inset 0 1px 0 rgba(255,255,255,.07);
 }
 
 /* =========================
@@ -525,7 +382,6 @@ a{
 ========================= */
 
 @media (max-width:900px){
-
   .rb-topbar{
     flex-direction:column;
     align-items:stretch;
@@ -533,19 +389,33 @@ a{
 
   .rb-profile-pill{
     width:100%;
+    max-width:none;
+    min-width:0;
   }
-
 }
 
 @media (max-width:640px){
-
   .rb-app-shell{
-    padding-left:14px;
-    padding-right:14px;
+    padding-left:16px;
+    padding-right:16px;
+    padding-bottom:calc(132px + var(--rb-bottom-safe));
+  }
+
+  .rb-topbar{
+    margin-bottom:30px;
   }
 
   .rb-brand-title{
-    font-size:2.3rem;
+    font-size:2.45rem;
+  }
+
+  .rb-profile-pill{
+    padding:9px 12px;
+  }
+
+  .rb-profile-pill img{
+    width:48px;
+    height:48px;
   }
 
   .rb-home-actions{
@@ -553,31 +423,87 @@ a{
   }
 
   .rb-main-launch{
-    min-width:0;
     flex:1;
+    min-width:0;
+    padding:0 14px;
   }
 
   .rb-icon-btn{
     width:52px;
-    padding:0;
+    min-width:52px;
   }
 
+  .rb-quick-actions{
+    gap:10px;
+  }
 }
 
-@media (max-width:420px){
-
-  .rb-brand-title{
-    font-size:2rem;
+@media (max-width:430px){
+  .rb-app-shell{
+    padding-left:15px;
+    padding-right:15px;
   }
 
-  .rb-profile-pill img{
-    width:46px;
-    height:46px;
+  .rb-brand-kicker{
+    letter-spacing:.30em;
+  }
+
+  .rb-brand-title{
+    font-size:2.18rem;
+    gap:7px;
+  }
+
+  .rb-brand-sub{
+    letter-spacing:.52em;
+  }
+
+  .rb-profile-copy strong{
+    font-size:.92rem;
+  }
+
+  .rb-profile-copy small{
+    font-size:.64rem;
+  }
+
+  .rb-bottom-nav{
+    left:8px;
+    right:8px;
+    gap:6px;
+    padding:8px;
   }
 
   .rb-bottom-nav button{
-    font-size:.68rem;
+    min-height:46px;
+    font-size:.70rem;
     padding:0 4px;
   }
+}
 
+@media (max-height:720px){
+  .rb-app-shell{
+    padding-top:calc(12px + var(--rb-top-safe));
+  }
+
+  .rb-topbar{
+    margin-bottom:18px;
+  }
+
+  .rb-profile-pill img{
+    width:44px;
+    height:44px;
+  }
+
+  .rb-home-actions{
+    margin-top:12px;
+  }
+
+  .rb-quick-actions{
+    margin-top:10px;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{
+    scroll-behavior:auto;
+  }
 }
