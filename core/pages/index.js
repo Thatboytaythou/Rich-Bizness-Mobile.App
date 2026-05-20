@@ -6,62 +6,14 @@
 ========================================= */
 
 const SECTIONS = [
-  {
-    key: "feed",
-    label: "FEED",
-    title: "Global Feed",
-    meta: "Posts • Drops • Community",
-    route: "/feed"
-  },
-  {
-    key: "live",
-    label: "LIVE",
-    title: "Go Live",
-    meta: "Broadcast • VIP • Realtime",
-    route: "/live"
-  },
-  {
-    key: "music",
-    label: "MUSIC",
-    title: "Music Universe",
-    meta: "Tracks • Radio • Podcasts",
-    route: "/music"
-  },
-  {
-    key: "gaming",
-    label: "GAMES",
-    title: "Arcade District",
-    meta: "Play • Scores • Challenges",
-    route: "/gaming"
-  },
-  {
-    key: "sports",
-    label: "SPORTS",
-    title: "Sports Arena",
-    meta: "Picks • Clips • Broadcasts",
-    route: "/sports"
-  },
-  {
-    key: "gallery",
-    label: "ART",
-    title: "Gallery Vault",
-    meta: "Art • Visuals • Showcase",
-    route: "/gallery"
-  },
-  {
-    key: "store",
-    label: "STORE",
-    title: "Creator Market",
-    meta: "Products • Drops • Unlocks",
-    route: "/store"
-  },
-  {
-    key: "meta",
-    label: "META",
-    title: "Meta World",
-    meta: "Worlds • Avatars • Portals",
-    route: "/meta"
-  }
+  { key: "feed", label: "FEED", title: "Global Feed", meta: "Posts • Drops • Community", route: "/feed" },
+  { key: "live", label: "LIVE", title: "Go Live", meta: "Broadcast • VIP • Realtime", route: "/live" },
+  { key: "music", label: "MUSIC", title: "Music Universe", meta: "Tracks • Radio • Podcasts", route: "/music" },
+  { key: "gaming", label: "GAMES", title: "Arcade District", meta: "Play • Scores • Challenges", route: "/gaming" },
+  { key: "sports", label: "SPORTS", title: "Sports Arena", meta: "Picks • Clips • Broadcasts", route: "/sports" },
+  { key: "gallery", label: "ART", title: "Gallery Vault", meta: "Art • Visuals • Showcase", route: "/gallery" },
+  { key: "store", label: "STORE", title: "Creator Market", meta: "Products • Drops • Unlocks", route: "/store" },
+  { key: "meta", label: "META", title: "Meta World", meta: "Worlds • Avatars • Portals", route: "/meta" }
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -72,22 +24,18 @@ let activeIndex = SECTIONS.findIndex(
 
 if (activeIndex < 0) activeIndex = 1;
 
-function getActiveSection() {
+function activeSection() {
   return SECTIONS[activeIndex] || SECTIONS[1];
 }
 
-function setOrbitRotation() {
-  const orbit = $("rb-tv-orbit");
-  if (!orbit) return;
-
-  const angle = activeIndex * -45;
-  orbit.style.setProperty("--rb-orbit-rotation", `${angle}deg`);
-}
-
 function paintSection() {
-  const section = getActiveSection();
+  const section = activeSection();
+  const rotation = activeIndex * -45;
 
   document.body.dataset.activeSection = section.key;
+
+  const orbit = $("rb-tv-orbit");
+  if (orbit) orbit.style.setProperty("--rb-orbit-rotation", `${rotation}deg`);
 
   const label = $("rb-active-label");
   const title = $("rb-active-title");
@@ -106,8 +54,6 @@ function paintSection() {
   document.querySelectorAll("[data-rb-route]").forEach((button) => {
     button.classList.toggle("active", button.dataset.rbRoute === section.key);
   });
-
-  setOrbitRotation();
 }
 
 function moveNext() {
@@ -121,16 +67,14 @@ function movePrev() {
 }
 
 function setActiveByKey(key) {
-  const nextIndex = SECTIONS.findIndex((section) => section.key === key);
-  if (nextIndex < 0) return;
-
-  activeIndex = nextIndex;
+  const index = SECTIONS.findIndex((section) => section.key === key);
+  if (index < 0) return;
+  activeIndex = index;
   paintSection();
 }
 
-function goTo(route) {
-  if (!route) return;
-  window.location.href = route;
+function go(route) {
+  if (route) window.location.href = route;
 }
 
 function bindClicks() {
@@ -152,19 +96,19 @@ function bindClicks() {
 
     if (target.id === "rb-launch-section") {
       event.preventDefault();
-      goTo(getActiveSection().route);
+      go(activeSection().route);
       return;
     }
 
     if (target.id === "rb-open-upload") {
       event.preventDefault();
-      goTo("/upload");
+      go("/upload");
       return;
     }
 
     if (target.id === "rb-open-auth" || target.id === "rb-open-profile") {
       event.preventDefault();
-      goTo("/auth");
+      go("/auth");
       return;
     }
 
@@ -181,18 +125,9 @@ function bindClicks() {
   });
 }
 
-function bindKeyboard() {
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowRight") moveNext();
-    if (event.key === "ArrowLeft") movePrev();
-    if (event.key === "Enter") goTo(getActiveSection().route);
-  });
-}
-
 function boot() {
   paintSection();
   bindClicks();
-  bindKeyboard();
   document.body.classList.add("rb-index-ready");
 }
 
