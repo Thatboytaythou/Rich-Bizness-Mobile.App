@@ -219,3 +219,40 @@
     font-size:.84rem;
   }
 }
+
+/* =========================================
+   HUB ALIGNMENT PATCH
+   Move whole Omni hub without breaking cards
+========================================= */
+
+.rb-portal-stage{
+  --rb-hub-x: 18px;
+  --rb-hub-y: 0px;
+}
+
+.rb-tv-orbit{
+  transform:
+    translate(calc(-50% + var(--rb-hub-x)), calc(-50% + var(--rb-hub-y)));
+}
+
+.rb-core-portal{
+  transform:
+    translate(var(--rb-hub-x), var(--rb-hub-y))
+    translateZ(0)
+    scale(1.04);
+}
+
+/* iPhone Safari tune */
+@media (max-width:720px){
+  .rb-portal-stage{
+    --rb-hub-x: 24px;
+    --rb-hub-y: 0px;
+  }
+}
+
+@media (max-width:390px){
+  .rb-portal-stage{
+    --rb-hub-x: 28px;
+    --rb-hub-y: 0px;
+  }
+}
