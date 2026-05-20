@@ -246,3 +246,73 @@
   }
 
 }
+
+/* =========================================
+   RICH BIZNESS LLC
+   OMNI HUB DEPTH PATCH
+========================================= */
+
+.rb-tv-orbit{
+  filter:
+    drop-shadow(0 40px 90px rgba(0,0,0,.58));
+}
+
+.rb-core-portal{
+  transform:
+    translateZ(0)
+    scale(1.04);
+
+  z-index:40;
+}
+
+.rb-tv-screen{
+  backdrop-filter:
+    blur(16px)
+    saturate(140%);
+}
+
+/* =========================
+   DESKTOP HUB TIGHTEN
+========================= */
+
+@media (min-width:721px){
+
+  .rb-tv-orbit{
+    --rb-orbit-radius:-235px;
+  }
+
+}
+
+/* =========================
+   MOBILE HUB TIGHTEN
+========================= */
+
+@media (max-width:720px){
+
+  .rb-tv-orbit{
+    --rb-orbit-radius:-138px;
+  }
+
+  .rb-core-portal{
+    width:min(78vw,360px);
+    height:min(78vw,360px);
+  }
+
+}
+
+/* =========================
+   SMALL IPHONE
+========================= */
+
+@media (max-width:430px){
+
+  .rb-tv-orbit{
+    --rb-orbit-radius:-128px;
+  }
+
+  .rb-core-portal{
+    width:min(82vw,330px);
+    height:min(82vw,330px);
+  }
+
+}
