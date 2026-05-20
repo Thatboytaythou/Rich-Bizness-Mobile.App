@@ -28,14 +28,28 @@ function activeSection() {
   return SECTIONS[activeIndex] || SECTIONS[1];
 }
 
+function setOrbitCards() {
+  const orbit = $("rb-tv-orbit");
+  const cards = document.querySelectorAll(".rb-tv-screen");
+  const orbitRotation = activeIndex * -45;
+
+  if (orbit) {
+    orbit.style.setProperty("--rb-orbit-rotation", `${orbitRotation}deg`);
+  }
+
+  cards.forEach((card, index) => {
+    const cardAngle = index * 45;
+    const counterAngle = -(cardAngle + orbitRotation);
+
+    card.style.setProperty("--rb-card-angle", `${cardAngle}deg`);
+    card.style.setProperty("--rb-card-counter", `${counterAngle}deg`);
+  });
+}
+
 function paintSection() {
   const section = activeSection();
-  const rotation = activeIndex * -45;
 
   document.body.dataset.activeSection = section.key;
-
-  const orbit = $("rb-tv-orbit");
-  if (orbit) orbit.style.setProperty("--rb-orbit-rotation", `${rotation}deg`);
 
   const label = $("rb-active-label");
   const title = $("rb-active-title");
@@ -54,6 +68,8 @@ function paintSection() {
   document.querySelectorAll("[data-rb-route]").forEach((button) => {
     button.classList.toggle("active", button.dataset.rbRoute === section.key);
   });
+
+  setOrbitCards();
 }
 
 function moveNext() {
@@ -69,6 +85,7 @@ function movePrev() {
 function setActiveByKey(key) {
   const index = SECTIONS.findIndex((section) => section.key === key);
   if (index < 0) return;
+
   activeIndex = index;
   paintSection();
 }
