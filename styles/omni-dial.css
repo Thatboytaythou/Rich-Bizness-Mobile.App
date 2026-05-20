@@ -226,7 +226,7 @@
 ========================================= */
 
 .rb-portal-stage{
-  --rb-hub-x: 18px;
+  --rb-hub-x: 34px;
   --rb-hub-y: 0px;
 }
 
@@ -245,7 +245,7 @@
 /* iPhone Safari tune */
 @media (max-width:720px){
   .rb-portal-stage{
-    --rb-hub-x: 24px;
+    --rb-hub-x: 34px;
     --rb-hub-y: 0px;
   }
 }
