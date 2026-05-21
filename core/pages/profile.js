@@ -9,7 +9,7 @@ const GAMER_TABLE = "gamer_profiles";
 const SPORTS_TABLE = "sports_profiles";
 const CREATOR_TABLE = "creator_page_settings";
 
-const DEFAULT_AVATAR = "/images/brand/project-avatar.png.jpeg";
+const DEFAULT_AVATAR = "/images/brand/hero-banner.png";
 const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const state = {
