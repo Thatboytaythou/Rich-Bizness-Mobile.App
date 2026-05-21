@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Feed | Rich Bizness Mobile</title>
 
   <link rel="stylesheet" href="/styles/main.css" />
@@ -15,16 +16,19 @@
 
 <body class="rb-page rb-feed-page">
   <main class="rb-shell">
-    <header class="rb-section-hero">
-      <a class="rb-back" href="/">← Home</a>
 
-      <div>
+    <header class="rb-section-hero">
+      <a class="rb-back" href="/">← Portal</a>
+
+      <div class="rb-section-hero-copy">
         <p class="rb-kicker">RICH BIZNESS LLC</p>
         <h1>Feed</h1>
-        <p class="rb-subtitle">Post, react, comment, and keep the whole Rich Bizness Mobile world synced.</p>
+        <p class="rb-subtitle">
+          Post, react, comment, and keep the whole Rich Bizness Mobile world synced.
+        </p>
       </div>
 
-      <nav class="rb-section-nav">
+      <nav class="rb-section-nav" aria-label="Feed navigation">
         <a href="/watch">Watch</a>
         <a href="/live">Live</a>
         <a href="/music">Music</a>
@@ -34,10 +38,15 @@
       </nav>
     </header>
 
-    <section class="rb-grid rb-feed-layout">
+    <section class="rb-feed-layout">
       <aside class="rb-card rb-composer-card">
         <div class="rb-user-strip">
-          <img id="composerAvatar" src="/images/brand/project-avatar.png.jpeg" alt="" />
+          <img
+            id="composerAvatar"
+            src="/images/brand/hero-banner.png"
+            alt="Composer avatar"
+          />
+
           <div>
             <strong id="composerName">Rich Bizness User</strong>
             <small id="feedStatus">Loading feed...</small>
@@ -45,23 +54,23 @@
         </div>
 
         <form id="feedForm" class="rb-form">
-          <label>
+          <label for="feedTitle">
             Title
             <input id="feedTitle" type="text" placeholder="What’s the headline?" />
           </label>
 
-          <label>
+          <label for="feedBody">
             Post
             <textarea id="feedBody" rows="5" placeholder="Say what’s happening in Rich Bizness..."></textarea>
           </label>
 
-          <label>
+          <label for="feedMediaUrl">
             Media URL
             <input id="feedMediaUrl" type="url" placeholder="Image, video, or audio URL" />
           </label>
 
           <div class="rb-form-row">
-            <label>
+            <label for="feedMediaType">
               Media Type
               <select id="feedMediaType">
                 <option value="">None</option>
@@ -71,7 +80,7 @@
               </select>
             </label>
 
-            <label>
+            <label for="feedSection">
               Section
               <select id="feedSection">
                 <option value="feed">Feed</option>
@@ -86,7 +95,7 @@
             </label>
           </div>
 
-          <label>
+          <label for="feedVisibility">
             Visibility
             <select id="feedVisibility">
               <option value="public">Public</option>
@@ -95,8 +104,13 @@
             </select>
           </label>
 
-          <button id="feedSubmitBtn" type="submit" class="rb-btn rb-btn-primary">Post to Feed</button>
-          <button id="feedRefreshBtn" type="button" class="rb-btn rb-btn-ghost">Refresh</button>
+          <button id="feedSubmitBtn" type="submit" class="rb-btn rb-btn-primary">
+            Post to Feed
+          </button>
+
+          <button id="feedRefreshBtn" type="button" class="rb-btn rb-btn-ghost">
+            Refresh
+          </button>
         </form>
       </aside>
 
@@ -109,6 +123,7 @@
         <div id="feedList" class="rb-feed-list"></div>
       </section>
     </section>
+
   </main>
 
   <script type="module" src="/core/pages/feed.js"></script>
