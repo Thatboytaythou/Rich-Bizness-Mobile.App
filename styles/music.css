@@ -1,1 +1,359 @@
+/* =========================================
+   RICH BIZNESS LLC
+   /styles/music.css
+   MUSIC PAGE ONLY
+========================================= */
 
+.rb-music-page{
+  min-height:100svh;
+  color:#fff;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(0,255,120,.22),transparent 34%),
+    radial-gradient(circle at 82% 12%,rgba(255,215,90,.15),transparent 28%),
+    linear-gradient(180deg,#03140b 0%,#020604 48%,#000 100%);
+  overflow-x:hidden;
+}
+
+.rb-music-page .rb-bg{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:url("/images/brand/hero-banner.png") center/cover no-repeat;
+  opacity:.14;
+  filter:saturate(1.25) contrast(1.15);
+}
+
+.rb-music-shell{
+  position:relative;
+  z-index:2;
+  width:min(1180px,94vw);
+  margin:0 auto;
+  padding:28px 0 52px;
+}
+
+.rb-music-top{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-bottom:28px;
+}
+
+.rb-auth-home{
+  min-height:42px;
+  padding:0 15px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  border:1px solid rgba(255,215,100,.25);
+  background:rgba(0,0,0,.45);
+  color:#fff;
+  text-decoration:none;
+  font-weight:900;
+  backdrop-filter:blur(14px);
+}
+
+.rb-music-hero{
+  min-height:360px;
+  padding:34px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  border-radius:34px;
+  border:1px solid rgba(255,215,100,.24);
+  background:
+    linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.82)),
+    url("/images/brand/Avatar-hero-Banner.png.jpeg") center/cover no-repeat;
+  box-shadow:0 35px 90px rgba(0,0,0,.62);
+  overflow:hidden;
+}
+
+.rb-kicker{
+  margin:0 0 8px;
+  color:#7cffaa;
+  font-size:.75rem;
+  font-weight:950;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+
+.rb-music-hero h1{
+  max-width:760px;
+  margin:0;
+  font-size:clamp(3rem,9vw,7rem);
+  line-height:.86;
+  letter-spacing:-.08em;
+  text-transform:uppercase;
+}
+
+.rb-music-hero > p:last-child{
+  max-width:620px;
+  margin:18px 0 0;
+  color:rgba(255,255,255,.78);
+  font-size:1.05rem;
+  line-height:1.55;
+}
+
+.rb-now-playing{
+  margin-top:18px;
+  padding:18px;
+  display:grid;
+  grid-template-columns:190px 1fr;
+  gap:20px;
+  align-items:center;
+  border-radius:30px;
+  border:1px solid rgba(0,255,120,.24);
+  background:linear-gradient(135deg,rgba(0,0,0,.72),rgba(5,36,17,.78));
+  box-shadow:0 25px 70px rgba(0,0,0,.48);
+  backdrop-filter:blur(18px);
+}
+
+.rb-now-cover{
+  width:190px;
+  height:190px;
+  border-radius:26px;
+  overflow:hidden;
+  border:2px solid rgba(255,215,100,.7);
+  box-shadow:0 0 35px rgba(0,255,120,.22);
+}
+
+.rb-now-cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.rb-now-info h2{
+  margin:0;
+  font-size:clamp(1.8rem,5vw,3.8rem);
+  line-height:.95;
+  letter-spacing:-.05em;
+  text-transform:uppercase;
+}
+
+.rb-now-info p{
+  color:rgba(255,255,255,.72);
+}
+
+.rb-now-info audio{
+  width:100%;
+  margin-top:14px;
+}
+
+.rb-music-stats{
+  margin:18px 0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+
+.rb-music-stats article{
+  padding:20px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(0,0,0,.5);
+  text-align:center;
+  box-shadow:0 18px 45px rgba(0,0,0,.34);
+}
+
+.rb-music-stats strong{
+  display:block;
+  color:#7cffaa;
+  font-size:2.1rem;
+  line-height:1;
+}
+
+.rb-music-stats span{
+  display:block;
+  margin-top:6px;
+  color:rgba(255,255,255,.62);
+  font-size:.75rem;
+  font-weight:950;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+.rb-music-tabs{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding:6px 0 16px;
+}
+
+.rb-music-tabs button{
+  flex:0 0 auto;
+  min-height:44px;
+  padding:0 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.72);
+  font-weight:950;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+
+.rb-music-tabs button.is-active{
+  color:#041006;
+  border-color:#7cffaa;
+  background:linear-gradient(135deg,#7cffaa,#ffd76b);
+  box-shadow:0 0 30px rgba(0,255,120,.26);
+}
+
+.rb-music-panel{
+  display:none;
+  padding:20px;
+  border-radius:32px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(0,0,0,.42);
+}
+
+.rb-music-panel.is-active{
+  display:block;
+}
+
+.rb-section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  margin-bottom:18px;
+}
+
+.rb-section-head h2{
+  margin:0;
+  font-size:clamp(1.6rem,4vw,3rem);
+  line-height:1;
+  letter-spacing:-.04em;
+  text-transform:uppercase;
+}
+
+.rb-music-list{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.rb-music-card{
+  overflow:hidden;
+  border-radius:26px;
+  border:1px solid rgba(0,255,120,.18);
+  background:linear-gradient(180deg,rgba(7,29,14,.88),rgba(0,0,0,.84));
+  box-shadow:0 20px 55px rgba(0,0,0,.4);
+}
+
+.rb-music-card-cover{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  display:block;
+  background:#06170c;
+}
+
+.rb-music-card-body{
+  padding:16px;
+}
+
+.rb-music-card-body h3{
+  margin:0 0 8px;
+  font-size:1.2rem;
+  line-height:1.05;
+  text-transform:uppercase;
+}
+
+.rb-music-card-body p{
+  margin:0;
+  color:rgba(255,255,255,.72);
+  line-height:1.45;
+}
+
+.rb-music-card-meta{
+  margin-top:12px;
+  color:rgba(255,255,255,.52);
+  font-size:.78rem;
+  font-weight:800;
+}
+
+.rb-music-card-actions{
+  margin-top:14px;
+}
+
+.rb-main-launch{
+  width:100%;
+  min-height:44px;
+  border:0;
+  border-radius:999px;
+  background:linear-gradient(135deg,#7cffaa,#ffd76b);
+  color:#041006;
+  font-weight:1000;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  box-shadow:0 0 24px rgba(0,255,120,.24);
+}
+
+.rb-empty{
+  padding:28px;
+  border-radius:22px;
+  border:1px dashed rgba(255,215,100,.28);
+  background:rgba(255,255,255,.05);
+  color:rgba(255,255,255,.68);
+  text-align:center;
+  grid-column:1/-1;
+}
+
+@media(max-width:900px){
+  .rb-music-shell{
+    width:92vw;
+    padding-top:18px;
+  }
+
+  .rb-music-top{
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  .rb-music-hero{
+    min-height:320px;
+    padding:24px;
+  }
+
+  .rb-now-playing{
+    grid-template-columns:1fr;
+    text-align:center;
+  }
+
+  .rb-now-cover{
+    width:170px;
+    height:170px;
+    margin:0 auto;
+  }
+
+  .rb-music-list{
+    grid-template-columns:1fr;
+  }
+
+  .rb-music-panel{
+    padding:12px;
+  }
+}
+
+@media(max-width:520px){
+  .rb-music-stats{
+    gap:8px;
+  }
+
+  .rb-music-stats article{
+    padding:15px 8px;
+  }
+
+  .rb-music-stats strong{
+    font-size:1.45rem;
+  }
+
+  .rb-music-tabs button{
+    min-height:42px;
+    padding:0 14px;
+    font-size:.72rem;
+  }
+}
