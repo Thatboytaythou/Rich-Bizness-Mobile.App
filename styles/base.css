@@ -123,6 +123,7 @@ a{
     linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);
   background-size:44px 44px;
   mask-image:linear-gradient(to bottom,transparent,black 14%,black 76%,transparent);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 14%,black 76%,transparent);
 }
 
 .rb-app-shell{
