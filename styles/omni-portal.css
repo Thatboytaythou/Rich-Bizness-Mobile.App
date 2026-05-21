@@ -21,13 +21,16 @@
 
 .rb-portal-ring,
 .rb-portal-ring-two,
+.rb-portal-ring-three,
+.rb-portal-glow,
 .rb-portal-light{
   position:absolute;
-  inset:0;
   border-radius:50%;
+  pointer-events:none;
 }
 
 .rb-portal-ring{
+  inset:0;
   border:1px solid rgba(255,215,106,.48);
   box-shadow:
     0 0 42px rgba(255,215,106,.22),
@@ -42,6 +45,32 @@
     0 0 55px rgba(102,255,102,.22),
     inset 0 0 70px rgba(0,0,0,.75);
   animation:rbPortalSpinReverse 22s linear infinite;
+}
+
+.rb-portal-ring-three{
+  inset:34px;
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:
+    0 0 34px rgba(255,255,255,.08),
+    inset 0 0 48px rgba(255,215,106,.08);
+  animation:rbPortalSpin 28s linear infinite;
+}
+
+.rb-portal-glow{
+  inset:20px;
+  background:
+    conic-gradient(
+      from 180deg,
+      transparent,
+      rgba(102,255,102,.24),
+      rgba(255,215,106,.22),
+      transparent,
+      rgba(102,255,102,.18),
+      transparent
+    );
+  filter:blur(18px);
+  opacity:.72;
+  animation:rbPortalSpin 18s linear infinite;
 }
 
 .rb-portal-light{
@@ -83,6 +112,7 @@
     0 20px 70px rgba(0,0,0,.42);
 
   backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
 }
 
 .rb-portal-copy span{
@@ -110,25 +140,17 @@
 
 .rb-portal-copy p{
   margin:0;
-
   max-width:24ch;
-
   font-size:clamp(.72rem,2.2vw,.95rem);
   line-height:1.3;
-
   color:rgba(238,255,226,.82);
 }
-
-/* =========================
-   PORTAL HALO
-========================= */
 
 .rb-core-portal::before{
   content:"";
   position:absolute;
   inset:-34px;
   border-radius:50%;
-
   background:
     conic-gradient(
       from 140deg,
@@ -139,7 +161,6 @@
       rgba(102,255,102,.18),
       transparent
     );
-
   filter:blur(22px);
   opacity:.84;
   animation:rbPortalSpin 18s linear infinite;
@@ -150,10 +171,8 @@
   position:absolute;
   inset:22px;
   border-radius:50%;
-
   background:
     radial-gradient(circle at 50% 50%,transparent 58%,rgba(255,215,106,.22) 62%,transparent 68%);
-
   opacity:.7;
 }
 
@@ -162,48 +181,36 @@
 ========================= */
 
 body[data-active-section="feed"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,255,255,.92),rgba(102,255,148,.48),rgba(0,0,0,.86) 72%);
+  background:radial-gradient(circle,rgba(255,255,255,.92),rgba(102,255,148,.48),rgba(0,0,0,.86) 72%);
 }
 
 body[data-active-section="live"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,246,215,.96),rgba(255,60,60,.38) 18%,rgba(102,255,102,.36) 48%,rgba(0,0,0,.88) 74%);
+  background:radial-gradient(circle,rgba(255,246,215,.96),rgba(255,60,60,.38) 18%,rgba(102,255,102,.36) 48%,rgba(0,0,0,.88) 74%);
 }
 
 body[data-active-section="music"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,255,230,.95),rgba(102,255,210,.38) 22%,rgba(255,215,106,.28) 48%,rgba(0,0,0,.88) 74%);
+  background:radial-gradient(circle,rgba(255,255,230,.95),rgba(102,255,210,.38) 22%,rgba(255,215,106,.28) 48%,rgba(0,0,0,.88) 74%);
 }
 
 body[data-active-section="gaming"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,255,255,.94),rgba(120,80,255,.34) 20%,rgba(102,255,102,.34) 50%,rgba(0,0,0,.9) 75%);
+  background:radial-gradient(circle,rgba(255,255,255,.94),rgba(120,80,255,.34) 20%,rgba(102,255,102,.34) 50%,rgba(0,0,0,.9) 75%);
 }
 
 body[data-active-section="sports"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,255,240,.95),rgba(255,215,106,.36) 20%,rgba(0,255,120,.34) 48%,rgba(0,0,0,.88) 74%);
+  background:radial-gradient(circle,rgba(255,255,240,.95),rgba(255,215,106,.36) 20%,rgba(0,255,120,.34) 48%,rgba(0,0,0,.88) 74%);
 }
 
 body[data-active-section="gallery"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,255,255,.96),rgba(255,120,220,.32) 20%,rgba(255,215,106,.26) 48%,rgba(0,0,0,.88) 74%);
+  background:radial-gradient(circle,rgba(255,255,255,.96),rgba(255,120,220,.32) 20%,rgba(255,215,106,.26) 48%,rgba(0,0,0,.88) 74%);
 }
 
 body[data-active-section="store"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,255,235,.96),rgba(255,215,106,.46) 22%,rgba(102,255,102,.28) 50%,rgba(0,0,0,.88) 76%);
+  background:radial-gradient(circle,rgba(255,255,235,.96),rgba(255,215,106,.46) 22%,rgba(102,255,102,.28) 50%,rgba(0,0,0,.88) 76%);
 }
 
 body[data-active-section="meta"] .rb-portal-light{
-  background:
-    radial-gradient(circle,rgba(255,255,255,.96),rgba(102,255,255,.34) 20%,rgba(102,255,102,.34) 48%,rgba(0,0,0,.9) 76%);
+  background:radial-gradient(circle,rgba(255,255,255,.96),rgba(102,255,255,.34) 20%,rgba(102,255,102,.34) 48%,rgba(0,0,0,.9) 76%);
 }
-
-/* =========================
-   LAUNCH AREA SUPPORT
-========================= */
 
 .rb-home-actions{
   position:relative;
@@ -216,10 +223,6 @@ body[data-active-section="meta"] .rb-portal-light{
     0 0 32px rgba(102,255,102,.24),
     0 18px 40px rgba(0,0,0,.42);
 }
-
-/* =========================
-   ANIMATION
-========================= */
 
 @keyframes rbPortalSpin{
   from{ transform:rotate(0deg); }
@@ -236,18 +239,14 @@ body[data-active-section="meta"] .rb-portal-light{
     transform:scale(.98);
     opacity:.86;
   }
+
   50%{
     transform:scale(1.04);
     opacity:1;
   }
 }
 
-/* =========================
-   IPHONE SAFETY
-========================= */
-
 @media (max-width:720px){
-
   .rb-core-portal{
     width:min(72vw,330px);
     height:min(72vw,330px);
@@ -255,6 +254,14 @@ body[data-active-section="meta"] .rb-portal-light{
 
   .rb-portal-ring-two{
     inset:14px;
+  }
+
+  .rb-portal-ring-three{
+    inset:28px;
+  }
+
+  .rb-portal-glow{
+    inset:16px;
   }
 
   .rb-portal-light{
@@ -266,11 +273,9 @@ body[data-active-section="meta"] .rb-portal-light{
     padding:14px;
     border-radius:24px;
   }
-
 }
 
 @media (max-width:390px){
-
   .rb-core-portal{
     width:270px;
     height:270px;
@@ -283,5 +288,4 @@ body[data-active-section="meta"] .rb-portal-light{
   .rb-portal-copy h2{
     font-size:1.8rem;
   }
-
 }
