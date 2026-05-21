@@ -44,7 +44,7 @@ function setStatus(text) {
 }
 
 function avatarUrl(profile = FEED.profile) {
-  return profile?.avatar_url || "/images/brand/project-avatar.png.jpeg";
+  return profile?.avatar_url || "/images/brand/background-v2.png.jpeg";
 }
 
 function displayName(profile = FEED.profile, user = FEED.user) {
