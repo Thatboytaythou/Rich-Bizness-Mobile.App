@@ -1,468 +1,344 @@
-/* =========================
-   RICH BIZNESS MOBILE
+/* =========================================
+   RICH BIZNESS LLC
    /styles/profile.css
+   PROFILE PAGE ONLY
+========================================= */
 
-   PROFILE / MESSAGES / NOTIFICATIONS LAYOUT ONLY
-   No index ownership
-========================= */
+.rb-profile-page{
+  min-height:100svh;
+  color:#fff;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(0,255,120,.18),transparent 34%),
+    radial-gradient(circle at 80% 20%,rgba(255,210,80,.14),transparent 28%),
+    linear-gradient(180deg,#03140b 0%,#020504 45%,#000 100%);
+}
 
-.rb-profile-shell{
+.rb-profile-page .rb-bg-fx{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  background:
+    url("/images/brand/hero-banner.png") center/cover no-repeat;
+  opacity:.16;
+  filter:saturate(1.2) contrast(1.15);
+}
+
+.rb-profile-page .rb-page-shell{
   position:relative;
   z-index:2;
-
-  width:min(100%, 980px);
-  min-height:100svh;
-
+  width:min(1180px,94vw);
   margin:0 auto;
-  padding:28px 16px calc(34px + env(safe-area-inset-bottom));
-
-  display:grid;
-  align-content:start;
-  gap:18px;
+  padding:110px 0 42px;
 }
 
-/* =========================
-   TOP ACTIONS
-========================= */
-
-.rb-profile-top{
+.rb-profile-hero{
   position:relative;
-  z-index:20;
-
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
-
-  padding:12px;
-
-  border:1px solid rgba(255,215,106,.22);
-  border-radius:24px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(8,18,10,.78),
-      rgba(0,0,0,.72)
-    );
-
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-
-  box-shadow:
-    0 0 34px rgba(0,255,136,.12),
-    inset 0 0 34px rgba(255,215,106,.04);
+  border-radius:34px;
+  overflow:hidden;
+  border:1px solid rgba(255,215,110,.24);
+  background:rgba(3,18,10,.72);
+  box-shadow:0 30px 90px rgba(0,0,0,.55);
 }
-
-.rb-profile-signout{
-  border:1px solid rgba(102,255,102,.28);
-  border-radius:999px;
-
-  padding:10px 14px;
-
-  background:rgba(0,0,0,.42);
-  color:var(--rb-gold);
-
-  font:inherit;
-  font-weight:900;
-
-  cursor:pointer;
-  touch-action:manipulation;
-}
-
-/* =========================
-   BANNER
-========================= */
 
 .rb-profile-banner{
-  position:relative;
-  isolation:isolate;
-
-  min-height:300px;
-
-  border-radius:34px;
-  border:1px solid rgba(255,215,106,.28);
-
-  overflow:hidden;
-
+  min-height:310px;
   background:
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.18),
-      rgba(0,0,0,.78)
-    ),
-    url("/images/brand/Avatar-hero-Banner.png.jpeg");
-
-  background-size:cover;
-  background-position:center;
-
-  box-shadow:
-    0 0 52px rgba(0,255,136,.18),
-    inset 0 0 90px rgba(0,0,0,.46);
+    linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.78)),
+    url("/images/brand/Avatar-hero-Banner.png.jpeg") center/cover no-repeat;
 }
-
-.rb-profile-banner::before{
-  content:"";
-
-  position:absolute;
-  inset:0;
-  z-index:1;
-
-  pointer-events:none;
-
-  background:
-    radial-gradient(
-      circle at 22% 20%,
-      rgba(0,255,136,.22),
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at 78% 74%,
-      rgba(255,215,106,.16),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.04),
-      rgba(0,0,0,.68)
-    );
-}
-
-.rb-profile-banner::after{
-  content:"RICH BIZNESS";
-
-  position:absolute;
-  left:18px;
-  right:18px;
-  bottom:18px;
-  z-index:2;
-
-  color:rgba(255,215,106,.12);
-
-  font-size:clamp(2.4rem, 10vw, 7rem);
-  line-height:.82;
-  font-weight:1000;
-  letter-spacing:-.08em;
-
-  pointer-events:none;
-}
-
-/* =========================
-   AVATAR
-========================= */
-
-.rb-profile-avatar-wrap{
-  position:absolute;
-  left:50%;
-  bottom:-62px;
-  transform:translateX(-50%);
-  z-index:5;
-
-  width:136px;
-  height:136px;
-
-  border-radius:50%;
-
-  padding:5px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-green),
-      var(--rb-gold)
-    );
-
-  box-shadow:
-    0 0 38px rgba(0,255,136,.5),
-    0 0 44px rgba(255,215,106,.24);
-}
-
-.rb-profile-avatar-wrap img{
-  width:100%;
-  height:100%;
-
-  border-radius:50%;
-
-  object-fit:cover;
-
-  border:4px solid rgba(0,0,0,.9);
-  background:#050805;
-}
-
-/* =========================
-   CARD
-========================= */
 
 .rb-profile-card{
   position:relative;
+  margin:-92px 24px 24px;
+  padding:24px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:22px;
+  align-items:end;
+  border-radius:30px;
+  border:1px solid rgba(0,255,120,.28);
+  background:linear-gradient(135deg,rgba(0,0,0,.78),rgba(6,35,18,.82));
+  backdrop-filter:blur(18px);
+  box-shadow:0 22px 70px rgba(0,0,0,.58);
+}
 
-  margin-top:48px;
-  padding:78px 20px 22px;
-
-  border:1px solid rgba(102,255,102,.32);
+.rb-profile-avatar{
+  width:142px;
+  height:142px;
+  object-fit:cover;
   border-radius:32px;
-
-  text-align:center;
-
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(0,255,136,.14),
-      transparent 34%
-    ),
-    linear-gradient(
-      135deg,
-      rgba(8,18,10,.86),
-      rgba(0,0,0,.86)
-    );
-
-  backdrop-filter:blur(22px);
-  -webkit-backdrop-filter:blur(22px);
-
+  border:3px solid rgba(255,215,110,.9);
   box-shadow:
-    0 0 46px rgba(0,255,136,.16),
-    inset 0 0 54px rgba(255,215,106,.05);
+    0 0 0 7px rgba(0,255,120,.12),
+    0 22px 42px rgba(0,0,0,.55);
+  background:#06170c;
 }
 
-.rb-profile-card::before{
-  content:"";
-
-  position:absolute;
-  inset:0;
-
-  border-radius:inherit;
-
-  pointer-events:none;
-
-  opacity:.45;
-
-  background:
-    linear-gradient(
-      120deg,
-      transparent,
-      rgba(255,255,255,.08),
-      transparent
-    );
-}
-
-.rb-profile-card > *{
-  position:relative;
-  z-index:2;
-}
-
-.rb-profile-card .rb-kicker{
-  margin:0 0 8px;
-
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-
-  min-height:26px;
-  padding:0 12px;
-
-  border-radius:999px;
-
-  color:#001806;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-green),
-      var(--rb-gold)
-    );
-
-  letter-spacing:.1em;
-}
-
-.rb-profile-card h1{
-  margin:0;
-
-  color:var(--rb-gold);
-
-  font-size:clamp(2.2rem, 9vw, 4.8rem);
-  line-height:.9;
+.rb-profile-main h1{
+  margin:4px 0 2px;
+  font-size:clamp(2rem,5vw,4.4rem);
+  line-height:.92;
   letter-spacing:-.06em;
-
-  text-shadow:
-    0 0 26px rgba(255,215,106,.22);
-}
-
-.rb-profile-handle{
-  margin:10px 0 0;
-
-  color:var(--rb-green);
-
-  font-weight:900;
-  letter-spacing:.04em;
-}
-
-.rb-profile-bio{
-  max-width:620px;
-
-  margin:16px auto 20px;
-
-  color:var(--rb-muted);
-
-  line-height:1.55;
-}
-
-/* =========================
-   GRID
-========================= */
-
-.rb-profile-grid{
-  display:grid;
-  grid-template-columns:repeat(3, 1fr);
-  gap:12px;
-}
-
-.rb-profile-grid article{
-  position:relative;
-  overflow:hidden;
-
-  min-height:128px;
-
-  padding:16px;
-
-  border-radius:24px;
-  border:1px solid rgba(255,215,106,.22);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(10,25,14,.82),
-      rgba(0,0,0,.82)
-    );
-
-  box-shadow:
-    0 0 28px rgba(0,255,136,.1),
-    inset 0 0 28px rgba(255,215,106,.04);
-}
-
-.rb-profile-grid article::before{
-  content:"";
-
-  position:absolute;
-  inset:-40%;
-
-  pointer-events:none;
-
-  opacity:.8;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(0,255,136,.12),
-      transparent 60%
-    );
-}
-
-.rb-profile-grid article > *{
-  position:relative;
-  z-index:2;
-}
-
-.rb-profile-grid strong{
-  display:block;
-
-  margin-bottom:8px;
-
-  color:var(--rb-gold);
-
-  font-size:1.08rem;
-}
-
-.rb-profile-grid span,
-.rb-profile-grid p,
-.rb-profile-grid small{
-  color:var(--rb-muted);
-
-  line-height:1.35;
-  font-size:.9rem;
-}
-
-/* =========================
-   SHARED NOTIFICATION / MESSAGE CARDS
-========================= */
-
-.rb-notification-card{
-  display:grid;
-  gap:8px;
-}
-
-.rb-notification-card small{
-  color:var(--rb-green);
-  font-weight:900;
-  letter-spacing:.06em;
   text-transform:uppercase;
 }
 
-/* =========================
-   MOBILE
-========================= */
+.rb-profile-main p{
+  margin:0;
+}
 
-@media (max-width:720px){
-  .rb-profile-shell{
-    padding:
-      max(18px, env(safe-area-inset-top))
-      12px
-      calc(24px + env(safe-area-inset-bottom));
-    gap:16px;
-  }
+.rb-profile-main #profileUsername{
+  color:#7cffaa;
+  font-weight:800;
+}
 
-  .rb-profile-top{
-    border-radius:22px;
+.rb-profile-main #profileBio{
+  margin-top:10px;
+  max-width:620px;
+  color:rgba(255,255,255,.78);
+  line-height:1.55;
+}
+
+.rb-profile-tags{
+  margin-top:16px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+}
+
+.rb-profile-tags span{
+  padding:9px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,215,110,.24);
+  background:rgba(255,255,255,.07);
+  color:#ffe08a;
+  font-size:.78rem;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.rb-profile-actions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:150px;
+}
+
+.rb-profile-stats{
+  margin:18px 0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+
+.rb-profile-stats article{
+  padding:20px;
+  border-radius:24px;
+  border:1px solid rgba(0,255,120,.18);
+  background:rgba(0,0,0,.55);
+  text-align:center;
+  box-shadow:0 18px 45px rgba(0,0,0,.35);
+}
+
+.rb-profile-stats strong{
+  display:block;
+  font-size:2rem;
+  color:#7cffaa;
+}
+
+.rb-profile-stats span{
+  color:rgba(255,255,255,.65);
+  font-size:.78rem;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-weight:900;
+}
+
+.rb-profile-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:18px;
+}
+
+.rb-profile-links a,
+.rb-social-links a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  padding:0 16px;
+  border-radius:999px;
+  border:1px solid rgba(255,215,110,.24);
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  text-decoration:none;
+  font-weight:900;
+}
+
+.rb-social-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.rb-tabs{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding:8px 0 16px;
+}
+
+.rb-tabs button{
+  flex:0 0 auto;
+  min-height:44px;
+  padding:0 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.72);
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.rb-tabs button.is-active{
+  color:#021006;
+  border-color:#7cffaa;
+  background:linear-gradient(135deg,#7cffaa,#ffd76b);
+  box-shadow:0 0 28px rgba(0,255,120,.28);
+}
+
+.rb-profile-panels{
+  padding:18px;
+  border-radius:30px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(0,0,0,.42);
+}
+
+.rb-feed-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.rb-post-card{
+  overflow:hidden;
+  border-radius:24px;
+  border:1px solid rgba(0,255,120,.18);
+  background:rgba(4,18,10,.84);
+}
+
+.rb-post-top{
+  padding:15px;
+}
+
+.rb-post-top strong{
+  display:block;
+}
+
+.rb-post-top small{
+  color:rgba(255,255,255,.55);
+}
+
+.rb-post-body{
+  padding:0 15px 14px;
+  color:rgba(255,255,255,.78);
+}
+
+.rb-post-media{
+  width:100%;
+  max-height:360px;
+  object-fit:cover;
+  display:block;
+}
+
+.rb-post-audio{
+  width:calc(100% - 30px);
+  margin:0 15px 15px;
+}
+
+.rb-post-actions{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px 15px 15px;
+  color:rgba(255,255,255,.68);
+  font-weight:800;
+}
+
+.rb-empty,
+.rb-mini-empty{
+  padding:28px;
+  border-radius:22px;
+  border:1px dashed rgba(255,215,110,.28);
+  background:rgba(255,255,255,.05);
+  color:rgba(255,255,255,.68);
+  text-align:center;
+}
+
+.rb-mini-card{
+  padding:22px;
+  border-radius:24px;
+  border:1px solid rgba(0,255,120,.18);
+  background:rgba(0,0,0,.42);
+}
+
+.rb-mini-card h3{
+  margin:0 0 14px;
+  color:#ffd76b;
+  text-transform:uppercase;
+}
+
+.rb-mini-card p{
+  color:rgba(255,255,255,.75);
+}
+
+@media(max-width:820px){
+  .rb-profile-page .rb-page-shell{
+    width:92vw;
+    padding-top:92px;
   }
 
   .rb-profile-banner{
-    min-height:260px;
-    border-radius:28px;
-  }
-
-  .rb-profile-avatar-wrap{
-    width:122px;
-    height:122px;
-    bottom:-56px;
+    min-height:240px;
   }
 
   .rb-profile-card{
-    margin-top:44px;
-    padding:72px 16px 20px;
-    border-radius:28px;
+    margin:-78px 12px 14px;
+    grid-template-columns:1fr;
+    text-align:center;
+    justify-items:center;
   }
 
-  .rb-profile-grid{
+  .rb-profile-avatar{
+    width:132px;
+    height:132px;
+  }
+
+  .rb-profile-actions{
+    width:100%;
+  }
+
+  .rb-profile-stats{
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+  }
+
+  .rb-profile-stats article{
+    padding:15px 8px;
+  }
+
+  .rb-profile-stats strong{
+    font-size:1.45rem;
+  }
+
+  .rb-feed-grid{
     grid-template-columns:1fr;
   }
 
-  .rb-profile-grid article{
-    min-height:108px;
-  }
-}
-
-@media (max-width:430px){
-  .rb-profile-shell{
-    padding-left:10px;
-    padding-right:10px;
-  }
-
-  .rb-profile-top{
-    justify-content:center;
-  }
-
-  .rb-profile-banner{
-    min-height:235px;
-  }
-
-  .rb-profile-avatar-wrap{
-    width:112px;
-    height:112px;
-    bottom:-52px;
-  }
-
-  .rb-profile-card{
-    margin-top:40px;
-    padding-top:66px;
+  .rb-profile-panels{
+    padding:12px;
   }
 }
