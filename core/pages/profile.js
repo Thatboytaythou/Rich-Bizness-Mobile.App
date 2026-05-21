@@ -1,13 +1,29 @@
-const PROFILE_TABLE = "profiles";
-const FEED_TABLE = "feed_posts";
-const FOLLOW_TABLE = "followers";
-const THEME_TABLE = "profile_theme_settings";
-const LEVEL_TABLE = "user_levels";
-const META_AVATAR_TABLE = "meta_avatars";
-const SELLER_TABLE = "store_seller_profiles";
-const GAMER_TABLE = "gamer_profiles";
-const SPORTS_TABLE = "sports_profiles";
-const CREATOR_TABLE = "creator_page_settings";
+import {
+  initApp,
+  getCurrentUserState,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
+
+import {
+  RB_TABLES,
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
+const PROFILE_TABLE = RB_TABLES.profiles;
+const FEED_TABLE = RB_TABLES.feedPosts;
+const FOLLOW_TABLE = RB_TABLES.followers;
+const THEME_TABLE = RB_TABLES.profileThemeSettings;
+const LEVEL_TABLE = RB_TABLES.userLevels;
+const META_AVATAR_TABLE = RB_TABLES.metaAvatars;
+const SELLER_TABLE = RB_TABLES.storeSellerProfiles;
+const GAMER_TABLE = RB_TABLES.gamerProfiles;
+const SPORTS_TABLE = RB_TABLES.sportsProfiles;
+const CREATOR_TABLE = RB_TABLES.creatorPageSettings;
 
 const DEFAULT_AVATAR = "/images/brand/hero-banner.png";
 const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
@@ -21,7 +37,7 @@ const state = {
   isOwner: false,
   isFollowing: false,
   posts: [],
-  channels: [],
+  channels: []
 };
 
 const $ = (id) => document.getElementById(id);
@@ -50,12 +66,10 @@ const els = {
   tabs: document.querySelectorAll("[data-profile-tab]"),
   panels: document.querySelectorAll("[data-profile-panel]"),
   creatorPanel: $("profileCreatorPanel"),
-  musicPanel: $("profileMusicPanel"),
-  livePanel: $("profileLivePanel"),
   storePanel: $("profileStorePanel"),
   gamingPanel: $("profileGamingPanel"),
   sportsPanel: $("profileSportsPanel"),
-  metaPanel: $("profileMetaPanel"),
+  metaPanel: $("profileMetaPanel")
 };
 
 function setStatus(message) {
@@ -84,14 +98,6 @@ function username(profile) {
   return name ? `@${name}` : "@richbizness";
 }
 
-function mediaTypeFromUrl(url = "") {
-  const clean = url.toLowerCase();
-  if (clean.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) return "video";
-  if (clean.match(/\.(mp3|wav|m4a|ogg)(\?|$)/)) return "audio";
-  if (clean.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/)) return "image";
-  return "";
-}
-
 function escapeHtml(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -101,51 +107,43 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-function getQueryProfileId() {
-  const url = new URL(window.location.href);
-  return url.searchParams.get("id") || url.searchParams.get("user") || url.searchParams.get("u");
+function mediaTypeFromUrl(url = "") {
+  const clean = url.toLowerCase();
+  if (clean.match(/\.(mp4|mov|webm|m4v)(\?|$)/)) return "video";
+  if (clean.match(/\.(mp3|wav|m4a|ogg)(\?|$)/)) return "audio";
+  if (clean.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/)) return "image";
+  return "";
 }
 
-async function resolveSupabase() {
-  if (window.rbSupabase) return window.rbSupabase;
-  if (window.supabase?.createClient) {
-    const url =
-      window.RB_SUPABASE_URL ||
-      window.SUPABASE_URL ||
-      window.RB_CONFIG?.SUPABASE_URL ||
-      window.__RB_CONFIG__?.SUPABASE_URL;
-    const key =
-      window.RB_SUPABASE_ANON_KEY ||
-      window.SUPABASE_ANON_KEY ||
-      window.RB_CONFIG?.SUPABASE_ANON_KEY ||
-      window.__RB_CONFIG__?.SUPABASE_ANON_KEY;
-
-    if (url && key) {
-      window.rbSupabase = window.supabase.createClient(url, key);
-      return window.rbSupabase;
-    }
-  }
-
-  try {
-    const mod = await import("/core/shared/supabase.js");
-    return mod.supabase || mod.rbSupabase || mod.default;
-  } catch {
-    return null;
-  }
+function getQueryProfileId() {
+  const url = new URL(window.location.href);
+  return (
+    url.searchParams.get("id") ||
+    url.searchParams.get("user") ||
+    url.searchParams.get("u")
+  );
 }
 
 async function initAuth() {
-  state.supabase = await resolveSupabase();
-  if (!state.supabase) {
-    setStatus("Supabase client not found.");
-    return false;
-  }
+  await initApp({
+    guard: false,
+    bindProfile: true,
+    toast: false
+  });
 
-  const { data } = await state.supabase.auth.getSession();
-  state.session = data?.session || null;
-  state.user = state.session?.user || null;
+  state.supabase = getSupabase();
+
+  const auth = getCurrentUserState();
+
+  state.session = auth?.session || null;
+  state.user = auth?.user || null;
+  state.profile = auth?.profile || null;
+
   state.targetId = getQueryProfileId() || state.user?.id || null;
-  state.isOwner = !!state.user?.id && state.user.id === state.targetId;
+
+  state.isOwner =
+    !!state.user?.id &&
+    state.user.id === state.targetId;
 
   return true;
 }
@@ -166,16 +164,22 @@ async function fetchProfile() {
 
   if (!data && state.isOwner) {
     const userMeta = state.user?.user_metadata || {};
+
     const seed = {
       id: state.user.id,
       username: userMeta.username || state.user.email?.split("@")[0] || null,
-      display_name: userMeta.display_name || userMeta.full_name || "Rich Bizness User",
+      display_name:
+        userMeta.display_name ||
+        userMeta.full_name ||
+        "Rich Bizness User",
       full_name: userMeta.full_name || null,
       avatar_url: userMeta.avatar_url || DEFAULT_AVATAR,
       banner_url: DEFAULT_BANNER,
       online_status: "online",
       last_seen_at: new Date().toISOString(),
-      metadata: { source: "profile.js:auto-create" },
+      metadata: {
+        source: "profile.js:auto-create"
+      }
     };
 
     const { data: created, error: createError } = await state.supabase
@@ -185,6 +189,7 @@ async function fetchProfile() {
       .single();
 
     if (createError) throw createError;
+
     state.profile = created;
     return created;
   }
@@ -201,35 +206,47 @@ async function updatePresence() {
     .update({
       online_status: "online",
       last_seen_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     })
     .eq("id", state.user.id);
 }
 
 async function fetchCounts() {
   const [followersRes, followingRes, postsRes] = await Promise.all([
-    state.supabase.from(FOLLOW_TABLE).select("id", { count: "exact", head: true }).eq("following_id", state.targetId),
-    state.supabase.from(FOLLOW_TABLE).select("id", { count: "exact", head: true }).eq("follower_id", state.targetId),
-    state.supabase.from(FEED_TABLE).select("id", { count: "exact", head: true }).eq("user_id", state.targetId),
+    state.supabase
+      .from(FOLLOW_TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("following_id", state.targetId),
+
+    state.supabase
+      .from(FOLLOW_TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("follower_id", state.targetId),
+
+    state.supabase
+      .from(FEED_TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", state.targetId)
   ]);
 
   return {
     followers: followersRes.count || 0,
     following: followingRes.count || 0,
-    posts: postsRes.count || 0,
+    posts: postsRes.count || 0
   };
 }
 
 async function fetchOwnerExtras() {
-  const [theme, level, meta, seller, gamer, sports, creator] = await Promise.allSettled([
-    state.supabase.from(THEME_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(LEVEL_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(META_AVATAR_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(SELLER_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(GAMER_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(SPORTS_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(CREATOR_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-  ]);
+  const [theme, level, meta, seller, gamer, sports, creator] =
+    await Promise.allSettled([
+      state.supabase.from(THEME_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
+      state.supabase.from(LEVEL_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
+      state.supabase.from(META_AVATAR_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
+      state.supabase.from(SELLER_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
+      state.supabase.from(GAMER_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
+      state.supabase.from(SPORTS_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
+      state.supabase.from(CREATOR_TABLE).select("*").eq("user_id", state.targetId).maybeSingle()
+    ]);
 
   return {
     theme: theme.value?.data || null,
@@ -238,7 +255,7 @@ async function fetchOwnerExtras() {
     seller: seller.value?.data || null,
     gamer: gamer.value?.data || null,
     sports: sports.value?.data || null,
-    creator: creator.value?.data || null,
+    creator: creator.value?.data || null
   };
 }
 
@@ -251,6 +268,7 @@ async function fetchPosts() {
     .limit(30);
 
   if (error) throw error;
+
   state.posts = data || [];
 }
 
@@ -273,26 +291,42 @@ function renderProfile(counts, extras) {
   const avatar = p.avatar_url || DEFAULT_AVATAR;
   const banner = extras?.theme?.background_url || p.banner_url || DEFAULT_BANNER;
 
-  if (els.banner) els.banner.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.75)), url("${banner}")`;
+  if (els.banner) {
+    els.banner.style.backgroundImage =
+      `linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.75)), url("${banner}")`;
+  }
+
   if (els.avatar) els.avatar.src = avatar;
   if (els.name) els.name.textContent = publicName(p);
   if (els.username) els.username.textContent = username(p);
   if (els.bio) els.bio.textContent = safeText(p.bio, "Building the Rich Bizness universe.");
-  if (els.rank) els.rank.textContent = safeText(extras?.level?.rank_title || p.rank_title, "Member");
+
+  if (els.rank) {
+    els.rank.textContent = safeText(
+      extras?.level?.rank_title || p.rank_title,
+      "Member"
+    );
+  }
+
   if (els.level) els.level.textContent = `Level ${extras?.level?.level || p.rich_level || 1}`;
   if (els.points) els.points.textContent = `${extras?.level?.rich_points || p.rich_points || 0} pts`;
   if (els.balance) els.balance.textContent = money(p.balance_cents || 0);
+
   if (els.followers) els.followers.textContent = counts.followers;
   if (els.following) els.following.textContent = counts.following;
   if (els.posts) els.posts.textContent = counts.posts;
 
   if (els.editBtn) els.editBtn.style.display = state.isOwner ? "" : "none";
+
   if (els.followBtn) {
     els.followBtn.style.display = !state.isOwner && state.user ? "" : "none";
     els.followBtn.textContent = state.isFollowing ? "Following" : "Follow";
     els.followBtn.classList.toggle("is-active", state.isFollowing);
   }
-  if (els.messageBtn) els.messageBtn.style.display = !state.isOwner && state.user ? "" : "none";
+
+  if (els.messageBtn) {
+    els.messageBtn.style.display = !state.isOwner && state.user ? "" : "none";
+  }
 
   renderLinks(p);
   renderExtras(extras);
@@ -313,11 +347,13 @@ function renderLinks(profile) {
     ["YouTube", profile.youtube_url],
     ["TikTok", profile.tiktok_url],
     ["Facebook", profile.facebook_url],
-    ["Snapchat", profile.snapchat_url],
+    ["Snapchat", profile.snapchat_url]
   ].filter(([, url]) => safeText(url));
 
   els.socials.innerHTML = links
-    .map(([label, url]) => `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${label}</a>`)
+    .map(([label, url]) => {
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${label}</a>`;
+    })
     .join("");
 }
 
@@ -325,31 +361,31 @@ function renderExtras(extras) {
   fillPanel(els.creatorPanel, extras.creator, "Creator Hub", [
     ["Title", extras.creator?.creator_title],
     ["Tagline", extras.creator?.creator_tagline],
-    ["Theme", extras.creator?.page_theme],
+    ["Theme", extras.creator?.page_theme]
   ]);
 
   fillPanel(els.storePanel, extras.seller, "Store Seller", [
     ["Seller", extras.seller?.seller_name],
     ["Rank", extras.seller?.seller_rank],
-    ["Sales", money(extras.seller?.total_sales_cents)],
+    ["Sales", money(extras.seller?.total_sales_cents)]
   ]);
 
   fillPanel(els.gamingPanel, extras.gamer, "Gaming Profile", [
     ["Gamer Tag", extras.gamer?.gamer_tag],
     ["Rank", extras.gamer?.rank_title],
-    ["Wins", extras.gamer?.wins],
+    ["Wins", extras.gamer?.wins]
   ]);
 
   fillPanel(els.sportsPanel, extras.sports, "Sports Profile", [
     ["Fan Tag", extras.sports?.fan_tag],
     ["Team", extras.sports?.favorite_team],
-    ["Points", extras.sports?.points],
+    ["Points", extras.sports?.points]
   ]);
 
   fillPanel(els.metaPanel, extras.meta, "Meta Avatar", [
     ["Display", extras.meta?.display_name],
     ["Aura", extras.meta?.aura],
-    ["Level", extras.meta?.level],
+    ["Level", extras.meta?.level]
   ]);
 }
 
@@ -381,7 +417,6 @@ function renderPosts() {
   }
 
   if (els.empty) els.empty.style.display = "none";
-
   els.feed.innerHTML = state.posts.map(renderPost).join("");
 }
 
@@ -392,9 +427,13 @@ function renderPost(post) {
 
   if (mediaUrl && type === "image") {
     media = `<img class="rb-post-media" src="${escapeHtml(mediaUrl)}" alt="" loading="lazy" />`;
-  } else if (mediaUrl && type === "video") {
+  }
+
+  if (mediaUrl && type === "video") {
     media = `<video class="rb-post-media" src="${escapeHtml(mediaUrl)}" controls playsinline></video>`;
-  } else if (mediaUrl && type === "audio") {
+  }
+
+  if (mediaUrl && type === "audio") {
     media = `<audio class="rb-post-audio" src="${escapeHtml(mediaUrl)}" controls></audio>`;
   }
 
@@ -431,20 +470,24 @@ async function toggleFollow() {
         .delete()
         .eq("follower_id", state.user.id)
         .eq("following_id", state.targetId);
+
       state.isFollowing = false;
     } else {
       await state.supabase.from(FOLLOW_TABLE).insert({
         follower_id: state.user.id,
-        following_id: state.targetId,
+        following_id: state.targetId
       });
+
       state.isFollowing = true;
     }
 
     const counts = await fetchCounts();
+
     if (els.followBtn) {
       els.followBtn.textContent = state.isFollowing ? "Following" : "Follow";
       els.followBtn.classList.toggle("is-active", state.isFollowing);
     }
+
     if (els.followers) els.followers.textContent = counts.followers;
   } finally {
     els.followBtn?.removeAttribute("disabled");
@@ -456,9 +499,13 @@ function bindTabs() {
     tab.addEventListener("click", () => {
       const key = tab.dataset.profileTab;
 
-      els.tabs.forEach((t) => t.classList.toggle("is-active", t === tab));
+      els.tabs.forEach((item) => {
+        item.classList.toggle("is-active", item === tab);
+      });
+
       els.panels.forEach((panel) => {
-        panel.style.display = panel.dataset.profilePanel === key ? "" : "none";
+        panel.style.display =
+          panel.dataset.profilePanel === key ? "" : "none";
       });
     });
   });
@@ -466,23 +513,24 @@ function bindTabs() {
 
 function bindActions() {
   els.editBtn?.addEventListener("click", () => {
-    window.location.href = "/edit";
+    window.location.href = RB_ROUTES.edit || "/edit";
   });
 
   els.followBtn?.addEventListener("click", toggleFollow);
 
   els.messageBtn?.addEventListener("click", () => {
     if (!state.targetId) return;
-    window.location.href = `/messages?user=${encodeURIComponent(state.targetId)}`;
+    window.location.href = `${RB_ROUTES.messages || "/messages"}?user=${encodeURIComponent(state.targetId)}`;
   });
 
   window.addEventListener("beforeunload", () => {
     if (!state.isOwner || !state.user || !state.supabase) return;
+
     state.supabase
       .from(PROFILE_TABLE)
       .update({
         online_status: "offline",
-        last_seen_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString()
       })
       .eq("id", state.user.id);
   });
@@ -491,16 +539,28 @@ function bindActions() {
 function subscribeRealtime() {
   if (!state.supabase || !state.targetId) return;
 
+  clearRealtime();
+
   const profileChannel = state.supabase
     .channel(`profile-page-${state.targetId}`)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: PROFILE_TABLE, filter: `id=eq.${state.targetId}` },
+      {
+        event: "*",
+        schema: "public",
+        table: PROFILE_TABLE,
+        filter: `id=eq.${state.targetId}`
+      },
       async () => reloadSoft()
     )
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: FEED_TABLE, filter: `user_id=eq.${state.targetId}` },
+      {
+        event: "*",
+        schema: "public",
+        table: FEED_TABLE,
+        filter: `user_id=eq.${state.targetId}`
+      },
       async () => {
         await fetchPosts();
         renderPosts();
@@ -511,11 +571,19 @@ function subscribeRealtime() {
   state.channels.push(profileChannel);
 }
 
+function clearRealtime() {
+  state.channels.forEach((channel) => {
+    state.supabase?.removeChannel(channel);
+  });
+
+  state.channels = [];
+}
+
 async function reloadSoft() {
   const [profile, counts, extras] = await Promise.all([
     fetchProfile(),
     fetchCounts(),
-    fetchOwnerExtras(),
+    fetchOwnerExtras()
   ]);
 
   if (profile) renderProfile(counts, extras);
@@ -525,11 +593,16 @@ async function boot() {
   bindTabs();
   bindActions();
 
-  const ready = await initAuth();
-  if (!ready) return;
-
   try {
     setStatus("Loading profile...");
+
+    await initAuth();
+
+    if (!state.supabase) {
+      setStatus("Supabase client not found.");
+      return;
+    }
+
     await updatePresence();
     await fetchProfile();
     await checkFollowing();
@@ -537,7 +610,7 @@ async function boot() {
     const [counts, extras] = await Promise.all([
       fetchCounts(),
       fetchOwnerExtras(),
-      fetchPosts(),
+      fetchPosts()
     ]);
 
     renderProfile(counts, extras);
@@ -545,10 +618,17 @@ async function boot() {
     subscribeRealtime();
 
     setStatus(state.isOwner ? "Your profile is synced." : "Profile loaded.");
+
+    markPageReady("profile");
   } catch (error) {
     console.error("[profile.js]", error);
     setStatus(error.message || "Profile failed to load.");
+    markPageError(error);
   }
 }
 
-document.addEventListener("DOMContentLoaded", boot);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  boot();
+}
