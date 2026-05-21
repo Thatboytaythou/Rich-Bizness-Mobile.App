@@ -396,7 +396,7 @@
 @media (max-width:430px){
 
   .rb-portal-stage{
-    --rb-hub-x:40px;
+    --rb-hub-x:54px;
     --rb-hub-y:-2px;
   }
 
@@ -429,7 +429,7 @@
   .rb-portal-stage{
     min-height:535px;
 
-    --rb-hub-x:34px;
+    --rb-hub-x:48px;
     --rb-hub-y:-2px;
   }
 
