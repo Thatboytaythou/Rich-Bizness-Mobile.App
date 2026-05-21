@@ -13,11 +13,15 @@
   place-items:center;
 
   overflow:hidden;
+
   perspective:1400px;
 
-  /* HUB ALIGNMENT */
-  --rb-hub-x:34px;
-  --rb-hub-y:0px;
+  /* =====================================
+     SAFARI HUB OFFSET
+  ===================================== */
+
+  --rb-hub-x:52px;
+  --rb-hub-y:-4px;
 }
 
 /* =========================================
@@ -34,9 +38,10 @@
   height:min(92vw,700px);
 
   transform:
-    translate(
+    translate3d(
       calc(-50% + var(--rb-hub-x)),
-      calc(-50% + var(--rb-hub-y))
+      calc(-50% + var(--rb-hub-y)),
+      0
     );
 
   transform-style:preserve-3d;
@@ -90,6 +95,10 @@
   transform-style:preserve-3d;
 
   backdrop-filter:
+    blur(16px)
+    saturate(140%);
+
+  -webkit-backdrop-filter:
     blur(16px)
     saturate(140%);
 
@@ -297,17 +306,19 @@
 ========================================= */
 
 .rb-core-portal{
-  z-index:40;
-
   position:relative;
 
+  z-index:40;
+
   transform:
-    translate(
+    translate3d(
       var(--rb-hub-x),
-      var(--rb-hub-y)
+      var(--rb-hub-y),
+      0
     )
-    translateZ(0)
     scale(1.04);
+
+  will-change:transform;
 }
 
 /* =========================================
@@ -319,8 +330,8 @@
   .rb-portal-stage{
     min-height:560px;
 
-    --rb-hub-x:34px;
-    --rb-hub-y:0px;
+    --rb-hub-x:46px;
+    --rb-hub-y:-2px;
   }
 
   .rb-tv-orbit{
@@ -385,8 +396,8 @@
 @media (max-width:430px){
 
   .rb-portal-stage{
-    --rb-hub-x:28px;
-    --rb-hub-y:0px;
+    --rb-hub-x:40px;
+    --rb-hub-y:-2px;
   }
 
   .rb-core-portal{
@@ -418,8 +429,8 @@
   .rb-portal-stage{
     min-height:535px;
 
-    --rb-hub-x:24px;
-    --rb-hub-y:0px;
+    --rb-hub-x:34px;
+    --rb-hub-y:-2px;
   }
 
   .rb-tv-orbit{
