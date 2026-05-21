@@ -1,7 +1,7 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/omni-portal.css
-   CENTER PORTAL / LAUNCH CORE
+   DIMENSIONAL CINEMA PORTAL CORE
 ========================================= */
 
 .rb-core-portal{
@@ -17,7 +17,13 @@
   border-radius:50%;
   transform-style:preserve-3d;
   pointer-events:none;
+
+  isolation:isolate;
 }
+
+/* =========================
+   PORTAL PARTS
+========================= */
 
 .rb-portal-ring,
 .rb-portal-ring-two,
@@ -29,65 +35,224 @@
   pointer-events:none;
 }
 
+/* OUTER DIMENSION RING */
 .rb-portal-ring{
-  inset:0;
-  border:1px solid rgba(255,215,106,.48);
-  box-shadow:
-    0 0 42px rgba(255,215,106,.22),
-    inset 0 0 42px rgba(102,255,102,.16);
-  animation:rbPortalSpin 16s linear infinite;
-}
+  inset:-2px;
 
-.rb-portal-ring-two{
-  inset:18px;
-  border:1px dashed rgba(102,255,102,.46);
-  box-shadow:
-    0 0 55px rgba(102,255,102,.22),
-    inset 0 0 70px rgba(0,0,0,.75);
-  animation:rbPortalSpinReverse 22s linear infinite;
-}
+  border:
+    1px solid rgba(255,215,106,.58);
 
-.rb-portal-ring-three{
-  inset:34px;
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:
-    0 0 34px rgba(255,255,255,.08),
-    inset 0 0 48px rgba(255,215,106,.08);
-  animation:rbPortalSpin 28s linear infinite;
-}
-
-.rb-portal-glow{
-  inset:20px;
   background:
     conic-gradient(
-      from 180deg,
-      transparent,
-      rgba(102,255,102,.24),
+      from 140deg,
+      rgba(102,255,102,.08),
       rgba(255,215,106,.22),
-      transparent,
-      rgba(102,255,102,.18),
-      transparent
+      transparent 22%,
+      rgba(102,255,102,.28),
+      transparent 52%,
+      rgba(255,215,106,.18),
+      rgba(102,255,102,.10)
     );
-  filter:blur(18px);
-  opacity:.72;
-  animation:rbPortalSpin 18s linear infinite;
+
+  box-shadow:
+    0 0 48px rgba(255,215,106,.24),
+    0 0 96px rgba(102,255,102,.16),
+    inset 0 0 42px rgba(102,255,102,.20),
+    inset 0 0 90px rgba(0,0,0,.65);
+
+  animation:
+    rbPortalSpin 14s linear infinite;
 }
 
+/* DASHED ENERGY RING */
+.rb-portal-ring-two{
+  inset:18px;
+
+  border:
+    1px dashed rgba(126,255,126,.62);
+
+  box-shadow:
+    0 0 40px rgba(102,255,102,.30),
+    inset 0 0 64px rgba(0,0,0,.78);
+
+  opacity:.95;
+
+  animation:
+    rbPortalSpinReverse 18s linear infinite;
+}
+
+/* INNER DEPTH RING */
+.rb-portal-ring-three{
+  inset:36px;
+
+  border:
+    1px solid rgba(255,255,255,.14);
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 38%,
+      rgba(102,255,102,.10) 50%,
+      rgba(0,0,0,.54) 68%,
+      rgba(255,215,106,.10) 100%
+    );
+
+  box-shadow:
+    inset 0 0 36px rgba(0,0,0,.92),
+    inset 0 0 88px rgba(102,255,102,.18),
+    0 0 42px rgba(255,215,106,.12);
+
+  animation:
+    rbPortalSpin 26s linear infinite;
+}
+
+/* SWIRLING AURA */
+.rb-portal-glow{
+  inset:20px;
+
+  background:
+    conic-gradient(
+      from 220deg,
+      transparent 0deg,
+      rgba(102,255,102,.34) 48deg,
+      rgba(255,215,106,.24) 96deg,
+      transparent 138deg,
+      rgba(102,255,160,.22) 190deg,
+      rgba(255,255,210,.18) 245deg,
+      transparent 310deg,
+      rgba(102,255,102,.24) 360deg
+    );
+
+  filter:
+    blur(16px)
+    saturate(1.35);
+
+  opacity:.82;
+
+  mix-blend-mode:screen;
+
+  animation:
+    rbPortalSpin 12s linear infinite,
+    rbPortalSurge 4.8s ease-in-out infinite;
+}
+
+/* INNER DIMENSION TUNNEL */
 .rb-portal-light{
   inset:38px;
+
   background:
-    radial-gradient(circle at 50% 45%,rgba(255,255,210,.95),rgba(144,255,144,.55) 18%,rgba(0,90,32,.32) 43%,rgba(0,0,0,.88) 72%),
-    radial-gradient(circle at 50% 50%,rgba(255,215,106,.18),transparent 66%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,235,1) 0%,
+      rgba(210,255,180,.90) 7%,
+      rgba(102,255,102,.58) 18%,
+      rgba(12,92,28,.54) 34%,
+      rgba(0,28,10,.82) 54%,
+      rgba(0,0,0,.95) 76%
+    ),
+    conic-gradient(
+      from 90deg,
+      rgba(102,255,102,.18),
+      rgba(255,215,106,.20),
+      rgba(0,0,0,.08),
+      rgba(102,255,102,.22),
+      rgba(255,255,255,.08),
+      rgba(102,255,102,.18)
+    );
+
   box-shadow:
-    0 0 55px rgba(102,255,102,.42),
-    0 0 130px rgba(255,215,106,.20),
-    inset 0 0 70px rgba(0,0,0,.72);
-  animation:rbPortalPulse 3.8s ease-in-out infinite;
+    0 0 70px rgba(102,255,102,.50),
+    0 0 150px rgba(255,215,106,.24),
+    inset 0 0 36px rgba(255,255,255,.22),
+    inset 0 0 88px rgba(0,0,0,.86),
+    inset 0 -28px 60px rgba(0,0,0,.84);
+
+  transform:
+    translateZ(18px);
+
+  animation:
+    rbPortalPulse 3.6s ease-in-out infinite,
+    rbPortalTunnel 9s linear infinite;
 }
+
+/* =========================
+   DIMENSIONAL GLASS HALO
+========================= */
+
+.rb-core-portal::before{
+  content:"";
+
+  position:absolute;
+  inset:-42px;
+
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(102,255,102,.18),
+      rgba(255,215,106,.10) 34%,
+      transparent 66%
+    ),
+    conic-gradient(
+      from 140deg,
+      transparent,
+      rgba(102,255,102,.28),
+      rgba(255,215,106,.26),
+      transparent,
+      rgba(102,255,102,.20),
+      transparent
+    );
+
+  filter:
+    blur(22px)
+    saturate(1.25);
+
+  opacity:.95;
+
+  animation:
+    rbPortalSpin 20s linear infinite;
+
+  z-index:-1;
+}
+
+.rb-core-portal::after{
+  content:"";
+
+  position:absolute;
+  inset:8px;
+
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle at 50% 44%,
+      transparent 42%,
+      rgba(255,255,255,.10) 48%,
+      transparent 54%,
+      rgba(102,255,102,.18) 62%,
+      transparent 70%
+    );
+
+  box-shadow:
+    inset 0 0 34px rgba(255,255,255,.08),
+    inset 0 0 90px rgba(102,255,102,.12);
+
+  opacity:.82;
+
+  animation:
+    rbPortalLens 5.8s ease-in-out infinite;
+
+  z-index:2;
+}
+
+/* =========================
+   PORTAL COPY GLASS
+========================= */
 
 .rb-portal-copy{
   position:relative;
-  z-index:5;
+  z-index:8;
 
   width:72%;
   min-height:44%;
@@ -98,29 +263,47 @@
   gap:6px;
 
   text-align:center;
+
   padding:18px;
 
   border-radius:28px;
-  border:1px solid rgba(255,255,255,.12);
+
+  border:
+    1px solid rgba(255,255,255,.14);
 
   background:
-    linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.58)),
-    rgba(0,0,0,.20);
+    linear-gradient(
+      180deg,
+      rgba(4,18,8,.54),
+      rgba(0,0,0,.68)
+    ),
+    rgba(0,0,0,.26);
 
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    0 20px 70px rgba(0,0,0,.42);
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -18px 40px rgba(0,0,0,.38),
+    0 22px 72px rgba(0,0,0,.56),
+    0 0 42px rgba(102,255,102,.10);
 
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
+  backdrop-filter:
+    blur(20px)
+    saturate(155%);
+
+  -webkit-backdrop-filter:
+    blur(20px)
+    saturate(155%);
 }
 
 .rb-portal-copy span{
   font-size:clamp(.7rem,2vw,.85rem);
   font-weight:950;
-  letter-spacing:.22em;
-  color:#7cff7c;
-  text-shadow:0 0 18px rgba(102,255,102,.85);
+  letter-spacing:.24em;
+
+  color:#8dff8d;
+
+  text-shadow:
+    0 0 14px rgba(102,255,102,.92),
+    0 0 32px rgba(102,255,102,.36);
 }
 
 .rb-portal-copy h2{
@@ -130,87 +313,82 @@
   line-height:.92;
   letter-spacing:-.07em;
 
-  background:linear-gradient(135deg,#fffbe1,#ffd86a 42%,#70ff70 78%,#ffffff);
+  background:
+    linear-gradient(
+      135deg,
+      #fffbe1,
+      #ffd86a 34%,
+      #78ff78 72%,
+      #ffffff
+    );
+
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
 
-  text-shadow:0 18px 50px rgba(0,0,0,.55);
+  text-shadow:
+    0 18px 50px rgba(0,0,0,.62);
 }
 
 .rb-portal-copy p{
   margin:0;
+
   max-width:24ch;
+
   font-size:clamp(.72rem,2.2vw,.95rem);
   line-height:1.3;
-  color:rgba(238,255,226,.82);
-}
 
-.rb-core-portal::before{
-  content:"";
-  position:absolute;
-  inset:-34px;
-  border-radius:50%;
-  background:
-    conic-gradient(
-      from 140deg,
-      transparent,
-      rgba(102,255,102,.25),
-      rgba(255,215,106,.28),
-      transparent,
-      rgba(102,255,102,.18),
-      transparent
-    );
-  filter:blur(22px);
-  opacity:.84;
-  animation:rbPortalSpin 18s linear infinite;
-}
-
-.rb-core-portal::after{
-  content:"";
-  position:absolute;
-  inset:22px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 50% 50%,transparent 58%,rgba(255,215,106,.22) 62%,transparent 68%);
-  opacity:.7;
+  color:
+    rgba(238,255,226,.84);
 }
 
 /* =========================
-   ACTIVE SECTION PORTAL COLORS
+   ACTIVE SECTION COLORS
 ========================= */
 
 body[data-active-section="feed"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,255,255,.92),rgba(102,255,148,.48),rgba(0,0,0,.86) 72%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(102,255,148,.72) 18%,rgba(0,70,28,.55) 45%,rgba(0,0,0,.94) 76%);
 }
 
 body[data-active-section="live"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,246,215,.96),rgba(255,60,60,.38) 18%,rgba(102,255,102,.36) 48%,rgba(0,0,0,.88) 74%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,246,215,1),rgba(255,72,62,.50) 16%,rgba(102,255,102,.50) 42%,rgba(0,0,0,.95) 76%);
 }
 
 body[data-active-section="music"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,255,230,.95),rgba(102,255,210,.38) 22%,rgba(255,215,106,.28) 48%,rgba(0,0,0,.88) 74%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,230,1),rgba(102,255,210,.56) 20%,rgba(255,215,106,.34) 45%,rgba(0,0,0,.95) 76%);
 }
 
 body[data-active-section="gaming"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,255,255,.94),rgba(120,80,255,.34) 20%,rgba(102,255,102,.34) 50%,rgba(0,0,0,.9) 75%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(138,102,255,.48) 18%,rgba(102,255,102,.44) 46%,rgba(0,0,0,.95) 76%);
 }
 
 body[data-active-section="sports"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,255,240,.95),rgba(255,215,106,.36) 20%,rgba(0,255,120,.34) 48%,rgba(0,0,0,.88) 74%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,240,1),rgba(255,215,106,.55) 20%,rgba(0,255,120,.42) 48%,rgba(0,0,0,.94) 76%);
 }
 
 body[data-active-section="gallery"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,255,255,.96),rgba(255,120,220,.32) 20%,rgba(255,215,106,.26) 48%,rgba(0,0,0,.88) 74%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(255,120,220,.44) 18%,rgba(255,215,106,.34) 46%,rgba(0,0,0,.95) 76%);
 }
 
 body[data-active-section="store"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,255,235,.96),rgba(255,215,106,.46) 22%,rgba(102,255,102,.28) 50%,rgba(0,0,0,.88) 76%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,235,1),rgba(255,215,106,.62) 20%,rgba(102,255,102,.34) 50%,rgba(0,0,0,.94) 76%);
 }
 
 body[data-active-section="meta"] .rb-portal-light{
-  background:radial-gradient(circle,rgba(255,255,255,.96),rgba(102,255,255,.34) 20%,rgba(102,255,102,.34) 48%,rgba(0,0,0,.9) 76%);
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(102,255,255,.50) 18%,rgba(102,255,102,.42) 48%,rgba(0,0,0,.95) 76%);
 }
+
+/* =========================
+   LAUNCH SUPPORT
+========================= */
 
 .rb-home-actions{
   position:relative;
@@ -219,10 +397,15 @@ body[data-active-section="meta"] .rb-portal-light{
 
 .rb-main-launch{
   min-width:min(64vw,320px);
+
   box-shadow:
     0 0 32px rgba(102,255,102,.24),
     0 18px 40px rgba(0,0,0,.42);
 }
+
+/* =========================
+   ANIMATION
+========================= */
 
 @keyframes rbPortalSpin{
   from{ transform:rotate(0deg); }
@@ -236,17 +419,68 @@ body[data-active-section="meta"] .rb-portal-light{
 
 @keyframes rbPortalPulse{
   0%,100%{
-    transform:scale(.98);
-    opacity:.86;
+    transform:
+      translateZ(18px)
+      scale(.985);
+
+    opacity:.88;
   }
 
   50%{
-    transform:scale(1.04);
+    transform:
+      translateZ(18px)
+      scale(1.045);
+
     opacity:1;
   }
 }
 
+@keyframes rbPortalTunnel{
+  from{
+    filter:
+      hue-rotate(0deg)
+      saturate(1.18)
+      contrast(1.08);
+  }
+
+  to{
+    filter:
+      hue-rotate(360deg)
+      saturate(1.18)
+      contrast(1.08);
+  }
+}
+
+@keyframes rbPortalSurge{
+  0%,100%{
+    opacity:.56;
+    transform:scale(.96);
+  }
+
+  50%{
+    opacity:.92;
+    transform:scale(1.06);
+  }
+}
+
+@keyframes rbPortalLens{
+  0%,100%{
+    opacity:.55;
+    transform:scale(.98);
+  }
+
+  50%{
+    opacity:.92;
+    transform:scale(1.025);
+  }
+}
+
+/* =========================
+   IPHONE SAFETY
+========================= */
+
 @media (max-width:720px){
+
   .rb-core-portal{
     width:min(72vw,330px);
     height:min(72vw,330px);
@@ -262,6 +496,7 @@ body[data-active-section="meta"] .rb-portal-light{
 
   .rb-portal-glow{
     inset:16px;
+    filter:blur(15px);
   }
 
   .rb-portal-light{
@@ -273,9 +508,11 @@ body[data-active-section="meta"] .rb-portal-light{
     padding:14px;
     border-radius:24px;
   }
+
 }
 
 @media (max-width:390px){
+
   .rb-core-portal{
     width:270px;
     height:270px;
@@ -288,4 +525,23 @@ body[data-active-section="meta"] .rb-portal-light{
   .rb-portal-copy h2{
     font-size:1.8rem;
   }
+
+}
+
+/* =========================
+   LOW MOTION
+========================= */
+
+@media (prefers-reduced-motion:reduce){
+
+  .rb-portal-ring,
+  .rb-portal-ring-two,
+  .rb-portal-ring-three,
+  .rb-portal-glow,
+  .rb-portal-light,
+  .rb-core-portal::before,
+  .rb-core-portal::after{
+    animation:none !important;
+  }
+
 }
