@@ -6,6 +6,7 @@
 
 .rb-core-portal{
   position:relative;
+
   z-index:20;
 
   width:clamp(230px,58vw,430px);
@@ -15,15 +16,17 @@
   place-items:center;
 
   border-radius:50%;
+
   transform-style:preserve-3d;
+
   pointer-events:none;
 
   isolation:isolate;
 }
 
-/* =========================
+/* =========================================
    PORTAL PARTS
-========================= */
+========================================= */
 
 .rb-portal-ring,
 .rb-portal-ring-two,
@@ -31,11 +34,16 @@
 .rb-portal-glow,
 .rb-portal-light{
   position:absolute;
+
   border-radius:50%;
+
   pointer-events:none;
 }
 
-/* OUTER DIMENSION RING */
+/* =========================================
+   OUTER RING
+========================================= */
+
 .rb-portal-ring{
   inset:-2px;
 
@@ -64,7 +72,10 @@
     rbPortalSpin 14s linear infinite;
 }
 
-/* DASHED ENERGY RING */
+/* =========================================
+   DASHED ENERGY RING
+========================================= */
+
 .rb-portal-ring-two{
   inset:18px;
 
@@ -81,7 +92,10 @@
     rbPortalSpinReverse 18s linear infinite;
 }
 
-/* INNER DEPTH RING */
+/* =========================================
+   INNER DEPTH RING
+========================================= */
+
 .rb-portal-ring-three{
   inset:36px;
 
@@ -106,7 +120,10 @@
     rbPortalSpin 26s linear infinite;
 }
 
-/* SWIRLING AURA */
+/* =========================================
+   SWIRLING AURA
+========================================= */
+
 .rb-portal-glow{
   inset:20px;
 
@@ -136,7 +153,10 @@
     rbPortalSurge 4.8s ease-in-out infinite;
 }
 
-/* INNER DIMENSION TUNNEL */
+/* =========================================
+   INNER DIMENSION TUNNEL
+========================================= */
+
 .rb-portal-light{
   inset:38px;
 
@@ -175,14 +195,15 @@
     rbPortalTunnel 9s linear infinite;
 }
 
-/* =========================
-   DIMENSIONAL GLASS HALO
-========================= */
+/* =========================================
+   DIMENSIONAL HALO
+========================================= */
 
 .rb-core-portal::before{
   content:"";
 
   position:absolute;
+
   inset:-42px;
 
   border-radius:50%;
@@ -220,6 +241,7 @@
   content:"";
 
   position:absolute;
+
   inset:8px;
 
   border-radius:50%;
@@ -246,12 +268,13 @@
   z-index:2;
 }
 
-/* =========================
+/* =========================================
    PORTAL COPY GLASS
-========================= */
+========================================= */
 
 .rb-portal-copy{
   position:relative;
+
   z-index:8;
 
   width:72%;
@@ -260,6 +283,7 @@
   display:grid;
   place-items:center;
   align-content:center;
+
   gap:6px;
 
   text-align:center;
@@ -295,8 +319,11 @@
 }
 
 .rb-portal-copy span{
-  font-size:clamp(.7rem,2vw,.85rem);
+  font-size:
+    clamp(.7rem,2vw,.85rem);
+
   font-weight:950;
+
   letter-spacing:.24em;
 
   color:#8dff8d;
@@ -309,8 +336,11 @@
 .rb-portal-copy h2{
   margin:0;
 
-  font-size:clamp(1.45rem,6vw,3.2rem);
+  font-size:
+    clamp(1.45rem,6vw,3.2rem);
+
   line-height:.92;
+
   letter-spacing:-.07em;
 
   background:
@@ -324,6 +354,7 @@
 
   -webkit-background-clip:text;
   background-clip:text;
+
   color:transparent;
 
   text-shadow:
@@ -335,63 +366,114 @@
 
   max-width:24ch;
 
-  font-size:clamp(.72rem,2.2vw,.95rem);
+  font-size:
+    clamp(.72rem,2.2vw,.95rem);
+
   line-height:1.3;
 
   color:
     rgba(238,255,226,.84);
 }
 
-/* =========================
+/* =========================================
    ACTIVE SECTION COLORS
-========================= */
+========================================= */
 
 body[data-active-section="feed"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(102,255,148,.72) 18%,rgba(0,70,28,.55) 45%,rgba(0,0,0,.94) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,255,1),
+      rgba(102,255,148,.72) 18%,
+      rgba(0,70,28,.55) 45%,
+      rgba(0,0,0,.94) 76%
+    );
 }
 
 body[data-active-section="live"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,246,215,1),rgba(255,72,62,.50) 16%,rgba(102,255,102,.50) 42%,rgba(0,0,0,.95) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,246,215,1),
+      rgba(255,72,62,.50) 16%,
+      rgba(102,255,102,.50) 42%,
+      rgba(0,0,0,.95) 76%
+    );
 }
 
 body[data-active-section="music"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,255,230,1),rgba(102,255,210,.56) 20%,rgba(255,215,106,.34) 45%,rgba(0,0,0,.95) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,230,1),
+      rgba(102,255,210,.56) 20%,
+      rgba(255,215,106,.34) 45%,
+      rgba(0,0,0,.95) 76%
+    );
 }
 
 body[data-active-section="gaming"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(138,102,255,.48) 18%,rgba(102,255,102,.44) 46%,rgba(0,0,0,.95) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,255,1),
+      rgba(138,102,255,.48) 18%,
+      rgba(102,255,102,.44) 46%,
+      rgba(0,0,0,.95) 76%
+    );
 }
 
 body[data-active-section="sports"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,255,240,1),rgba(255,215,106,.55) 20%,rgba(0,255,120,.42) 48%,rgba(0,0,0,.94) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,240,1),
+      rgba(255,215,106,.55) 20%,
+      rgba(0,255,120,.42) 48%,
+      rgba(0,0,0,.94) 76%
+    );
 }
 
 body[data-active-section="gallery"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(255,120,220,.44) 18%,rgba(255,215,106,.34) 46%,rgba(0,0,0,.95) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,255,1),
+      rgba(255,120,220,.44) 18%,
+      rgba(255,215,106,.34) 46%,
+      rgba(0,0,0,.95) 76%
+    );
 }
 
 body[data-active-section="store"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,255,235,1),rgba(255,215,106,.62) 20%,rgba(102,255,102,.34) 50%,rgba(0,0,0,.94) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,235,1),
+      rgba(255,215,106,.62) 20%,
+      rgba(102,255,102,.34) 50%,
+      rgba(0,0,0,.94) 76%
+    );
 }
 
 body[data-active-section="meta"] .rb-portal-light{
   background:
-    radial-gradient(circle at 50% 48%,rgba(255,255,255,1),rgba(102,255,255,.50) 18%,rgba(102,255,102,.42) 48%,rgba(0,0,0,.95) 76%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255,255,255,1),
+      rgba(102,255,255,.50) 18%,
+      rgba(102,255,102,.42) 48%,
+      rgba(0,0,0,.95) 76%
+    );
 }
 
-/* =========================
+/* =========================================
    LAUNCH SUPPORT
-========================= */
+========================================= */
 
 .rb-home-actions{
   position:relative;
+
   z-index:30;
 }
 
@@ -403,21 +485,34 @@ body[data-active-section="meta"] .rb-portal-light{
     0 18px 40px rgba(0,0,0,.42);
 }
 
-/* =========================
+/* =========================================
    ANIMATION
-========================= */
+========================================= */
 
 @keyframes rbPortalSpin{
-  from{ transform:rotate(0deg); }
-  to{ transform:rotate(360deg); }
+
+  from{
+    transform:rotate(0deg);
+  }
+
+  to{
+    transform:rotate(360deg);
+  }
 }
 
 @keyframes rbPortalSpinReverse{
-  from{ transform:rotate(360deg); }
-  to{ transform:rotate(0deg); }
+
+  from{
+    transform:rotate(360deg);
+  }
+
+  to{
+    transform:rotate(0deg);
+  }
 }
 
 @keyframes rbPortalPulse{
+
   0%,100%{
     transform:
       translateZ(18px)
@@ -436,6 +531,7 @@ body[data-active-section="meta"] .rb-portal-light{
 }
 
 @keyframes rbPortalTunnel{
+
   from{
     filter:
       hue-rotate(0deg)
@@ -452,32 +548,42 @@ body[data-active-section="meta"] .rb-portal-light{
 }
 
 @keyframes rbPortalSurge{
+
   0%,100%{
     opacity:.56;
-    transform:scale(.96);
+
+    transform:
+      scale(.96);
   }
 
   50%{
     opacity:.92;
-    transform:scale(1.06);
+
+    transform:
+      scale(1.06);
   }
 }
 
 @keyframes rbPortalLens{
+
   0%,100%{
     opacity:.55;
-    transform:scale(.98);
+
+    transform:
+      scale(.98);
   }
 
   50%{
     opacity:.92;
-    transform:scale(1.025);
+
+    transform:
+      scale(1.025);
   }
 }
 
-/* =========================
-   IPHONE SAFETY
-========================= */
+/* =========================================
+   MOBILE SAFARI
+========================================= */
 
 @media (max-width:720px){
 
@@ -496,7 +602,9 @@ body[data-active-section="meta"] .rb-portal-light{
 
   .rb-portal-glow{
     inset:16px;
-    filter:blur(15px);
+
+    filter:
+      blur(15px);
   }
 
   .rb-portal-light{
@@ -505,10 +613,11 @@ body[data-active-section="meta"] .rb-portal-light{
 
   .rb-portal-copy{
     width:76%;
+
     padding:14px;
+
     border-radius:24px;
   }
-
 }
 
 @media (max-width:390px){
@@ -525,12 +634,11 @@ body[data-active-section="meta"] .rb-portal-light{
   .rb-portal-copy h2{
     font-size:1.8rem;
   }
-
 }
 
-/* =========================
-   LOW MOTION
-========================= */
+/* =========================================
+   REDUCED MOTION
+========================================= */
 
 @media (prefers-reduced-motion:reduce){
 
@@ -543,5 +651,4 @@ body[data-active-section="meta"] .rb-portal-light{
   .rb-core-portal::after{
     animation:none !important;
   }
-
 }
