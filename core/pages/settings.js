@@ -1,25 +1,18 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/settings.js
-
-   SETTINGS CONTROLLER
-   LOCKED TO /core/app.js
 ========================= */
 
 import {
   initApp,
+  getCurrentUserState,
   markPageReady,
   markPageError
 } from "/core/app.js";
 
-import {
-  getAuthState,
-  onAuthState
-} from "/core/features/auth/auth-state.js";
+import { rbSignOut } from "/core/shared/rb-auth.js";
 
-import {
-  rbSignOut
-} from "/core/shared/rb-auth.js";
+import { RB_ROUTES } from "/core/shared/rb-config.js";
 
 import {
   toastInfo,
@@ -37,7 +30,8 @@ const els = {
   signOutBtn: $("settings-signout-btn")
 };
 
-function paintSettings(state = getAuthState()) {
+function paintSettings() {
+  const state = getCurrentUserState();
   const user = state?.user || null;
   const profile = state?.profile || null;
 
@@ -62,45 +56,36 @@ function paintSettings(state = getAuthState()) {
 
 function bindSettingsActions() {
   els.editBtn?.addEventListener("click", () => {
-    window.location.href = "/edit";
+    window.location.href = RB_ROUTES.edit || "/edit";
   });
 
   els.profileBtn?.addEventListener("click", () => {
-    window.location.href = "/profile";
+    window.location.href = RB_ROUTES.profile || "/profile";
   });
 
   els.signOutBtn?.addEventListener("click", async () => {
     try {
       await rbSignOut({
-        redirectTo: "/auth"
+        redirectTo: RB_ROUTES.auth || "/auth"
       });
 
       toastInfo("Signed out.");
     } catch (error) {
-      console.error(error);
-
-      toastError(
-        error?.message ||
-          "Sign out failed."
-      );
+      console.error("[settings.js]", error);
+      toastError(error?.message || "Sign out failed.");
     }
   });
 }
 
 async function bootSettingsPage() {
   try {
-    const appState = await initApp({
+    await initApp({
       guard: true,
       bindProfile: true,
       toast: false
     });
 
-    paintSettings(appState.auth);
-
-    onAuthState((nextState) => {
-      paintSettings(nextState);
-    });
-
+    paintSettings();
     bindSettingsActions();
 
     document.body.classList.add("rb-settings-ready");
@@ -109,6 +94,7 @@ async function bootSettingsPage() {
 
     console.log("RB SETTINGS READY");
   } catch (error) {
+    console.error("[settings.js]", error);
     markPageError(error);
   }
 }
