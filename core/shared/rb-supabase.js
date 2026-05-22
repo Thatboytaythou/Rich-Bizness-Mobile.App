@@ -1,9 +1,6 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-supabase.js
-
-   GLOBAL SUPABASE ENGINE
-   Session Persistence Locked
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -57,6 +54,15 @@ export function getUser() {
 
 export function getProfile() {
   return currentProfile;
+}
+
+export function getCurrentUserState() {
+  return {
+    session: currentSession,
+    user: currentUser,
+    profile: currentProfile,
+    authed: !!currentUser
+  };
 }
 
 export function isAuthed() {
@@ -118,6 +124,8 @@ export async function refreshSession() {
     currentProfile = null;
   }
 
+  authBooted = true;
+
   return currentSession;
 }
 
@@ -156,6 +164,15 @@ export async function signUp({
 
   if (error) throw error;
 
+  currentSession = data.session || null;
+  currentUser = data.user || data.session?.user || null;
+
+  if (currentUser?.id) {
+    await loadProfile(currentUser.id);
+  }
+
+  authBooted = true;
+
   return data;
 }
 
@@ -163,16 +180,15 @@ export async function signIn({
   email,
   password
 }) {
-  const { data, error } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
   if (error) throw error;
 
   currentSession = data.session || null;
-  currentUser = data.user || null;
+  currentUser = data.user || data.session?.user || null;
 
   if (currentUser?.id) {
     await loadProfile(currentUser.id);
@@ -199,7 +215,9 @@ supabase.auth.onAuthStateChange((_event, session) => {
 
   if (currentUser?.id) {
     setTimeout(() => {
-      loadProfile(currentUser.id);
+      loadProfile(currentUser.id).catch((error) => {
+        console.warn("[RB PROFILE STATE WARNING]", error.message);
+      });
     }, 0);
   } else {
     currentProfile = null;
@@ -224,10 +242,9 @@ export async function uploadFile({
   file,
   upsert = false
 }) {
-  const { data, error } =
-    await supabase.storage
-      .from(bucket)
-      .upload(path, file, { upsert });
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { upsert });
 
   if (error) throw error;
 
@@ -238,10 +255,9 @@ export async function deleteFile({
   bucket,
   paths = []
 }) {
-  const { data, error } =
-    await supabase.storage
-      .from(bucket)
-      .remove(paths);
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .remove(paths);
 
   if (error) throw error;
 
@@ -284,11 +300,10 @@ export async function rbInsert({
   table,
   values
 }) {
-  const { data, error } =
-    await supabase
-      .from(table)
-      .insert(values)
-      .select();
+  const { data, error } = await supabase
+    .from(table)
+    .insert(values)
+    .select();
 
   if (error) throw error;
 
