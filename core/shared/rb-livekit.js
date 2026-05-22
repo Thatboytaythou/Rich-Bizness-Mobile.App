@@ -1,8 +1,6 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-livekit.js
-
-   LIVEKIT CLIENT CORE
 ========================= */
 
 import {
@@ -10,308 +8,208 @@ import {
   RoomEvent,
   Track,
   VideoPresets
-} from "https://esm.sh/livekit-client";
+} from "https://esm.sh/livekit-client@2";
 
-/* =========================
-   CONFIG
-========================= */
+let activeRoom = null;
+
 export const LIVEKIT_CONFIG = {
-  url:
-    window.LIVEKIT_URL ||
-    "",
-
   adaptiveStream: true,
   dynacast: true,
-
   videoCaptureDefaults: {
-    resolution:
-      VideoPresets.h720.resolution
+    resolution: VideoPresets.h720.resolution
   },
-
   publishDefaults: {
     simulcast: true
   }
 };
 
-/* =========================
-   ROOM
-========================= */
-let activeRoom = null;
-
-/* =========================
-   CREATE ROOM
-========================= */
 export async function createRoom() {
-  if (activeRoom) {
-    return activeRoom;
-  }
+  if (activeRoom) return activeRoom;
 
   activeRoom = new Room({
-    adaptiveStream:
-      LIVEKIT_CONFIG.adaptiveStream,
-
-    dynacast:
-      LIVEKIT_CONFIG.dynacast,
-
-    videoCaptureDefaults:
-      LIVEKIT_CONFIG.videoCaptureDefaults,
-
-    publishDefaults:
-      LIVEKIT_CONFIG.publishDefaults
+    adaptiveStream: LIVEKIT_CONFIG.adaptiveStream,
+    dynacast: LIVEKIT_CONFIG.dynacast,
+    videoCaptureDefaults: LIVEKIT_CONFIG.videoCaptureDefaults,
+    publishDefaults: LIVEKIT_CONFIG.publishDefaults
   });
 
   return activeRoom;
 }
 
-/* =========================
-   GET ROOM
-========================= */
 export function getRoom() {
   return activeRoom;
 }
 
-/* =========================
-   TOKEN REQUEST
-========================= */
 export async function requestLiveKitToken({
   roomName,
+  room,
+  identity,
+  userId,
   participantName,
+  name,
+  role = "viewer",
   metadata = {}
 }) {
-  const response = await fetch(
-    "/api/livekit-token",
-    {
-      method: "POST",
+  const response = await fetch("/api/livekit-token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      roomName: roomName || room,
+      room: room || roomName,
+      identity,
+      userId,
+      name: name || participantName,
+      participantName,
+      role,
+      metadata
+    })
+  });
 
-      headers: {
-        "Content-Type":
-          "application/json"
-      },
-
-      body: JSON.stringify({
-        roomName,
-        participantName,
-        metadata
-      })
-    }
-  );
-
-  const data =
-    await response.json();
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      data?.error ||
-      "Token request failed"
-    );
+    throw new Error(data?.error || "Token request failed");
   }
 
   return data;
 }
 
-/* =========================
-   CONNECT
-========================= */
 export async function connectToRoom({
   roomName,
+  room,
+  identity,
+  userId,
   participantName,
+  name,
+  role = "viewer",
   metadata = {}
 }) {
-  const room =
-    await createRoom();
+  const active = await createRoom();
 
-  const tokenData =
-    await requestLiveKitToken({
-      roomName,
-      participantName,
-      metadata
-    });
+  const tokenData = await requestLiveKitToken({
+    roomName,
+    room,
+    identity,
+    userId,
+    participantName,
+    name,
+    role,
+    metadata
+  });
 
-  await room.connect(
-    LIVEKIT_CONFIG.url,
-    tokenData.token
-  );
+  const token = tokenData.token || tokenData.accessToken;
+  const url = tokenData.url || tokenData.livekitUrl || tokenData.wsUrl;
 
-  return room;
+  if (!token || !url) {
+    throw new Error("Missing LiveKit URL or token.");
+  }
+
+  await active.connect(url, token);
+
+  return active;
 }
 
-/* =========================
-   CAMERA + MIC
-========================= */
 export async function enableCameraAndMic() {
-  if (!activeRoom) return;
+  if (!activeRoom) return null;
 
-  await activeRoom.localParticipant
-    .enableCameraAndMicrophone(
-      true,
-      true
-    );
+  await activeRoom.localParticipant.setCameraEnabled(true);
+  await activeRoom.localParticipant.setMicrophoneEnabled(true);
+
+  return activeRoom;
 }
 
-/* =========================
-   DISABLE CAMERA
-========================= */
 export async function disableCamera() {
   if (!activeRoom) return;
-
-  await activeRoom.localParticipant
-    .setCameraEnabled(false);
+  await activeRoom.localParticipant.setCameraEnabled(false);
 }
 
-/* =========================
-   DISABLE MIC
-========================= */
 export async function disableMic() {
   if (!activeRoom) return;
-
-  await activeRoom.localParticipant
-    .setMicrophoneEnabled(false);
+  await activeRoom.localParticipant.setMicrophoneEnabled(false);
 }
 
-/* =========================
-   ENABLE CAMERA
-========================= */
 export async function enableCamera() {
   if (!activeRoom) return;
-
-  await activeRoom.localParticipant
-    .setCameraEnabled(true);
+  await activeRoom.localParticipant.setCameraEnabled(true);
 }
 
-/* =========================
-   ENABLE MIC
-========================= */
 export async function enableMic() {
   if (!activeRoom) return;
-
-  await activeRoom.localParticipant
-    .setMicrophoneEnabled(true);
+  await activeRoom.localParticipant.setMicrophoneEnabled(true);
 }
 
-/* =========================
-   SCREEN SHARE
-========================= */
 export async function startScreenShare() {
   if (!activeRoom) return;
-
-  await activeRoom.localParticipant
-    .setScreenShareEnabled(true);
+  await activeRoom.localParticipant.setScreenShareEnabled(true);
 }
 
-/* =========================
-   STOP SCREEN SHARE
-========================= */
 export async function stopScreenShare() {
   if (!activeRoom) return;
-
-  await activeRoom.localParticipant
-    .setScreenShareEnabled(false);
+  await activeRoom.localParticipant.setScreenShareEnabled(false);
 }
 
-/* =========================
-   DISCONNECT
-========================= */
 export async function disconnectRoom() {
   if (!activeRoom) return;
 
   await activeRoom.disconnect();
-
   activeRoom = null;
 }
 
-/* =========================
-   PARTICIPANTS
-========================= */
 export function getParticipants() {
   if (!activeRoom) return [];
-
-  return Array.from(
-    activeRoom.remoteParticipants.values()
-  );
+  return Array.from(activeRoom.remoteParticipants.values());
 }
 
-/* =========================
-   TRACK ATTACH
-========================= */
-export function attachTrack(
-  track,
-  element
-) {
+export function attachTrack(track, element) {
   if (!track || !element) return;
-
   track.attach(element);
 }
 
-/* =========================
-   TRACK DETACH
-========================= */
-export function detachTrack(
-  track,
-  element
-) {
-  if (!track || !element) return;
-
-  track.detach(element);
+export function detachTrack(track) {
+  if (!track) return;
+  track.detach().forEach((el) => el.remove());
 }
 
-/* =========================
-   ROOM EVENTS
-========================= */
 export function bindRoomEvents({
   onParticipantConnected,
   onParticipantDisconnected,
   onTrackSubscribed,
+  onTrackUnsubscribed,
   onDisconnected
-}) {
+} = {}) {
   if (!activeRoom) return;
 
-  if (
-    typeof onParticipantConnected ===
-    "function"
-  ) {
-    activeRoom.on(
-      RoomEvent.ParticipantConnected,
-      onParticipantConnected
-    );
+  if (typeof onParticipantConnected === "function") {
+    activeRoom.on(RoomEvent.ParticipantConnected, onParticipantConnected);
   }
 
-  if (
-    typeof onParticipantDisconnected ===
-    "function"
-  ) {
-    activeRoom.on(
-      RoomEvent.ParticipantDisconnected,
-      onParticipantDisconnected
-    );
+  if (typeof onParticipantDisconnected === "function") {
+    activeRoom.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
   }
 
-  if (
-    typeof onTrackSubscribed ===
-    "function"
-  ) {
-    activeRoom.on(
-      RoomEvent.TrackSubscribed,
-      (
-        track,
-        publication,
-        participant
-      ) => {
-        onTrackSubscribed({
-          track,
-          publication,
-          participant
-        });
-      }
-    );
+  if (typeof onTrackSubscribed === "function") {
+    activeRoom.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      onTrackSubscribed({ track, publication, participant });
+    });
   }
 
-  if (
-    typeof onDisconnected ===
-    "function"
-  ) {
-    activeRoom.on(
-      RoomEvent.Disconnected,
-      onDisconnected
-    );
+  if (typeof onTrackUnsubscribed === "function") {
+    activeRoom.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+      onTrackUnsubscribed({ track, publication, participant });
+    });
+  }
+
+  if (typeof onDisconnected === "function") {
+    activeRoom.on(RoomEvent.Disconnected, onDisconnected);
   }
 }
+
+export {
+  Room,
+  RoomEvent,
+  Track
+};
+
+console.log("RB LIVEKIT CORE READY");
