@@ -1,8 +1,6 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-upload-router.js
-
-   UPLOAD SECTION ROUTER
 ========================= */
 
 import {
@@ -83,16 +81,6 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "insert"
   },
 
-  musicCover: {
-    bucket: RB_BUCKETS.musicCovers,
-    folder: "covers",
-    section: "music",
-    visibility: "public",
-    table: RB_TABLES.musicTracks,
-    column: "cover_url",
-    mode: "attach"
-  },
-
   podcastAudio: {
     bucket: RB_BUCKETS.podcastAudio,
     folder: "episodes",
@@ -101,16 +89,6 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     table: RB_TABLES.podcastEpisodes,
     column: "audio_url",
     mode: "insert"
-  },
-
-  podcastCover: {
-    bucket: RB_BUCKETS.podcastCovers,
-    folder: "covers",
-    section: "podcast",
-    visibility: "public",
-    table: RB_TABLES.podcastEpisodes,
-    column: "cover_url",
-    mode: "attach"
   },
 
   radioCover: {
@@ -143,16 +121,6 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "attach"
   },
 
-  gameAsset: {
-    bucket: RB_BUCKETS.gameAssets,
-    folder: "assets",
-    section: "gaming",
-    visibility: "public",
-    table: RB_TABLES.games,
-    column: "play_url",
-    mode: "attach"
-  },
-
   gameClip: {
     bucket: RB_BUCKETS.gameClips,
     folder: "clips",
@@ -160,26 +128,6 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     visibility: "public",
     table: RB_TABLES.gameClips,
     column: "clip_url",
-    mode: "insert"
-  },
-
-  gameCover: {
-    bucket: RB_BUCKETS.gameCovers,
-    folder: "covers",
-    section: "gaming",
-    visibility: "public",
-    table: RB_TABLES.games,
-    column: "cover_url",
-    mode: "attach"
-  },
-
-  sportsMedia: {
-    bucket: RB_BUCKETS.sportsMedia,
-    folder: "media",
-    section: "sports",
-    visibility: "public",
-    table: RB_TABLES.sportsPosts,
-    column: "media_url",
     mode: "insert"
   },
 
@@ -193,16 +141,6 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "insert"
   },
 
-  sportsCover: {
-    bucket: RB_BUCKETS.sportsCovers,
-    folder: "covers",
-    section: "sports",
-    visibility: "public",
-    table: RB_TABLES.sportsBroadcasts,
-    column: "cover_url",
-    mode: "attach"
-  },
-
   storeProduct: {
     bucket: RB_BUCKETS.storeProducts,
     folder: "products",
@@ -210,7 +148,7 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     visibility: "public",
     table: RB_TABLES.products,
     column: "image_url",
-    mode: "attach"
+    mode: "insert"
   },
 
   storeDigital: {
@@ -220,16 +158,6 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     visibility: "private",
     table: RB_TABLES.products,
     column: "digital_file_url",
-    mode: "attach"
-  },
-
-  storeSellerMedia: {
-    bucket: RB_BUCKETS.storeSellerMedia,
-    folder: "seller",
-    section: "store",
-    visibility: "public",
-    table: RB_TABLES.storeSellerProfiles,
-    column: "banner_url",
     mode: "attach"
   },
 
@@ -281,6 +209,14 @@ export async function uploadByRoute({
   });
 }
 
+function uploadedValue(uploaded, route) {
+  if (route.visibility === "public") {
+    return uploaded?.publicUrl || uploaded?.public_url || "";
+  }
+
+  return uploaded?.path || uploaded?.file_path || "";
+}
+
 export async function createContentWithUpload({
   type,
   file,
@@ -303,10 +239,11 @@ export async function createContentWithUpload({
     upsert
   });
 
-  const urlValue =
-    route.visibility === "public"
-      ? uploaded.publicUrl
-      : uploaded.path;
+  const urlValue = uploadedValue(uploaded, route);
+
+  if (!urlValue) {
+    throw new Error("Upload finished but no file URL/path returned.");
+  }
 
   if (route.mode === "update-profile") {
     const data = await rbUpdate({
