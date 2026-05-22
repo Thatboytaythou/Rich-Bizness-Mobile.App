@@ -7,25 +7,26 @@
 .rb-portal-stage{
   position:relative;
 
-  min-height:clamp(520px,66svh,760px);
+  min-height:
+    clamp(520px,66svh,760px);
 
   display:grid;
   place-items:center;
 
   overflow:hidden;
 
-  perspective:1400px;
+  perspective:1800px;
 
   /* =====================================
-     SAFARI HUB OFFSET
+     SAFARI HUB ALIGNMENT
   ===================================== */
 
-  --rb-hub-x:52px;
-  --rb-hub-y:-4px;
+  --rb-hub-x:58px;
+  --rb-hub-y:-6px;
 }
 
 /* =========================================
-   ORBIT
+   ORBIT SYSTEM
 ========================================= */
 
 .rb-tv-orbit{
@@ -48,7 +49,7 @@
 
   pointer-events:none;
 
-  z-index:35;
+  z-index:45;
 
   filter:
     drop-shadow(0 40px 90px rgba(0,0,0,.58));
@@ -66,18 +67,25 @@
   left:50%;
   top:50%;
 
-  width:clamp(122px,28vw,180px);
-  height:clamp(138px,31vw,210px);
+  width:
+    clamp(122px,28vw,180px);
 
-  margin-left:calc(clamp(122px,28vw,180px) / -2);
-  margin-top:calc(clamp(138px,31vw,210px) / -2);
+  height:
+    clamp(138px,31vw,210px);
+
+  margin-left:
+    calc(clamp(122px,28vw,180px) / -2);
+
+  margin-top:
+    calc(clamp(138px,31vw,210px) / -2);
 
   border:
     1px solid rgba(255,215,106,.30);
 
-  border-radius:22px;
+  border-radius:24px;
 
   overflow:hidden;
+
   padding:0;
 
   color:#fff;
@@ -90,6 +98,7 @@
     inset 0 1px 0 rgba(255,255,255,.08);
 
   cursor:pointer;
+
   pointer-events:auto;
 
   transform-style:preserve-3d;
@@ -125,7 +134,7 @@
 }
 
 /* =========================================
-   CARD IMAGE
+   IMAGE
 ========================================= */
 
 .rb-tv-screen img{
@@ -144,7 +153,7 @@
 }
 
 /* =========================================
-   CARD OVERLAY
+   OVERLAY
 ========================================= */
 
 .rb-tv-overlay{
@@ -169,7 +178,9 @@
   margin-bottom:4px;
 
   font-size:.66rem;
+
   font-weight:950;
+
   letter-spacing:.18em;
 
   color:#7cff7c;
@@ -182,6 +193,7 @@
     clamp(.9rem,2.5vw,1.12rem);
 
   line-height:1.05;
+
   letter-spacing:-.03em;
 }
 
@@ -203,7 +215,7 @@
     rgba(102,255,102,.86);
 
   transform:
-    translate(-50%,-18%)
+    translate(-50%,-34%)
     scale(1);
 
   box-shadow:
@@ -222,8 +234,8 @@
   z-index:60;
 
   transform:
-    translate(-178%,-10%)
-    rotate(-4deg)
+    translate(-188%,-12%)
+    rotate(-5deg)
     scale(.86);
 }
 
@@ -237,8 +249,8 @@
   z-index:60;
 
   transform:
-    translate(78%,-10%)
-    rotate(4deg)
+    translate(88%,-12%)
+    rotate(5deg)
     scale(.86);
 }
 
@@ -247,14 +259,14 @@
 ========================================= */
 
 .rb-tv-screen.rb-pos-back-left{
-  opacity:.38;
+  opacity:.34;
 
   z-index:20;
 
   transform:
-    translate(-250%,-32%)
-    rotate(-9deg)
-    scale(.68);
+    translate(-258%,-34%)
+    rotate(-10deg)
+    scale(.66);
 }
 
 /* =========================================
@@ -262,14 +274,14 @@
 ========================================= */
 
 .rb-tv-screen.rb-pos-back-right{
-  opacity:.38;
+  opacity:.34;
 
   z-index:20;
 
   transform:
-    translate(150%,-32%)
-    rotate(9deg)
-    scale(.68);
+    translate(158%,-34%)
+    rotate(10deg)
+    scale(.66);
 }
 
 /* =========================================
@@ -308,7 +320,7 @@
 .rb-core-portal{
   position:relative;
 
-  z-index:40;
+  z-index:30;
 
   transform:
     translate3d(
@@ -322,7 +334,7 @@
 }
 
 /* =========================================
-   TABLET / MOBILE
+   MOBILE / TABLET
 ========================================= */
 
 @media (max-width:720px){
@@ -330,8 +342,8 @@
   .rb-portal-stage{
     min-height:560px;
 
-    --rb-hub-x:54px;
-    --rb-hub-y:-2px;
+    --rb-hub-x:52px;
+    --rb-hub-y:-4px;
   }
 
   .rb-tv-orbit{
@@ -346,39 +358,39 @@
     margin-left:-61px;
     margin-top:-73px;
 
-    border-radius:18px;
+    border-radius:20px;
   }
 
   .rb-tv-screen.is-active{
     transform:
-      translate(-50%,-14%)
+      translate(-50%,-28%)
       scale(1);
   }
 
   .rb-tv-screen.rb-pos-left{
     transform:
-      translate(-148%,-4%)
+      translate(-150%,-6%)
       rotate(-4deg)
       scale(.88);
   }
 
   .rb-tv-screen.rb-pos-right{
     transform:
-      translate(48%,-4%)
+      translate(50%,-6%)
       rotate(4deg)
       scale(.88);
   }
 
   .rb-tv-screen.rb-pos-back-left{
     transform:
-      translate(-205%,-24%)
+      translate(-208%,-26%)
       rotate(-9deg)
       scale(.66);
   }
 
   .rb-tv-screen.rb-pos-back-right{
     transform:
-      translate(105%,-24%)
+      translate(108%,-26%)
       rotate(9deg)
       scale(.66);
   }
@@ -396,8 +408,8 @@
 @media (max-width:430px){
 
   .rb-portal-stage{
-    --rb-hub-x:48px;
-    --rb-hub-y:-2px;
+    --rb-hub-x:46px;
+    --rb-hub-y:-4px;
   }
 
   .rb-core-portal{
@@ -407,14 +419,14 @@
 
   .rb-tv-screen.rb-pos-left{
     transform:
-      translate(-140%,-4%)
+      translate(-142%,-5%)
       rotate(-4deg)
       scale(.86);
   }
 
   .rb-tv-screen.rb-pos-right{
     transform:
-      translate(40%,-4%)
+      translate(42%,-5%)
       rotate(4deg)
       scale(.86);
   }
@@ -429,8 +441,8 @@
   .rb-portal-stage{
     min-height:535px;
 
-    --rb-hub-x:42px;
-    --rb-hub-y:-2px;
+    --rb-hub-x:40px;
+    --rb-hub-y:-4px;
   }
 
   .rb-tv-orbit{
