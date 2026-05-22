@@ -4,7 +4,6 @@
    Viewer side: Live → Watch sync
 ========================= */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   Room,
   RoomEvent,
@@ -12,21 +11,24 @@ import {
 } from "https://esm.sh/livekit-client@2";
 
 import {
-  RB_SUPABASE,
+  initApp,
+  getCurrentUserState,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
+
+import { getSupabase } from "/core/shared/rb-supabase.js";
+
+import {
   RB_TABLES,
   RB_ROUTES
-} from "../shared/rb-config.js";
-
-const supabase = createClient(RB_SUPABASE.url, RB_SUPABASE.publishableKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
+} from "/core/shared/rb-config.js";
 
 const $ = (id) => document.getElementById(id);
 const qs = (sel) => document.querySelector(sel);
+
+const DEFAULT_AVATAR = "/images/brand/hero-banner.png";
+const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const els = {
   status: $("watchStatus") || $("liveStatus") || qs("[data-watch-status]"),
@@ -66,6 +68,7 @@ const els = {
 };
 
 const WATCH = {
+  supabase: null,
   user: null,
   profile: null,
   stream: null,
@@ -105,25 +108,22 @@ function streamKey() {
 }
 
 function watchUrl(stream = WATCH.stream) {
-  if (!stream) return `${RB_ROUTES.watch || "/watch"}`;
+  if (!stream) return RB_ROUTES.watch || "/watch";
   return `${RB_ROUTES.watch || "/watch"}?stream=${encodeURIComponent(stream.slug || stream.id)}`;
 }
 
 function displayName() {
   return (
     WATCH.profile?.display_name ||
+    WATCH.profile?.full_name ||
     WATCH.profile?.username ||
-    WATCH.user?.email ||
+    WATCH.user?.email?.split("@")[0] ||
     "Rich Viewer"
   );
 }
 
 function username() {
   return WATCH.profile?.username || WATCH.user?.email || "rich_viewer";
-}
-
-function safeImg(url) {
-  return url || "/images/brand/project-avatar.png.jpeg";
 }
 
 function renderStream() {
@@ -154,8 +154,9 @@ function renderStream() {
     els.badge.className = s.status === "live" ? "live-badge on" : "live-badge off";
   }
 
-  if (els.stage && (s.cover_url || s.thumbnail_url)) {
-    els.stage.style.backgroundImage = `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.75)), url("${s.cover_url || s.thumbnail_url}")`;
+  if (els.stage) {
+    els.stage.style.backgroundImage =
+      `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.75)), url("${s.cover_url || s.thumbnail_url || DEFAULT_BANNER}")`;
   }
 
   if (els.joinBtn) els.joinBtn.disabled = s.status !== "live";
@@ -165,39 +166,31 @@ function renderStream() {
 function needsPayment(stream = WATCH.stream) {
   if (!stream) return false;
   if (stream.access_type === "free") return false;
-  if (stream.price_cents <= 0 && stream.access_type !== "vip") return false;
+  if (Number(stream.price_cents || 0) <= 0 && stream.access_type !== "vip") return false;
   return !WATCH.unlocked;
 }
 
-async function initAuth() {
-  const { data } = await supabase.auth.getUser();
-  WATCH.user = data?.user || null;
+async function initIdentity() {
+  await initApp({
+    guard: false,
+    bindProfile: true,
+    toast: false
+  });
 
-  if (!WATCH.user) {
-    WATCH.profile = null;
-    setStatus("Watching as guest.");
-    return;
-  }
+  WATCH.supabase = getSupabase();
 
-  const { data: profile } = await supabase
-    .from(RB_TABLES.profiles)
-    .select("*")
-    .eq("id", WATCH.user.id)
-    .maybeSingle();
+  const state = getCurrentUserState();
 
-  WATCH.profile = profile || {
-    id: WATCH.user.id,
-    username: WATCH.user.email,
-    display_name: WATCH.user.email
-  };
+  WATCH.user = state?.user || null;
+  WATCH.profile = state?.profile || null;
 
-  setStatus(`Signed in as ${displayName()}`);
+  setStatus(WATCH.user?.id ? `Signed in as ${displayName()}` : "Watching as guest.");
 }
 
 async function loadStream() {
   const key = streamKey();
 
-  let query = supabase
+  let query = WATCH.supabase
     .from(RB_TABLES.liveStreams)
     .select("*, profiles:creator_id(username, display_name, avatar_url, banner_url)")
     .order("created_at", { ascending: false });
@@ -205,7 +198,7 @@ async function loadStream() {
   if (key) {
     query = query.or(`slug.eq.${key},id.eq.${key}`);
   } else {
-    query = query.in("status", ["live", "scheduled", "draft"]).limit(1);
+    query = query.in("status", ["live", "scheduled", "draft"]);
   }
 
   const { data, error } = await query.limit(1).maybeSingle();
@@ -224,19 +217,20 @@ async function loadStream() {
     ...data,
     username: data.profiles?.username,
     display_name: data.profiles?.display_name,
-    creator_avatar_url: data.profiles?.avatar_url,
-    creator_banner_url: data.profiles?.banner_url
+    creator_avatar_url: data.profiles?.avatar_url || DEFAULT_AVATAR,
+    creator_banner_url: data.profiles?.banner_url || DEFAULT_BANNER
   };
 
   await checkAccess();
   renderStream();
+
   return WATCH.stream;
 }
 
 async function loadStreamList() {
   if (!els.streamList) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await WATCH.supabase
     .from(RB_TABLES.liveStreams)
     .select("id, slug, title, description, status, access_type, price_cents, thumbnail_url, cover_url, viewer_count, created_at")
     .in("status", ["live", "scheduled"])
@@ -251,7 +245,7 @@ async function loadStreamList() {
     (data || [])
       .map((s) => `
         <article class="watch-card" data-stream-card="${s.id}">
-          <div class="watch-card-img" style="background-image:url('${s.thumbnail_url || s.cover_url || "/images/brand/Avatar-hero-Banner.png.jpeg"}')"></div>
+          <div class="watch-card-img" style="background-image:url('${s.thumbnail_url || s.cover_url || DEFAULT_BANNER}')"></div>
           <div>
             <b>${s.title || "Family Bizness"}</b>
             <span>${String(s.status || "draft").toUpperCase()} · ${s.viewer_count || 0} watching</span>
@@ -280,7 +274,7 @@ async function checkAccess() {
   }
 
   const [purchaseRes, vipRes] = await Promise.all([
-    supabase
+    WATCH.supabase
       .from(RB_TABLES.liveStreamPurchases)
       .select("id,status")
       .eq("stream_id", WATCH.stream.id)
@@ -289,7 +283,7 @@ async function checkAccess() {
       .limit(1)
       .maybeSingle(),
 
-    supabase
+    WATCH.supabase
       .from(RB_TABLES.vipLiveAccess)
       .select("id,access_status,expires_at")
       .eq("stream_id", WATCH.stream.id)
@@ -300,9 +294,12 @@ async function checkAccess() {
   ]);
 
   const hasPurchase = !!purchaseRes.data;
-  const hasVip = !!vipRes.data && (!vipRes.data.expires_at || new Date(vipRes.data.expires_at) > new Date());
+  const hasVip =
+    !!vipRes.data &&
+    (!vipRes.data.expires_at || new Date(vipRes.data.expires_at) > new Date());
 
   WATCH.unlocked = hasPurchase || hasVip;
+
   return WATCH.unlocked;
 }
 
@@ -327,7 +324,7 @@ async function createViewSession() {
     }
   };
 
-  const { data } = await supabase
+  const { data } = await WATCH.supabase
     .from(RB_TABLES.liveViewSessions)
     .insert(payload)
     .select("*")
@@ -342,9 +339,12 @@ async function createViewSession() {
 async function closeViewSession() {
   if (!WATCH.viewSession) return;
 
-  const watchSeconds = Math.max(0, Math.floor((Date.now() - (WATCH.joinedAt || Date.now())) / 1000));
+  const watchSeconds = Math.max(
+    0,
+    Math.floor((Date.now() - (WATCH.joinedAt || Date.now())) / 1000)
+  );
 
-  await supabase
+  await WATCH.supabase
     .from(RB_TABLES.liveViewSessions)
     .update({
       left_at: new Date().toISOString(),
@@ -364,7 +364,7 @@ async function updateViewerCount(delta) {
   const nextViewers = Math.max(0, Number(WATCH.stream.viewer_count || 0) + delta);
   const nextPeak = Math.max(Number(WATCH.stream.peak_viewers || 0), nextViewers);
 
-  const { data } = await supabase
+  const { data } = await WATCH.supabase
     .from(RB_TABLES.liveStreams)
     .update({
       viewer_count: nextViewers,
@@ -382,17 +382,22 @@ async function updateViewerCount(delta) {
 }
 
 async function getLivekitToken() {
+  const room = WATCH.stream.livekit_room_name || `rb-live-${WATCH.stream.id}`;
+
   const res = await fetch("/api/livekit-token", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      room: WATCH.stream.livekit_room_name,
-      roomName: WATCH.stream.livekit_room_name,
+      room,
+      roomName: room,
       identity: WATCH.user?.id || WATCH.anonymousId,
+      userId: WATCH.user?.id || null,
       name: displayName(),
+      role: "viewer",
       metadata: {
         stream_id: WATCH.stream.id,
         stream_slug: WATCH.stream.slug,
+        user_id: WATCH.user?.id || null,
         role: "viewer",
         anonymous: !WATCH.user
       }
@@ -442,14 +447,15 @@ async function joinWatch() {
     await room.connect(url, token);
 
     WATCH.connected = true;
+
     if (els.empty) els.empty.style.display = "none";
     if (els.leaveBtn) els.leaveBtn.disabled = false;
     if (els.joinBtn) els.joinBtn.disabled = true;
 
     setStatus("You are watching live.");
-  } catch (err) {
+  } catch (error) {
     await closeViewSession();
-    setStatus(err.message || "Could not join live.");
+    setStatus(error.message || "Could not join live.");
     if (els.joinBtn) els.joinBtn.disabled = false;
   }
 }
@@ -507,7 +513,7 @@ function handleTrackUnsubscribed(track) {
 async function loadChat() {
   if (!WATCH.stream || !els.chatList) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await WATCH.supabase
     .from(RB_TABLES.liveChatMessages)
     .select("*")
     .eq("stream_id", WATCH.stream.id)
@@ -530,10 +536,11 @@ function chatTemplate(m) {
   `;
 }
 
-async function sendChat(e) {
-  e?.preventDefault?.();
+async function sendChat(event) {
+  event?.preventDefault?.();
 
   if (!WATCH.stream || !els.chatInput) return;
+
   const message = els.chatInput.value.trim();
   if (!message) return;
 
@@ -542,7 +549,7 @@ async function sendChat(e) {
     return;
   }
 
-  const { error } = await supabase.from(RB_TABLES.liveChatMessages).insert({
+  const { error } = await WATCH.supabase.from(RB_TABLES.liveChatMessages).insert({
     stream_id: WATCH.stream.id,
     user_id: WATCH.user?.id || null,
     username: WATCH.user ? username() : "guest",
@@ -562,7 +569,7 @@ async function sendChat(e) {
 
   els.chatInput.value = "";
 
-  await supabase
+  await WATCH.supabase
     .from(RB_TABLES.liveStreams)
     .update({
       total_chat_messages: Number(WATCH.stream.total_chat_messages || 0) + 1,
@@ -574,7 +581,7 @@ async function sendChat(e) {
 async function sendReaction(reaction = "🔥") {
   if (!WATCH.stream) return;
 
-  const { error } = await supabase.from(RB_TABLES.liveReactions).insert({
+  const { error } = await WATCH.supabase.from(RB_TABLES.liveReactions).insert({
     stream_id: WATCH.stream.id,
     user_id: WATCH.user?.id || null,
     reaction,
@@ -592,7 +599,7 @@ async function sendReaction(reaction = "🔥") {
 
   burstReaction(reaction);
 
-  await supabase
+  await WATCH.supabase
     .from(RB_TABLES.liveStreams)
     .update({
       total_reactions: Number(WATCH.stream.total_reactions || 0) + 1,
@@ -611,13 +618,14 @@ function burstReaction(reaction) {
   node.style.bottom = `${10 + Math.random() * 30}%`;
 
   els.reactionLayer.appendChild(node);
+
   setTimeout(() => node.remove(), 1400);
 }
 
 async function loadTips() {
   if (!WATCH.stream || !els.tipList) return;
 
-  const { data } = await supabase
+  const { data } = await WATCH.supabase
     .from(RB_TABLES.liveTips)
     .select("*")
     .eq("stream_id", WATCH.stream.id)
@@ -643,7 +651,7 @@ async function sendTip() {
   const amount = Math.max(100, Math.round(Number(els.tipAmount?.value || 1) * 100));
   const message = els.tipMessage?.value?.trim() || null;
 
-  const { error } = await supabase.from(RB_TABLES.liveTips).insert({
+  const { error } = await WATCH.supabase.from(RB_TABLES.liveTips).insert({
     stream_id: WATCH.stream.id,
     from_user_id: WATCH.user?.id || null,
     to_user_id: WATCH.stream.creator_id,
@@ -674,7 +682,7 @@ async function unlockPaidStream() {
   if (!WATCH.stream) return;
 
   if (!WATCH.user) {
-    setStatus("Sign in required to unlock this live.");
+    window.location.href = `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(watchUrl(WATCH.stream))}`;
     return;
   }
 
@@ -704,8 +712,8 @@ async function unlockPaidStream() {
     }
 
     throw new Error(data?.error || "Checkout URL missing.");
-  } catch (err) {
-    setStatus(err.message || "Checkout failed.");
+  } catch (error) {
+    setStatus(error.message || "Checkout failed.");
   }
 }
 
@@ -722,7 +730,7 @@ function bindRealtime() {
 
   const streamId = WATCH.stream.id;
 
-  const streamChannel = supabase
+  const streamChannel = WATCH.supabase
     .channel(`watch-stream-${streamId}`)
     .on(
       "postgres_changes",
@@ -734,7 +742,7 @@ function bindRealtime() {
     )
     .subscribe();
 
-  const chatChannel = supabase
+  const chatChannel = WATCH.supabase
     .channel(`watch-chat-${streamId}`)
     .on(
       "postgres_changes",
@@ -747,7 +755,7 @@ function bindRealtime() {
     )
     .subscribe();
 
-  const reactionChannel = supabase
+  const reactionChannel = WATCH.supabase
     .channel(`watch-reactions-${streamId}`)
     .on(
       "postgres_changes",
@@ -756,7 +764,7 @@ function bindRealtime() {
     )
     .subscribe();
 
-  const tipsChannel = supabase
+  const tipsChannel = WATCH.supabase
     .channel(`watch-tips-${streamId}`)
     .on(
       "postgres_changes",
@@ -769,7 +777,7 @@ function bindRealtime() {
 }
 
 function clearRealtime() {
-  WATCH.channels.forEach((ch) => supabase.removeChannel(ch));
+  WATCH.channels.forEach((ch) => WATCH.supabase?.removeChannel(ch));
   WATCH.channels = [];
 }
 
@@ -783,38 +791,53 @@ function bindEvents() {
   els.tipBtn?.addEventListener("click", sendTip);
 
   window.addEventListener("beforeunload", () => {
-    if (WATCH.viewSession) {
-      navigator.sendBeacon?.(
-        "/api/health",
-        JSON.stringify({
-          event: "watch_leave",
-          stream_id: WATCH.stream?.id,
-          view_session_id: WATCH.viewSession?.id
-        })
-      );
-    }
+    clearRealtime();
+    closeViewSession();
   });
 }
 
-async function boot() {
-  bindEvents();
-  await initAuth();
-  await loadStreamList();
+async function bootWatchPage() {
+  try {
+    bindEvents();
 
-  const stream = await loadStream();
+    if (els.leaveBtn) els.leaveBtn.disabled = true;
 
-  if (!stream) return;
+    await initIdentity();
+    await loadStreamList();
 
-  bindRealtime();
-  await loadChat();
-  await loadTips();
+    const stream = await loadStream();
 
-  if (getParam("paid") === "1") {
-    await checkAccess();
-    renderStream();
+    if (!stream) {
+      renderStream();
+      return;
+    }
+
+    bindRealtime();
+    await loadChat();
+    await loadTips();
+
+    if (getParam("paid") === "1") {
+      await checkAccess();
+      renderStream();
+    }
+
+    setStatus(
+      stream.status === "live"
+        ? "Ready to join live."
+        : "Stream loaded. Waiting for creator."
+    );
+
+    markPageReady("watch");
+    console.log("RB WATCH READY");
+  } catch (error) {
+    console.error("[watch.js]", error);
+    setStatus(error?.message || "Watch failed to load.");
+    markPageError(error);
   }
-
-  setStatus(stream.status === "live" ? "Ready to join live." : "Stream loaded. Waiting for creator.");
 }
 
-boot();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootWatchPage);
+} else {
+  bootWatchPage();
+}
