@@ -1,19 +1,16 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/messages.js
-
-   MESSAGES PAGE CONTROLLER
-   Locked To Current Auth/Profile Chain
 ========================= */
 
 import {
-  autoGuardCurrentPage
-} from "/core/features/auth/session-guard.js";
+  initApp,
+  getCurrentUserState,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
 
-import {
-  initAuthState,
-  onAuthState
-} from "/core/features/auth/auth-state.js";
+import { getSupabase } from "/core/shared/rb-supabase.js";
 
 import {
   profileName,
@@ -21,14 +18,7 @@ import {
   profileHandle
 } from "/core/shared/rb-profile.js";
 
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
-
-import {
-  getSupabase,
-  getUser
-} from "/core/shared/rb-supabase.js";
+import { RB_TABLES } from "/core/shared/rb-config.js";
 
 import {
   toastInfo,
@@ -48,21 +38,17 @@ const els = {
   identityStatus: $("messages-identity-status")
 };
 
-function paintMessages(state) {
+let supabase = null;
+let channel = null;
+
+function paintMessages() {
+  const state = getCurrentUserState();
   const user = state?.user || null;
   const profile = state?.profile || null;
 
-  if (els.name) {
-    els.name.textContent = profileName(profile);
-  }
-
-  if (els.handle) {
-    els.handle.textContent = profileHandle(profile);
-  }
-
-  if (els.avatar) {
-    els.avatar.src = profileAvatar(profile);
-  }
+  if (els.name) els.name.textContent = profileName(profile);
+  if (els.handle) els.handle.textContent = profileHandle(profile);
+  if (els.avatar) els.avatar.src = profileAvatar(profile);
 
   if (els.status) {
     els.status.textContent = user?.id
@@ -78,13 +64,12 @@ function paintMessages(state) {
 }
 
 async function loadThreadCount() {
-  const user = getUser();
+  const state = getCurrentUserState();
+  const user = state?.user || null;
 
   if (!user?.id) return;
 
   try {
-    const supabase = getSupabase();
-
     const { count, error } = await supabase
       .from(RB_TABLES.dmThreadMembers)
       .select("id", {
@@ -97,20 +82,45 @@ async function loadThreadCount() {
     if (error) throw error;
 
     if (els.threadCount) {
-      els.threadCount.textContent =
-        `${count || 0} active conversations`;
+      els.threadCount.textContent = `${count || 0} active conversations`;
     }
 
     if (els.syncStatus) {
       els.syncStatus.textContent = "Messages synced";
     }
   } catch (error) {
-    console.warn("[RB MESSAGES COUNT WARNING]", error.message);
+    console.warn("[messages.js]", error.message);
 
     if (els.syncStatus) {
       els.syncStatus.textContent = "Messages table waiting";
     }
   }
+}
+
+function bindRealtime() {
+  const state = getCurrentUserState();
+  const user = state?.user || null;
+
+  if (!user?.id) return;
+
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+
+  channel = supabase
+    .channel(`rb-messages-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.dmThreadMembers,
+        filter: `user_id=eq.${user.id}`
+      },
+      loadThreadCount
+    )
+    .subscribe();
 }
 
 function bindMessagesActions() {
@@ -120,43 +130,41 @@ function bindMessagesActions() {
       "Rich Bizness DMs"
     );
   });
+
+  window.addEventListener("beforeunload", () => {
+    if (channel) supabase?.removeChannel(channel);
+  });
 }
 
 async function bootMessagesPage() {
   try {
-    await autoGuardCurrentPage();
-
-    const state = await initAuthState();
-
-    paintMessages(state);
-
-    await loadThreadCount();
-
-    onAuthState(async (nextState) => {
-      paintMessages(nextState);
-      await loadThreadCount();
+    await initApp({
+      guard: true,
+      bindProfile: true,
+      toast: false
     });
 
+    supabase = getSupabase();
+
+    paintMessages();
     bindMessagesActions();
 
+    await loadThreadCount();
+    bindRealtime();
+
     document.body.classList.add("rb-messages-ready");
+    markPageReady("messages");
 
     console.log("RB MESSAGES READY");
   } catch (error) {
-    console.error(error);
-
-    toastError(
-      error?.message ||
-        "Messages failed to load."
-    );
+    console.error("[messages.js]", error);
+    markPageError(error);
+    toastError(error?.message || "Messages failed to load.");
   }
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    bootMessagesPage
-  );
+  document.addEventListener("DOMContentLoaded", bootMessagesPage);
 } else {
   bootMessagesPage();
 }
