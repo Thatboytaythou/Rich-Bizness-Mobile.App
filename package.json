@@ -3,18 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+
   "scripts": {
     "dev": "vercel dev",
     "start": "vercel dev",
     "build": "echo \"Rich Bizness Mobile Build Ready\"",
     "deploy": "vercel --prod"
   },
+
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
     "livekit-client": "^2.13.3",
     "livekit-server-sdk": "^2.11.3",
     "stripe": "^18.1.1"
   },
+
   "engines": {
     "node": ">=20"
   }
