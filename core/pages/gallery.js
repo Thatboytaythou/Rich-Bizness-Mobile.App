@@ -1,9 +1,6 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/gallery.js
-
-   GALLERY PAGE CONTROLLER
-   uploads + feed_posts section gallery
 ========================= */
 
 import {
@@ -12,23 +9,13 @@ import {
   markPageError
 } from "/core/app.js";
 
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
-
-import {
-  getSupabase
-} from "/core/shared/rb-supabase.js";
+import { RB_TABLES } from "/core/shared/rb-config.js";
+import { getSupabase } from "/core/shared/rb-supabase.js";
 
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
-
-const TABLES = {
-  uploads: RB_TABLES?.uploads || "uploads",
-  feedPosts: RB_TABLES?.feedPosts || RB_TABLES?.feed_posts || "feed_posts"
-};
 
 const els = {
   uploadCount: $("gallery-upload-count"),
@@ -173,7 +160,7 @@ function renderPostCard(item) {
 
 async function loadUploads() {
   const { data, error } = await supabase
-    .from(TABLES.uploads)
+    .from(RB_TABLES.uploads)
     .select("*")
     .eq("section", "gallery")
     .order("created_at", { ascending: false })
@@ -196,18 +183,25 @@ async function loadUploads() {
   }
 
   els.uploadsList.innerHTML = "";
-  uploads.forEach((item) => els.uploadsList.appendChild(renderGalleryTile(item)));
+  uploads.forEach((item) => {
+    els.uploadsList.appendChild(renderGalleryTile(item));
+  });
 
-  const featured = uploads.filter((item) => item?.metadata?.is_featured || item?.metadata?.featured).slice(0, 24);
+  const featured = uploads
+    .filter((item) => item?.metadata?.is_featured || item?.metadata?.featured)
+    .slice(0, 24);
+
   const finalFeatured = featured.length ? featured : uploads.slice(0, 12);
 
   els.featuredList.innerHTML = "";
-  finalFeatured.forEach((item) => els.featuredList.appendChild(renderGalleryTile(item)));
+  finalFeatured.forEach((item) => {
+    els.featuredList.appendChild(renderGalleryTile(item));
+  });
 }
 
 async function loadPosts() {
   const { data, error } = await supabase
-    .from(TABLES.feedPosts)
+    .from(RB_TABLES.feedPosts)
     .select("*")
     .eq("section", "gallery")
     .order("created_at", { ascending: false })
@@ -225,7 +219,9 @@ async function loadPosts() {
   }
 
   els.postsList.innerHTML = "";
-  posts.forEach((item) => els.postsList.appendChild(renderPostCard(item)));
+  posts.forEach((item) => {
+    els.postsList.appendChild(renderPostCard(item));
+  });
 }
 
 async function loadGalleryPage() {
@@ -235,16 +231,22 @@ async function loadGalleryPage() {
   ]);
 }
 
+function clearRealtime() {
+  channels.forEach((channel) => {
+    supabase?.removeChannel(channel);
+  });
+
+  channels = [];
+}
+
 function bindRealtime() {
   const reload = () => loadGalleryPage().catch(console.error);
 
-  channels.forEach((channel) => {
-    supabase.removeChannel(channel);
-  });
+  clearRealtime();
 
   channels = [
-    TABLES.uploads,
-    TABLES.feedPosts
+    RB_TABLES.uploads,
+    RB_TABLES.feedPosts
   ].map((table) =>
     supabase
       .channel(`rb-gallery-${table}`)
@@ -274,8 +276,9 @@ async function bootGalleryPage() {
     bindTabs();
 
     await loadGalleryPage();
-
     bindRealtime();
+
+    window.addEventListener("beforeunload", clearRealtime);
 
     document.body.classList.add("rb-gallery-ready");
 
@@ -283,7 +286,7 @@ async function bootGalleryPage() {
 
     console.log("RB GALLERY READY");
   } catch (error) {
-    console.error(error);
+    console.error("[gallery.js]", error);
 
     setEmpty(els.uploadsList, "Gallery uploads failed to load.");
     setEmpty(els.postsList, "Gallery posts failed to load.");
