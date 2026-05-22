@@ -1,32 +1,20 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/notifications.js
-
-   NOTIFICATIONS PAGE CONTROLLER
-   Locked To Current Auth/Profile Chain
 ========================= */
 
 import {
-  autoGuardCurrentPage
-} from "/core/features/auth/session-guard.js";
+  initApp,
+  getCurrentUserState,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
 
-import {
-  initAuthState,
-  onAuthState
-} from "/core/features/auth/auth-state.js";
+import { getSupabase } from "/core/shared/rb-supabase.js";
 
-import {
-  profileName
-} from "/core/shared/rb-profile.js";
+import { profileName } from "/core/shared/rb-profile.js";
 
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
-
-import {
-  getSupabase,
-  getUser
-} from "/core/shared/rb-supabase.js";
+import { RB_TABLES } from "/core/shared/rb-config.js";
 
 import {
   toastInfo,
@@ -45,6 +33,9 @@ const els = {
   identityStatus: $("notifications-identity-status")
 };
 
+let supabase = null;
+let channel = null;
+
 function escapeHtml(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -55,19 +46,11 @@ function escapeHtml(value = "") {
 }
 
 function notificationTitle(item) {
-  return (
-    item?.title ||
-    item?.type ||
-    "Rich Bizness Alert"
-  );
+  return item?.title || item?.type || "Rich Bizness Alert";
 }
 
 function notificationBody(item) {
-  return (
-    item?.body ||
-    item?.message ||
-    "New activity in your Rich Bizness universe."
-  );
+  return item?.body || item?.message || "New activity in your Rich Bizness universe.";
 }
 
 function renderEmpty() {
@@ -89,30 +72,22 @@ function renderNotifications(items = []) {
     return;
   }
 
-  els.list.innerHTML = items
-    .map((item) => {
-      const title = escapeHtml(notificationTitle(item));
-      const body = escapeHtml(notificationBody(item));
-      const priority = escapeHtml(item?.priority || "normal");
-
-      return `
-        <article class="rb-notification-card">
-          <strong>${title}</strong>
-          <span>${body}</span>
-          <small>${priority}</small>
-        </article>
-      `;
-    })
-    .join("");
+  els.list.innerHTML = items.map((item) => `
+    <article class="rb-notification-card ${item.is_read ? "" : "is-unread"}">
+      <strong>${escapeHtml(notificationTitle(item))}</strong>
+      <span>${escapeHtml(notificationBody(item))}</span>
+      <small>${escapeHtml(item.priority || item.type || "normal")}</small>
+    </article>
+  `).join("");
 }
 
-function paintNotifications(state) {
+function paintNotifications() {
+  const state = getCurrentUserState();
   const user = state?.user || null;
   const profile = state?.profile || null;
 
   if (els.title) {
-    els.title.textContent =
-      `${profileName(profile)} Notifications`;
+    els.title.textContent = `${profileName(profile)} Notifications`;
   }
 
   if (els.status) {
@@ -129,7 +104,8 @@ function paintNotifications(state) {
 }
 
 async function loadNotifications() {
-  const user = getUser();
+  const state = getCurrentUserState();
+  const user = state?.user || null;
 
   if (!user?.id) {
     renderEmpty();
@@ -137,33 +113,29 @@ async function loadNotifications() {
   }
 
   try {
-    const supabase = getSupabase();
-
     const { data, error } = await supabase
       .from(RB_TABLES.richNotifications || RB_TABLES.notifications)
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(12);
+      .limit(30);
 
     if (error) throw error;
 
     const items = data || [];
+    const unread = items.filter((item) => !item.is_read).length;
 
     renderNotifications(items);
 
-    const unread = items.filter((item) => !item.is_read).length;
-
     if (els.unreadCount) {
-      els.unreadCount.textContent =
-        `${unread} unread alerts`;
+      els.unreadCount.textContent = `${unread} unread alerts`;
     }
 
     if (els.syncStatus) {
       els.syncStatus.textContent = "Notifications synced";
     }
   } catch (error) {
-    console.warn("[RB NOTIFICATIONS WARNING]", error.message);
+    console.warn("[notifications.js]", error.message);
 
     renderEmpty();
 
@@ -173,52 +145,72 @@ async function loadNotifications() {
   }
 }
 
+function bindRealtime() {
+  const state = getCurrentUserState();
+  const user = state?.user || null;
+
+  if (!user?.id) return;
+
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+
+  channel = supabase
+    .channel(`rb-notifications-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.richNotifications || RB_TABLES.notifications,
+        filter: `user_id=eq.${user.id}`
+      },
+      loadNotifications
+    )
+    .subscribe();
+}
+
 function bindNotificationActions() {
   els.refreshBtn?.addEventListener("click", async () => {
     await loadNotifications();
+    toastInfo("Alerts refreshed.", "Rich Bizness");
+  });
 
-    toastInfo(
-      "Alerts refreshed.",
-      "Rich Bizness"
-    );
+  window.addEventListener("beforeunload", () => {
+    if (channel) supabase.removeChannel(channel);
   });
 }
 
 async function bootNotificationsPage() {
   try {
-    await autoGuardCurrentPage();
-
-    const state = await initAuthState();
-
-    paintNotifications(state);
-
-    await loadNotifications();
-
-    onAuthState(async (nextState) => {
-      paintNotifications(nextState);
-      await loadNotifications();
+    await initApp({
+      guard: true,
+      bindProfile: true,
+      toast: false
     });
 
+    supabase = getSupabase();
+
+    paintNotifications();
     bindNotificationActions();
 
+    await loadNotifications();
+    bindRealtime();
+
     document.body.classList.add("rb-notifications-ready");
+    markPageReady("notifications");
 
     console.log("RB NOTIFICATIONS READY");
   } catch (error) {
-    console.error(error);
-
-    toastError(
-      error?.message ||
-        "Notifications failed to load."
-    );
+    console.error("[notifications.js]", error);
+    markPageError(error);
+    toastError(error?.message || "Notifications failed to load.");
   }
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    bootNotificationsPage
-  );
+  document.addEventListener("DOMContentLoaded", bootNotificationsPage);
 } else {
   bootNotificationsPage();
 }
