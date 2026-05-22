@@ -1,4 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   Room,
   RoomEvent,
@@ -7,18 +6,18 @@ import {
 } from "https://esm.sh/livekit-client@2";
 
 import {
-  RB_SUPABASE,
+  initApp,
+  getCurrentUserState,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
+
+import { getSupabase } from "/core/shared/rb-supabase.js";
+
+import {
   RB_TABLES,
   RB_ROUTES
-} from "../shared/rb-config.js";
-
-const supabase = createClient(RB_SUPABASE.url, RB_SUPABASE.publishableKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
+} from "/core/shared/rb-config.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -68,6 +67,7 @@ const els = {
 };
 
 const LIVE = {
+  supabase: null,
   user: null,
   profile: null,
   stream: null,
@@ -87,7 +87,13 @@ function setStatus(text) {
 }
 
 function name() {
-  return LIVE.profile?.display_name || LIVE.profile?.username || LIVE.user?.email || "Rich User";
+  return (
+    LIVE.profile?.display_name ||
+    LIVE.profile?.full_name ||
+    LIVE.profile?.username ||
+    LIVE.user?.email?.split("@")[0] ||
+    "Rich User"
+  );
 }
 
 function username() {
@@ -109,11 +115,13 @@ function renderStream() {
   if (!s) {
     safeSet(els.stageTitle, "No stream created");
     safeSet(els.liveBadge, "OFF AIR");
+
     if (els.liveBadge) els.liveBadge.className = "live-badge off";
     if (els.watchLink) els.watchLink.href = RB_ROUTES.watch || "/watch";
     if (els.startLiveBtn) els.startLiveBtn.disabled = true;
     if (els.endLiveBtn) els.endLiveBtn.disabled = true;
     if (els.copyWatchBtn) els.copyWatchBtn.disabled = true;
+
     return;
   }
 
@@ -121,7 +129,10 @@ function renderStream() {
 
   safeSet(els.stageTitle, s.title || "Family Bizness");
   safeSet(els.liveBadge, isLive ? "LIVE" : String(s.status || "DRAFT").toUpperCase());
-  if (els.liveBadge) els.liveBadge.className = isLive ? "live-badge on" : "live-badge off";
+
+  if (els.liveBadge) {
+    els.liveBadge.className = isLive ? "live-badge on" : "live-badge off";
+  }
 
   if (els.watchLink) els.watchLink.href = watchUrl(s);
 
@@ -136,33 +147,32 @@ function renderStream() {
   if (els.endLiveBtn) els.endLiveBtn.disabled = !isLive;
   if (els.copyWatchBtn) els.copyWatchBtn.disabled = false;
 
-  if (els.videoStage && s.cover_url) {
+  if (els.videoStage) {
     els.videoStage.style.backgroundImage =
-      `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.75)), url("${s.cover_url}")`;
+      s.cover_url
+        ? `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.75)), url("${s.cover_url}")`
+        : "";
   }
 }
 
-async function initAuth() {
-  const { data, error } = await supabase.auth.getUser();
+async function initIdentity() {
+  await initApp({
+    guard: true,
+    bindProfile: true,
+    toast: false
+  });
 
-  if (error || !data?.user) {
+  LIVE.supabase = getSupabase();
+
+  const state = getCurrentUserState();
+
+  LIVE.user = state?.user || null;
+  LIVE.profile = state?.profile || null;
+
+  if (!LIVE.user?.id) {
     setStatus("Sign in required before going live.");
     return false;
   }
-
-  LIVE.user = data.user;
-
-  const { data: profile } = await supabase
-    .from(RB_TABLES.profiles)
-    .select("*")
-    .eq("id", LIVE.user.id)
-    .maybeSingle();
-
-  LIVE.profile = profile || {
-    id: LIVE.user.id,
-    username: LIVE.user.email,
-    display_name: LIVE.user.email
-  };
 
   setStatus(`Signed in as ${name()}`);
   return true;
@@ -170,6 +180,8 @@ async function initAuth() {
 
 async function createStream() {
   if (!LIVE.user) return setStatus("Sign in first.");
+
+  const roomName = `rb-live-${LIVE.user.id}-${Date.now()}`;
 
   const payload = {
     creator_id: LIVE.user.id,
@@ -183,6 +195,7 @@ async function createStream() {
     currency: "usd",
     thumbnail_url: els.streamThumbnail?.value?.trim() || null,
     cover_url: els.streamCover?.value?.trim() || null,
+    livekit_room_name: roomName,
     viewer_count: 0,
     peak_viewers: 0,
     total_chat_messages: 0,
@@ -195,12 +208,13 @@ async function createStream() {
     is_vip_enabled: !!els.vipEnabled?.checked,
     last_activity_at: new Date().toISOString(),
     metadata: {
-      source: "live.html",
-      watch_ready: true
+      source: "live.js",
+      watch_ready: true,
+      profile_name: name()
     }
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await LIVE.supabase
     .from(RB_TABLES.liveStreams)
     .insert(payload)
     .select("*")
@@ -210,15 +224,19 @@ async function createStream() {
 
   LIVE.stream = data;
 
-  await supabase.from(RB_TABLES.liveStreamMembers).insert({
+  await LIVE.supabase.from(RB_TABLES.liveStreamMembers).insert({
     stream_id: data.id,
     user_id: LIVE.user.id,
     role: "host",
     status: "active",
-    metadata: { display_name: name(), source: "live.html" }
+    metadata: {
+      display_name: name(),
+      username: username(),
+      source: "live.js"
+    }
   });
 
-  await supabase.from(RB_TABLES.liveStreamCards).insert({
+  await LIVE.supabase.from(RB_TABLES.liveStreamCards).insert({
     stream_id: data.id,
     creator_id: LIVE.user.id,
     title: data.title,
@@ -228,10 +246,13 @@ async function createStream() {
     cover_url: data.cover_url,
     target_url: watchUrl(data),
     is_active: true,
-    metadata: { section: "watch", source: "live.html" }
+    metadata: {
+      section: "watch",
+      source: "live.js"
+    }
   });
 
-  await supabase.from(RB_TABLES.richNotifications).insert({
+  await LIVE.supabase.from(RB_TABLES.richNotifications).insert({
     user_id: LIVE.user.id,
     actor_id: LIVE.user.id,
     type: "live_created",
@@ -242,7 +263,10 @@ async function createStream() {
     target_id: data.id,
     target_url: watchUrl(data),
     emoji: "📺",
-    metadata: { stream_slug: data.slug }
+    metadata: {
+      stream_slug: data.slug,
+      source: "live.js"
+    }
   });
 
   renderStream();
@@ -251,17 +275,24 @@ async function createStream() {
 }
 
 async function getLivekitToken() {
+  const room = LIVE.stream.livekit_room_name || `rb-live-${LIVE.stream.id}`;
+
   const res = await fetch("/api/livekit-token", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
-      room: LIVE.stream.livekit_room_name,
-      roomName: LIVE.stream.livekit_room_name,
+      room,
+      roomName: room,
       identity: LIVE.user.id,
+      userId: LIVE.user.id,
       name: name(),
+      role: "host",
       metadata: {
         stream_id: LIVE.stream.id,
         stream_slug: LIVE.stream.slug,
+        user_id: LIVE.user.id,
         role: "host"
       }
     })
@@ -279,6 +310,7 @@ function attachRemoteTrack(track, participant) {
   el.playsInline = true;
   el.dataset.sid = participant.sid;
   el.className = "remote-video";
+
   els.remoteVideos.appendChild(el);
 }
 
@@ -289,27 +321,29 @@ function detachRemoteTrack(track) {
 async function syncParticipants() {
   if (!LIVE.stream || !els.participantList) return;
 
-  const room = LIVE.room;
   const rows = [];
 
-  if (room?.localParticipant) {
+  if (LIVE.room?.localParticipant) {
     rows.push(`<li><strong>${name()}</strong><span>Host</span></li>`);
   }
 
-  room?.remoteParticipants?.forEach((p) => {
+  LIVE.room?.remoteParticipants?.forEach((p) => {
     rows.push(`<li><strong>${p.name || p.identity}</strong><span>Viewer</span></li>`);
   });
 
-  els.participantList.innerHTML = rows.length ? rows.join("") : `<li>No participants yet.</li>`;
+  els.participantList.innerHTML = rows.length
+    ? rows.join("")
+    : `<li>No participants yet.</li>`;
 }
 
 async function startLive() {
   if (!LIVE.stream) return setStatus("Create stream first.");
 
   if (els.startLiveBtn) els.startLiveBtn.disabled = true;
+
   setStatus("Starting LiveKit room...");
 
-  const { data, error } = await supabase
+  const { data, error } = await LIVE.supabase
     .from(RB_TABLES.liveStreams)
     .update({
       status: "live",
@@ -336,7 +370,11 @@ async function startLive() {
 
     if (!token || !url) throw new Error("Missing LiveKit URL or token.");
 
-    const room = new Room({ adaptiveStream: true, dynacast: true });
+    const room = new Room({
+      adaptiveStream: true,
+      dynacast: true
+    });
+
     LIVE.room = room;
 
     room.on(RoomEvent.TrackSubscribed, attachRemoteTrack);
@@ -347,11 +385,17 @@ async function startLive() {
 
     await room.connect(url, token);
 
-    LIVE.localTracks = await createLocalTracks({ audio: true, video: true });
+    LIVE.localTracks = await createLocalTracks({
+      audio: true,
+      video: true
+    });
 
     for (const track of LIVE.localTracks) {
       await room.localParticipant.publishTrack(track);
-      if (track.kind === Track.Kind.Video && els.localVideo) track.attach(els.localVideo);
+
+      if (track.kind === Track.Kind.Video && els.localVideo) {
+        track.attach(els.localVideo);
+      }
     }
 
     if (els.stageEmpty) els.stageEmpty.style.display = "none";
@@ -360,7 +404,7 @@ async function startLive() {
 
     await syncParticipants();
 
-    await supabase.from(RB_TABLES.richNotifications).insert({
+    await LIVE.supabase.from(RB_TABLES.richNotifications).insert({
       user_id: LIVE.user.id,
       actor_id: LIVE.user.id,
       type: "live_started",
@@ -371,12 +415,16 @@ async function startLive() {
       target_id: LIVE.stream.id,
       target_url: watchUrl(),
       emoji: "🔥",
-      metadata: { stream_slug: LIVE.stream.slug }
+      metadata: {
+        stream_slug: LIVE.stream.slug,
+        source: "live.js"
+      }
     });
 
     setStatus("WE LIT 🔥 Live is active and ready for Watch.");
-  } catch (err) {
-    setStatus(err.message);
+  } catch (error) {
+    setStatus(error.message);
+    if (els.startLiveBtn) els.startLiveBtn.disabled = false;
   }
 }
 
@@ -385,7 +433,7 @@ async function endLive() {
 
   await disconnectRoom();
 
-  const { data, error } = await supabase
+  const { data, error } = await LIVE.supabase
     .from(RB_TABLES.liveStreams)
     .update({
       status: "ended",
@@ -425,17 +473,25 @@ async function disconnectRoom() {
 
 async function toggleMic() {
   LIVE.mic = !LIVE.mic;
+
   for (const track of LIVE.localTracks) {
-    if (track.kind === Track.Kind.Audio) LIVE.mic ? track.unmute() : track.mute();
+    if (track.kind === Track.Kind.Audio) {
+      LIVE.mic ? track.unmute() : track.mute();
+    }
   }
+
   safeSet(els.toggleMicBtn, LIVE.mic ? "Mute Mic" : "Unmute Mic");
 }
 
 async function toggleCam() {
   LIVE.cam = !LIVE.cam;
+
   for (const track of LIVE.localTracks) {
-    if (track.kind === Track.Kind.Video) LIVE.cam ? track.unmute() : track.mute();
+    if (track.kind === Track.Kind.Video) {
+      LIVE.cam ? track.unmute() : track.mute();
+    }
   }
+
   safeSet(els.toggleCamBtn, LIVE.cam ? "Stop Cam" : "Start Cam");
 }
 
@@ -445,26 +501,32 @@ async function copyWatchLink() {
   setStatus("Watch link copied.");
 }
 
-async function sendChat(e) {
-  e.preventDefault();
+async function sendChat(event) {
+  event.preventDefault();
+
   if (!LIVE.stream || !LIVE.user || !els.chatInput?.value.trim()) return;
 
   const text = els.chatInput.value.trim();
   els.chatInput.value = "";
 
-  const { error } = await supabase.from(RB_TABLES.liveChatMessages).insert({
-    stream_id: LIVE.stream.id,
-    user_id: LIVE.user.id,
-    username: username(),
-    display_name: name(),
-    message: text,
-    body: text,
-    metadata: { source: "live.html", role: "host" }
-  });
+  const { error } = await LIVE.supabase
+    .from(RB_TABLES.liveChatMessages)
+    .insert({
+      stream_id: LIVE.stream.id,
+      user_id: LIVE.user.id,
+      username: username(),
+      display_name: name(),
+      message: text,
+      body: text,
+      metadata: {
+        source: "live.js",
+        role: "host"
+      }
+    });
 
   if (error) return setStatus(error.message);
 
-  await supabase
+  await LIVE.supabase
     .from(RB_TABLES.liveStreams)
     .update({
       total_chat_messages: Number(LIVE.stream.total_chat_messages || 0) + 1,
@@ -476,14 +538,16 @@ async function sendChat(e) {
 async function sendReaction() {
   if (!LIVE.stream) return;
 
-  await supabase.from(RB_TABLES.liveReactions).insert({
+  await LIVE.supabase.from(RB_TABLES.liveReactions).insert({
     stream_id: LIVE.stream.id,
     user_id: LIVE.user?.id || null,
     reaction: "🔥",
-    metadata: { source: "live.html" }
+    metadata: {
+      source: "live.js"
+    }
   });
 
-  await supabase
+  await LIVE.supabase
     .from(RB_TABLES.liveStreams)
     .update({
       total_reactions: Number(LIVE.stream.total_reactions || 0) + 1,
@@ -501,6 +565,7 @@ function popReaction(icon) {
   span.textContent = icon;
   span.className = "reaction-pop";
   span.style.left = `${20 + Math.random() * 60}%`;
+
   els.reactionLayer.appendChild(span);
 
   setTimeout(() => span.remove(), 1300);
@@ -511,11 +576,11 @@ function renderChat(rows = []) {
 
   els.chatList.innerHTML = rows.length
     ? rows.map((m) => `
-      <li>
-        <strong>${m.display_name || m.username || "Rich User"}</strong>
-        <p>${m.message || m.body || ""}</p>
-      </li>
-    `).join("")
+        <li>
+          <strong>${m.display_name || m.username || "Rich User"}</strong>
+          <p>${m.message || m.body || ""}</p>
+        </li>
+      `).join("")
     : `<li>No chat yet.</li>`;
 }
 
@@ -524,16 +589,16 @@ function renderTips(rows = []) {
 
   els.tipList.innerHTML = rows.length
     ? rows.map((t) => `
-      <li>
-        <strong>${t.display_name || t.username || "Supporter"}</strong>
-        <span>${money(t.amount_cents)}</span>
-      </li>
-    `).join("")
+        <li>
+          <strong>${t.display_name || t.username || "Supporter"}</strong>
+          <span>${money(t.amount_cents)}</span>
+        </li>
+      `).join("")
     : `<li>No tips yet.</li>`;
 }
 
 async function loadChat(streamId) {
-  const { data } = await supabase
+  const { data } = await LIVE.supabase
     .from(RB_TABLES.liveChatMessages)
     .select("*")
     .eq("stream_id", streamId)
@@ -544,7 +609,7 @@ async function loadChat(streamId) {
 }
 
 async function loadTips(streamId) {
-  const { data } = await supabase
+  const { data } = await LIVE.supabase
     .from(RB_TABLES.liveTips)
     .select("*")
     .eq("stream_id", streamId)
@@ -555,14 +620,17 @@ async function loadTips(streamId) {
 }
 
 function clearRealtime() {
-  LIVE.subs.forEach((sub) => supabase.removeChannel(sub));
+  LIVE.subs.forEach((sub) => {
+    LIVE.supabase?.removeChannel(sub);
+  });
+
   LIVE.subs = [];
 }
 
 function bindRealtime(streamId) {
   clearRealtime();
 
-  const streamSub = supabase
+  const streamSub = LIVE.supabase
     .channel(`live-stream-${streamId}`)
     .on(
       "postgres_changes",
@@ -579,7 +647,7 @@ function bindRealtime(streamId) {
     )
     .subscribe();
 
-  const chatSub = supabase
+  const chatSub = LIVE.supabase
     .channel(`live-chat-${streamId}`)
     .on(
       "postgres_changes",
@@ -593,7 +661,7 @@ function bindRealtime(streamId) {
     )
     .subscribe();
 
-  const reactionSub = supabase
+  const reactionSub = LIVE.supabase
     .channel(`live-reactions-${streamId}`)
     .on(
       "postgres_changes",
@@ -607,7 +675,7 @@ function bindRealtime(streamId) {
     )
     .subscribe();
 
-  const tipsSub = supabase
+  const tipsSub = LIVE.supabase
     .channel(`live-tips-${streamId}`)
     .on(
       "postgres_changes",
@@ -625,9 +693,9 @@ function bindRealtime(streamId) {
 }
 
 async function loadLatestDraftOrLive() {
-  if (!LIVE.user) return;
+  if (!LIVE.user?.id) return;
 
-  const { data } = await supabase
+  const { data } = await LIVE.supabase
     .from(RB_TABLES.liveStreams)
     .select("*")
     .eq("creator_id", LIVE.user.id)
@@ -663,16 +731,33 @@ function bindEvents() {
   });
 }
 
-async function boot() {
-  bindEvents();
+async function bootLivePage() {
+  try {
+    bindEvents();
 
-  if (els.toggleMicBtn) els.toggleMicBtn.disabled = true;
-  if (els.toggleCamBtn) els.toggleCamBtn.disabled = true;
+    if (els.toggleMicBtn) els.toggleMicBtn.disabled = true;
+    if (els.toggleCamBtn) els.toggleCamBtn.disabled = true;
 
-  const ok = await initAuth();
-  if (!ok) return renderStream();
+    const ok = await initIdentity();
 
-  await loadLatestDraftOrLive();
+    if (!ok) {
+      renderStream();
+      return;
+    }
+
+    await loadLatestDraftOrLive();
+
+    markPageReady("live");
+    console.log("RB LIVE READY");
+  } catch (error) {
+    console.error("[live.js]", error);
+    setStatus(error?.message || "Live failed to load.");
+    markPageError(error);
+  }
 }
 
-boot();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootLivePage);
+} else {
+  bootLivePage();
+}
