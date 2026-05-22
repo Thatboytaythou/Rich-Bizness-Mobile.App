@@ -15,7 +15,7 @@ import {
 } from "/core/shared/rb-supabase.js";
 
 const DEFAULT_AVATAR =
-  "/images/brand/project-avatar.png.jpeg";
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const DEFAULT_BANNER =
   "/images/brand/Avatar-hero-Banner.png.jpeg";
