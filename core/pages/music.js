@@ -1,9 +1,6 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/music.js
-
-   MUSIC PAGE CONTROLLER
-   Tracks + Podcasts + Radio + Playlists
 ========================= */
 
 import {
@@ -12,13 +9,8 @@ import {
   markPageError
 } from "/core/app.js";
 
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
-
-import {
-  getSupabase
-} from "/core/shared/rb-supabase.js";
+import { RB_TABLES } from "/core/shared/rb-config.js";
+import { getSupabase } from "/core/shared/rb-supabase.js";
 
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -45,10 +37,6 @@ const els = {
 let supabase = null;
 let channels = [];
 
-/* =========================
-   HELPERS
-========================= */
-
 function safe(value, fallback = "") {
   return value || fallback;
 }
@@ -60,6 +48,7 @@ function setEmpty(target, text) {
 
 function moneyDate(date) {
   if (!date) return "Just dropped";
+
   return new Date(date).toLocaleDateString([], {
     month: "short",
     day: "numeric",
@@ -68,11 +57,7 @@ function moneyDate(date) {
 }
 
 function creatorLine(item) {
-  return (
-    item?.display_name ||
-    item?.username ||
-    "Rich Bizness Creator"
-  );
+  return item?.display_name || item?.username || "Rich Bizness Creator";
 }
 
 function playAudio({
@@ -82,31 +67,16 @@ function playAudio({
   audioUrl = "",
   coverUrl = FALLBACK_COVER
 }) {
-  if (els.nowCover) {
-    els.nowCover.src = coverUrl || FALLBACK_COVER;
-  }
-
-  if (els.nowType) {
-    els.nowType.textContent = type;
-  }
-
-  if (els.nowTitle) {
-    els.nowTitle.textContent = title;
-  }
-
-  if (els.nowMeta) {
-    els.nowMeta.textContent = meta;
-  }
+  if (els.nowCover) els.nowCover.src = coverUrl || FALLBACK_COVER;
+  if (els.nowType) els.nowType.textContent = type;
+  if (els.nowTitle) els.nowTitle.textContent = title;
+  if (els.nowMeta) els.nowMeta.textContent = meta;
 
   if (els.audioPlayer && audioUrl) {
     els.audioPlayer.src = audioUrl;
     els.audioPlayer.play().catch(() => {});
   }
 }
-
-/* =========================
-   TABS
-========================= */
 
 function bindTabs() {
   $$("[data-music-tab]").forEach((button) => {
@@ -127,24 +97,10 @@ function bindTabs() {
   });
 }
 
-/* =========================
-   RENDER CARDS
-========================= */
-
 function renderAudioCard(item, type) {
-  const title =
-    item.title ||
-    item.station_name ||
-    "Untitled";
-
-  const audioUrl =
-    item.audio_url ||
-    item.stream_url ||
-    "";
-
-  const coverUrl =
-    item.cover_url ||
-    FALLBACK_COVER;
+  const title = item.title || item.station_name || "Untitled";
+  const audioUrl = item.audio_url || item.stream_url || "";
+  const coverUrl = item.cover_url || FALLBACK_COVER;
 
   const meta = [
     creatorLine(item),
@@ -175,9 +131,7 @@ function renderAudioCard(item, type) {
       </div>
 
       <div class="rb-music-card-actions">
-        <button type="button" class="rb-main-launch">
-          PLAY
-        </button>
+        <button type="button" class="rb-main-launch">PLAY</button>
       </div>
     </div>
   `;
@@ -224,10 +178,6 @@ function renderPlaylistCard(item) {
   return card;
 }
 
-/* =========================
-   LOADERS
-========================= */
-
 async function loadTracks() {
   const { data, error } = await supabase
     .from(RB_TABLES.musicTracks)
@@ -238,9 +188,7 @@ async function loadTracks() {
 
   if (error) throw error;
 
-  if (els.trackCount) {
-    els.trackCount.textContent = data?.length || 0;
-  }
+  if (els.trackCount) els.trackCount.textContent = data?.length || 0;
 
   if (!data?.length) {
     setEmpty(els.tracksList, "No tracks yet.");
@@ -263,9 +211,7 @@ async function loadPodcasts() {
 
   if (error) throw error;
 
-  if (els.podcastCount) {
-    els.podcastCount.textContent = data?.length || 0;
-  }
+  if (els.podcastCount) els.podcastCount.textContent = data?.length || 0;
 
   if (!data?.length) {
     setEmpty(els.podcastsList, "No podcast episodes yet.");
@@ -288,9 +234,7 @@ async function loadRadio() {
 
   if (error) throw error;
 
-  if (els.radioCount) {
-    els.radioCount.textContent = data?.length || 0;
-  }
+  if (els.radioCount) els.radioCount.textContent = data?.length || 0;
 
   if (!data?.length) {
     setEmpty(els.radioList, "No radio stations yet.");
@@ -333,27 +277,25 @@ async function loadMusicPage() {
   ]);
 }
 
-/* =========================
-   REALTIME
-========================= */
+function clearRealtime() {
+  channels.forEach((channel) => {
+    supabase?.removeChannel(channel);
+  });
+
+  channels = [];
+}
 
 function bindRealtime() {
   const reload = () => loadMusicPage().catch(console.error);
 
-  channels.forEach((channel) => {
-    supabase.removeChannel(channel);
-  });
+  clearRealtime();
 
   channels = [
     supabase
       .channel("rb-music-tracks")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: RB_TABLES.musicTracks
-        },
+        { event: "*", schema: "public", table: RB_TABLES.musicTracks },
         reload
       )
       .subscribe(),
@@ -362,11 +304,7 @@ function bindRealtime() {
       .channel("rb-podcast-episodes")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: RB_TABLES.podcastEpisodes
-        },
+        { event: "*", schema: "public", table: RB_TABLES.podcastEpisodes },
         reload
       )
       .subscribe(),
@@ -375,11 +313,7 @@ function bindRealtime() {
       .channel("rb-radio-stations")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: RB_TABLES.radioStations
-        },
+        { event: "*", schema: "public", table: RB_TABLES.radioStations },
         reload
       )
       .subscribe(),
@@ -388,20 +322,12 @@ function bindRealtime() {
       .channel("rb-playlists")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: RB_TABLES.playlists
-        },
+        { event: "*", schema: "public", table: RB_TABLES.playlists },
         reload
       )
       .subscribe()
   ];
 }
-
-/* =========================
-   BOOT
-========================= */
 
 async function bootMusicPage() {
   try {
@@ -419,13 +345,15 @@ async function bootMusicPage() {
 
     bindRealtime();
 
+    window.addEventListener("beforeunload", clearRealtime);
+
     document.body.classList.add("rb-music-ready");
 
     markPageReady("music");
 
     console.log("RB MUSIC READY");
   } catch (error) {
-    console.error(error);
+    console.error("[music.js]", error);
 
     setEmpty(els.tracksList, "Music failed to load.");
     setEmpty(els.podcastsList, "Podcasts failed to load.");
