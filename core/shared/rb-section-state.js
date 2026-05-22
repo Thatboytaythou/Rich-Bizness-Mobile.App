@@ -1,9 +1,9 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-section-state.js
-
-   UNIVERSAL SECTION STATE
 ========================= */
+
+import { RB_ROUTES } from "/core/shared/rb-config.js";
 
 const SECTION_MAP = {
   feed: {
@@ -11,56 +11,63 @@ const SECTION_MAP = {
     label: "FEED",
     title: "Global Feed",
     meta: "Posts • Drops • Community",
-    route: "/feed"
+    route: RB_ROUTES.feed
   },
+
   live: {
     key: "live",
     label: "LIVE",
     title: "Go Live",
     meta: "Broadcast • VIP • Realtime",
-    route: "/live"
+    route: RB_ROUTES.live
   },
+
   music: {
     key: "music",
     label: "MUSIC",
     title: "Music Universe",
     meta: "Tracks • Podcast • Radio",
-    route: "/music"
+    route: RB_ROUTES.music
   },
+
   gaming: {
     key: "gaming",
     label: "GAMES",
     title: "Arcade District",
     meta: "Chess • Runner • Scores",
-    route: "/gaming"
+    route: RB_ROUTES.gaming
   },
+
   sports: {
     key: "sports",
     label: "SPORTS",
     title: "Sports Arena",
     meta: "Picks • Clips • Broadcasts",
-    route: "/sports"
+    route: RB_ROUTES.sports
   },
+
   gallery: {
     key: "gallery",
     label: "ART",
     title: "Gallery Vault",
     meta: "Artwork • Collect • Showcase",
-    route: "/gallery"
+    route: RB_ROUTES.gallery
   },
+
   store: {
     key: "store",
     label: "STORE",
     title: "Creator Market",
     meta: "Products • Unlocks • Sellers",
-    route: "/store"
+    route: RB_ROUTES.store
   },
+
   meta: {
     key: "meta",
     label: "META",
     title: "Meta World",
     meta: "Avatars • Worlds • Portals",
-    route: "/meta"
+    route: RB_ROUTES.meta
   }
 };
 
@@ -88,7 +95,9 @@ export function setActiveSection(key = "live") {
 
   activeSectionKey = next.key;
 
-  document.body.dataset.activeSection = next.key;
+  if (document.body) {
+    document.body.dataset.activeSection = next.key;
+  }
 
   listeners.forEach((callback) => {
     callback(next);
@@ -116,6 +125,7 @@ export function onSectionChange(callback) {
 
 export function nextSection() {
   const sections = getSections();
+
   const currentIndex = sections.findIndex(
     (section) => section.key === activeSectionKey
   );
@@ -130,6 +140,7 @@ export function nextSection() {
 
 export function prevSection() {
   const sections = getSections();
+
   const currentIndex = sections.findIndex(
     (section) => section.key === activeSectionKey
   );
