@@ -6,13 +6,7 @@
    FINAL LOCKED VERSION
 ========================= */
 
-import {
-  RB_ROUTES
-} from "/core/shared/rb-config.js";
-
-/* =========================
-   ROUTE HELPERS
-========================= */
+import { RB_ROUTES } from "/core/shared/rb-config.js";
 
 export function goTo(route = "/") {
   window.location.href = route;
@@ -32,106 +26,64 @@ export function goBack() {
 
 export function openExternal(url = "") {
   if (!url) return;
-
-  window.open(
-    url,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
-/* =========================
-   QUERY PARAMS
-========================= */
-
 export function getQueryParam(key) {
-  const params =
-    new URLSearchParams(window.location.search);
-
+  const params = new URLSearchParams(window.location.search);
   return params.get(key);
 }
 
 export function setQueryParam(key, value) {
   const url = new URL(window.location.href);
-
   url.searchParams.set(key, value);
-
   window.history.replaceState({}, "", url);
 }
 
 export function removeQueryParam(key) {
   const url = new URL(window.location.href);
-
   url.searchParams.delete(key);
-
   window.history.replaceState({}, "", url);
 }
 
 export function clearQueryParams() {
   const url = new URL(window.location.href);
-
   url.search = "";
-
   window.history.replaceState({}, "", url);
 }
 
-/* =========================
-   ROUTE BUILDERS
-========================= */
-
 export function getWatchUrl(slug = "") {
-  return `${RB_ROUTES.watch}?slug=${encodeURIComponent(slug)}`;
+  if (!slug) return RB_ROUTES.watch;
+  return `${RB_ROUTES.watch}?stream=${encodeURIComponent(slug)}`;
 }
 
 export function getProfileUrl(username = "") {
-  if (!username) {
-    return RB_ROUTES.profile;
-  }
-
+  if (!username) return RB_ROUTES.profile;
   return `${RB_ROUTES.profile}?user=${encodeURIComponent(username)}`;
 }
 
 export function getEditUrl(userId = "") {
-  if (!userId) {
-    return RB_ROUTES.edit;
-  }
-
+  if (!userId) return RB_ROUTES.edit;
   return `${RB_ROUTES.edit}?id=${encodeURIComponent(userId)}`;
 }
 
 export function getMessageThreadUrl(threadId = "") {
-  if (!threadId) {
-    return RB_ROUTES.messages;
-  }
-
+  if (!threadId) return RB_ROUTES.messages;
   return `${RB_ROUTES.messages}?thread=${encodeURIComponent(threadId)}`;
 }
 
 export function getLiveUrl(streamId = "") {
-  if (!streamId) {
-    return RB_ROUTES.live;
-  }
-
+  if (!streamId) return RB_ROUTES.live;
   return `${RB_ROUTES.live}?stream=${encodeURIComponent(streamId)}`;
 }
 
-export function getUploadUrl(type = "") {
-  if (!type) {
-    return RB_ROUTES.upload;
-  }
-
-  return `${RB_ROUTES.upload}?type=${encodeURIComponent(type)}`;
+export function getUploadUrl(section = "") {
+  if (!section) return RB_ROUTES.upload;
+  return `${RB_ROUTES.upload}?section=${encodeURIComponent(section)}`;
 }
 
-/* =========================
-   GAME ROUTES
-========================= */
-
 export function getGameUrl(slug = "") {
-  if (!slug) {
-    return RB_ROUTES.gaming;
-  }
-
+  if (!slug) return RB_ROUTES.gaming;
   return `/games/${slug}`;
 }
 
@@ -151,10 +103,6 @@ export function getStudioShowdownUrl() {
   return RB_ROUTES.games.studioShowdown;
 }
 
-/* =========================
-   PAGE STATE
-========================= */
-
 export function getCurrentPath() {
   return window.location.pathname;
 }
@@ -162,9 +110,7 @@ export function getCurrentPath() {
 export function getCurrentPage() {
   const path = getCurrentPath();
 
-  if (path === "/") {
-    return "index";
-  }
+  if (path === "/") return "index";
 
   return path
     .split("/")
@@ -173,10 +119,7 @@ export function getCurrentPage() {
 }
 
 export function isPage(page = "") {
-  return (
-    getCurrentPage() ===
-    page.replace(".html", "")
-  );
+  return getCurrentPage() === page.replace(".html", "");
 }
 
 export function getHash() {
@@ -191,8 +134,7 @@ export function clearHash() {
   history.pushState(
     "",
     document.title,
-    window.location.pathname +
-      window.location.search
+    window.location.pathname + window.location.search
   );
 }
 
@@ -209,10 +151,6 @@ export function scrollBottomSmooth() {
     behavior: "smooth"
   });
 }
-
-/* =========================
-   ROUTE PROTECTION MAP
-========================= */
 
 export const RB_ROUTE_ACCESS = Object.freeze({
   public: [
@@ -288,72 +226,41 @@ export const RB_ROUTE_ACCESS = Object.freeze({
   ]
 });
 
-/* =========================
-   ACCESS CHECKS
-========================= */
-
-export function isProtectedRoute(
-  path = getCurrentPath()
-) {
+export function isProtectedRoute(path = getCurrentPath()) {
   return RB_ROUTE_ACCESS.protected.includes(path);
 }
 
-export function isPublicRoute(
-  path = getCurrentPath()
-) {
+export function isPublicRoute(path = getCurrentPath()) {
   return RB_ROUTE_ACCESS.public.includes(path);
 }
 
-export function isCreatorRoute(
-  path = getCurrentPath()
-) {
+export function isCreatorRoute(path = getCurrentPath()) {
   return RB_ROUTE_ACCESS.creator.includes(path);
 }
 
-export function isSellerRoute(
-  path = getCurrentPath()
-) {
+export function isSellerRoute(path = getCurrentPath()) {
   return RB_ROUTE_ACCESS.seller.includes(path);
 }
 
-export function isArtistRoute(
-  path = getCurrentPath()
-) {
+export function isArtistRoute(path = getCurrentPath()) {
   return RB_ROUTE_ACCESS.artist.includes(path);
 }
 
-/* =========================
-   SAFE REDIRECT
-========================= */
-
-export function safeRedirect(
-  route,
-  delay = 0
-) {
+export function safeRedirect(route, delay = 0) {
   window.setTimeout(() => {
     goTo(route);
   }, delay);
 }
 
-/* =========================
-   PRELOAD ROUTE
-========================= */
-
 export function preloadRoute(route = "") {
   if (!route) return;
 
-  const link =
-    document.createElement("link");
-
+  const link = document.createElement("link");
   link.rel = "prefetch";
   link.href = route;
 
   document.head.appendChild(link);
 }
-
-/* =========================
-   APP ROUTE PRELOADS
-========================= */
 
 export function preloadCoreRoutes() {
   [
