@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Rich Bizness Universe Concept</title>
+
+<style>
+:root{
+  --bg:#020602;
+  --green:#66ff66;
+  --green2:#9cff7d;
+  --gold:#ffd76a;
+  --white:#f8fff8;
+  --muted:rgba(235,255,230,.68);
+  --panel:rgba(5,12,7,.72);
+  --border:rgba(102,255,102,.28);
+  --gold-border:rgba(255,215,106,.22);
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#000;
+  color:var(--white);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display",Arial,sans-serif;
+  overflow-x:hidden;
+}
+
+body{
+  background:
+    radial-gradient(circle at 50% 32%,rgba(102,255,102,.22),transparent 30%),
+    radial-gradient(circle at 50% 55%,rgba(255,215,106,.08),transparent 38%),
+    linear-gradient(180deg,#020602,#000 78%);
+}
+
+.rb-page{
+  position:relative;
+  min-height:100svh;
+  padding:
+    max(18px,env(safe-area-inset-top))
+    clamp(14px,3vw,38px)
+    calc(34px + env(safe-area-inset-bottom));
+  isolation:isolate;
+}
+
+.rb-page::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-3;
+  background-image:
+    linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:58px 58px;
+  opacity:.13;
+  mask-image:radial-gradient(circle at 50% 42%,black,transparent 72%);
+}
+
+.rb-page::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 45%,transparent 0 34%,rgba(0,0,0,.28) 55%,rgba(0,0,0,.88) 100%);
+}
+
+.rb-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  position:relative;
+  z-index:20;
+}
+
+.rb-brand small{
+  display:block;
+  font-size:.62rem;
+  letter-spacing:.35em;
+  color:rgba(245,255,247,.68);
+  font-weight:800;
+}
+
+.rb-brand h1{
+  margin:4px 0 0;
+  font-size:clamp(2.2rem,7vw,5.2rem);
+  line-height:.82;
+  letter-spacing:-.08em;
+}
+
+.rb-brand h1 span{font-weight:250}
+.rb-brand h1 strong{
+  background:linear-gradient(135deg,#fff,#80ff7d 45%,#ffd76a);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  font-weight:950;
+}
+
+.rb-brand b{
+  display:block;
+  margin-top:6px;
+  color:var(--gold);
+  letter-spacing:.55em;
+  font-size:.72rem;
+}
+
+.rb-profile{
+  min-width:220px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 16px 10px 10px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(6,18,9,.75),rgba(0,0,0,.62));
+  box-shadow:0 0 32px rgba(102,255,102,.14),inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.rb-avatar{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  border:2px solid rgba(255,215,106,.35);
+  background:
+    radial-gradient(circle at 40% 32%,#ffd76a,transparent 20%),
+    radial-gradient(circle at 50% 50%,#222,#050505);
+  display:grid;
+  place-items:center;
+  font-weight:950;
+  color:var(--gold);
+}
+
+.rb-profile strong{
+  display:block;
+  font-size:.94rem;
+}
+.rb-profile span{
+  display:block;
+  color:var(--green2);
+  font-size:.66rem;
+  letter-spacing:.22em;
+  font-weight:950;
+}
+
+.rb-hero-copy{
+  text-align:center;
+  margin-top:clamp(28px,5vw,64px);
+  position:relative;
+  z-index:10;
+}
+
+.rb-hero-copy p{
+  margin:0 0 12px;
+  letter-spacing:.52em;
+  color:rgba(245,255,247,.78);
+  font-weight:900;
+  font-size:.72rem;
+}
+
+.rb-hero-copy h2{
+  margin:0;
+  font-size:clamp(1.5rem,4.6vw,4.25rem);
+  line-height:.95;
+  letter-spacing:.16em;
+  font-weight:300;
+}
+
+.rb-hero-copy h2 strong{
+  color:var(--green);
+  font-weight:800;
+  text-shadow:0 0 28px rgba(102,255,102,.75);
+}
+
+.rb-hero-copy small{
+  display:block;
+  margin-top:12px;
+  letter-spacing:.42em;
+  color:rgba(255,255,255,.8);
+  font-weight:850;
+}
+
+.rb-universe{
+  position:relative;
+  min-height:620px;
+  display:grid;
+  place-items:center;
+  margin-top:-8px;
+}
+
+.rb-orbit-stage{
+  position:relative;
+  width:min(94vw,1040px);
+  height:min(94vw,760px);
+  max-height:760px;
+  min-height:560px;
+  display:grid;
+  place-items:center;
+  perspective:1400px;
+}
+
+.rb-ring{
+  position:absolute;
+  width:min(58vw,520px);
+  height:min(58vw,520px);
+  min-width:290px;
+  min-height:290px;
+  border-radius:50%;
+  border:1px solid rgba(102,255,102,.42);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(0,0,0,.92) 0 32%,rgba(0,70,24,.68) 42%,rgba(102,255,102,.18) 58%,transparent 68%),
+    conic-gradient(from 120deg,transparent,rgba(102,255,102,.35),rgba(255,215,106,.22),transparent,rgba(102,255,102,.28),transparent);
+  box-shadow:
+    0 0 55px rgba(102,255,102,.52),
+    0 0 150px rgba(102,255,102,.22),
+    inset 0 0 60px rgba(102,255,102,.24),
+    inset 0 0 120px rgba(0,0,0,.92);
+  animation:spin 18s linear infinite;
+}
+
+.rb-ring::before{
+  content:"";
+  position:absolute;
+  inset:28px;
+  border-radius:50%;
+  border:1px dashed rgba(255,215,106,.38);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.85),0 0 35px rgba(255,215,106,.18);
+  animation:spinReverse 22s linear infinite;
+}
+
+.rb-ring::after{
+  content:"";
+  position:absolute;
+  inset:72px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,#101 0,#1010 1%),
+    radial-gradient(circle at 50% 48%,rgba(255,255,220,.95),rgba(102,255,102,.55) 12%,rgba(0,75,28,.38) 38%,rgba(0,0,0,.94) 72%);
+  box-shadow:
+    inset 0 0 58px rgba(0,0,0,.9),
+    0 0 80px rgba(102,255,102,.42);
+}
+
+.rb-energy-floor{
+  position:absolute;
+  width:min(85vw,880px);
+  height:190px;
+  bottom:90px;
+  border-radius:50%;
+  border:1px solid rgba(102,255,102,.12);
+  background:radial-gradient(ellipse at 50% 50%,rgba(102,255,102,.20),transparent 64%);
+  transform:rotateX(72deg);
+  filter:blur(.3px);
+}
+
+.rb-center-logo{
+  position:absolute;
+  width:min(31vw,260px);
+  height:min(31vw,260px);
+  min-width:150px;
+  min-height:150px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  z-index:5;
+  background:radial-gradient(circle at 50% 45%,rgba(8,18,10,.98),#000 72%);
+  box-shadow:0 0 60px rgba(0,0,0,.85), inset 0 0 38px rgba(102,255,102,.14);
+}
+
+.rb-center-logo b{
+  display:block;
+  font-size:clamp(2rem,5vw,4rem);
+  line-height:1;
+  color:#baff9c;
+  text-shadow:0 0 25px rgba(102,255,102,.65);
+}
+
+.rb-center-logo span{
+  display:block;
+  margin-top:8px;
+  font-size:.82rem;
+  letter-spacing:.22em;
+  font-weight:900;
+}
+
+.rb-center-logo small{
+  display:block;
+  margin-top:6px;
+  color:var(--green2);
+  letter-spacing:.38em;
+  font-size:.56rem;
+}
+
+.rb-card{
+  position:absolute;
+  width:clamp(86px,12vw,148px);
+  height:clamp(128px,18vw,210px);
+  border-radius:22px;
+  overflow:hidden;
+  border:1px solid rgba(102,255,102,.30);
+  background:linear-gradient(180deg,rgba(8,20,10,.94),rgba(0,0,0,.94));
+  box-shadow:0 24px 70px rgba(0,0,0,.75),0 0 28px rgba(102,255,102,.13);
+  z-index:8;
+  transform-style:preserve-3d;
+}
+
+.rb-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.18),transparent 25%,transparent 70%,rgba(102,255,102,.16)),
+    radial-gradient(circle at 50% 20%,var(--c),transparent 42%);
+  opacity:.75;
+}
+
+.rb-card i{
+  position:absolute;
+  inset:12px 12px auto;
+  height:46%;
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 50% 50%,var(--c),transparent 34%),
+    linear-gradient(135deg,rgba(255,255,255,.16),transparent);
+  box-shadow:inset 0 0 28px rgba(0,0,0,.65),0 0 24px var(--c);
+}
+
+.rb-card span{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:34px;
+  text-align:center;
+  font-weight:950;
+  font-size:clamp(.72rem,1.5vw,1.05rem);
+}
+
+.rb-card small{
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:16px;
+  text-align:center;
+  color:var(--green2);
+  letter-spacing:.22em;
+  font-size:.48rem;
+  font-weight:900;
+}
+
+.card-feed{--c:rgba(160,80,255,.8); transform:translate(-265px,-16px) rotateY(-16deg) scale(1.18); z-index:11}
+.card-music{--c:rgba(102,255,102,.9); transform:translate(-480px,-4px) rotateY(-24deg) scale(.92)}
+.card-sports{--c:rgba(255,215,106,.85); transform:translate(-650px,22px) rotateY(-34deg) scale(.72); opacity:.74}
+.card-rich{--c:rgba(255,215,106,.9); transform:translate(290px,-20px) rotateY(18deg) scale(1.05); z-index:10}
+.card-gaming{--c:rgba(102,255,102,.8); transform:translate(520px,8px) rotateY(26deg) scale(.85)}
+.card-store{--c:rgba(255,215,106,.85); transform:translate(690px,30px) rotateY(36deg) scale(.68); opacity:.72}
+
+.rb-live-card{
+  position:absolute;
+  z-index:20;
+  width:clamp(136px,19vw,210px);
+  height:clamp(168px,24vw,270px);
+  border-radius:28px;
+  border:1px solid rgba(102,255,102,.58);
+  background:
+    radial-gradient(circle at 50% 34%,rgba(102,255,102,.38),transparent 28%),
+    linear-gradient(180deg,rgba(9,24,12,.98),rgba(0,0,0,.96));
+  box-shadow:
+    0 0 0 1px rgba(102,255,102,.24),
+    0 0 70px rgba(102,255,102,.38),
+    0 35px 90px rgba(0,0,0,.82);
+  display:grid;
+  place-items:center;
+  text-align:center;
+  transform:translateY(185px);
+}
+
+.rb-live-card::before{
+  content:"LIVE";
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:5px 13px;
+  border:1px solid rgba(102,255,102,.34);
+  border-radius:999px;
+  color:var(--green2);
+  font-size:.56rem;
+  font-weight:950;
+  letter-spacing:.18em;
+}
+
+.rb-live-card .signal{
+  width:78px;
+  height:78px;
+  border-radius:50%;
+  border:3px solid var(--green);
+  display:grid;
+  place-items:center;
+  box-shadow:0 0 35px rgba(102,255,102,.55),inset 0 0 28px rgba(102,255,102,.18);
+}
+
+.rb-live-card .signal::before{
+  content:"";
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:8px double var(--green);
+}
+
+.rb-live-card h3{
+  position:absolute;
+  bottom:44px;
+  margin:0;
+  font-size:clamp(1.3rem,3vw,2rem);
+}
+
+.rb-live-card small{
+  position:absolute;
+  bottom:24px;
+  color:var(--green2);
+  letter-spacing:.25em;
+  font-weight:900;
+  font-size:.58rem;
+}
+
+.rb-cta-row{
+  display:grid;
+  grid-template-columns:1fr minmax(220px,360px) 1fr;
+  gap:clamp(14px,4vw,70px);
+  align-items:center;
+  width:min(92vw,980px);
+  margin:-45px auto 0;
+  position:relative;
+  z-index:30;
+}
+
+.rb-side-btn,.rb-main-btn{
+  min-height:64px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(8,22,11,.82),rgba(0,0,0,.78));
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  box-shadow:0 0 32px rgba(102,255,102,.14),inset 0 1px 0 rgba(255,255,255,.07);
+  font-weight:950;
+}
+
+.rb-side-btn small{
+  display:block;
+  color:rgba(245,255,247,.55);
+  font-size:.52rem;
+  letter-spacing:.25em;
+}
+
+.rb-main-btn{
+  background:linear-gradient(135deg,rgba(102,255,102,.95),rgba(255,215,106,.92));
+  color:#031006;
+  font-size:clamp(1rem,2.4vw,1.55rem);
+  letter-spacing:.22em;
+  text-shadow:none;
+  box-shadow:0 0 52px rgba(102,255,102,.36);
+}
+
+.rb-nav{
+  width:min(92vw,1000px);
+  margin:52px auto 0;
+  padding:12px;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  border-radius:34px;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(180deg,rgba(20,20,20,.88),rgba(4,4,4,.90));
+  box-shadow:0 -18px 60px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.rb-nav button{
+  min-height:72px;
+  border-radius:24px;
+  border:1px solid transparent;
+  background:transparent;
+  color:rgba(255,255,255,.76);
+  font-weight:700;
+}
+
+.rb-nav button.active{
+  color:var(--green2);
+  border-color:rgba(102,255,102,.38);
+  background:linear-gradient(180deg,rgba(24,70,32,.92),rgba(6,25,12,.92));
+  box-shadow:0 0 30px rgba(102,255,102,.18);
+}
+
+.rb-stats{
+  width:min(92vw,1000px);
+  margin:48px auto 0;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  padding:22px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(16,16,16,.82),rgba(0,0,0,.82));
+}
+
+.rb-stat{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  justify-content:center;
+}
+
+.rb-stat b{
+  font-size:clamp(1.25rem,3vw,2rem);
+  font-weight:650;
+}
+.rb-stat small{
+  display:block;
+  color:rgba(255,255,255,.55);
+  letter-spacing:.2em;
+  font-size:.58rem;
+}
+
+.rb-footer{
+  margin:58px 0 12px;
+  text-align:center;
+  color:rgba(255,255,255,.75);
+  letter-spacing:.55em;
+  font-size:.72rem;
+}
+
+.rb-footer span{
+  display:block;
+  margin-top:10px;
+  color:var(--green2);
+  font-size:.52rem;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinReverse{to{transform:rotate(-360deg)}}
+
+@media(max-width:760px){
+  .rb-top{
+    align-items:flex-start;
+  }
+
+  .rb-profile{
+    min-width:0;
+    padding:8px 10px;
+  }
+
+  .rb-profile strong,.rb-profile span{
+    display:none;
+  }
+
+  .rb-avatar{
+    width:42px;
+    height:42px;
+  }
+
+  .rb-hero-copy{
+    margin-top:46px;
+  }
+
+  .rb-universe{
+    min-height:540px;
+    margin-top:8px;
+  }
+
+  .rb-orbit-stage{
+    min-height:500px;
+    height:560px;
+  }
+
+  .rb-ring{
+    width:330px;
+    height:330px;
+  }
+
+  .rb-center-logo{
+    width:160px;
+    height:160px;
+  }
+
+  .rb-card{
+    width:92px;
+    height:138px;
+    border-radius:16px;
+  }
+
+  .card-feed{transform:translate(-128px,-18px) rotateY(-16deg) scale(1)}
+  .card-music{transform:translate(-215px,-4px) rotateY(-24deg) scale(.82)}
+  .card-sports{transform:translate(-285px,16px) rotateY(-34deg) scale(.64)}
+  .card-rich{transform:translate(132px,-16px) rotateY(18deg) scale(.92)}
+  .card-gaming{transform:translate(222px,8px) rotateY(26deg) scale(.74)}
+  .card-store{transform:translate(294px,20px) rotateY(36deg) scale(.58)}
+
+  .rb-live-card{
+    width:126px;
+    height:160px;
+    border-radius:20px;
+    transform:translateY(148px);
+  }
+
+  .rb-live-card .signal{
+    width:50px;
+    height:50px;
+  }
+
+  .rb-live-card h3{
+    font-size:1rem;
+    bottom:35px;
+  }
+
+  .rb-live-card small{
+    bottom:18px;
+    font-size:.45rem;
+  }
+
+  .rb-cta-row{
+    margin-top:-28px;
+    grid-template-columns:1fr;
+  }
+
+  .rb-side-btn{
+    display:none;
+  }
+
+  .rb-main-btn{
+    min-height:58px;
+  }
+
+  .rb-nav{
+    margin-top:28px;
+    border-radius:26px;
+    gap:7px;
+    padding:8px;
+  }
+
+  .rb-nav button{
+    min-height:58px;
+    font-size:.78rem;
+  }
+
+  .rb-stats{
+    grid-template-columns:repeat(2,1fr);
+    margin-top:26px;
+    padding:14px;
+  }
+
+  .rb-footer{
+    letter-spacing:.28em;
+    font-size:.58rem;
+  }
+}
+</style>
+</head>
+
+<body>
+  <main class="rb-page">
+
+    <header class="rb-top">
+      <div class="rb-brand">
+        <small>WELCOME BACK</small>
+        <h1><span>RICH</span> <strong>BIZNESS</strong></h1>
+        <b>LLC</b>
+      </div>
+
+      <div class="rb-profile">
+        <div class="rb-avatar">RB</div>
+        <div>
+          <strong>Guest Mode</strong>
+          <span>ENTER REALITY</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="rb-hero-copy">
+      <p>EVERYTHING YOU NEED</p>
+      <h2>ALL IN ONE <strong>UNIVERSE</strong></h2>
+      <small>CONNECT • CREATE • EARN</small>
+    </section>
+
+    <section class="rb-universe">
+      <div class="rb-orbit-stage">
+
+        <div class="rb-energy-floor"></div>
+        <div class="rb-ring"></div>
+
+        <div class="rb-center-logo">
+          <div>
+            <b>RB</b>
+            <span>RICH BIZNESS</span>
+            <small>UNIVERSE</small>
+          </div>
+        </div>
+
+        <article class="rb-card card-sports">
+          <i></i><span>Sports</span><small>ACTION</small>
+        </article>
+
+        <article class="rb-card card-music">
+          <i></i><span>Music</span><small>UNIVERSE</small>
+        </article>
+
+        <article class="rb-card card-feed">
+          <i></i><span>Global Feed</span><small>DISCOVER</small>
+        </article>
+
+        <article class="rb-card card-rich">
+          <i></i><span>Rich Bizness</span><small>MUSIC UNIVERSE</small>
+        </article>
+
+        <article class="rb-card card-gaming">
+          <i></i><span>Gaming</span><small>PLAY</small>
+        </article>
+
+        <article class="rb-card card-store">
+          <i></i><span>The Store</span><small>SHOP</small>
+        </article>
+
+        <article class="rb-live-card">
+          <div class="signal"></div>
+          <h3>Go Live</h3>
+          <small>LIVE STREAM</small>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="rb-cta-row">
+      <div class="rb-side-btn">☁ Upload Content <small>SHARE YOUR WORLD</small></div>
+      <div class="rb-main-btn">ENTER REALITY →</div>
+      <div class="rb-side-btn">▣ Create Channel <small>BUILD YOUR BRAND</small></div>
+    </section>
+
+    <nav class="rb-nav">
+      <button>⌂<br>Feed</button>
+      <button class="active">◉<br>Live</button>
+      <button>♫<br>Music</button>
+      <button>🎮<br>Games</button>
+      <button>◇<br>Meta</button>
+    </nav>
+
+    <section class="rb-stats">
+      <div class="rb-stat"><b>10M+</b><small>MEMBERS</small></div>
+      <div class="rb-stat"><b>500K+</b><small>CREATORS</small></div>
+      <div class="rb-stat"><b>100K+</b><small>LIVE NOW</small></div>
+      <div class="rb-stat"><b>1M+</b><small>DAILY ACTIVE</small></div>
+    </section>
+
+    <footer class="rb-footer">
+      ONE PLATFORM • ENDLESS POSSIBILITIES
+      <span>WELCOME TO RICH BIZNESS UNIVERSE</span>
+    </footer>
+
+  </main>
+</body>
+</html>
