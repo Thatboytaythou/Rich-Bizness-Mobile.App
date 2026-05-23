@@ -1,526 +1,199 @@
 /* =========================================
    RICH BIZNESS LLC
    /core/pages/index.js
-   FINAL 3-CARD OMNI CONTROLLER
-   CINEMA STACK EDITION
+   INDEX UNIVERSE CONTROLLER
+   No imports. No Supabase. No freeze.
 ========================================= */
 
-const SECTIONS = [
+const RB_SECTIONS = [
   {
     key: "feed",
     label: "FEED",
     title: "Global Feed",
-    meta: "Posts • Drops • Community",
+    meta: "DISCOVER",
     route: "/feed"
   },
-
   {
     key: "live",
     label: "LIVE",
     title: "Go Live",
-    meta: "Broadcast • VIP • Realtime",
+    meta: "LIVE STREAM",
     route: "/live"
   },
-
   {
     key: "music",
     label: "MUSIC",
-    title: "Music Universe",
-    meta: "Tracks • Radio • Podcasts",
+    title: "Music",
+    meta: "UNIVERSE",
     route: "/music"
   },
-
   {
     key: "gaming",
-    label: "GAMES",
-    title: "Arcade District",
-    meta: "Play • Scores • Challenges",
+    label: "GAMING",
+    title: "Gaming",
+    meta: "PLAY",
     route: "/gaming"
   },
-
   {
     key: "sports",
     label: "SPORTS",
-    title: "Sports Arena",
-    meta: "Picks • Clips • Broadcasts",
+    title: "Sports",
+    meta: "ACTION",
     route: "/sports"
   },
-
   {
     key: "gallery",
-    label: "ART",
-    title: "Gallery Vault",
-    meta: "Art • Visuals • Showcase",
+    label: "GALLERY",
+    title: "Gallery",
+    meta: "SHOWCASE",
     route: "/gallery"
   },
-
   {
     key: "store",
     label: "STORE",
-    title: "Creator Market",
-    meta: "Products • Drops • Unlocks",
+    title: "The Store",
+    meta: "SHOP",
     route: "/store"
   },
-
   {
     key: "meta",
     label: "META",
-    title: "Meta World",
-    meta: "Worlds • Avatars • Portals",
+    title: "Meta",
+    meta: "WORLD",
     route: "/meta"
+  },
+  {
+    key: "upload",
+    label: "UPLOAD",
+    title: "Upload Content",
+    meta: "SHARE YOUR WORLD",
+    route: "/upload"
   }
 ];
 
 const $ = (id) => document.getElementById(id);
 
-const POSITION_CLASSES = [
-  "rb-pos-left",
-  "rb-pos-right",
-  "rb-pos-back-left",
-  "rb-pos-back-right",
-  "rb-pos-hidden"
-];
+let activeKey = document.body.dataset.activeSection || "live";
 
-let activeIndex = SECTIONS.findIndex(
-  (section) =>
-    section.key === document.body.dataset.activeSection
-);
-
-if(activeIndex < 0){
-  activeIndex = 1;
+function getSection(key = activeKey) {
+  return RB_SECTIONS.find((section) => section.key === key) || RB_SECTIONS[1];
 }
 
-/* =========================================
-   HELPERS
-========================================= */
-
-function activeSection(){
-  return SECTIONS[activeIndex] || SECTIONS[1];
+function setText(id, value) {
+  const el = $(id);
+  if (el) el.textContent = value;
 }
 
-function normalizeIndex(index){
-  return (
-    (index + SECTIONS.length) %
-    SECTIONS.length
-  );
-}
+function setActiveSection(key) {
+  const section = getSection(key);
 
-function clearPositionClasses(card){
-  POSITION_CLASSES.forEach((className)=>{
-    card.classList.remove(className);
-  });
-}
-
-/* =========================================
-   PAINT
-========================================= */
-
-function paintSection(){
-
-  const section = activeSection();
-
+  activeKey = section.key;
   document.body.dataset.activeSection = section.key;
 
-  /* =========================
-     PORTAL TEXT
-  ========================= */
-
-  const label = $("rb-active-label");
-  const title = $("rb-active-title");
-  const meta = $("rb-active-meta");
-  const launch = $("rb-launch-section");
-
-  if(label){
-    label.textContent = section.label;
-  }
-
-  if(title){
-    title.textContent = section.title;
-  }
-
-  if(meta){
-    meta.textContent = section.meta;
-  }
-
-  if(launch){
-    launch.textContent =
-      `ENTER ${section.label}`;
-  }
-
-  /* =========================
-     BOTTOM NAV
-  ========================= */
-
-  document
-    .querySelectorAll("[data-rb-route]")
-    .forEach((button)=>{
-
-      button.classList.toggle(
-        "active",
-        button.dataset.rbRoute === section.key
-      );
-
-    });
-
-  /* =========================
-     CARD STACK
-  ========================= */
-
-  const cards = [
-    ...document.querySelectorAll(".rb-tv-screen")
-  ];
-
-  cards.forEach((card, index)=>{
-
-    const distance =
-      normalizeIndex(index - activeIndex);
-
-    clearPositionClasses(card);
-
-    card.classList.remove("is-active");
-
-    /* ACTIVE */
-
-    if(distance === 0){
-
-      card.classList.add("is-active");
-
-      return;
-    }
-
-    /* RIGHT */
-
-    if(distance === 1){
-
-      card.classList.add("rb-pos-right");
-
-      return;
-    }
-
-    /* LEFT */
-
-    if(distance === SECTIONS.length - 1){
-
-      card.classList.add("rb-pos-left");
-
-      return;
-    }
-
-    /* BACK RIGHT */
-
-    if(distance === 2){
-
-      card.classList.add("rb-pos-back-right");
-
-      return;
-    }
-
-    /* BACK LEFT */
-
-    if(distance === SECTIONS.length - 2){
-
-      card.classList.add("rb-pos-back-left");
-
-      return;
-    }
-
-    /* HIDDEN */
-
-    card.classList.add("rb-pos-hidden");
-
+  document.querySelectorAll("[data-section]").forEach((card) => {
+    card.classList.toggle("is-active", card.dataset.section === section.key);
   });
 
+  document.querySelectorAll("[data-route]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.route === section.key);
+  });
+
+  setText("rb-active-label", section.label);
+  setText("rb-active-title", section.title);
+  setText("rb-active-meta", section.meta);
+  setText("rb-launch-section", `ENTER ${section.label} →`);
 }
 
-/* =========================================
-   MOVEMENT
-========================================= */
-
-function moveNext(){
-
-  activeIndex =
-    normalizeIndex(activeIndex + 1);
-
-  paintSection();
-
+function goTo(path) {
+  if (!path) return;
+  window.location.href = path;
 }
 
-function movePrev(){
-
-  activeIndex =
-    normalizeIndex(activeIndex - 1);
-
-  paintSection();
-
+function launchActiveSection() {
+  goTo(getSection().route);
 }
 
-function setActiveByKey(key){
+function bindIndexClicks() {
+  document.addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target) return;
 
-  const foundIndex =
-    SECTIONS.findIndex(
-      (section)=>section.key === key
-    );
-
-  if(foundIndex < 0){
-    return;
-  }
-
-  activeIndex = foundIndex;
-
-  paintSection();
-
-}
-
-/* =========================================
-   ROUTING
-========================================= */
-
-function go(route){
-
-  if(!route){
-    return;
-  }
-
-  window.location.href = route;
-
-}
-
-/* =========================================
-   CLICK EVENTS
-========================================= */
-
-function bindClicks(){
-
-  document.addEventListener(
-    "click",
-    (event)=>{
-
-      const target =
-        event.target.closest(
-          "button,a"
-        );
-
-      if(!target){
-        return;
-      }
-
-      /* =====================
-         NEXT
-      ===================== */
-
-      if(
-        target.id === "rb-rotate-next"
-      ){
-
-        event.preventDefault();
-
-        moveNext();
-
-        return;
-      }
-
-      /* =====================
-         PREV
-      ===================== */
-
-      if(
-        target.id === "rb-rotate-prev"
-      ){
-
-        event.preventDefault();
-
-        movePrev();
-
-        return;
-      }
-
-      /* =====================
-         LAUNCH
-      ===================== */
-
-      if(
-        target.id === "rb-launch-section"
-      ){
-
-        event.preventDefault();
-
-        go(
-          activeSection().route
-        );
-
-        return;
-      }
-
-      /* =====================
-         UPLOAD
-      ===================== */
-
-      if(
-        target.id === "rb-open-upload"
-      ){
-
-        event.preventDefault();
-
-        go("/upload");
-
-        return;
-      }
-
-      /* =====================
-         AUTH
-      ===================== */
-
-      if(
-        target.id === "rb-open-auth" ||
-        target.id === "rb-open-profile"
-      ){
-
-        event.preventDefault();
-
-        go("/auth");
-
-        return;
-      }
-
-      /* =====================
-         TV CARD
-      ===================== */
-
-      if(
-        target.dataset.rbSection
-      ){
-
-        event.preventDefault();
-
-        const key =
-          target.dataset.rbSection;
-
-        const current =
-          activeSection().key;
-
-        /* already active = enter */
-
-        if(key === current){
-
-          const section =
-            SECTIONS.find(
-              (item)=>item.key === key
-            );
-
-          if(section){
-            go(section.route);
-          }
-
-          return;
-        }
-
-        /* otherwise rotate */
-
-        setActiveByKey(key);
-
-        return;
-      }
-
-      /* =====================
-         BOTTOM NAV
-      ===================== */
-
-      if(
-        target.dataset.rbRoute
-      ){
-
-        event.preventDefault();
-
-        setActiveByKey(
-          target.dataset.rbRoute
-        );
-
-      }
-
+    if (target.dataset.section) {
+      event.preventDefault();
+      setActiveSection(target.dataset.section);
+      return;
     }
-  );
 
+    if (target.dataset.route) {
+      event.preventDefault();
+      setActiveSection(target.dataset.route);
+      return;
+    }
+
+    if (target.id === "rb-launch-section") {
+      event.preventDefault();
+      launchActiveSection();
+      return;
+    }
+
+    if (target.id === "rb-open-upload") {
+      event.preventDefault();
+      setActiveSection("upload");
+      return;
+    }
+
+    if (target.id === "rb-create-channel") {
+      event.preventDefault();
+      goTo("/profile");
+      return;
+    }
+
+    if (target.id === "rb-open-profile") {
+      event.preventDefault();
+      goTo("/auth");
+    }
+  });
 }
 
-/* =========================================
-   SWIPE SUPPORT
-========================================= */
+function bindKeyboard() {
+  document.addEventListener("keydown", (event) => {
+    const currentIndex = RB_SECTIONS.findIndex((section) => section.key === activeKey);
 
-function bindTouch(){
+    if (event.key === "ArrowRight") {
+      const next = RB_SECTIONS[(currentIndex + 1) % RB_SECTIONS.length];
+      setActiveSection(next.key);
+    }
 
-  let startX = 0;
-  let endX = 0;
+    if (event.key === "ArrowLeft") {
+      const prev = RB_SECTIONS[(currentIndex - 1 + RB_SECTIONS.length) % RB_SECTIONS.length];
+      setActiveSection(prev.key);
+    }
 
-  document.addEventListener(
-    "touchstart",
-    (event)=>{
-
-      startX =
-        event.changedTouches[0].clientX;
-
-    },
-    { passive:true }
-  );
-
-  document.addEventListener(
-    "touchend",
-    (event)=>{
-
-      endX =
-        event.changedTouches[0].clientX;
-
-      const delta =
-        endX - startX;
-
-      if(Math.abs(delta) < 45){
-        return;
-      }
-
-      if(delta < 0){
-        moveNext();
-      }else{
-        movePrev();
-      }
-
-    },
-    { passive:true }
-  );
-
+    if (event.key === "Enter") {
+      launchActiveSection();
+    }
+  });
 }
 
-/* =========================================
-   BOOT
-========================================= */
-
-function boot(){
-
-  paintSection();
-
-  bindClicks();
-
-  bindTouch();
-
-  document.body.classList.add(
-    "rb-index-ready"
-  );
-
+function paintStats() {
+  setText("rb-stat-members", "10M+");
+  setText("rb-stat-creators", "500K+");
+  setText("rb-stat-live", "100K+");
+  setText("rb-stat-active", "1M+");
 }
 
-/* =========================================
-   START
-========================================= */
+function bootIndex() {
+  setActiveSection(activeKey);
+  paintStats();
+  bindIndexClicks();
+  bindKeyboard();
 
-if(
-  document.readyState === "loading"
-){
+  document.body.classList.add("rb-index-ready");
+  console.log("RB INDEX READY");
+}
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    boot
-  );
-
-}else{
-
-  boot();
-
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootIndex);
+} else {
+  bootIndex();
 }
