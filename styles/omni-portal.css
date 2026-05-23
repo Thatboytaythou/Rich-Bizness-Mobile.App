@@ -1,25 +1,35 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/omni-portal.css
-   DIMENSIONAL CINEMA PORTAL CORE
+   DIMENSIONAL PORTAL CORE
 ========================================= */
 
-.rb-core-portal{
-  position:relative;
+/* =========================================
+   PORTAL CORE CONTAINER
+========================================= */
 
-  z-index:20;
+.rb-portal-core{
+  position:absolute;
 
-  width:clamp(230px,58vw,430px);
-  height:clamp(230px,58vw,430px);
+  left:50%;
+  top:50%;
+
+  width:clamp(290px,38vw,540px);
+  height:clamp(290px,38vw,540px);
+
+  transform:
+    translate(-50%,-50%);
+
+  border-radius:50%;
+
+  z-index:6;
 
   display:grid;
   place-items:center;
 
-  border-radius:50%;
+  pointer-events:none;
 
   transform-style:preserve-3d;
-
-  pointer-events:none;
 
   isolation:isolate;
 }
@@ -31,8 +41,7 @@
 .rb-portal-ring,
 .rb-portal-ring-two,
 .rb-portal-ring-three,
-.rb-portal-glow,
-.rb-portal-light{
+.rb-portal-glow{
   position:absolute;
 
   border-radius:50%;
@@ -41,55 +50,60 @@
 }
 
 /* =========================================
-   OUTER RING
+   OUTER DIMENSION RING
 ========================================= */
 
 .rb-portal-ring{
-  inset:-2px;
+  inset:0;
 
   border:
-    1px solid rgba(255,215,106,.58);
+    1px solid rgba(123,255,102,.52);
 
   background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0,0,0,.94) 0 32%,
+      rgba(0,70,24,.58) 42%,
+      rgba(123,255,102,.16) 58%,
+      transparent 70%
+    ),
+
     conic-gradient(
-      from 140deg,
-      rgba(102,255,102,.08),
-      rgba(255,215,106,.22),
-      transparent 22%,
-      rgba(102,255,102,.28),
-      transparent 52%,
-      rgba(255,215,106,.18),
-      rgba(102,255,102,.10)
+      from 120deg,
+      transparent,
+      rgba(123,255,102,.38),
+      rgba(255,213,74,.24),
+      transparent,
+      rgba(0,255,136,.30),
+      transparent
     );
 
   box-shadow:
-    0 0 48px rgba(255,215,106,.24),
-    0 0 96px rgba(102,255,102,.16),
-    inset 0 0 42px rgba(102,255,102,.20),
-    inset 0 0 90px rgba(0,0,0,.65);
+    0 0 58px rgba(123,255,102,.46),
+    0 0 150px rgba(0,255,136,.20),
+    inset 0 0 64px rgba(123,255,102,.20),
+    inset 0 0 130px rgba(0,0,0,.92);
 
   animation:
-    rbPortalSpin 14s linear infinite;
+    rbPortalSpin 18s linear infinite;
 }
 
 /* =========================================
-   DASHED ENERGY RING
+   SECONDARY DASHED RING
 ========================================= */
 
 .rb-portal-ring-two{
-  inset:18px;
+  inset:28px;
 
   border:
-    1px dashed rgba(126,255,126,.62);
+    1px dashed rgba(255,213,74,.36);
 
   box-shadow:
-    0 0 40px rgba(102,255,102,.30),
-    inset 0 0 64px rgba(0,0,0,.78);
-
-  opacity:.95;
+    0 0 38px rgba(255,213,74,.14),
+    inset 0 0 65px rgba(0,0,0,.85);
 
   animation:
-    rbPortalSpinReverse 18s linear infinite;
+    rbPortalSpinReverse 22s linear infinite;
 }
 
 /* =========================================
@@ -97,400 +111,220 @@
 ========================================= */
 
 .rb-portal-ring-three{
-  inset:36px;
-
-  border:
-    1px solid rgba(255,255,255,.14);
+  inset:72px;
 
   background:
     radial-gradient(
-      circle at 50% 50%,
-      transparent 38%,
-      rgba(102,255,102,.10) 50%,
-      rgba(0,0,0,.54) 68%,
-      rgba(255,215,106,.10) 100%
+      circle at 50% 48%,
+      rgba(255,255,220,.95),
+      rgba(123,255,102,.56) 13%,
+      rgba(0,80,30,.40) 38%,
+      rgba(0,0,0,.95) 73%
     );
 
   box-shadow:
-    inset 0 0 36px rgba(0,0,0,.92),
-    inset 0 0 88px rgba(102,255,102,.18),
-    0 0 42px rgba(255,215,106,.12);
+    inset 0 0 52px rgba(255,255,255,.18),
+    inset 0 0 78px rgba(0,0,0,.92),
+    0 0 82px rgba(123,255,102,.42);
 
   animation:
-    rbPortalSpin 26s linear infinite;
+    rbPortalTunnel 6.5s ease-in-out infinite;
 }
 
 /* =========================================
-   SWIRLING AURA
+   SWIRLING GLOW FIELD
 ========================================= */
 
 .rb-portal-glow{
-  inset:20px;
+  inset:18px;
 
   background:
     conic-gradient(
       from 220deg,
-      transparent 0deg,
-      rgba(102,255,102,.34) 48deg,
-      rgba(255,215,106,.24) 96deg,
-      transparent 138deg,
-      rgba(102,255,160,.22) 190deg,
-      rgba(255,255,210,.18) 245deg,
-      transparent 310deg,
-      rgba(102,255,102,.24) 360deg
+      transparent,
+      rgba(123,255,102,.34),
+      rgba(255,213,74,.24),
+      transparent 45%,
+      rgba(0,255,136,.28),
+      rgba(255,255,255,.10),
+      transparent
     );
 
   filter:
-    blur(16px)
-    saturate(1.35);
+    blur(18px)
+    saturate(1.3);
 
-  opacity:.82;
+  opacity:.80;
 
   mix-blend-mode:screen;
 
   animation:
     rbPortalSpin 12s linear infinite,
-    rbPortalSurge 4.8s ease-in-out infinite;
+    rbPortalSurge 4s ease-in-out infinite;
 }
 
 /* =========================================
-   INNER DIMENSION TUNNEL
+   CENTER LOGO CORE
 ========================================= */
 
-.rb-portal-light{
-  inset:38px;
+.rb-portal-center{
+  position:relative;
+
+  z-index:5;
+
+  width:clamp(150px,20vw,260px);
+  height:clamp(150px,20vw,260px);
+
+  border-radius:50%;
+
+  display:grid;
+  place-items:center;
+
+  text-align:center;
 
   background:
     radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,235,1) 0%,
-      rgba(210,255,180,.90) 7%,
-      rgba(102,255,102,.58) 18%,
-      rgba(12,92,28,.54) 34%,
-      rgba(0,28,10,.82) 54%,
-      rgba(0,0,0,.95) 76%
-    ),
-    conic-gradient(
-      from 90deg,
-      rgba(102,255,102,.18),
-      rgba(255,215,106,.20),
-      rgba(0,0,0,.08),
-      rgba(102,255,102,.22),
-      rgba(255,255,255,.08),
-      rgba(102,255,102,.18)
+      circle at 50% 42%,
+      rgba(10,25,12,.98),
+      rgba(0,0,0,.98) 72%
     );
 
+  border:
+    1px solid rgba(123,255,102,.24);
+
   box-shadow:
-    0 0 70px rgba(102,255,102,.50),
-    0 0 150px rgba(255,215,106,.24),
-    inset 0 0 36px rgba(255,255,255,.22),
-    inset 0 0 88px rgba(0,0,0,.86),
-    inset 0 -28px 60px rgba(0,0,0,.84);
-
-  transform:
-    translateZ(18px);
-
-  animation:
-    rbPortalPulse 3.6s ease-in-out infinite,
-    rbPortalTunnel 9s linear infinite;
+    0 0 60px rgba(0,0,0,.90),
+    0 0 40px rgba(123,255,102,.16),
+    inset 0 0 38px rgba(123,255,102,.14),
+    inset 0 0 90px rgba(0,0,0,.86);
 }
 
-/* =========================================
-   DIMENSIONAL HALO
-========================================= */
-
-.rb-core-portal::before{
+.rb-portal-center::before{
   content:"";
 
   position:absolute;
 
-  inset:-42px;
+  inset:-10px;
 
   border-radius:50%;
+
+  border:
+    1px solid rgba(255,213,74,.20);
+
+  box-shadow:
+    0 0 28px rgba(255,213,74,.12);
+
+  animation:
+    rbPortalSpinReverse 18s linear infinite;
+}
+
+.rb-portal-center b{
+  display:block;
+
+  font-size:
+    clamp(2rem,5vw,4rem);
+
+  line-height:1;
+
+  color:
+    #baff9c;
+
+  text-shadow:
+    0 0 25px rgba(123,255,102,.65),
+    0 0 55px rgba(0,255,136,.20);
+}
+
+.rb-portal-center span{
+  display:block;
+
+  margin-top:8px;
+
+  font-size:
+    clamp(.62rem,1.5vw,.9rem);
+
+  letter-spacing:.22em;
+
+  font-weight:950;
+
+  color:#fff;
+}
+
+.rb-portal-center small{
+  display:block;
+
+  margin-top:6px;
+
+  color:var(--rb-green);
+
+  letter-spacing:.38em;
+
+  font-size:.56rem;
+}
+
+/* =========================================
+   PORTAL LIGHT BLEED
+========================================= */
+
+.rb-portal-core::before{
+  content:"";
+
+  position:absolute;
+
+  inset:-70px;
+
+  border-radius:50%;
+
+  z-index:-2;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(123,255,102,.20),
+      rgba(0,255,136,.10) 34%,
+      transparent 68%
+    );
+
+  filter:
+    blur(30px);
+
+  animation:
+    rbPortalAura 5.5s ease-in-out infinite;
+}
+
+.rb-portal-core::after{
+  content:"";
+
+  position:absolute;
+
+  inset:44px;
+
+  border-radius:50%;
+
+  z-index:4;
+
+  pointer-events:none;
 
   background:
     radial-gradient(
       circle at 50% 50%,
-      rgba(102,255,102,.18),
-      rgba(255,215,106,.10) 34%,
-      transparent 66%
-    ),
-    conic-gradient(
-      from 140deg,
-      transparent,
-      rgba(102,255,102,.28),
-      rgba(255,215,106,.26),
-      transparent,
-      rgba(102,255,102,.20),
-      transparent
-    );
-
-  filter:
-    blur(22px)
-    saturate(1.25);
-
-  opacity:.95;
-
-  animation:
-    rbPortalSpin 20s linear infinite;
-
-  z-index:-1;
-}
-
-.rb-core-portal::after{
-  content:"";
-
-  position:absolute;
-
-  inset:8px;
-
-  border-radius:50%;
-
-  background:
-    radial-gradient(
-      circle at 50% 44%,
       transparent 42%,
       rgba(255,255,255,.10) 48%,
-      transparent 54%,
-      rgba(102,255,102,.18) 62%,
-      transparent 70%
+      transparent 55%,
+      rgba(123,255,102,.18) 62%,
+      transparent 72%
     );
 
-  box-shadow:
-    inset 0 0 34px rgba(255,255,255,.08),
-    inset 0 0 90px rgba(102,255,102,.12);
-
-  opacity:.82;
+  opacity:.74;
 
   animation:
-    rbPortalLens 5.8s ease-in-out infinite;
-
-  z-index:2;
+    rbPortalLens 4.8s ease-in-out infinite;
 }
 
 /* =========================================
-   PORTAL COPY GLASS
-========================================= */
-
-.rb-portal-copy{
-  position:relative;
-
-  z-index:8;
-
-  width:72%;
-  min-height:44%;
-
-  display:grid;
-  place-items:center;
-  align-content:center;
-
-  gap:6px;
-
-  text-align:center;
-
-  padding:18px;
-
-  border-radius:28px;
-
-  border:
-    1px solid rgba(255,255,255,.14);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(4,18,8,.54),
-      rgba(0,0,0,.68)
-    ),
-    rgba(0,0,0,.26);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.16),
-    inset 0 -18px 40px rgba(0,0,0,.38),
-    0 22px 72px rgba(0,0,0,.56),
-    0 0 42px rgba(102,255,102,.10);
-
-  backdrop-filter:
-    blur(20px)
-    saturate(155%);
-
-  -webkit-backdrop-filter:
-    blur(20px)
-    saturate(155%);
-}
-
-.rb-portal-copy span{
-  font-size:
-    clamp(.7rem,2vw,.85rem);
-
-  font-weight:950;
-
-  letter-spacing:.24em;
-
-  color:#8dff8d;
-
-  text-shadow:
-    0 0 14px rgba(102,255,102,.92),
-    0 0 32px rgba(102,255,102,.36);
-}
-
-.rb-portal-copy h2{
-  margin:0;
-
-  font-size:
-    clamp(1.45rem,6vw,3.2rem);
-
-  line-height:.92;
-
-  letter-spacing:-.07em;
-
-  background:
-    linear-gradient(
-      135deg,
-      #fffbe1,
-      #ffd86a 34%,
-      #78ff78 72%,
-      #ffffff
-    );
-
-  -webkit-background-clip:text;
-  background-clip:text;
-
-  color:transparent;
-
-  text-shadow:
-    0 18px 50px rgba(0,0,0,.62);
-}
-
-.rb-portal-copy p{
-  margin:0;
-
-  max-width:24ch;
-
-  font-size:
-    clamp(.72rem,2.2vw,.95rem);
-
-  line-height:1.3;
-
-  color:
-    rgba(238,255,226,.84);
-}
-
-/* =========================================
-   ACTIVE SECTION COLORS
-========================================= */
-
-body[data-active-section="feed"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,255,1),
-      rgba(102,255,148,.72) 18%,
-      rgba(0,70,28,.55) 45%,
-      rgba(0,0,0,.94) 76%
-    );
-}
-
-body[data-active-section="live"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,246,215,1),
-      rgba(255,72,62,.50) 16%,
-      rgba(102,255,102,.50) 42%,
-      rgba(0,0,0,.95) 76%
-    );
-}
-
-body[data-active-section="music"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,230,1),
-      rgba(102,255,210,.56) 20%,
-      rgba(255,215,106,.34) 45%,
-      rgba(0,0,0,.95) 76%
-    );
-}
-
-body[data-active-section="gaming"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,255,1),
-      rgba(138,102,255,.48) 18%,
-      rgba(102,255,102,.44) 46%,
-      rgba(0,0,0,.95) 76%
-    );
-}
-
-body[data-active-section="sports"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,240,1),
-      rgba(255,215,106,.55) 20%,
-      rgba(0,255,120,.42) 48%,
-      rgba(0,0,0,.94) 76%
-    );
-}
-
-body[data-active-section="gallery"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,255,1),
-      rgba(255,120,220,.44) 18%,
-      rgba(255,215,106,.34) 46%,
-      rgba(0,0,0,.95) 76%
-    );
-}
-
-body[data-active-section="store"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,235,1),
-      rgba(255,215,106,.62) 20%,
-      rgba(102,255,102,.34) 50%,
-      rgba(0,0,0,.94) 76%
-    );
-}
-
-body[data-active-section="meta"] .rb-portal-light{
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(255,255,255,1),
-      rgba(102,255,255,.50) 18%,
-      rgba(102,255,102,.42) 48%,
-      rgba(0,0,0,.95) 76%
-    );
-}
-
-/* =========================================
-   LAUNCH SUPPORT
-========================================= */
-
-.rb-home-actions{
-  position:relative;
-
-  z-index:30;
-}
-
-.rb-main-launch{
-  min-width:min(64vw,320px);
-
-  box-shadow:
-    0 0 32px rgba(102,255,102,.24),
-    0 18px 40px rgba(0,0,0,.42);
-}
-
-/* =========================================
-   ANIMATION
+   ANIMATIONS
 ========================================= */
 
 @keyframes rbPortalSpin{
-
   from{
     transform:rotate(0deg);
   }
@@ -501,7 +335,6 @@ body[data-active-section="meta"] .rb-portal-light{
 }
 
 @keyframes rbPortalSpinReverse{
-
   from{
     transform:rotate(360deg);
   }
@@ -511,46 +344,33 @@ body[data-active-section="meta"] .rb-portal-light{
   }
 }
 
-@keyframes rbPortalPulse{
-
+@keyframes rbPortalTunnel{
   0%,100%{
     transform:
-      translateZ(18px)
-      scale(.985);
+      scale(.98);
 
-    opacity:.88;
+    opacity:.86;
+
+    filter:
+      saturate(1.1)
+      contrast(1.05);
   }
 
   50%{
     transform:
-      translateZ(18px)
       scale(1.045);
 
     opacity:1;
-  }
-}
 
-@keyframes rbPortalTunnel{
-
-  from{
     filter:
-      hue-rotate(0deg)
-      saturate(1.18)
-      contrast(1.08);
-  }
-
-  to{
-    filter:
-      hue-rotate(360deg)
-      saturate(1.18)
-      contrast(1.08);
+      saturate(1.35)
+      contrast(1.12);
   }
 }
 
 @keyframes rbPortalSurge{
-
   0%,100%{
-    opacity:.56;
+    opacity:.55;
 
     transform:
       scale(.96);
@@ -564,91 +384,125 @@ body[data-active-section="meta"] .rb-portal-light{
   }
 }
 
-@keyframes rbPortalLens{
-
+@keyframes rbPortalAura{
   0%,100%{
     opacity:.55;
+
+    transform:
+      scale(.96);
+  }
+
+  50%{
+    opacity:.95;
+
+    transform:
+      scale(1.07);
+  }
+}
+
+@keyframes rbPortalLens{
+  0%,100%{
+    opacity:.48;
 
     transform:
       scale(.98);
   }
 
   50%{
-    opacity:.92;
+    opacity:.86;
 
     transform:
-      scale(1.025);
+      scale(1.03);
   }
 }
 
 /* =========================================
-   MOBILE SAFARI
+   TABLET
 ========================================= */
 
-@media (max-width:720px){
+@media (max-width:980px){
 
-  .rb-core-portal{
-    width:min(72vw,330px);
-    height:min(72vw,330px);
+  .rb-portal-core{
+    width:360px;
+    height:360px;
   }
 
   .rb-portal-ring-two{
-    inset:14px;
+    inset:22px;
   }
 
   .rb-portal-ring-three{
-    inset:28px;
+    inset:58px;
   }
 
-  .rb-portal-glow{
-    inset:16px;
-
-    filter:
-      blur(15px);
-  }
-
-  .rb-portal-light{
-    inset:30px;
-  }
-
-  .rb-portal-copy{
-    width:76%;
-
-    padding:14px;
-
-    border-radius:24px;
-  }
-}
-
-@media (max-width:390px){
-
-  .rb-core-portal{
-    width:270px;
-    height:270px;
-  }
-
-  .rb-portal-light{
-    inset:26px;
-  }
-
-  .rb-portal-copy h2{
-    font-size:1.8rem;
+  .rb-portal-center{
+    width:170px;
+    height:170px;
   }
 }
 
 /* =========================================
-   REDUCED MOTION
+   MOBILE
 ========================================= */
 
-@media (prefers-reduced-motion:reduce){
+@media (max-width:640px){
 
-  .rb-portal-ring,
-  .rb-portal-ring-two,
-  .rb-portal-ring-three,
-  .rb-portal-glow,
-  .rb-portal-light,
-  .rb-core-portal::before,
-  .rb-core-portal::after{
-    animation:none !important;
+  .rb-portal-core{
+    width:310px;
+    height:310px;
+
+    top:48%;
+  }
+
+  .rb-portal-ring-two{
+    inset:18px;
+  }
+
+  .rb-portal-ring-three{
+    inset:52px;
+  }
+
+  .rb-portal-glow{
+    inset:14px;
+
+    filter:
+      blur(15px)
+      saturate(1.25);
+  }
+
+  .rb-portal-center{
+    width:150px;
+    height:150px;
+  }
+
+  .rb-portal-center span{
+    letter-spacing:.16em;
+  }
+
+  .rb-portal-center small{
+    letter-spacing:.26em;
+  }
+}
+
+/* =========================================
+   SMALL PHONE
+========================================= */
+
+@media (max-width:430px){
+
+  .rb-portal-core{
+    width:280px;
+    height:280px;
+
+    top:47%;
+  }
+
+  .rb-portal-ring-three{
+    inset:46px;
+  }
+
+  .rb-portal-center{
+    width:138px;
+    height:138px;
   }
 }
