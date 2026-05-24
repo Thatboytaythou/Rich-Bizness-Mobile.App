@@ -1,7 +1,8 @@
-/* =========================
-   RICH BIZNESS MOBILE
+/* =========================================
+   RICH BIZNESS LLC
    /core/pages/edit.js
-========================= */
+   PROFILE EDIT PAGE CONTROLLER - POLISHED
+========================================= */
 
 import {
   initApp,
@@ -36,9 +37,7 @@ const els = {
 
 function fillForm() {
   const state = getCurrentUserState();
-  const profile = state?.profile || null;
-
-  if (!profile) return;
+  const profile = state?.profile || {};
 
   if (els.displayName) els.displayName.value = profile.display_name || "";
   if (els.username) els.username.value = profile.username || "";
@@ -46,56 +45,13 @@ function fillForm() {
 }
 
 function setLoading(isLoading) {
-  els.form?.classList.toggle("is-loading", isLoading);
+  if (!els.form) return;
 
-  els.form
-    ?.querySelectorAll("button,input,textarea,select")
-    .forEach((el) => {
-      el.disabled = isLoading;
-    });
-}
+  els.form.classList.toggle("is-loading", isLoading);
 
-async function uploadProfileMedia() {
-  const updates = {};
-
-  const avatar = els.avatarFile?.files?.[0] || null;
-  const banner = els.bannerFile?.files?.[0] || null;
-
-  if (avatar) {
-    const result = await createContentWithUpload({
-      type: "profileAvatar",
-      file: avatar,
-      values: {},
-      metadata: {
-        purpose: "profile_avatar",
-        source: "edit.js"
-      },
-      upsert: true
-    });
-
-    const url = result?.uploaded?.publicUrl || result?.publicUrl || null;
-
-    if (url) updates.avatar_url = url;
-  }
-
-  if (banner) {
-    const result = await createContentWithUpload({
-      type: "profileBanner",
-      file: banner,
-      values: {},
-      metadata: {
-        purpose: "profile_banner",
-        source: "edit.js"
-      },
-      upsert: true
-    });
-
-    const url = result?.uploaded?.publicUrl || result?.publicUrl || null;
-
-    if (url) updates.banner_url = url;
-  }
-
-  return updates;
+  els.form.querySelectorAll("button, input, textarea, select").forEach((el) => {
+    el.disabled = isLoading;
+  });
 }
 
 function cleanUsername(username = "") {
@@ -107,11 +63,53 @@ function cleanUsername(username = "") {
     .slice(0, 24);
 }
 
+async function uploadProfileMedia() {
+  const updates = {};
+
+  // Avatar
+  if (els.avatarFile?.files?.[0]) {
+    try {
+      const result = await createContentWithUpload({
+        type: "profileAvatar",
+        file: els.avatarFile.files[0],
+        metadata: { purpose: "profile_avatar", source: "edit.js" },
+        upsert: true
+      });
+
+      const url = result?.uploaded?.publicUrl || result?.publicUrl;
+      if (url) updates.avatar_url = url;
+    } catch (err) {
+      console.warn("Avatar upload failed:", err);
+    }
+  }
+
+  // Banner
+  if (els.bannerFile?.files?.[0]) {
+    try {
+      const result = await createContentWithUpload({
+        type: "profileBanner",
+        file: els.bannerFile.files[0],
+        metadata: { purpose: "profile_banner", source: "edit.js" },
+        upsert: true
+      });
+
+      const url = result?.uploaded?.publicUrl || result?.publicUrl;
+      if (url) updates.banner_url = url;
+    } catch (err) {
+      console.warn("Banner upload failed:", err);
+    }
+  }
+
+  return updates;
+}
+
 function bindEditActions() {
+  // Back button
   els.backBtn?.addEventListener("click", () => {
     window.location.href = RB_ROUTES.profile || "/profile";
   });
 
+  // Form submit
   els.form?.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -120,29 +118,30 @@ function bindEditActions() {
 
       const mediaUpdates = await uploadProfileMedia();
 
-      const displayName = els.displayName?.value?.trim() || "";
-
-      await updateMyProfile({
-        display_name: displayName,
-        full_name: displayName,
-        username: cleanUsername(els.username?.value || ""),
+      const payload = {
+        display_name: els.displayName?.value?.trim() || "",
+        full_name: els.displayName?.value?.trim() || "",
+        username: cleanUsername(els.username?.value),
         bio: els.bio?.value?.trim() || "",
         ...mediaUpdates
-      });
+      };
 
+      await updateMyProfile(payload);
       await refreshAppIdentity();
 
-      toastSuccess("Profile updated.", "Rich Bizness");
-
+      toastSuccess("Profile updated successfully.", "Rich Bizness");
       window.location.href = RB_ROUTES.profile || "/profile";
+
     } catch (error) {
       console.error("[edit.js]", error);
-      toastError(error?.message || "Profile update failed.");
+      toastError(error?.message || "Failed to update profile.");
     } finally {
       setLoading(false);
     }
   });
 }
+
+/* ====================== BOOT ====================== */
 
 async function bootEditPage() {
   try {
@@ -156,16 +155,16 @@ async function bootEditPage() {
     bindEditActions();
 
     document.body.classList.add("rb-edit-ready");
-
     markPageReady("edit");
 
-    console.log("RB EDIT READY");
+    console.log("🚀 RB EDIT PAGE READY");
   } catch (error) {
-    console.error("[edit.js]", error);
+    console.error("[edit.js] Boot failed:", error);
     markPageError(error);
   }
 }
 
+// Initialize
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootEditPage);
 } else {
