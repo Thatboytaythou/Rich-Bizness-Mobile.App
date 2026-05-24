@@ -8,169 +8,138 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
-    body { background: #0a0f0a; overflow-x: hidden; }
-    #globe-container, #character-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-    .glow-green { box-shadow: 0 0 100px -20px #00ff9d; }
-    .phone-mockup {
-      background: #111;
-      border: 14px solid #00ff9d;
-      border-radius: 52px;
-      padding: 10px;
-      box-shadow: 0 0 80px -15px #00ff9d;
-      transition: all 0.4s ease;
-      cursor: pointer;
+    body {
+      background: #030712;
+      overflow-x: hidden;
+    }
+    .hero-bg {
+      background: linear-gradient(180deg, rgba(15,23,42,0.95), rgba(3,7,18,0.98)),
+                  radial-gradient(circle at center, rgba(59,130,246,0.15), transparent 70%);
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(234, 179, 8, 0.25);
+    }
+    .portal-glow {
+      box-shadow: 0 0 120px -20px #3b82f6,
+                  0 0 60px -10px #22d3ee;
     }
   </style>
 </head>
 <body class="text-white min-h-screen pb-20">
 
-  <!-- Globe Background -->
-  <div id="globe-container"></div>
-
-  <!-- Character Canvas -->
-  <div id="character-container" class="opacity-90"></div>
+  <!-- 3D Background -->
+  <div id="globe-container" class="fixed inset-0 z-[-1]"></div>
 
   <div class="max-w-6xl mx-auto px-6 pt-8 relative z-10">
 
     <!-- Header -->
-    <div class="flex justify-between items-center mb-8">
+    <div class="glass rounded-3xl p-6 flex justify-between items-center mb-10">
       <div>
-        <h1 class="text-5xl font-black tracking-tighter">RICH <span class="text-[#00ff9d]">BIZNESS</span></h1>
+        <h1 class="text-5xl font-black tracking-tighter">RICH <span class="text-[#22d3ee]">BIZNESS</span></h1>
         <p class="text-gray-400">LLC • EMPIRE OF THE UNIVERSE</p>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="px-4 py-2 bg-green-500/10 border border-green-500 rounded-full text-sm flex items-center gap-2">
-          <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          LIVE
-        </div>
+      <div class="px-5 py-2 bg-cyan-500/10 border border-cyan-400 rounded-full flex items-center gap-2 text-sm">
+        <div class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+        LIVE
       </div>
     </div>
 
     <!-- Cinematic Hero -->
-    <div class="relative h-[580px] flex items-center justify-center mb-12 rounded-3xl overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/60 to-black/90"></div>
+    <div class="hero-bg relative h-[620px] rounded-3xl overflow-hidden border border-cyan-500/30 mb-16 flex items-center justify-center">
       
-      <div class="relative z-10 text-center">
-        <h2 class="text-6xl font-black tracking-tighter mb-4">ALL IN ONE <span class="text-[#00ff9d]">UNIVERSE</span></h2>
-        <p class="text-[#00ff9d] text-2xl">CONNECT • CREATE • CONQUER</p>
+      <!-- GTA Style Avatar -->
+      <div class="absolute left-12 bottom-20 z-20">
+        <div class="w-64 h-96 bg-gradient-to-b from-slate-800 to-black rounded-3xl border border-cyan-400/50 flex flex-col items-center justify-end p-6 portal-glow">
+          <div class="text-7xl mb-4">🧢</div>
+          <div class="text-cyan-300 font-bold text-xl">THE LEGEND</div>
+          <div class="text-xs text-gray-400 tracking-widest">RICH BIZNESS EMPIRE</div>
+        </div>
       </div>
 
-      <!-- Central Phone -->
-      <div onclick="goLive()" class="phone-mockup w-72 absolute bottom-12 left-1/2 -translate-x-1/2 z-20">
-        <div class="bg-black rounded-3xl h-[520px] flex flex-col items-center justify-center text-center p-6">
-          <div class="w-28 h-28 bg-gradient-to-br from-green-400 to-emerald-600 rounded-3xl flex items-center justify-center mb-8 glow-green">
-            <i class="fa-solid fa-broadcast-tower text-6xl"></i>
+      <!-- Central Portal Phone -->
+      <div onclick="goLive()" class="phone-mockup w-80 relative z-30 cursor-pointer">
+        <div class="bg-zinc-950 rounded-3xl h-[560px] flex flex-col items-center justify-center text-center p-8 border border-cyan-400/30">
+          <div class="w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-3xl flex items-center justify-center mb-10 portal-glow">
+            <i class="fa-solid fa-broadcast-tower text-7xl text-black"></i>
           </div>
-          <h2 class="text-3xl font-bold mb-2">Go Live</h2>
-          <p class="text-green-400">ENTER THE EMPIRE</p>
+          <h2 class="text-4xl font-bold mb-3">Go Live</h2>
+          <p class="text-cyan-300 text-lg">ENTER THE PORTAL</p>
+        </div>
+      </div>
+
+      <!-- Floating Module Phones -->
+      <div class="absolute right-12 top-32 phone-mockup w-52 scale-75 cursor-pointer" onclick="selectModule('music')">
+        <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-music text-5xl text-purple-400"></i>
+          <p class="mt-6 font-bold">Music</p>
+        </div>
+      </div>
+
+      <div class="absolute right-8 bottom-32 phone-mockup w-52 scale-75 cursor-pointer" onclick="selectModule('gaming')">
+        <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-gamepad text-5xl text-cyan-400"></i>
+          <p class="mt-6 font-bold">Gaming</p>
         </div>
       </div>
     </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">10M+</div><div class="text-gray-400">Members</div></div>
-      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">500K+</div><div class="text-gray-400">Creators</div></div>
-      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">100K+</div><div class="text-gray-400">Live Now</div></div>
-      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">∞</div><div class="text-gray-400">Modules</div></div>
-    </div>
-
-    <!-- Module Phones -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-      <div onclick="selectModule('music')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-music text-5xl text-purple-400"></i><p class="mt-4 font-bold">Music</p></div></div>
-      <div onclick="selectModule('gaming')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-gamepad text-5xl text-cyan-400"></i><p class="mt-4 font-bold">Gaming</p></div></div>
-      <div onclick="selectModule('meta')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-globe text-5xl text-sky-400"></i><p class="mt-4 font-bold">Meta</p></div></div>
-      <div onclick="selectModule('store')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-store text-5xl text-amber-400"></i><p class="mt-4 font-bold">Store</p></div></div>
+      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">10M+</div><div class="text-gray-400">Members</div></div>
+      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">500K+</div><div class="text-gray-400">Creators</div></div>
+      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">100K+</div><div class="text-gray-400">Live Now</div></div>
+      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">∞</div><div class="text-gray-400">Modules</div></div>
     </div>
   </div>
 
   <script>
-    // === GLOBE BACKGROUND ===
-    const globeScene = new THREE.Scene();
-    const globeCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const globeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    globeRenderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('globe-container').appendChild(globeRenderer.domElement);
+    // 3D Galactic Portal Globe
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('globe-container').appendChild(renderer.domElement);
 
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(9, 64, 64), new THREE.MeshPhongMaterial({color: 0x00ff9d, emissive: 0x004422}));
-    globeScene.add(globe);
-    globeScene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const light = new THREE.PointLight(0x00ff9d, 2.5);
-    light.position.set(25, 20, 30);
-    globeScene.add(light);
-    globeCamera.position.z = 28;
+    const globe = new THREE.Mesh(
+      new THREE.SphereGeometry(11, 64, 64),
+      new THREE.MeshPhongMaterial({ 
+        color: 0x22d3ee, 
+        emissive: 0x1e40af,
+        shininess: 12,
+        transparent: true,
+        opacity: 0.85
+      })
+    );
+    scene.add(globe);
 
-    // === REALISTIC 3D CHARACTER ===
-    const charScene = new THREE.Scene();
-    const charCamera = new THREE.PerspectiveCamera(45, 300/400, 0.1, 1000);
-    const charRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    charRenderer.setSize(300, 400);
-    document.getElementById('character-container').appendChild(charRenderer.domElement);
+    const innerGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(8, 64, 64),
+      new THREE.MeshBasicMaterial({ color: 0x67e8f9, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending })
+    );
+    scene.add(innerGlow);
 
-    // Hooded Character
-    const characterGroup = new THREE.Group();
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const pointLight = new THREE.PointLight(0x67e8f9, 3);
+    pointLight.position.set(30, 20, 40);
+    scene.add(pointLight);
 
-    // Body (Hoodie)
-    const bodyGeo = new THREE.BoxGeometry(4, 7, 3);
-    const bodyMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 2;
-    characterGroup.add(body);
-
-    // Head
-    const headGeo = new THREE.SphereGeometry(2.2, 32, 32);
-    const headMat = new THREE.MeshPhongMaterial({ color: 0xffdbac });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 6.5;
-    characterGroup.add(head);
-
-    // Beanie
-    const beanieGeo = new THREE.CylinderGeometry(2.1, 1.8, 2, 32);
-    const beanieMat = new THREE.MeshPhongMaterial({ color: 0x1e3a2f });
-    const beanie = new THREE.Mesh(beanieGeo, beanieMat);
-    beanie.position.y = 8;
-    beanie.rotation.x = Math.PI / 2;
-    characterGroup.add(beanie);
-
-    // Arms
-    const armGeo = new THREE.BoxGeometry(1.2, 4, 1.2);
-    const leftArm = new THREE.Mesh(armGeo, bodyMat);
-    leftArm.position.set(-2.5, 3, 0);
-    leftArm.rotation.z = 0.6;
-    characterGroup.add(leftArm);
-
-    const rightArm = leftArm.clone();
-    rightArm.position.x = 2.5;
-    rightArm.rotation.z = -0.6;
-    characterGroup.add(rightArm);
-
-    charScene.add(characterGroup);
-    charScene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const charLight = new THREE.PointLight(0x00ff9d, 1.5);
-    charLight.position.set(10, 15, 20);
-    charScene.add(charLight);
-
-    charCamera.position.set(0, 5, 15);
-    charCamera.lookAt(0, 5, 0);
+    camera.position.z = 32;
 
     function animate() {
       requestAnimationFrame(animate);
-      
-      // Globe
-      globe.rotation.y += 0.0015;
-      globeRenderer.render(globeScene, globeCamera);
-
-      // Character subtle animation
-      characterGroup.rotation.y = Math.sin(Date.now() * 0.0008) * 0.08;
-      charRenderer.render(charScene, charCamera);
+      globe.rotation.y += 0.0012;
+      innerGlow.rotation.y += 0.0018;
+      renderer.render(scene, camera);
     }
     animate();
 
-    // Interactions
-    function goLive() { alert("🚀 Launching Live Stream Studio..."); }
+    function goLive() {
+      alert("🌌 Opening Portal to Live Stream Reality...");
+    }
     function selectModule(mod) {
-      const map = { music: "🎵 Music Universe", gaming: "🎮 Gaming District", meta: "🌌 Meta World", store: "🛍️ Creator Market" };
-      alert(`Entering ${map[mod]}...`);
+      alert(`Entering ${mod.toUpperCase()} Universe...`);
     }
   </script>
 </body>
