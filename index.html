@@ -9,93 +9,114 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
     body {
-      background: #030712;
-      overflow-x: hidden;
+      background: #0a0f0a;
+      color: #e5e7eb;
     }
-    .hero-bg {
-      background: linear-gradient(180deg, rgba(15,23,42,0.95), rgba(3,7,18,0.98)),
-                  radial-gradient(circle at center, rgba(59,130,246,0.15), transparent 70%);
+    .burnt-gold { color: #fbbf24; }
+    .smoke-green { color: #10b981; }
+    .glass-smoke {
+      background: rgba(16, 185, 129, 0.07);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(251, 191, 36, 0.25);
     }
-    .glass {
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(234, 179, 8, 0.25);
+    .phone-mockup {
+      background: #111827;
+      border: 14px solid #10b981;
+      border-radius: 52px;
+      padding: 10px;
+      box-shadow: 0 0 80px -15px #10b981,
+                  0 0 40px -10px #fbbf24;
+      transition: all 0.4s ease;
     }
-    .portal-glow {
-      box-shadow: 0 0 120px -20px #3b82f6,
-                  0 0 60px -10px #22d3ee;
+    .phone-mockup:hover {
+      transform: scale(1.08) rotate(1deg);
+      box-shadow: 0 0 100px -10px #fbbf24;
     }
   </style>
 </head>
-<body class="text-white min-h-screen pb-20">
+<body class="min-h-screen pb-20">
 
   <!-- 3D Background -->
-  <div id="globe-container" class="fixed inset-0 z-[-1]"></div>
+  <div id="globe-container" class="fixed inset-0 z-[-1] opacity-75"></div>
 
   <div class="max-w-6xl mx-auto px-6 pt-8 relative z-10">
 
     <!-- Header -->
-    <div class="glass rounded-3xl p-6 flex justify-between items-center mb-10">
+    <div class="glass-smoke rounded-3xl p-6 flex justify-between items-center mb-10">
       <div>
-        <h1 class="text-5xl font-black tracking-tighter">RICH <span class="text-[#22d3ee]">BIZNESS</span></h1>
-        <p class="text-gray-400">LLC • EMPIRE OF THE UNIVERSE</p>
+        <h1 class="text-5xl font-black tracking-tighter">RICH <span class="burnt-gold">BIZNESS</span></h1>
+        <p class="text-gray-400">LLC • SMOKE & EMPIRE</p>
       </div>
-      <div class="px-5 py-2 bg-cyan-500/10 border border-cyan-400 rounded-full flex items-center gap-2 text-sm">
-        <div class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+      <div class="px-5 py-2 bg-emerald-500/10 border border-emerald-500 rounded-full flex items-center gap-2 text-sm">
+        <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
         LIVE
       </div>
     </div>
 
-    <!-- Cinematic Hero -->
-    <div class="hero-bg relative h-[620px] rounded-3xl overflow-hidden border border-cyan-500/30 mb-16 flex items-center justify-center">
-      
-      <!-- GTA Style Avatar -->
-      <div class="absolute left-12 bottom-20 z-20">
-        <div class="w-64 h-96 bg-gradient-to-b from-slate-800 to-black rounded-3xl border border-cyan-400/50 flex flex-col items-center justify-end p-6 portal-glow">
-          <div class="text-7xl mb-4">🧢</div>
-          <div class="text-cyan-300 font-bold text-xl">THE LEGEND</div>
-          <div class="text-xs text-gray-400 tracking-widest">RICH BIZNESS EMPIRE</div>
-        </div>
-      </div>
+    <!-- Multiverse Phones -->
+    <div class="relative h-[680px] flex items-center justify-center mb-16">
+      <!-- Smoke Rings -->
+      <div class="absolute w-[580px] h-[580px] border border-emerald-500/30 rounded-full animate-[spin_50s_linear_infinite]"></div>
+      <div class="absolute w-[720px] h-[720px] border border-amber-500/20 rounded-full animate-[spin_75s_linear_infinite]"></div>
 
-      <!-- Central Portal Phone -->
-      <div onclick="goLive()" class="phone-mockup w-80 relative z-30 cursor-pointer">
-        <div class="bg-zinc-950 rounded-3xl h-[560px] flex flex-col items-center justify-center text-center p-8 border border-cyan-400/30">
-          <div class="w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-3xl flex items-center justify-center mb-10 portal-glow">
+      <!-- Central Phone -->
+      <div onclick="goLive()" class="phone-mockup w-80 relative z-30">
+        <div class="bg-zinc-950 rounded-3xl h-[560px] flex flex-col items-center justify-center text-center p-8">
+          <div class="w-32 h-32 bg-gradient-to-br from-emerald-400 to-amber-500 rounded-3xl flex items-center justify-center mb-10 shadow-2xl">
             <i class="fa-solid fa-broadcast-tower text-7xl text-black"></i>
           </div>
           <h2 class="text-4xl font-bold mb-3">Go Live</h2>
-          <p class="text-cyan-300 text-lg">ENTER THE PORTAL</p>
+          <p class="text-emerald-400 text-lg">ENTER THE SMOKE</p>
         </div>
       </div>
 
-      <!-- Floating Module Phones -->
-      <div class="absolute right-12 top-32 phone-mockup w-52 scale-75 cursor-pointer" onclick="selectModule('music')">
-        <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-music text-5xl text-purple-400"></i>
-          <p class="mt-6 font-bold">Music</p>
+      <!-- Orbiting Multiverse Phones -->
+      <div onclick="selectModule('music')" class="absolute left-8 top-20 phone-mockup w-52 scale-75">
+        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-music text-6xl text-purple-400 mb-6"></i>
+          <p class="font-bold text-xl">Music</p>
         </div>
       </div>
 
-      <div class="absolute right-8 bottom-32 phone-mockup w-52 scale-75 cursor-pointer" onclick="selectModule('gaming')">
-        <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-gamepad text-5xl text-cyan-400"></i>
-          <p class="mt-6 font-bold">Gaming</p>
+      <div onclick="selectModule('gaming')" class="absolute left-12 bottom-24 phone-mockup w-52 scale-75">
+        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-gamepad text-6xl text-cyan-400 mb-6"></i>
+          <p class="font-bold text-xl">Gaming</p>
+        </div>
+      </div>
+
+      <div onclick="selectModule('meta')" class="absolute right-8 top-20 phone-mockup w-52 scale-75">
+        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-globe text-6xl text-sky-400 mb-6"></i>
+          <p class="font-bold text-xl">Meta</p>
+        </div>
+      </div>
+
+      <div onclick="selectModule('store')" class="absolute right-12 bottom-24 phone-mockup w-52 scale-75">
+        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-store text-6xl text-amber-400 mb-6"></i>
+          <p class="font-bold text-xl">Store</p>
         </div>
       </div>
     </div>
 
+    <!-- Hero Text -->
+    <div class="text-center mb-16">
+      <h2 class="text-6xl font-black tracking-tighter">ALL IN ONE <span class="burnt-gold">UNIVERSE</span></h2>
+      <p class="text-emerald-400 text-2xl mt-4">SMOKE • POWER • LEGACY</p>
+    </div>
+
     <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">10M+</div><div class="text-gray-400">Members</div></div>
-      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">500K+</div><div class="text-gray-400">Creators</div></div>
-      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">100K+</div><div class="text-gray-400">Live Now</div></div>
-      <div class="glass rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-cyan-400">∞</div><div class="text-gray-400">Modules</div></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">10M+</div><div class="text-gray-400">Members</div></div>
+      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">500K+</div><div class="text-gray-400">Creators</div></div>
+      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">100K+</div><div class="text-gray-400">Live Now</div></div>
+      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">∞</div><div class="text-gray-400">Realms</div></div>
     </div>
   </div>
 
   <script>
-    // 3D Galactic Portal Globe
+    // 3D Smoke Globe
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -104,42 +125,27 @@
 
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(11, 64, 64),
-      new THREE.MeshPhongMaterial({ 
-        color: 0x22d3ee, 
-        emissive: 0x1e40af,
-        shininess: 12,
-        transparent: true,
-        opacity: 0.85
-      })
+      new THREE.MeshPhongMaterial({ color: 0x10b981, emissive: 0x064e3b, shininess: 10 })
     );
     scene.add(globe);
 
-    const innerGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(8, 64, 64),
-      new THREE.MeshBasicMaterial({ color: 0x67e8f9, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending })
-    );
-    scene.add(innerGlow);
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    const pointLight = new THREE.PointLight(0x67e8f9, 3);
-    pointLight.position.set(30, 20, 40);
-    scene.add(pointLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const light = new THREE.PointLight(0xfacc15, 2.8);
+    light.position.set(30, 25, 35);
+    scene.add(light);
 
     camera.position.z = 32;
 
     function animate() {
       requestAnimationFrame(animate);
-      globe.rotation.y += 0.0012;
-      innerGlow.rotation.y += 0.0018;
+      globe.rotation.y += 0.0015;
       renderer.render(scene, camera);
     }
     animate();
 
-    function goLive() {
-      alert("🌌 Opening Portal to Live Stream Reality...");
-    }
+    function goLive() { alert("🌫️ Entering the Smoke Portal..."); }
     function selectModule(mod) {
-      alert(`Entering ${mod.toUpperCase()} Universe...`);
+      alert(`Entering ${mod.toUpperCase()} Realm...`);
     }
   </script>
 </body>
