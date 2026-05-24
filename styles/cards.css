@@ -1,10 +1,7 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/cards.css
-
-   GLOBAL CARD SYSTEM
-   feed / live / music / podcast / radio
-   gaming / sports / gallery / store / meta
+   GLOBAL CARD SYSTEM - POLISHED
 ========================================= */
 
 /* =========================================
@@ -24,39 +21,21 @@
 .rb-store-card,
 .rb-meta-card,
 .rb-profile-card,
-.rb-creator-card{
-
-  position:relative;
-
-  overflow:hidden;
-
-  border-radius:32px;
-
-  border:
-    1px solid rgba(255,255,255,.08);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.04),
-      rgba(0,0,0,.56)
-    );
-
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-
-  box-shadow:
-    0 30px 80px rgba(0,0,0,.42),
-    0 0 30px rgba(0,255,136,.08);
-
-  transition:
-    transform .24s ease,
-    border-color .24s ease,
-    box-shadow .24s ease,
-    background .24s ease,
-    opacity .24s ease;
-
-  isolation:isolate;
+.rb-creator-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.58));
+  backdrop-filter: blur(16px);
+  box-shadow: 
+    0 30px 80px rgba(0,0,0,0.45),
+    0 0 30px rgba(0,255,136,0.09);
+  transition: 
+    transform 0.28s cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+  isolation: isolate;
 }
 
 /* =========================================
@@ -76,21 +55,16 @@
 .rb-store-card:hover,
 .rb-meta-card:hover,
 .rb-profile-card:hover,
-.rb-creator-card:hover{
-
-  transform:
-    translateY(-4px);
-
-  border-color:
-    rgba(102,255,153,.24);
-
-  box-shadow:
-    0 40px 100px rgba(0,0,0,.52),
-    0 0 40px rgba(0,255,136,.14);
+.rb-creator-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(102,255,153,0.28);
+  box-shadow: 
+    0 40px 100px rgba(0,0,0,0.55),
+    0 0 45px rgba(0,255,136,0.18);
 }
 
 /* =========================================
-   GLASS FX
+   GLASS OVERLAY
 ========================================= */
 
 .rb-card::before,
@@ -106,31 +80,18 @@
 .rb-store-card::before,
 .rb-meta-card::before,
 .rb-profile-card::before,
-.rb-creator-card::before{
-
-  content:"";
-
-  position:absolute;
-  inset:0;
-
-  pointer-events:none;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.14),
-      transparent 18%,
-      transparent 72%,
-      rgba(0,255,136,.08)
-    );
-
-  opacity:.8;
-
-  z-index:1;
+.rb-creator-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,0.16), transparent 22%, transparent 68%, rgba(0,255,136,0.10));
+  opacity: 0.85;
+  z-index: 1;
 }
 
 /* =========================================
-   TOP MEDIA
+   MEDIA / COVER
 ========================================= */
 
 .rb-card-media,
@@ -138,15 +99,11 @@
 .rb-live-cover,
 .rb-game-cover,
 .rb-gallery-cover,
-.rb-store-cover{
-
-  position:relative;
-
-  aspect-ratio:16/10;
-
-  overflow:hidden;
-
-  background:#020402;
+.rb-store-cover {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #020402;
 }
 
 .rb-card-media img,
@@ -155,26 +112,17 @@
 .rb-game-cover img,
 .rb-gallery-cover img,
 .rb-store-cover img,
-
 .rb-card-media video,
 .rb-media-cover video,
 .rb-live-cover video,
 .rb-game-cover video,
 .rb-gallery-cover video,
-.rb-store-cover video{
-
-  width:100%;
-  height:100%;
-
-  object-fit:cover;
-
-  transition:
-    transform .5s ease,
-    filter .4s ease;
-
-  filter:
-    saturate(1.06)
-    contrast(1.05);
+.rb-store-cover video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease, filter 0.4s ease;
+  filter: saturate(1.08) contrast(1.06);
 }
 
 .rb-card:hover img,
@@ -190,368 +138,190 @@
 .rb-store-card:hover img,
 .rb-meta-card:hover img,
 .rb-profile-card:hover img,
-.rb-creator-card:hover img{
-
-  transform:scale(1.04);
-
-  filter:
-    saturate(1.12)
-    contrast(1.08);
+.rb-creator-card:hover img {
+  transform: scale(1.06);
+  filter: saturate(1.18) contrast(1.12);
 }
 
 /* =========================================
-   OVERLAY
+   OVERLAY + BODY
 ========================================= */
 
-.rb-card-overlay{
-  position:absolute;
-  inset:0;
+.rb-card-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 18px;
+  z-index: 3;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.85));
+}
 
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
+.rb-card-body {
+  position: relative;
+  z-index: 2;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
 
-  padding:18px;
+.rb-card-kicker {
+  color: var(--rb-green);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
 
-  z-index:3;
+.rb-card-title {
+  margin: 0;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
 
-  background:
-    linear-gradient(
-      180deg,
-      transparent,
-      rgba(0,0,0,.82)
-    );
+.rb-card-copy {
+  color: var(--rb-muted);
+  line-height: 1.55;
+  font-size: 0.92rem;
 }
 
 /* =========================================
-   CONTENT
+   META & USER ROW
 ========================================= */
 
-.rb-card-body{
-  position:relative;
-  z-index:2;
-
-  display:grid;
-  gap:12px;
-
-  padding:18px;
+.rb-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.rb-card-kicker{
-  color:var(--rb-green);
-
-  font-size:.72rem;
-  font-weight:1000;
-
-  letter-spacing:.18em;
-  text-transform:uppercase;
+.rb-card-meta span {
+  color: rgba(255,255,255,0.65);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.rb-card-title{
-  margin:0;
-
-  font-size:clamp(1.05rem,2vw,1.45rem);
-
-  line-height:1.05;
-  letter-spacing:-.04em;
+.rb-card-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.rb-card-copy{
-  color:var(--rb-muted);
-
-  line-height:1.55;
-  font-size:.92rem;
+.rb-card-user img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255,215,106,0.28);
+  background: #081008;
 }
 
 /* =========================================
-   META
+   SPECIAL CARD VARIANTS
 ========================================= */
 
-.rb-card-meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-
-  flex-wrap:wrap;
+.rb-live-card {
+  border-color: rgba(255,70,70,0.22);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.48), 0 0 34px rgba(255,0,60,0.12);
 }
 
-.rb-card-meta span{
-  color:rgba(255,255,255,.62);
+.rb-live-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff3355, #ff0033);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  box-shadow: 0 0 18px rgba(255,0,60,0.38);
+}
 
-  font-size:.72rem;
-  font-weight:900;
+.rb-store-price {
+  color: var(--rb-gold);
+  font-size: 1.22rem;
+  font-weight: 1000;
+}
 
-  letter-spacing:.08em;
-  text-transform:uppercase;
+.rb-music-wave {
+  position: relative;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(255,215,106,0.08));
+  overflow: hidden;
+}
+
+.rb-music-wave::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, rgba(102,255,153,0.25) 0 2px, transparent 2px 8px);
+  animation: rbWaveMove 6.5s linear infinite;
 }
 
 /* =========================================
-   PROFILE ROW
+   CARD ACTIONS
 ========================================= */
 
-.rb-card-user{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.rb-card-user img{
-  width:48px;
-  height:48px;
-
-  border-radius:50%;
-
-  object-fit:cover;
-
-  border:
-    1px solid rgba(255,215,106,.26);
-
-  background:#081008;
-}
-
-.rb-card-user strong{
-  display:block;
-}
-
-.rb-card-user span{
-  display:block;
-
-  margin-top:2px;
-
-  color:rgba(255,255,255,.58);
-
-  font-size:.76rem;
-}
-
-/* =========================================
-   LIVE CARD
-========================================= */
-
-.rb-live-card{
-
-  border:
-    1px solid rgba(255,70,70,.18);
-
-  box-shadow:
-    0 30px 80px rgba(0,0,0,.46),
-    0 0 34px rgba(255,0,60,.08);
-}
-
-.rb-live-badge{
-  position:absolute;
-
-  top:14px;
-  left:14px;
-
-  z-index:4;
-
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-
-  min-height:32px;
-
-  padding:0 14px;
-
-  border-radius:999px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #ff3355,
-      #ff0033
-    );
-
-  color:#fff;
-
-  font-size:.68rem;
-  font-weight:1000;
-  letter-spacing:.12em;
-
-  box-shadow:
-    0 0 18px rgba(255,0,60,.34);
-}
-
-/* =========================================
-   STORE CARD
-========================================= */
-
-.rb-store-price{
-  color:var(--rb-gold);
-
-  font-size:1.2rem;
-  font-weight:1000;
-}
-
-/* =========================================
-   MUSIC CARD
-========================================= */
-
-.rb-music-wave{
-  position:relative;
-
-  height:52px;
-
-  border-radius:16px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(0,255,136,.08),
-      rgba(255,215,106,.06)
-    );
-
-  overflow:hidden;
-}
-
-.rb-music-wave::before{
-  content:"";
-
-  position:absolute;
-
-  inset:0;
-
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(102,255,153,.22) 0 2px,
-      transparent 2px 8px
-    );
-
-  animation:
-    rbWaveMove 7s linear infinite;
-}
-
-/* =========================================
-   GAMING CARD
-========================================= */
-
-.rb-game-card{
-
-  border:
-    1px solid rgba(0,255,136,.14);
-}
-
-.rb-game-score{
-  color:var(--rb-green);
-
-  font-size:2rem;
-  font-weight:1000;
-}
-
-/* =========================================
-   META CARD
-========================================= */
-
-.rb-meta-card{
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(120,0,255,.10),
-      rgba(0,0,0,.58)
-    );
-}
-
-/* =========================================
-   ACTION ROW
-========================================= */
-
-.rb-card-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-
-  flex-wrap:wrap;
+.rb-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .rb-card-actions button,
-.rb-card-actions a{
-
-  min-height:42px;
-
-  padding:0 16px;
-
-  border-radius:999px;
-
-  border:
-    1px solid rgba(255,255,255,.08);
-
-  background:
-    rgba(255,255,255,.04);
-
-  color:#fff;
-
-  font-size:.74rem;
-  font-weight:1000;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-
-  cursor:pointer;
-
-  transition:
-    transform .18s ease,
-    background .18s ease,
-    border-color .18s ease;
+.rb-card-actions a {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .rb-card-actions button:hover,
-.rb-card-actions a:hover{
-
-  transform:
-    translateY(-1px);
-
-  border-color:
-    rgba(102,255,153,.24);
-
-  background:
-    rgba(0,255,136,.08);
+.rb-card-actions a:hover {
+  transform: translateY(-1px);
+  border-color: rgba(102,255,153,0.3);
+  background: rgba(0,255,136,0.1);
 }
 
 /* =========================================
-   EMPTY CARD
+   SHINE EFFECT
 ========================================= */
 
-.rb-empty-card{
-  display:grid;
-  place-items:center;
-
-  min-height:220px;
-
-  padding:24px;
-
-  text-align:center;
-}
-
-/* =========================================
-   CARD SHINE
-========================================= */
-
-.rb-card-shine{
-  position:absolute;
-
-  top:-120%;
-  left:-30%;
-
-  width:55%;
-  height:300%;
-
-  transform:rotate(18deg);
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(255,255,255,.12),
-      transparent
-    );
-
-  opacity:0;
-
-  transition:
-    opacity .3s ease,
-    left .7s ease;
+.rb-card-shine {
+  position: absolute;
+  top: -120%;
+  left: -30%;
+  width: 55%;
+  height: 300%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+  opacity: 0;
+  transition: all 0.7s ease;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .rb-card:hover .rb-card-shine,
@@ -567,32 +337,25 @@
 .rb-store-card:hover .rb-card-shine,
 .rb-meta-card:hover .rb-card-shine,
 .rb-profile-card:hover .rb-card-shine,
-.rb-creator-card:hover .rb-card-shine{
-
-  left:120%;
-  opacity:1;
+.rb-creator-card:hover .rb-card-shine {
+  left: 120%;
+  opacity: 1;
 }
 
 /* =========================================
    ANIMATIONS
 ========================================= */
 
-@keyframes rbWaveMove{
-  from{
-    transform:translateX(0);
-  }
-
-  to{
-    transform:translateX(40px);
-  }
+@keyframes rbWaveMove {
+  from { transform: translateX(0); }
+  to   { transform: translateX(40px); }
 }
 
 /* =========================================
    MOBILE
 ========================================= */
 
-@media (max-width:640px){
-
+@media (max-width: 640px) {
   .rb-card,
   .rb-media-card,
   .rb-live-card,
@@ -606,29 +369,28 @@
   .rb-store-card,
   .rb-meta-card,
   .rb-profile-card,
-  .rb-creator-card{
-
-    border-radius:24px;
+  .rb-creator-card {
+    border-radius: 24px;
   }
 
-  .rb-card-body{
-    padding:14px;
+  .rb-card-body {
+    padding: 14px;
   }
 
-  .rb-card-title{
-    font-size:1rem;
+  .rb-card-title {
+    font-size: 1rem;
   }
 
-  .rb-card-copy{
-    font-size:.86rem;
+  .rb-card-copy {
+    font-size: 0.86rem;
   }
 
-  .rb-card-actions{
-    width:100%;
+  .rb-card-actions {
+    width: 100%;
   }
 
   .rb-card-actions button,
-  .rb-card-actions a{
-    flex:1;
+  .rb-card-actions a {
+    flex: 1;
   }
 }
