@@ -10,59 +10,48 @@
   <style>
     body {
       background: #0a0f0a;
-      color: #e5e7eb;
+      overflow-x: hidden;
     }
     .burnt-gold { color: #fbbf24; }
-    .smoke-green { color: #10b981; }
+    .dark-emerald { color: #10b981; }
+    .phone-hub {
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
     .glass-smoke {
-      background: rgba(16, 185, 129, 0.07);
+      background: rgba(16, 185, 129, 0.08);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(251, 191, 36, 0.25);
-    }
-    .phone-mockup {
-      background: #111827;
-      border: 14px solid #10b981;
-      border-radius: 52px;
-      padding: 10px;
-      box-shadow: 0 0 80px -15px #10b981,
-                  0 0 40px -10px #fbbf24;
-      transition: all 0.4s ease;
-    }
-    .phone-mockup:hover {
-      transform: scale(1.08) rotate(1deg);
-      box-shadow: 0 0 100px -10px #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.3);
     }
   </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="text-white min-h-screen pb-20">
 
-  <!-- 3D Background -->
-  <div id="globe-container" class="fixed inset-0 z-[-1] opacity-75"></div>
+  <!-- 3D Galaxy Portal Background -->
+  <div id="portal-container" class="fixed inset-0 z-[-1]"></div>
 
   <div class="max-w-6xl mx-auto px-6 pt-8 relative z-10">
 
     <!-- Header -->
-    <div class="glass-smoke rounded-3xl p-6 flex justify-between items-center mb-10">
+    <div class="glass-smoke rounded-3xl p-6 flex justify-between items-center mb-12">
       <div>
         <h1 class="text-5xl font-black tracking-tighter">RICH <span class="burnt-gold">BIZNESS</span></h1>
         <p class="text-gray-400">LLC • SMOKE & EMPIRE</p>
       </div>
-      <div class="px-5 py-2 bg-emerald-500/10 border border-emerald-500 rounded-full flex items-center gap-2 text-sm">
+      <div class="px-6 py-3 bg-emerald-500/10 border border-emerald-500 rounded-full flex items-center gap-3 text-sm">
         <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
         LIVE
       </div>
     </div>
 
-    <!-- Multiverse Phones -->
-    <div class="relative h-[680px] flex items-center justify-center mb-16">
-      <!-- Smoke Rings -->
-      <div class="absolute w-[580px] h-[580px] border border-emerald-500/30 rounded-full animate-[spin_50s_linear_infinite]"></div>
-      <div class="absolute w-[720px] h-[720px] border border-amber-500/20 rounded-full animate-[spin_75s_linear_infinite]"></div>
+    <!-- Sliding Multiverse Phones Hub -->
+    <div class="relative h-[680px] flex items-center justify-center mb-16 overflow-hidden">
+      <!-- Smoke Clouds Layer -->
+      <div class="absolute inset-0 bg-[radial-gradient(circle,#10b98122_20%,transparent_70%)] animate-pulse"></div>
 
       <!-- Central Phone -->
-      <div onclick="goLive()" class="phone-mockup w-80 relative z-30">
-        <div class="bg-zinc-950 rounded-3xl h-[560px] flex flex-col items-center justify-center text-center p-8">
-          <div class="w-32 h-32 bg-gradient-to-br from-emerald-400 to-amber-500 rounded-3xl flex items-center justify-center mb-10 shadow-2xl">
+      <div onclick="goLive()" class="phone-mockup w-80 relative z-30 scale-110">
+        <div class="bg-zinc-950 rounded-3xl h-[560px] flex flex-col items-center justify-center text-center p-8 border border-amber-400/40">
+          <div class="w-32 h-32 bg-gradient-to-br from-emerald-400 via-amber-400 to-yellow-500 rounded-3xl flex items-center justify-center mb-10 shadow-2xl">
             <i class="fa-solid fa-broadcast-tower text-7xl text-black"></i>
           </div>
           <h2 class="text-4xl font-bold mb-3">Go Live</h2>
@@ -70,29 +59,29 @@
         </div>
       </div>
 
-      <!-- Orbiting Multiverse Phones -->
-      <div onclick="selectModule('music')" class="absolute left-8 top-20 phone-mockup w-52 scale-75">
+      <!-- Sliding Side Phones -->
+      <div onclick="selectModule('music')" class="phone-mockup absolute left-12 top-28 w-52 scale-75 hover:scale-90">
         <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
           <i class="fa-solid fa-music text-6xl text-purple-400 mb-6"></i>
           <p class="font-bold text-xl">Music</p>
         </div>
       </div>
 
-      <div onclick="selectModule('gaming')" class="absolute left-12 bottom-24 phone-mockup w-52 scale-75">
+      <div onclick="selectModule('gaming')" class="phone-mockup absolute left-8 bottom-28 w-52 scale-75 hover:scale-90">
         <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
           <i class="fa-solid fa-gamepad text-6xl text-cyan-400 mb-6"></i>
           <p class="font-bold text-xl">Gaming</p>
         </div>
       </div>
 
-      <div onclick="selectModule('meta')" class="absolute right-8 top-20 phone-mockup w-52 scale-75">
+      <div onclick="selectModule('meta')" class="phone-mockup absolute right-12 top-28 w-52 scale-75 hover:scale-90">
         <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
           <i class="fa-solid fa-globe text-6xl text-sky-400 mb-6"></i>
           <p class="font-bold text-xl">Meta</p>
         </div>
       </div>
 
-      <div onclick="selectModule('store')" class="absolute right-12 bottom-24 phone-mockup w-52 scale-75">
+      <div onclick="selectModule('store')" class="phone-mockup absolute right-8 bottom-28 w-52 scale-75 hover:scale-90">
         <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
           <i class="fa-solid fa-store text-6xl text-amber-400 mb-6"></i>
           <p class="font-bold text-xl">Store</p>
@@ -116,37 +105,50 @@
   </div>
 
   <script>
-    // 3D Smoke Globe
+    // Rotating Galaxy Portal
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('globe-container').appendChild(renderer.domElement);
+    document.getElementById('portal-container').appendChild(renderer.domElement);
 
-    const globe = new THREE.Mesh(
-      new THREE.SphereGeometry(11, 64, 64),
-      new THREE.MeshPhongMaterial({ color: 0x10b981, emissive: 0x064e3b, shininess: 10 })
+    const portal = new THREE.Mesh(
+      new THREE.SphereGeometry(12, 64, 64),
+      new THREE.MeshPhongMaterial({ 
+        color: 0x10b981, 
+        emissive: 0x064e3b, 
+        shininess: 15,
+        transparent: true,
+        opacity: 0.85
+      })
     );
-    scene.add(globe);
+    scene.add(portal);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const light = new THREE.PointLight(0xfacc15, 2.8);
-    light.position.set(30, 25, 35);
+    // Galaxy Stars
+    const stars = new THREE.Points(
+      new THREE.BufferGeometry().setAttribute('position', 
+        new THREE.Float32BufferAttribute(Array.from({length: 8000}, () => THREE.MathUtils.randFloatSpread(200)), 3)),
+      new THREE.PointsMaterial({ color: 0xfacc15, size: 0.08 })
+    );
+    scene.add(stars);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const light = new THREE.PointLight(0xfacc15, 3);
+    light.position.set(30, 25, 40);
     scene.add(light);
 
-    camera.position.z = 32;
+    camera.position.z = 35;
 
     function animate() {
       requestAnimationFrame(animate);
-      globe.rotation.y += 0.0015;
+      portal.rotation.y += 0.0012;
+      stars.rotation.y += 0.0003;
       renderer.render(scene, camera);
     }
     animate();
 
     function goLive() { alert("🌫️ Entering the Smoke Portal..."); }
-    function selectModule(mod) {
-      alert(`Entering ${mod.toUpperCase()} Realm...`);
-    }
+    function selectModule(mod) { alert(`Entering ${mod.toUpperCase()} Realm...`); }
   </script>
 </body>
 </html>
