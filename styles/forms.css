@@ -1,396 +1,258 @@
-/* =========================
-   RICH BIZNESS MOBILE
+/* =========================================
+   RICH BIZNESS LLC
    /styles/forms.css
+   AUTH + FORM SYSTEM - POLISHED
+========================================= */
 
-   AUTH + FORM VISUAL SYSTEM
-   Forms only
-   No index ownership
-========================= */
+/* =========================================
+   AUTH SHELL
+========================================= */
 
-.rb-auth-shell{
-  position:relative;
-  z-index:2;
-
-  min-height:100svh;
-  width:min(100%, 980px);
-
-  margin:0 auto;
-  padding:28px 16px;
-
-  display:grid;
-  align-content:center;
-  gap:22px;
+.rb-auth-shell {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  width: min(100%, 980px);
+  margin: 0 auto;
+  padding: 28px 16px;
+  display: grid;
+  align-content: center;
+  gap: 22px;
 }
 
-/* =========================
-   HERO
-========================= */
+/* =========================================
+   HERO SECTION
+========================================= */
 
-.rb-auth-hero{
-  position:relative;
-  overflow:hidden;
-
-  padding:26px;
-
-  border:1px solid rgba(255,215,106,.24);
-  border-radius:32px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(8,18,10,.86),
-      rgba(0,0,0,.82)
-    );
-
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-
-  box-shadow:
-    0 0 44px rgba(0,255,136,.16),
-    inset 0 0 80px rgba(255,215,106,.04);
+.rb-auth-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26px;
+  border: 1px solid rgba(255,215,106,0.26);
+  border-radius: 32px;
+  background: linear-gradient(135deg, rgba(8,18,10,0.88), rgba(0,0,0,0.85));
+  backdrop-filter: blur(18px);
+  box-shadow: 
+    0 0 44px rgba(0,255,136,0.18),
+    inset 0 0 80px rgba(255,215,106,0.06);
 }
 
-.rb-auth-hero::before{
-  content:"";
-
-  position:absolute;
-  inset:0;
-
-  pointer-events:none;
-
-  background:url("/images/brand/hero-logo.png.jpeg");
-  background-size:cover;
-  background-position:center;
-
-  opacity:.12;
-
-  transform:scale(1.08);
-
-  filter:
-    saturate(1.25)
-    contrast(1.12)
-    brightness(.92);
+.rb-auth-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/images/brand/hero-logo.png.jpeg") center/cover;
+  opacity: 0.14;
+  transform: scale(1.08);
+  filter: saturate(1.25) contrast(1.12) brightness(0.92);
 }
 
-.rb-auth-hero::after{
-  content:"";
-
-  position:absolute;
-  inset:0;
-
-  pointer-events:none;
-
-  background:
-    radial-gradient(
-      circle at 20% 20%,
-      rgba(0,255,136,.14),
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at 80% 70%,
-      rgba(255,215,106,.12),
-      transparent 36%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.08),
-      rgba(0,0,0,.42)
-    );
+.rb-auth-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0,255,136,0.16), transparent 36%),
+    radial-gradient(circle at 80% 70%, rgba(255,215,106,0.14), transparent 38%),
+    linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.48));
 }
 
-.rb-auth-hero > *{
-  position:relative;
-  z-index:2;
+.rb-auth-hero > * {
+  position: relative;
+  z-index: 2;
 }
 
-.rb-auth-hero h1{
-  margin:0;
-
-  color:var(--rb-gold);
-
-  font-size:clamp(2.4rem, 10vw, 5.8rem);
-  line-height:.88;
-  letter-spacing:-.07em;
-
-  text-shadow:
-    0 0 26px rgba(255,215,106,.22),
-    0 0 48px rgba(0,255,136,.08);
+.rb-auth-hero h1 {
+  margin: 0;
+  color: var(--rb-gold);
+  font-size: clamp(2.4rem, 10vw, 5.8rem);
+  line-height: 0.88;
+  letter-spacing: -0.07em;
+  text-shadow: 
+    0 0 26px rgba(255,215,106,0.25),
+    0 0 48px rgba(0,255,136,0.1);
 }
 
-.rb-auth-hero p{
-  margin:12px 0 0;
-
-  max-width:680px;
-
-  color:var(--rb-muted);
-
-  line-height:1.5;
+.rb-auth-hero p {
+  margin: 12px 0 0;
+  max-width: 680px;
+  color: var(--rb-muted);
+  line-height: 1.55;
 }
 
-/* =========================
+/* =========================================
    AUTH PANEL
-========================= */
+========================================= */
 
-.rb-auth-panel{
-  position:relative;
-  overflow:hidden;
-
-  padding:16px;
-
-  border:1px solid rgba(102,255,102,.32);
-  border-radius:30px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(8,18,10,.88),
-      rgba(0,0,0,.82)
-    );
-
-  backdrop-filter:blur(22px);
-  -webkit-backdrop-filter:blur(22px);
-
-  box-shadow:
-    0 0 42px rgba(0,255,136,.18),
-    inset 0 0 50px rgba(255,215,106,.06);
+.rb-auth-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 16px;
+  border: 1px solid rgba(102,255,102,0.35);
+  border-radius: 30px;
+  background: linear-gradient(135deg, rgba(8,18,10,0.9), rgba(0,0,0,0.88));
+  backdrop-filter: blur(22px);
+  box-shadow: 
+    0 0 42px rgba(0,255,136,0.2),
+    inset 0 0 50px rgba(255,215,106,0.08);
 }
 
-.rb-auth-panel::before{
-  content:"";
-
-  position:absolute;
-  inset:0;
-
-  pointer-events:none;
-
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(0,255,136,.08),
-      transparent 34%
-    );
+.rb-auth-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(0,255,136,0.1), transparent 36%);
 }
 
-.rb-auth-panel > *{
-  position:relative;
-  z-index:2;
+/* =========================================
+   AUTH TABS
+========================================= */
+
+.rb-auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
-/* =========================
-   TABS
-========================= */
-
-.rb-auth-tabs{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-
-  margin-bottom:14px;
+.rb-auth-tabs button {
+  min-height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,215,106,0.26);
+  background: rgba(0,0,0,0.52);
+  color: var(--rb-muted);
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.22s ease;
 }
 
-.rb-auth-tabs button{
-  min-height:48px;
-
-  border-radius:999px;
-  border:1px solid rgba(255,215,106,.24);
-
-  background:rgba(0,0,0,.48);
-  color:var(--rb-muted);
-
-  font-weight:1000;
-  letter-spacing:.06em;
-
-  cursor:pointer;
-  touch-action:manipulation;
-
-  transition:
-    transform .18s ease,
-    box-shadow .18s ease,
-    background .18s ease;
-}
-
-.rb-auth-tabs button:active{
-  transform:scale(.98);
+.rb-auth-tabs button:active {
+  transform: scale(0.97);
 }
 
 body[data-auth-mode="signin"] [data-auth-mode="signin"],
-body[data-auth-mode="signup"] [data-auth-mode="signup"]{
-  color:#001806;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-green),
-      var(--rb-gold)
-    );
-
-  box-shadow:0 0 24px rgba(0,255,136,.32);
+body[data-auth-mode="signup"] [data-auth-mode="signup"] {
+  color: #001806;
+  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+  box-shadow: 0 0 24px rgba(0,255,136,0.35);
 }
 
-/* =========================
-   FORM
-========================= */
+/* =========================================
+   FORM STYLES
+========================================= */
 
-.rb-auth-form{
-  gap:14px;
+.rb-auth-form {
+  display: grid;
+  gap: 14px;
 }
 
 #rb-signin-form,
-#rb-signup-form{
-  display:none;
+#rb-signup-form {
+  display: none;
 }
 
-.rb-auth-panel.is-signin #rb-signin-form{
-  display:grid;
+.rb-auth-panel.is-signin #rb-signin-form,
+.rb-auth-panel.is-signup #rb-signup-form {
+  display: grid;
 }
 
-.rb-auth-panel.is-signup #rb-signup-form{
-  display:grid;
+.rb-auth-form h2 {
+  margin: 4px 0 2px;
+  color: var(--rb-gold);
+  font-size: 1.5rem;
+  text-shadow: 0 0 20px rgba(255,215,106,0.16);
 }
 
-.rb-auth-form h2{
-  margin:4px 0 2px;
-
-  color:var(--rb-gold);
-
-  font-size:1.5rem;
-
-  text-shadow:
-    0 0 20px rgba(255,215,106,.14);
-}
-
-.rb-auth-form label{
-  display:grid;
-  gap:7px;
-
-  color:var(--rb-green);
-
-  font-size:.8rem;
-  font-weight:900;
-  letter-spacing:.08em;
-  text-transform:uppercase;
+.rb-auth-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--rb-green);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .rb-auth-form input,
 .rb-auth-form textarea,
-.rb-auth-form select{
-  width:100%;
-
-  border-radius:18px;
-  border:1px solid rgba(255,215,106,.22);
-
-  outline:none;
-
-  color:var(--rb-white);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.72),
-      rgba(5,12,7,.88)
-    );
-
-  box-shadow:
-    inset 0 0 22px rgba(0,255,136,.06);
-
-  font:inherit;
-
-  transition:
-    border-color .18s ease,
-    box-shadow .18s ease,
-    transform .18s ease;
+.rb-auth-form select {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255,215,106,0.24);
+  outline: none;
+  color: var(--rb-white);
+  background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(5,12,7,0.9));
+  box-shadow: inset 0 0 22px rgba(0,255,136,0.08);
+  font: inherit;
+  transition: all 0.2s ease;
 }
 
 .rb-auth-form input,
-.rb-auth-form select{
-  min-height:54px;
-  padding:0 16px;
+.rb-auth-form select {
+  min-height: 54px;
+  padding: 0 16px;
 }
 
-.rb-auth-form textarea{
-  min-height:120px;
-  resize:vertical;
-  padding:14px;
-}
-
-.rb-auth-form input::placeholder,
-.rb-auth-form textarea::placeholder{
-  color:rgba(255,255,255,.28);
+.rb-auth-form textarea {
+  min-height: 120px;
+  resize: vertical;
+  padding: 14px;
 }
 
 .rb-auth-form input:focus,
 .rb-auth-form textarea:focus,
-.rb-auth-form select:focus{
-  border-color:rgba(102,255,102,.72);
-
-  box-shadow:
-    0 0 22px rgba(0,255,136,.22),
-    inset 0 0 22px rgba(0,255,136,.08);
-
-  transform:translateY(-1px);
+.rb-auth-form select:focus {
+  border-color: rgba(102,255,102,0.75);
+  box-shadow: 0 0 22px rgba(0,255,136,0.25), inset 0 0 22px rgba(0,255,136,0.1);
+  transform: translateY(-1px);
 }
 
-.rb-auth-form input[type="file"]{
-  padding:14px;
-  min-height:auto;
+/* =========================================
+   LINKS & BACK
+========================================= */
+
+.rb-auth-home {
+  justify-self: center;
+  color: var(--rb-gold);
+  text-decoration: none;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s ease;
 }
 
-.rb-auth-form.is-loading{
-  opacity:.72;
-  pointer-events:none;
+.rb-auth-home:hover {
+  transform: translateY(-1px);
 }
 
-/* =========================
-   BACK / TEXT LINKS
-========================= */
-
-.rb-auth-home{
-  justify-self:center;
-
-  color:var(--rb-gold);
-
-  text-decoration:none;
-  font-weight:1000;
-  letter-spacing:.06em;
-
-  cursor:pointer;
-  touch-action:manipulation;
-
-  transition:
-    transform .18s ease,
-    opacity .18s ease;
-}
-
-.rb-auth-home:hover{
-  transform:translateY(-1px);
-}
-
-.rb-auth-home:active{
-  transform:scale(.98);
-}
-
-/* =========================
+/* =========================================
    MOBILE
-========================= */
+========================================= */
 
-@media (max-width:720px){
-  .rb-auth-shell{
-    padding:
+@media (max-width: 720px) {
+  .rb-auth-shell {
+    padding: 
       max(18px, env(safe-area-inset-top))
       12px
       calc(24px + env(safe-area-inset-bottom));
   }
 
-  .rb-auth-hero{
-    border-radius:26px;
-    padding:22px 18px;
+  .rb-auth-hero {
+    border-radius: 26px;
+    padding: 22px 18px;
   }
 
-  .rb-auth-panel{
-    border-radius:24px;
+  .rb-auth-panel {
+    border-radius: 24px;
   }
 
-  .rb-auth-hero h1{
-    font-size:clamp(2.3rem, 12vw, 4.4rem);
+  .rb-auth-hero h1 {
+    font-size: clamp(2.3rem, 12vw, 4.4rem);
   }
 }
