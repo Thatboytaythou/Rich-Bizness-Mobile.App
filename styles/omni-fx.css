@@ -1,7 +1,7 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/omni-fx.css
-   CINEMATIC ATMOSPHERE FX
+   CINEMATIC ATMOSPHERE FX - POLISHED
 ========================================= */
 
 /* =========================================
@@ -11,545 +11,277 @@
 .rb-bg-layer,
 .rb-bg-grid,
 .rb-bg-vignette,
-.rb-bg-noise{
-
-  position:fixed;
-  inset:0;
-
-  pointer-events:none;
+.rb-bg-noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -10;
 }
 
 /* =========================================
    MAIN BACKGROUND
 ========================================= */
 
-.rb-bg-layer{
-
-  z-index:-10;
-
-  background:
-    radial-gradient(
-      circle at 50% 38%,
-      rgba(92,255,124,.20) 0%,
-      rgba(0,255,136,.12) 18%,
-      rgba(0,0,0,0) 48%
-    ),
-
-    radial-gradient(
-      circle at top,
-      rgba(0,255,136,.10) 0%,
-      rgba(0,0,0,0) 45%
-    ),
-
-    linear-gradient(
-      180deg,
-      #071107 0%,
-      #030603 22%,
-      #010201 100%
-    );
+.rb-bg-layer {
+  z-index: -10;
+  background: 
+    radial-gradient(circle at 50% 38%, rgba(92,255,124,0.22) 0%, rgba(0,255,136,0.12) 18%, transparent 48%),
+    radial-gradient(circle at top, rgba(0,255,136,0.10) 0%, transparent 45%),
+    linear-gradient(180deg, #071107 0%, #030603 22%, #010201 100%);
 }
 
 /* =========================================
-   GRID
+   SUBTLE GRID
 ========================================= */
 
-.rb-bg-grid{
-
-  z-index:-9;
-
-  opacity:.12;
-
-  background-image:
-
-    linear-gradient(
-      rgba(120,255,160,.08) 1px,
-      transparent 1px
-    ),
-
-    linear-gradient(
-      90deg,
-      rgba(120,255,160,.08) 1px,
-      transparent 1px
-    );
-
-  background-size:80px 80px;
-
-  mask-image:
-    radial-gradient(
-      circle at center,
-      rgba(0,0,0,1),
-      rgba(0,0,0,.2) 70%,
-      transparent 100%
-    );
+.rb-bg-grid {
+  z-index: -9;
+  opacity: 0.09;
+  background-image: 
+    linear-gradient(rgba(120,255,160,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,255,160,0.08) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 75%);
 }
 
 /* =========================================
    VIGNETTE
 ========================================= */
 
-.rb-bg-vignette{
-
-  z-index:-8;
-
-  background:
-    radial-gradient(
-      circle at center,
-      transparent 42%,
-      rgba(0,0,0,.38) 75%,
-      rgba(0,0,0,.88) 100%
-    );
+.rb-bg-vignette {
+  z-index: -8;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.45) 72%, rgba(0,0,0,0.92) 100%);
 }
 
 /* =========================================
-   FILM GRAIN
+   FILM GRAIN / NOISE
 ========================================= */
 
-.rb-bg-noise{
-
-  z-index:-7;
-
-  opacity:.045;
-
-  mix-blend-mode:soft-light;
-
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='white'%3E%3Ccircle cx='12' cy='18' r='1'/%3E%3Ccircle cx='72' cy='82' r='1'/%3E%3Ccircle cx='144' cy='24' r='1'/%3E%3Ccircle cx='166' cy='118' r='1'/%3E%3Ccircle cx='102' cy='162' r='1'/%3E%3Ccircle cx='42' cy='142' r='1'/%3E%3C/g%3E%3C/svg%3E");
-
-  animation:rbNoiseMove 1.4s steps(2) infinite;
+.rb-bg-noise {
+  z-index: -7;
+  opacity: 0.035;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='white'%3E%3Ccircle cx='12' cy='18' r='1'/%3E%3Ccircle cx='72' cy='82' r='1'/%3E%3Ccircle cx='144' cy='24' r='1'/%3E%3Ccircle cx='166' cy='118' r='1'/%3E%3Ccircle cx='102' cy='162' r='1'/%3E%3Ccircle cx='42' cy='142' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  animation: rbNoiseMove 1.8s steps(2) infinite;
 }
 
-@keyframes rbNoiseMove{
-
-  0%{
-    transform:translate3d(0,0,0);
-  }
-
-  25%{
-    transform:translate3d(-6px,4px,0);
-  }
-
-  50%{
-    transform:translate3d(3px,-5px,0);
-  }
-
-  75%{
-    transform:translate3d(5px,2px,0);
-  }
-
-  100%{
-    transform:translate3d(0,0,0);
-  }
+@keyframes rbNoiseMove {
+  0%   { transform: translate3d(0,0,0); }
+  25%  { transform: translate3d(-4px,3px,0); }
+  50%  { transform: translate3d(3px,-4px,0); }
+  75%  { transform: translate3d(5px,2px,0); }
+  100% { transform: translate3d(0,0,0); }
 }
 
 /* =========================================
-   UNIVERSAL GREEN GLOW
+   CENTRAL GREEN GLOW
 ========================================= */
 
-.rb-index-page::before{
-
-  content:"";
-
-  position:fixed;
-
-  left:50%;
-  top:42%;
-
-  width:1200px;
-  height:1200px;
-
-  transform:translate(-50%,-50%);
-
-  border-radius:50%;
-
-  pointer-events:none;
-
-  z-index:-6;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(123,255,102,.22) 0%,
-      rgba(0,255,136,.10) 18%,
-      rgba(0,0,0,0) 62%
-    );
-
-  filter:blur(45px);
-
-  animation:rbPulseGlow 7s ease-in-out infinite;
+.rb-index-page::before {
+  content: "";
+  position: fixed;
+  left: 50%;
+  top: 42%;
+  width: 1200px;
+  height: 1200px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -6;
+  background: radial-gradient(circle, rgba(123,255,102,0.24) 0%, rgba(0,255,136,0.10) 18%, transparent 62%);
+  filter: blur(48px);
+  animation: rbPulseGlow 8s ease-in-out infinite;
 }
 
-@keyframes rbPulseGlow{
-
-  0%{
-    opacity:.65;
-    transform:translate(-50%,-50%) scale(1);
-  }
-
-  50%{
-    opacity:1;
-    transform:translate(-50%,-50%) scale(1.08);
-  }
-
-  100%{
-    opacity:.65;
-    transform:translate(-50%,-50%) scale(1);
-  }
+@keyframes rbPulseGlow {
+  0%, 100% { opacity: 0.65; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.95; transform: translate(-50%, -50%) scale(1.09); }
 }
 
 /* =========================================
-   ENERGY RINGS
+   ENERGY RINGS AROUND PORTAL
 ========================================= */
 
-.rb-universe-stage::before{
-
-  content:"";
-
-  position:absolute;
-
-  left:50%;
-  top:50%;
-
-  width:980px;
-  height:980px;
-
-  transform:translate(-50%,-50%);
-
-  border-radius:50%;
-
-  border:
-    1px solid rgba(123,255,102,.12);
-
-  box-shadow:
-    0 0 50px rgba(0,255,136,.10),
-    inset 0 0 60px rgba(123,255,102,.08);
-
-  opacity:.7;
-
-  animation:rbRotateSlow 26s linear infinite;
+.rb-universe-stage::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 980px;
+  height: 980px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(123,255,102,0.14);
+  box-shadow: 
+    0 0 50px rgba(0,255,136,0.12),
+    inset 0 0 60px rgba(123,255,102,0.08);
+  opacity: 0.75;
+  animation: rbRotateSlow 28s linear infinite;
 }
 
-.rb-universe-stage::after{
-
-  content:"";
-
-  position:absolute;
-
-  left:50%;
-  top:50%;
-
-  width:760px;
-  height:760px;
-
-  transform:translate(-50%,-50%);
-
-  border-radius:50%;
-
-  border:
-    1px dashed rgba(255,213,74,.12);
-
-  opacity:.45;
-
-  animation:rbRotateReverse 34s linear infinite;
+.rb-universe-stage::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 760px;
+  height: 760px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed rgba(255,213,74,0.14);
+  opacity: 0.45;
+  animation: rbRotateReverse 36s linear infinite;
 }
 
-@keyframes rbRotateSlow{
-
-  from{
-    transform:translate(-50%,-50%) rotate(0deg);
-  }
-
-  to{
-    transform:translate(-50%,-50%) rotate(360deg);
-  }
+@keyframes rbRotateSlow {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-@keyframes rbRotateReverse{
-
-  from{
-    transform:translate(-50%,-50%) rotate(360deg);
-  }
-
-  to{
-    transform:translate(-50%,-50%) rotate(0deg);
-  }
+@keyframes rbRotateReverse {
+  from { transform: translate(-50%, -50%) rotate(360deg); }
+  to   { transform: translate(-50%, -50%) rotate(0deg); }
 }
 
 /* =========================================
    FLOATING PARTICLES
 ========================================= */
 
-.rb-index-shell::before,
-.rb-index-shell::after{
-
-  content:"";
-
-  position:absolute;
-
-  inset:0;
-
-  pointer-events:none;
+.rb-index-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(circle, rgba(123,255,102,0.65) 0, transparent 58%),
+    radial-gradient(circle, rgba(255,213,74,0.45) 0, transparent 58%),
+    radial-gradient(circle, rgba(0,255,136,0.55) 0, transparent 58%);
+  background-size: 4px 4px, 5px 5px, 3px 3px;
+  background-position: 10% 20%, 80% 30%, 60% 85%;
+  opacity: 0.45;
+  animation: rbParticleFloat 22s linear infinite;
 }
 
-.rb-index-shell::before{
-
-  background-image:
-
-    radial-gradient(
-      circle,
-      rgba(123,255,102,.65) 0,
-      transparent 58%
-    ),
-
-    radial-gradient(
-      circle,
-      rgba(255,213,74,.45) 0,
-      transparent 58%
-    ),
-
-    radial-gradient(
-      circle,
-      rgba(0,255,136,.55) 0,
-      transparent 58%
-    );
-
-  background-size:
-    4px 4px,
-    5px 5px,
-    3px 3px;
-
-  background-position:
-    10% 20%,
-    80% 30%,
-    60% 85%;
-
-  opacity:.55;
-
-  animation:rbParticleFloat 18s linear infinite;
+.rb-index-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(123,255,102,0.07), transparent 65%);
+  filter: blur(40px);
+  z-index: -5;
 }
 
-.rb-index-shell::after{
-
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      rgba(123,255,102,.06),
-      transparent 60%
-    );
-
-  filter:blur(40px);
-}
-
-@keyframes rbParticleFloat{
-
-  0%{
-    transform:translateY(0px);
-  }
-
-  50%{
-    transform:translateY(-18px);
-  }
-
-  100%{
-    transform:translateY(0px);
-  }
+@keyframes rbParticleFloat {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-22px); }
+  100% { transform: translateY(0); }
 }
 
 /* =========================================
-   ACTION BUTTON FX
+   SHIMMER ON INTERACTIVE ELEMENTS
 ========================================= */
 
 .rb-main-action,
 .rb-side-action,
 .rb-bottom-nav button,
-.rb-profile-pill{
-
-  position:relative;
-  overflow:hidden;
+.rb-profile-pill,
+.rb-orbit-card {
+  position: relative;
+  overflow: hidden;
 }
 
 .rb-main-action::before,
 .rb-side-action::before,
 .rb-bottom-nav button::before,
-.rb-profile-pill::before{
-
-  content:"";
-
-  position:absolute;
-
-  top:-120%;
-  left:-40%;
-
-  width:60%;
-  height:320%;
-
-  transform:rotate(18deg);
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(255,255,255,.16),
-      transparent
-    );
-
-  opacity:0;
-
-  transition:.4s ease;
+.rb-profile-pill::before,
+.rb-orbit-card::before {
+  content: "";
+  position: absolute;
+  top: -120%;
+  left: -40%;
+  width: 60%;
+  height: 320%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  opacity: 0;
+  transition: 0.5s ease;
 }
 
 .rb-main-action:hover::before,
 .rb-side-action:hover::before,
 .rb-bottom-nav button:hover::before,
-.rb-profile-pill:hover::before{
-
-  left:120%;
-
-  opacity:1;
+.rb-profile-pill:hover::before,
+.rb-orbit-card:hover::before {
+  left: 120%;
+  opacity: 1;
 }
 
 /* =========================================
-   GREEN HOVER
+   LIVE FOCUS PULSE
 ========================================= */
 
-.rb-main-action:hover,
-.rb-side-action:hover,
-.rb-bottom-nav button:hover{
+.rb-live-focus {
+  animation: rbLivePulse 4.2s ease-in-out infinite;
+}
 
-  transform:translateY(-2px);
-
-  box-shadow:
-    0 0 18px rgba(123,255,102,.18),
-    0 0 45px rgba(0,255,136,.14);
+@keyframes rbLivePulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(123,255,102,0.12), 0 0 45px rgba(0,255,136,0.08); }
+  50%      { box-shadow: 0 0 45px rgba(123,255,102,0.28), 0 0 95px rgba(0,255,136,0.18); }
 }
 
 /* =========================================
-   LIVE CARD GLOW
+   PORTAL SMOKE & ENERGY
 ========================================= */
 
-.rb-live-focus{
-
-  animation:rbLivePulse 4s ease-in-out infinite;
+.rb-portal-core::before {
+  content: "";
+  position: absolute;
+  inset: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(123,255,102,0.22), rgba(0,255,136,0.10) 34%, transparent 68%);
+  filter: blur(32px);
+  animation: rbPortalAura 5.5s ease-in-out infinite;
 }
 
-@keyframes rbLivePulse{
+.rb-universe-stage::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  background: 
+    radial-gradient(ellipse at 50% 58%, rgba(123,255,102,0.26), transparent 42%),
+    radial-gradient(ellipse at 48% 48%, rgba(210,255,180,0.14), transparent 38%);
+  filter: blur(34px);
+  opacity: 0.55;
+  animation: rbSmokeDrift 9s ease-in-out infinite;
+}
 
-  0%{
-    box-shadow:
-      0 0 20px rgba(123,255,102,.12),
-      0 0 45px rgba(0,255,136,.08);
-  }
+@keyframes rbSmokeDrift {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.38; }
+  50%      { transform: translate(-50%, -58%) scale(1.14); opacity: 0.72; }
+}
 
-  50%{
-    box-shadow:
-      0 0 40px rgba(123,255,102,.25),
-      0 0 90px rgba(0,255,136,.16);
-  }
-
-  100%{
-    box-shadow:
-      0 0 20px rgba(123,255,102,.12),
-      0 0 45px rgba(0,255,136,.08);
-  }
+@keyframes rbPortalAura {
+  0%, 100% { opacity: 0.55; transform: scale(0.96); }
+  50%      { opacity: 0.95; transform: scale(1.08); }
 }
 
 /* =========================================
-   MOBILE FX CONTROL
+   MOBILE OPTIMIZATIONS
 ========================================= */
 
-@media (max-width:768px){
-
-  .rb-universe-stage::before{
-    width:700px;
-    height:700px;
-  }
-
-  .rb-universe-stage::after{
-    width:520px;
-    height:520px;
-  }
-
-  .rb-index-page::before{
-    width:720px;
-    height:720px;
-  }
+@media (max-width: 768px) {
+  .rb-index-page::before { width: 720px; height: 720px; }
+  .rb-universe-stage::before { width: 700px; height: 700px; }
+  .rb-universe-stage::after { width: 520px; height: 520px; }
 }
 
-@media (max-width:640px){
-
-  .rb-bg-grid{
-    background-size:52px 52px;
-  }
-
-  .rb-universe-stage::before{
-    width:520px;
-    height:520px;
-  }
-
-  .rb-universe-stage::after{
-    width:360px;
-    height:360px;
-  }
-
-  .rb-index-page::before{
-    width:520px;
-    height:520px;
-  }
-}
-
-/* =========================================
-   PORTAL SMOKE / ENERGY LEAK
-========================================= */
-
-.rb-portal-core::before{
-  animation:
-    rbPortalAura 5.5s ease-in-out infinite,
-    rbPortalSmokeRise 8s ease-in-out infinite;
-}
-
-.rb-universe-stage .rb-portal-core::after{
-  box-shadow:
-    0 -40px 90px rgba(123,255,102,.22),
-    0 -90px 160px rgba(0,255,136,.12),
-    inset 0 0 34px rgba(255,255,255,.08);
-}
-
-.rb-universe-stage::after{
-  background:
-    radial-gradient(
-      ellipse at 50% 58%,
-      rgba(123,255,102,.24),
-      transparent 42%
-    ),
-    radial-gradient(
-      ellipse at 48% 48%,
-      rgba(210,255,180,.12),
-      transparent 38%
-    );
-  filter:blur(34px);
-  opacity:.55;
-  animation:rbSmokeDrift 9s ease-in-out infinite;
-}
-
-@keyframes rbSmokeDrift{
-  0%,100%{
-    transform:translate(-50%,-50%) scale(1);
-    opacity:.36;
-  }
-
-  50%{
-    transform:translate(-50%,-58%) scale(1.12);
-    opacity:.72;
-  }
-}
-
-@keyframes rbPortalSmokeRise{
-  0%,100%{
-    transform:scale(.96) translateY(0);
-    opacity:.55;
-  }
-
-  50%{
-    transform:scale(1.08) translateY(-24px);
-    opacity:.95;
-  }
+@media (max-width: 640px) {
+  .rb-bg-grid { background-size: 52px 52px; }
+  .rb-universe-stage::before { width: 520px; height: 520px; }
+  .rb-universe-stage::after { width: 360px; height: 360px; }
 }
