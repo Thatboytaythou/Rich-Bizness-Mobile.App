@@ -2,13 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-
-  <title>Rich Bizness — Enter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Rich Bizness — Enter The Universe</title>
 
   <link rel="stylesheet" href="/styles/main.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
@@ -16,10 +11,7 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body
-  class="rb-home rb-auth-page"
-  data-auth-mode="signin"
->
+<body class="rb-home rb-auth-page" data-auth-mode="signin">
 
   <div class="rb-bg"></div>
   <div class="rb-vignette"></div>
@@ -27,196 +19,120 @@
 
   <main class="rb-auth-shell">
 
-    <!-- =========================
-         HERO
-    ========================== -->
-
+    <!-- HERO -->
     <section class="rb-auth-hero">
-
-      <p class="rb-kicker">
-        RICH BIZNESS IDENTITY
-      </p>
-
-      <h1>
-        Enter The Universe
-      </h1>
-
+      <p class="rb-kicker">RICH BIZNESS IDENTITY</p>
+      <h1>Enter The Universe</h1>
       <p>
-        One identity for Live, Music, Gaming,
-        Sports, Store, Meta, Messages,
-        Creator payouts, and the full
-        Rich Bizness ecosystem.
+        One identity. All platforms.<br>
+        Live • Music • Gaming • Store • Meta • Creator Economy
       </p>
-
     </section>
 
-    <!-- =========================
-         AUTH PANEL
-    ========================== -->
-
-    <section
-      id="rb-auth-panel"
-      class="rb-auth-panel is-signin"
-    >
+    <!-- AUTH PANEL -->
+    <section id="rb-auth-panel" class="rb-auth-panel is-signin">
 
       <!-- TABS -->
-
       <div class="rb-auth-tabs">
-
-        <button
-          type="button"
-          data-auth-mode="signin"
-          class="is-active"
-        >
+        <button type="button" data-auth-mode="signin" class="is-active">
           TAP IN 💰
         </button>
-
-        <button
-          type="button"
-          data-auth-mode="signup"
-        >
-          CREATE ✨
+        <button type="button" data-auth-mode="signup">
+          CREATE ID ✨
         </button>
-
       </div>
 
-      <!-- =========================
-           SIGN IN
-      ========================== -->
-
-      <form
-        id="rb-signin-form"
-        class="rb-auth-form"
-      >
-
-        <h2>
-          Welcome Back
-        </h2>
+      <!-- SIGN IN FORM -->
+      <form id="rb-signin-form" class="rb-auth-form">
+        <h2>Welcome Back</h2>
 
         <label>
           Email
-
-          <input
-            name="email"
-            type="email"
-            autocomplete="email"
-            placeholder="you@richbizness.com"
-            required
+          <input 
+            name="email" 
+            type="email" 
+            autocomplete="email" 
+            placeholder="you@richbizness.com" 
+            required 
           />
         </label>
 
         <label>
           Password
-
-          <input
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            placeholder="••••••••"
-            required
+          <input 
+            name="password" 
+            type="password" 
+            autocomplete="current-password" 
+            placeholder="••••••••" 
+            required 
           />
         </label>
 
-        <button
-          class="rb-main-launch"
-          type="submit"
-        >
+        <button class="rb-main-launch" type="submit">
           TAP IN 💰
         </button>
-
       </form>
 
-      <!-- =========================
-           SIGN UP
-      ========================== -->
-
-      <form
-        id="rb-signup-form"
-        class="rb-auth-form"
-      >
-
-        <h2>
-          Create Identity
-        </h2>
+      <!-- SIGN UP FORM -->
+      <form id="rb-signup-form" class="rb-auth-form">
+        <h2>Create Your Identity</h2>
 
         <label>
           Display Name
-
-          <input
-            name="display_name"
-            type="text"
-            autocomplete="name"
-            placeholder="ThatboyTayThou"
+          <input 
+            name="display_name" 
+            type="text" 
+            autocomplete="name" 
+            placeholder="ThatboyTayThou" 
           />
         </label>
 
         <label>
           Username
-
-          <input
-            name="username"
-            type="text"
-            autocomplete="username"
-            placeholder="thatboytaythou"
+          <input 
+            name="username" 
+            type="text" 
+            autocomplete="username" 
+            placeholder="thatboytaythou" 
           />
         </label>
 
         <label>
           Email
-
-          <input
-            name="email"
-            type="email"
-            autocomplete="email"
-            placeholder="you@richbizness.com"
-            required
+          <input 
+            name="email" 
+            type="email" 
+            autocomplete="email" 
+            placeholder="you@richbizness.com" 
+            required 
           />
         </label>
 
         <label>
           Password
-
-          <input
-            name="password"
-            type="password"
-            autocomplete="new-password"
-            placeholder="Create password"
-            required
+          <input 
+            name="password" 
+            type="password" 
+            autocomplete="new-password" 
+            placeholder="Create strong password" 
+            required 
           />
         </label>
 
-        <button
-          class="rb-main-launch"
-          type="submit"
-        >
+        <button class="rb-main-launch" type="submit">
           CREATE ID ✨
         </button>
-
       </form>
 
     </section>
 
-    <!-- =========================
-         BACK HOME
-    ========================== -->
-
-    <a
-      class="rb-auth-home"
-      href="/"
-    >
+    <!-- BACK LINK -->
+    <a href="/" class="rb-auth-home">
       ← Back To Portal
     </a>
 
   </main>
 
-  <!-- =========================
-       AUTH PAGE
-  ========================== -->
-
-  <script
-    type="module"
-    src="/core/pages/auth.js"
-  ></script>
-
+  <script type="module" src="/core/pages/auth.js"></script>
 </body>
 </html>
