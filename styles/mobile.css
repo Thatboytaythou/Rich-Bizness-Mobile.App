@@ -1,259 +1,208 @@
-/* =========================
-   RICH BIZNESS MOBILE
+/* =========================================
+   RICH BIZNESS LLC
    /styles/mobile.css
-   MOBILE SIZING ONLY
-========================= */
+   MOBILE RESPONSIVE - POLISHED
+========================================= */
 
-@media (max-width:720px){
-  :root{
-    --rb-nav-h:82px;
+@media (max-width: 720px) {
+  :root {
+    --rb-nav-h: 82px;
   }
 
-  html,
-  body{
-    width:100%;
-    max-width:100%;
-    min-height:100%;
-    overflow-x:hidden;
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
   }
 
-  body{
-    min-height:100svh;
-    padding:0;
+  body {
+    min-height: 100svh;
+    padding: 0;
   }
 
-  .rb-app-shell,
-  .rb-home-shell{
-    width:100%;
-    max-width:100%;
-    min-height:100svh;
-    padding:
+  .rb-home-shell,
+  .rb-app-shell {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100svh;
+    padding: 
       calc(12px + env(safe-area-inset-top))
       14px
       calc(var(--rb-nav-h) + 118px + env(safe-area-inset-bottom));
-    gap:14px;
+    gap: 14px;
   }
 
-  .rb-topbar,
-  .rb-home-top{
-    width:100%;
-    flex-direction:column;
-    align-items:stretch;
-    gap:12px;
-    padding:0;
-    margin-bottom:8px;
+  /* HEADER */
+  .rb-home-top,
+  .rb-index-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 0;
+    margin-bottom: 8px;
   }
 
-  .rb-brand-title{
-    font-size:clamp(2.25rem,11vw,3.25rem);
-    line-height:.9;
+  .rb-brand-lock h1 {
+    font-size: clamp(2.25rem, 11vw, 3.25rem);
+    line-height: 0.9;
   }
 
-  .rb-brand-kicker{
-    font-size:.62rem;
-    letter-spacing:.18em;
+  /* PROFILE PILL */
+  .rb-profile-pill {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    padding: 10px 12px;
   }
 
-  .rb-profile-pill{
-    width:100%;
-    min-width:0;
-    justify-content:flex-start;
-    padding:10px 12px;
+  .rb-profile-pill img {
+    width: 44px;
+    height: 44px;
   }
 
-  .rb-profile-pill img{
-    width:44px;
-    height:44px;
+  /* PORTAL STAGE */
+  .rb-universe-stage,
+  .rb-portal-stage {
+    width: 100%;
+    min-height: clamp(430px, 54svh, 540px);
+    border-radius: 26px;
   }
 
-  .rb-portal-stage{
-    width:100%;
-    min-height:clamp(430px,54svh,540px);
-    border-radius:26px;
+  /* ORBIT DIAL */
+  .rb-dial-orbit {
+    width: min(88vw, 360px);
+    height: min(88vw, 360px);
   }
 
-  .rb-tv-orbit{
-    width:min(88vw,360px);
-    height:min(88vw,360px);
-    --rb-orbit-radius:-135px;
+  .rb-orbit-card {
+    width: 104px;
+    height: 126px;
+    margin-left: -52px;
+    margin-top: -63px;
+    border-radius: 17px;
   }
 
-  .rb-tv-screen{
-    width:104px;
-    height:126px;
-    margin-left:-52px;
-    margin-top:-63px;
-    border-radius:17px;
+  /* PORTAL CORE */
+  .rb-portal-core {
+    width: clamp(230px, 68vw, 285px);
+    height: clamp(230px, 68vw, 285px);
   }
 
-  .rb-tv-screen.is-active{
-    transform:
-      rotate(var(--rb-card-angle,0deg))
-      translateY(var(--rb-orbit-radius))
-      rotate(var(--rb-card-counter,0deg))
-      scale(.96);
+  .rb-portal-center {
+    width: clamp(130px, 42vw, 170px);
+    height: clamp(130px, 42vw, 170px);
   }
 
-  .rb-tv-overlay{
-    padding:8px 9px 10px;
+  /* ACTION ROW */
+  .rb-action-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
-  .rb-tv-overlay span{
-    font-size:.58rem;
-    letter-spacing:.14em;
+  .rb-main-action {
+    min-height: 52px;
+    min-width: 100%;
+    padding: 0 18px;
+    font-size: 0.78rem;
   }
 
-  .rb-tv-overlay h3{
-    font-size:.82rem;
+  /* BOTTOM NAV */
+  .rb-bottom-nav {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    height: 82px;
+    padding: 9px;
+    border-radius: 24px;
   }
 
-  .rb-core-portal{
-    width:clamp(230px,68vw,285px);
-    height:clamp(230px,68vw,285px);
-  }
-
-  .rb-portal-copy{
-    width:76%;
-    padding:15px 12px;
-    border-radius:22px;
-  }
-
-  .rb-portal-copy span{
-    font-size:.6rem;
-    letter-spacing:.15em;
-  }
-
-  .rb-portal-copy h2{
-    font-size:clamp(1.55rem,7.5vw,2.15rem);
-  }
-
-  .rb-portal-copy p{
-    font-size:.78rem;
-  }
-
-  .rb-home-actions{
-    gap:10px;
-    margin-top:14px;
-  }
-
-  .rb-main-launch{
-    min-height:52px;
-    flex:1;
-    min-width:0;
-    padding:0 18px;
-    font-size:.78rem;
-    letter-spacing:.08em;
-  }
-
-  .rb-icon-btn{
-    width:48px;
-    height:48px;
-    padding:0;
-    font-size:1.55rem;
-    flex:0 0 auto;
-  }
-
-  .rb-quick-actions{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    width:100%;
-    margin-top:12px;
-  }
-
-  .rb-quick-actions button{
-    width:100%;
-    min-height:48px;
-    padding:0 14px;
-  }
-
-  .rb-bottom-nav{
-    left:max(8px, env(safe-area-inset-left));
-    right:max(8px, env(safe-area-inset-right));
-    bottom:max(8px, env(safe-area-inset-bottom));
-    height:82px;
-    padding:9px;
-    border-radius:24px;
-  }
-
-  .rb-bottom-nav button{
-    font-size:.62rem;
-    letter-spacing:.03em;
+  .rb-bottom-nav button {
+    font-size: 0.62rem;
+    letter-spacing: 0.03em;
   }
 }
 
-@media (max-width:430px){
-  :root{
-    --rb-nav-h:80px;
+/* =========================================
+   SMALL PHONES
+========================================= */
+
+@media (max-width: 430px) {
+  :root {
+    --rb-nav-h: 80px;
   }
 
-  .rb-app-shell,
-  .rb-home-shell{
-    padding-left:12px;
-    padding-right:12px;
-    gap:12px;
+  .rb-home-shell,
+  .rb-app-shell {
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 12px;
   }
 
-  .rb-brand-title{
-    font-size:clamp(2rem,10.8vw,2.85rem);
+  .rb-brand-lock h1 {
+    font-size: clamp(2rem, 10.8vw, 2.85rem);
   }
 
-  .rb-portal-stage{
-    min-height:clamp(415px,52svh,510px);
+  .rb-universe-stage,
+  .rb-portal-stage {
+    min-height: clamp(415px, 52svh, 510px);
   }
 
-  .rb-tv-orbit{
-    width:min(86vw,340px);
-    height:min(86vw,340px);
-    --rb-orbit-radius:-126px;
+  .rb-dial-orbit {
+    width: min(86vw, 340px);
+    height: min(86vw, 340px);
   }
 
-  .rb-tv-screen{
-    width:96px;
-    height:118px;
-    margin-left:-48px;
-    margin-top:-59px;
+  .rb-orbit-card {
+    width: 96px;
+    height: 118px;
+    margin-left: -48px;
+    margin-top: -59px;
   }
 
-  .rb-core-portal{
-    width:clamp(220px,66vw,270px);
-    height:clamp(220px,66vw,270px);
+  .rb-portal-core {
+    width: clamp(220px, 66vw, 270px);
+    height: clamp(220px, 66vw, 270px);
   }
 
-  .rb-main-launch{
-    min-height:50px;
-    font-size:.72rem;
+  .rb-main-action {
+    min-height: 50px;
+    font-size: 0.72rem;
   }
 
-  .rb-icon-btn{
-    width:46px;
-    height:46px;
+  .rb-bottom-nav {
+    height: 80px;
   }
 
-  .rb-bottom-nav{
-    height:80px;
-  }
-
-  .rb-bottom-nav button{
-    font-size:.58rem;
+  .rb-bottom-nav button {
+    font-size: 0.58rem;
   }
 }
 
-@media (max-width:380px){
-  .rb-tv-orbit{
-    width:320px;
-    height:320px;
-    --rb-orbit-radius:-118px;
+/* =========================================
+   EXTRA SMALL PHONES
+========================================= */
+
+@media (max-width: 380px) {
+  .rb-dial-orbit {
+    width: 320px;
+    height: 320px;
   }
 
-  .rb-tv-screen{
-    width:90px;
-    height:112px;
-    margin-left:-45px;
-    margin-top:-56px;
+  .rb-orbit-card {
+    width: 90px;
+    height: 112px;
+    margin-left: -45px;
+    margin-top: -56px;
   }
 
-  .rb-portal-stage{
-    min-height:400px;
+  .rb-universe-stage,
+  .rb-portal-stage {
+    min-height: 400px;
+  }
+
+  .rb-portal-core {
+    width: clamp(200px, 64vw, 250px);
+    height: clamp(200px, 64vw, 250px);
   }
 }
