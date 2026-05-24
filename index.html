@@ -13,23 +13,22 @@
       overflow-x: hidden;
     }
     .burnt-gold { color: #fbbf24; }
-    .dark-emerald { color: #10b981; }
     .phone-hub {
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .glass-smoke {
-      background: rgba(16, 185, 129, 0.08);
-      backdrop-filter: blur(20px);
+      background: rgba(16, 185, 129, 0.06);
+      backdrop-filter: blur(16px);
       border: 1px solid rgba(251, 191, 36, 0.3);
     }
   </style>
 </head>
 <body class="text-white min-h-screen pb-20">
 
-  <!-- 3D Galaxy Portal Background -->
+  <!-- 3D Portal Background -->
   <div id="portal-container" class="fixed inset-0 z-[-1]"></div>
 
-  <div class="max-w-6xl mx-auto px-6 pt-8 relative z-10">
+  <div class="max-w-5xl mx-auto px-6 pt-8 relative z-10">
 
     <!-- Header -->
     <div class="glass-smoke rounded-3xl p-6 flex justify-between items-center mb-12">
@@ -37,54 +36,67 @@
         <h1 class="text-5xl font-black tracking-tighter">RICH <span class="burnt-gold">BIZNESS</span></h1>
         <p class="text-gray-400">LLC • SMOKE & EMPIRE</p>
       </div>
-      <div class="px-6 py-3 bg-emerald-500/10 border border-emerald-500 rounded-full flex items-center gap-3 text-sm">
+      <div class="px-6 py-3 bg-emerald-500/10 border border-emerald-500 rounded-full flex items-center gap-3">
         <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-        LIVE
+        <span class="text-sm font-medium">LIVE</span>
       </div>
     </div>
 
-    <!-- Sliding Multiverse Phones Hub -->
-    <div class="relative h-[680px] flex items-center justify-center mb-16 overflow-hidden">
-      <!-- Smoke Clouds Layer -->
-      <div class="absolute inset-0 bg-[radial-gradient(circle,#10b98122_20%,transparent_70%)] animate-pulse"></div>
+    <!-- PS5-Style Central Hub -->
+    <div class="relative h-[680px] flex items-center justify-center mb-16">
+      
+      <!-- Rotating Portal -->
+      <div id="portal" class="absolute w-[520px] h-[520px] border-4 border-emerald-400/40 rounded-full flex items-center justify-center">
+        <div class="w-[380px] h-[380px] border border-amber-400/60 rounded-full animate-[spin_25s_linear_infinite]"></div>
+      </div>
 
-      <!-- Central Phone -->
-      <div onclick="goLive()" class="phone-mockup w-80 relative z-30 scale-110">
-        <div class="bg-zinc-950 rounded-3xl h-[560px] flex flex-col items-center justify-center text-center p-8 border border-amber-400/40">
-          <div class="w-32 h-32 bg-gradient-to-br from-emerald-400 via-amber-400 to-yellow-500 rounded-3xl flex items-center justify-center mb-10 shadow-2xl">
-            <i class="fa-solid fa-broadcast-tower text-7xl text-black"></i>
+      <!-- Central Main Phone -->
+      <div onclick="goLive()" class="phone-hub relative z-30 w-80">
+        <div class="phone-mockup">
+          <div class="bg-zinc-950 rounded-3xl h-[520px] flex flex-col items-center justify-center text-center p-8 border border-amber-400/50">
+            <div class="w-28 h-28 bg-gradient-to-br from-emerald-400 to-amber-500 rounded-3xl flex items-center justify-center mb-8 shadow-2xl">
+              <i class="fa-solid fa-broadcast-tower text-6xl text-black"></i>
+            </div>
+            <h2 class="text-4xl font-bold mb-2">Go Live</h2>
+            <p class="text-emerald-400">ENTER THE SMOKE</p>
           </div>
-          <h2 class="text-4xl font-bold mb-3">Go Live</h2>
-          <p class="text-emerald-400 text-lg">ENTER THE SMOKE</p>
         </div>
       </div>
 
       <!-- Sliding Side Phones -->
-      <div onclick="selectModule('music')" class="phone-mockup absolute left-12 top-28 w-52 scale-75 hover:scale-90">
-        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-music text-6xl text-purple-400 mb-6"></i>
-          <p class="font-bold text-xl">Music</p>
+      <div onclick="selectModule('music')" class="phone-hub absolute left-8 top-40 w-52 scale-75 hover:scale-90 cursor-pointer">
+        <div class="phone-mockup">
+          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-music text-5xl text-purple-400 mb-4"></i>
+            <p class="font-bold">Music</p>
+          </div>
         </div>
       </div>
 
-      <div onclick="selectModule('gaming')" class="phone-mockup absolute left-8 bottom-28 w-52 scale-75 hover:scale-90">
-        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-gamepad text-6xl text-cyan-400 mb-6"></i>
-          <p class="font-bold text-xl">Gaming</p>
+      <div onclick="selectModule('gaming')" class="phone-hub absolute left-6 bottom-40 w-52 scale-75 hover:scale-90 cursor-pointer">
+        <div class="phone-mockup">
+          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-gamepad text-5xl text-cyan-400 mb-4"></i>
+            <p class="font-bold">Gaming</p>
+          </div>
         </div>
       </div>
 
-      <div onclick="selectModule('meta')" class="phone-mockup absolute right-12 top-28 w-52 scale-75 hover:scale-90">
-        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-globe text-6xl text-sky-400 mb-6"></i>
-          <p class="font-bold text-xl">Meta</p>
+      <div onclick="selectModule('meta')" class="phone-hub absolute right-8 top-40 w-52 scale-75 hover:scale-90 cursor-pointer">
+        <div class="phone-mockup">
+          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-globe text-5xl text-sky-400 mb-4"></i>
+            <p class="font-bold">Meta</p>
+          </div>
         </div>
       </div>
 
-      <div onclick="selectModule('store')" class="phone-mockup absolute right-8 bottom-28 w-52 scale-75 hover:scale-90">
-        <div class="bg-zinc-950 rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-store text-6xl text-amber-400 mb-6"></i>
-          <p class="font-bold text-xl">Store</p>
+      <div onclick="selectModule('store')" class="phone-hub absolute right-6 bottom-40 w-52 scale-75 hover:scale-90 cursor-pointer">
+        <div class="phone-mockup">
+          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-store text-5xl text-amber-400 mb-4"></i>
+            <p class="font-bold">Store</p>
+          </div>
         </div>
       </div>
     </div>
@@ -105,7 +117,7 @@
   </div>
 
   <script>
-    // Rotating Galaxy Portal
+    // Rotating Portal with Galaxy
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -113,36 +125,38 @@
     document.getElementById('portal-container').appendChild(renderer.domElement);
 
     const portal = new THREE.Mesh(
-      new THREE.SphereGeometry(12, 64, 64),
+      new THREE.SphereGeometry(13, 64, 64),
       new THREE.MeshPhongMaterial({ 
         color: 0x10b981, 
-        emissive: 0x064e3b, 
-        shininess: 15,
-        transparent: true,
-        opacity: 0.85
+        emissive: 0x064e3b,
+        shininess: 20 
       })
     );
     scene.add(portal);
 
-    // Galaxy Stars
-    const stars = new THREE.Points(
-      new THREE.BufferGeometry().setAttribute('position', 
-        new THREE.Float32BufferAttribute(Array.from({length: 8000}, () => THREE.MathUtils.randFloatSpread(200)), 3)),
-      new THREE.PointsMaterial({ color: 0xfacc15, size: 0.08 })
-    );
+    // Stars / Smoke Particles
+    const starsGeo = new THREE.BufferGeometry();
+    const positions = [];
+    for (let i = 0; i < 6000; i++) {
+      positions.push(THREE.MathUtils.randFloatSpread(300));
+      positions.push(THREE.MathUtils.randFloatSpread(300));
+      positions.push(THREE.MathUtils.randFloatSpread(300));
+    }
+    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({color: 0xfacc15, size: 0.1}));
     scene.add(stars);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
     const light = new THREE.PointLight(0xfacc15, 3);
-    light.position.set(30, 25, 40);
+    light.position.set(40, 30, 50);
     scene.add(light);
 
-    camera.position.z = 35;
+    camera.position.z = 38;
 
     function animate() {
       requestAnimationFrame(animate);
-      portal.rotation.y += 0.0012;
-      stars.rotation.y += 0.0003;
+      portal.rotation.y += 0.0015;
+      stars.rotation.y += 0.0004;
       renderer.render(scene, camera);
     }
     animate();
