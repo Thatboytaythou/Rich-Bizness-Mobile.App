@@ -6,23 +6,29 @@
   <title>Rich Bizness • Universe</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
-    body { background: #0a0f0a; }
-    .glow-green { box-shadow: 0 0 70px -15px #00ff9d; }
+    body { background: #0a0f0a; overflow-x: hidden; }
+    #globe-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.75; }
+    .glow-green { box-shadow: 0 0 90px -15px #00ff9d; }
     .phone-mockup {
       background: #111;
-      border: 12px solid #00ff9d;
-      border-radius: 48px;
-      padding: 12px;
-      box-shadow: 0 0 60px -10px #00ff9d;
+      border: 14px solid #00ff9d;
+      border-radius: 52px;
+      padding: 10px;
+      box-shadow: 0 0 70px -10px #00ff9d;
       transition: all 0.4s ease;
+      cursor: pointer;
     }
-    .phone-mockup:hover { transform: scale(1.08); }
+    .phone-mockup:hover { transform: scale(1.1) rotate(2deg); }
   </style>
 </head>
 <body class="text-white min-h-screen pb-20">
 
-  <div class="max-w-6xl mx-auto px-6 pt-8">
+  <!-- 3D Globe + Stars Background -->
+  <div id="globe-container"></div>
+
+  <div class="max-w-6xl mx-auto px-6 pt-8 relative z-10">
 
     <!-- Header -->
     <div class="flex justify-between items-center mb-8">
@@ -38,80 +44,143 @@
       </div>
     </div>
 
-    <!-- Multiple Phones Container -->
-    <div class="relative h-[620px] flex items-center justify-center mb-12 overflow-hidden">
-      <!-- Background Rings -->
-      <div class="absolute w-[520px] h-[520px] border border-green-500/20 rounded-full animate-[spin_50s_linear_infinite]"></div>
-      <div class="absolute w-[620px] h-[620px] border border-green-500/10 rounded-full animate-[spin_70s_linear_infinite]"></div>
+    <!-- Multiple Phones -->
+    <div class="relative h-[620px] flex items-center justify-center mb-12">
+      <div class="absolute w-[520px] h-[520px] border border-green-500/30 rounded-full animate-[spin_45s_linear_infinite]"></div>
+      <div class="absolute w-[620px] h-[620px] border border-green-500/20 rounded-full animate-[spin_65s_linear_infinite]"></div>
 
-      <!-- Central Big Phone -->
-      <div class="phone-mockup w-72 relative z-20">
-        <div class="bg-black rounded-3xl h-[520px] flex flex-col items-center justify-center text-center">
-          <div class="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 glow-green">
-            <i class="fa-solid fa-broadcast-tower text-5xl"></i>
+      <!-- Central Phone -->
+      <div onclick="goLive()" class="phone-mockup w-72 relative z-30">
+        <div class="bg-black rounded-3xl h-[520px] flex flex-col items-center justify-center text-center p-6">
+          <div class="w-28 h-28 bg-gradient-to-br from-green-400 to-emerald-600 rounded-3xl flex items-center justify-center mb-8 glow-green">
+            <i class="fa-solid fa-broadcast-tower text-6xl"></i>
           </div>
-          <h3 class="text-2xl font-bold">Go Live</h3>
+          <h2 class="text-3xl font-bold mb-2">Go Live</h2>
           <p class="text-green-400">ENTER THE UNIVERSE</p>
         </div>
       </div>
 
-      <!-- Orbiting Small Phones -->
-      <div class="absolute top-12 left-12 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center text-center p-4">
-          <i class="fa-solid fa-gamepad text-4xl text-cyan-400 mb-4"></i>
-          <p class="font-bold text-sm">Gaming</p>
+      <!-- Orbiting Phones -->
+      <div onclick="selectModule('music')" class="absolute left-12 top-24 phone-mockup w-44 scale-75">
+        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-music text-5xl text-purple-400 mb-4"></i>
+          <p class="font-bold">Music</p>
         </div>
       </div>
 
-      <div class="absolute top-20 right-16 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center text-center p-4">
-          <i class="fa-solid fa-globe text-4xl text-sky-400 mb-4"></i>
-          <p class="font-bold text-sm">Meta</p>
+      <div onclick="selectModule('gaming')" class="absolute left-20 bottom-24 phone-mockup w-44 scale-75">
+        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-gamepad text-5xl text-cyan-400 mb-4"></i>
+          <p class="font-bold">Gaming</p>
         </div>
       </div>
 
-      <div class="absolute bottom-16 left-20 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center text-center p-4">
-          <i class="fa-solid fa-music text-4xl text-purple-400 mb-4"></i>
-          <p class="font-bold text-sm">Music</p>
+      <div onclick="selectModule('meta')" class="absolute right-12 top-24 phone-mockup w-44 scale-75">
+        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-globe text-5xl text-sky-400 mb-4"></i>
+          <p class="font-bold">Meta</p>
         </div>
       </div>
 
-      <div class="absolute bottom-12 right-12 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center text-center p-4">
-          <i class="fa-solid fa-store text-4xl text-amber-400 mb-4"></i>
-          <p class="font-bold text-sm">Store</p>
+      <div onclick="selectModule('store')" class="absolute right-20 bottom-24 phone-mockup w-44 scale-75">
+        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-store text-5xl text-amber-400 mb-4"></i>
+          <p class="font-bold">Store</p>
         </div>
       </div>
     </div>
 
-    <!-- Hero Text -->
+    <!-- Hero -->
     <div class="text-center mb-12">
       <h2 class="text-5xl font-bold">ALL IN ONE <span class="text-[#00ff9d]">UNIVERSE</span></h2>
-      <p class="text-[#00ff9d] text-xl mt-3">CONNECT • CREATE • EARN</p>
+      <p class="text-[#00ff9d] text-xl mt-4">CONNECT • CREATE • EARN</p>
     </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">10M+</div><div class="text-gray-400">Members</div></div>
-      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">500K+</div><div class="text-gray-400">Creators</div></div>
-      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">100K+</div><div class="text-gray-400">Live Now</div></div>
-      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">∞</div><div class="text-gray-400">Modules</div></div>
-    </div>
-
-    <!-- 3D Schema -->
-    <div class="bg-zinc-950 rounded-3xl p-6 border border-green-500/30">
-      <h3 class="text-xl font-bold mb-4 text-center text-[#00ff9d]">3D DATABASE SCHEMA</h3>
-      <div id="three-container" class="w-full h-96 rounded-2xl overflow-hidden"></div>
+      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">10M+</div><div class="text-gray-400">Members</div></div>
+      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">500K+</div><div class="text-gray-400">Creators</div></div>
+      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">100K+</div><div class="text-gray-400">Live Now</div></div>
+      <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">∞</div><div class="text-gray-400">Modules</div></div>
     </div>
 
   </div>
 
-  <!-- Three.js 3D Graph -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script>
-    // (Same 3D schema code from before - abbreviated for brevity)
-    // You can paste the full 3D script from previous response here if needed
+    // === ENHANCED 3D GLOBE + STARS ===
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('globe-container').appendChild(renderer.domElement);
+
+    // Globe
+    const globeGeo = new THREE.SphereGeometry(9, 64, 64);
+    const globeMat = new THREE.MeshPhongMaterial({
+      color: 0x00ff9d,
+      emissive: 0x008844,
+      shininess: 10
+    });
+    const globe = new THREE.Mesh(globeGeo, globeMat);
+    scene.add(globe);
+
+    // Glow layer
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(9.4, 64, 64),
+      new THREE.MeshBasicMaterial({ color: 0x00ff9d, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending })
+    );
+    scene.add(glow);
+
+    // Stars
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.07 });
+    const starsVertices = [];
+    for (let i = 0; i < 8000; i++) {
+      const x = THREE.MathUtils.randFloatSpread(200);
+      const y = THREE.MathUtils.randFloatSpread(200);
+      const z = THREE.MathUtils.randFloatSpread(200);
+      starsVertices.push(x, y, z);
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+    const starField = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starField);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambient);
+    const pointLight = new THREE.PointLight(0x00ff9d, 2.5);
+    pointLight.position.set(20, 15, 30);
+    scene.add(pointLight);
+
+    camera.position.z = 28;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      globe.rotation.y += 0.0015;
+      glow.rotation.y += 0.0015;
+      starField.rotation.y += 0.0001;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Clickable Phones
+    function goLive() {
+      alert("🚀 Launching Live Stream Studio...");
+    }
+    function selectModule(module) {
+      const messages = {
+        music: "🎵 Opening Music Universe...",
+        gaming: "🎮 Loading Gaming Arcade...",
+        meta: "🌌 Entering Meta World...",
+        store: "🛒 Opening Creator Store..."
+      };
+      alert(messages[module]);
+    }
   </script>
 </body>
 </html>
