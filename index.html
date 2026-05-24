@@ -3,136 +3,143 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rich Bizness • Universe Control</title>
+  <title>Rich Bizness • Universe</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
     body { background: #0a0f0a; }
-    .card-hover { transition: all 0.3s ease; }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 0 30px -5px rgb(0 255 157); }
-    .glow { box-shadow: 0 0 40px -10px rgb(0 255 157); }
+    .glow-green { box-shadow: 0 0 80px -20px #00ff9d; }
+    .phone-orb { border: 16px solid #00ff9d; border-radius: 60px; box-shadow: 0 0 90px -15px #00ff9d; }
   </style>
 </head>
-<body class="text-white min-h-screen pb-12">
+<body class="text-white min-h-screen">
 
-  <div class="max-w-7xl mx-auto px-6 pt-8">
+  <div class="max-w-6xl mx-auto px-6 pt-8">
 
     <!-- Header -->
-    <div class="flex justify-between items-center mb-10">
+    <div class="flex justify-between items-center mb-8">
       <div>
         <h1 class="text-5xl font-black tracking-tighter">RICH <span class="text-[#00ff9d]">BIZNESS</span></h1>
-        <p class="text-gray-400">Universe Control Center</p>
+        <p class="text-gray-400">LLC • ALL IN ONE UNIVERSE</p>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="px-4 py-2 bg-green-500/10 border border-green-500 rounded-full text-sm flex items-center gap-2">
+      <div class="flex items-center gap-4 text-sm">
+        <div class="px-4 py-2 bg-green-500/10 border border-green-500 rounded-full flex items-center gap-2">
           <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
           LIVE
         </div>
-        <div class="text-sm text-gray-400">
-          Supabase: <span class="text-green-400">Connected</span><br>
-          LiveKit: <span class="text-green-400">Connected</span>
+        <div>
+          <div>Supabase: <span class="text-green-400">Connected</span></div>
+          <div class="text-xs">LiveKit: Connected</div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-      <div class="bg-zinc-900 rounded-3xl p-6 card-hover">
-        <div class="text-4xl font-bold text-green-400">10M+</div>
-        <div class="text-gray-400">Members</div>
-      </div>
-      <div class="bg-zinc-900 rounded-3xl p-6 card-hover">
-        <div class="text-4xl font-bold text-green-400">500K+</div>
-        <div class="text-gray-400">Creators</div>
-      </div>
-      <div class="bg-zinc-900 rounded-3xl p-6 card-hover">
-        <div class="text-4xl font-bold text-green-400">100K+</div>
-        <div class="text-gray-400">Live Now</div>
-      </div>
-      <div class="bg-zinc-900 rounded-3xl p-6 card-hover">
-        <div class="text-4xl font-bold text-green-400">∞</div>
-        <div class="text-gray-400">Universe Modules</div>
+    <!-- Central Orb -->
+    <div class="relative flex justify-center my-12">
+      <div class="relative">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] border border-green-500/30 rounded-full animate-[spin_40s_linear_infinite]"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] border border-green-500/20 rounded-full animate-[spin_55s_linear_infinite]"></div>
+        
+        <div class="phone-orb w-80 h-[520px] bg-zinc-950 relative z-10 flex flex-col items-center justify-center text-center p-8 glow-green">
+          <div class="w-28 h-28 bg-gradient-to-br from-green-400 to-emerald-600 rounded-3xl flex items-center justify-center mb-8 glow-green">
+            <i class="fa-solid fa-broadcast-tower text-6xl"></i>
+          </div>
+          <h2 class="text-3xl font-bold mb-2">Go Live</h2>
+          <p class="text-green-400 text-lg">ENTER THE UNIVERSE</p>
+        </div>
       </div>
     </div>
 
-    <!-- Main Modules Grid -->
-    <h2 class="text-3xl font-bold mb-6 text-[#00ff9d]">Platform Modules</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-      <!-- Social & Feed -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-white/10">
-        <i class="fa-solid fa-stream text-4xl text-green-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Feed & Social</h3>
-        <p class="text-gray-400 mb-6">Global Feed, Posts, Comments, Likes, Reposts</p>
-        <div class="text-sm text-gray-500">Tables: feed_posts, feed_comments, followers</div>
-      </div>
-
-      <!-- Live Streaming -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-green-500 glow">
-        <i class="fa-solid fa-broadcast-tower text-4xl text-green-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Live Streaming</h3>
-        <p class="text-gray-400 mb-6">LiveKit Rooms, Chat, Tips, Viewers</p>
-        <div class="text-sm text-green-400">LiveKit Connected • <span class="text-white">wss://rich-bizness-mobile-app-ww6cieid.livekit.cloud</span></div>
-      </div>
-
-      <!-- Gaming -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-white/10">
-        <i class="fa-solid fa-gamepad text-4xl text-cyan-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Gaming</h3>
-        <p class="text-gray-400 mb-6">Games, Tournaments, Challenges, Clips</p>
-        <div class="text-sm text-gray-500">Tables: games, game_tournaments, gamer_profiles</div>
-      </div>
-
-      <!-- Music & Audio -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-white/10">
-        <i class="fa-solid fa-music text-4xl text-purple-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Music & Radio</h3>
-        <p class="text-gray-400 mb-6">Tracks, Playlists, Radio Stations, Podcasts</p>
-      </div>
-
-      <!-- Store -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-white/10">
-        <i class="fa-solid fa-store text-4xl text-amber-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Store & Commerce</h3>
-        <p class="text-gray-400 mb-6">Products, Orders, Seller Profiles</p>
-      </div>
-
-      <!-- Meta Universe -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-white/10">
-        <i class="fa-solid fa-globe text-4xl text-sky-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Meta Universe</h3>
-        <p class="text-gray-400 mb-6">Worlds, Rooms, Avatars, Portals</p>
-      </div>
-
-      <!-- Messaging -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-white/10">
-        <i class="fa-solid fa-comments text-4xl text-rose-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Messages & Calls</h3>
-        <p class="text-gray-400 mb-6">DMs, Group Chats, Rich Calls</p>
-      </div>
-
-      <!-- Profiles & Users -->
-      <div class="bg-zinc-900 rounded-3xl p-8 card-hover border border-white/10">
-        <i class="fa-solid fa-users text-4xl text-emerald-400 mb-4"></i>
-        <h3 class="text-2xl font-bold mb-2">Profiles & Levels</h3>
-        <p class="text-gray-400 mb-6">User data, Levels, Badges, Settings</p>
-      </div>
-
+    <div class="text-center mb-12">
+      <h2 class="text-5xl font-bold">ALL IN ONE <span class="text-[#00ff9d]">UNIVERSE</span></h2>
+      <p class="text-[#00ff9d] text-xl mt-3">CONNECT • CREATE • EARN</p>
     </div>
 
-    <div class="mt-12 text-center text-gray-500 text-sm">
-      Supabase Project: <span class="text-green-400">xfsrqomsiulswbalgknx.supabase.co</span><br>
-      Publishable Key: <span class="font-mono text-xs">sb_publishable_pW8c7eWAX1GPi5HbncKjpg_CicEceV8</span>
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">10M+</div><div class="text-gray-400">Members</div></div>
+      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">500K+</div><div class="text-gray-400">Creators</div></div>
+      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">100K+</div><div class="text-gray-400">Live Now</div></div>
+      <div class="bg-zinc-900 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">∞</div><div class="text-gray-400">Modules</div></div>
+    </div>
+
+    <!-- 3D Schema Explorer -->
+    <div class="bg-zinc-950 rounded-3xl p-8 mb-12 border border-green-500/30">
+      <h3 class="text-2xl font-bold mb-6 text-center text-[#00ff9d]">3D DATABASE SCHEMA EXPLORER</h3>
+      <div id="three-container" class="w-full h-[520px] rounded-2xl overflow-hidden"></div>
+      <p class="text-center text-xs text-gray-500 mt-4">Drag to rotate • Scroll to zoom • Click nodes • Central hub: Profiles</p>
     </div>
 
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script>
-    // Simple interactivity
-    document.querySelectorAll('.card-hover').forEach(card => {
-      card.addEventListener('click', () => {
-        alert("Module selected — ready for detailed view (we can build this next)");
-      });
+    // === 3D SCHEMA GRAPH ===
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, 800/520, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(800, 520);
+    document.getElementById('three-container').appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    camera.position.z = 90;
+
+    const nodes = [
+      {id:"profiles", label:"Profiles", size:7, color:0x00ff9d, x:0,y:0,z:0},
+      {id:"live_streams", label:"Live Streams", size:4.5, color:0x00ccff},
+      {id:"games", label:"Games", size:4.5, color:0xffaa00},
+      {id:"meta_worlds", label:"Meta Worlds", size:4.5, color:0x00ff88},
+      {id:"music_tracks", label:"Music", size:4, color:0xcc66ff},
+      {id:"products", label:"Store", size:4, color:0xff66aa},
+      {id:"feed_posts", label:"Feed", size:4.2, color:0x88ffaa},
+      {id:"dm_threads", label:"Messages", size:4, color:0xffdd66},
+    ];
+
+    const nodeMeshes = [];
+    const nodeMap = {};
+
+    nodes.forEach(n => {
+      const geo = new THREE.SphereGeometry(n.size, 32, 32);
+      const mat = new THREE.MeshPhongMaterial({color: n.color, emissive: n.color, emissiveIntensity: 0.7});
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(n.x || (Math.random()-0.5)*50, n.y || (Math.random()-0.5)*40, n.z || (Math.random()-0.5)*20);
+      mesh.userData = n;
+      scene.add(mesh);
+      nodeMeshes.push(mesh);
+      nodeMap[n.id] = mesh;
+    });
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const light = new THREE.PointLight(0x00ff9d, 2, 200);
+    light.position.set(30, 40, 50);
+    scene.add(light);
+
+    // Animation
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      nodeMeshes.forEach(m => m.rotation.y += 0.003);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Click handler
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    renderer.domElement.addEventListener('click', (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(nodeMeshes);
+      if (intersects.length > 0) {
+        const node = intersects[0].object.userData;
+        alert(`📊 ${node.label}\n\nConnected to Profiles via foreign keys.\nPart of Rich Bizness Core Schema.`);
+      }
     });
   </script>
 </body>
