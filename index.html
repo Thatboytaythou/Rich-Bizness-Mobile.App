@@ -10,147 +10,106 @@
   <link rel="stylesheet" href="/styles/omni-portal.css" />
   <link rel="stylesheet" href="/styles/omni-dial.css" />
 
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-  />
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" defer></script>
+  <script src="/core/engine/universe-preview.js" defer></script>
+  <script src="/core/pages/index.js" defer></script>
 </head>
 
 <body class="rb-index-page">
   <div id="portal-container" aria-hidden="true"></div>
 
   <main class="rb-index-shell">
-    <header class="rb-top-panel">
-      <div class="rb-brand-block">
-        <p class="rb-kicker">RICH BIZNESS MOBILE</p>
-        <h1>Reality <span>Changers</span></h1>
-      </div>
+    <header class="rb-hero-lock">
+      <p class="rb-kicker">RICH BIZNESS MOBILE</p>
+      <h1>Reality <span>Changers</span></h1>
 
-      <a class="rb-guest-pill" href="/auth.html">
-        <span class="rb-guest-avatar">?</span>
+      <button class="rb-guest-card" type="button" data-route="auth">
+        <span class="rb-guest-icon">?</span>
         <span>
           <strong>Guest Mode</strong>
-          <small>Sign in</small>
+          <small>SIGN IN</small>
         </span>
-      </a>
+      </button>
     </header>
 
-    <section class="rb-universe-stage" aria-label="Rich Bizness universe hub">
-      <div class="rb-portal-core" aria-hidden="true">
-        <div class="rb-portal-ring ring-a"></div>
-        <div class="rb-portal-ring ring-b"></div>
-        <div class="rb-portal-ring ring-c"></div>
-        <div class="rb-portal-center">
-          <span>RB</span>
-          <small>Universe</small>
+    <section class="rb-universe-stage" aria-label="Rich Bizness Universe Hub">
+      <button class="rb-profile-side" type="button" data-route="profile">
+        <i class="fa-solid fa-user"></i>
+        <span>Profile</span>
+      </button>
+
+      <nav class="rb-right-tabs" aria-label="Utility sections">
+        <button type="button" data-route="admin"><i class="fa-solid fa-shield-halved"></i><span>Admin</span></button>
+        <button type="button" data-route="creator"><i class="fa-solid fa-crown"></i><span>Creator</span></button>
+        <button type="button" data-route="watch"><i class="fa-solid fa-tv"></i><span>Watch</span></button>
+        <button type="button" data-route="notifications"><i class="fa-solid fa-bell"></i><span>Alerts</span></button>
+        <button type="button" data-route="settings"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
+        <button type="button" data-route="edit"><i class="fa-solid fa-pen-nib"></i><span>Edit</span></button>
+      </nav>
+
+      <div class="rb-orbit-wrap">
+        <div class="rb-portal-core">
+          <div class="rb-portal-rings"></div>
+          <button class="rb-center-action" type="button" data-route="live">
+            <span class="rb-live-chip">LIVE</span>
+            <i class="fa-solid fa-broadcast-tower"></i>
+            <strong>Go Live</strong>
+            <small>ENTER THE SMOKE</small>
+          </button>
+        </div>
+
+        <div class="rb-orbit-track" id="rbOrbitTrack">
+          <button class="rb-tv-card is-front" type="button" data-route="live">
+            <small>LIVE</small><strong>Go Live</strong><span>Broadcast • VIP • Realtime</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="music">
+            <small>MUSIC</small><strong>Music Universe</strong><span>Tracks • Playlists • Artists</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="gallery">
+            <small>GALLERY</small><strong>Visual Drops</strong><span>Photos • Clips • Moments</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="podcast">
+            <small>PODCAST</small><strong>Podcast Shows</strong><span>Episodes • Voices • Stories</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="radio">
+            <small>RADIO</small><strong>Live Radio</strong><span>Stations • Streams • Audio</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="gaming">
+            <small>GAMES</small><strong>Arcade District</strong><span>Scores • Clips • Tournaments</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="upload">
+            <small>UPLOAD</small><strong>Upload Content</strong><span>Share • Route • Publish</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="sports">
+            <small>SPORTS</small><strong>Sports Arena</strong><span>Picks • Scores • Broadcasts</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="feed">
+            <small>FEED</small><strong>Global Feed</strong><span>Posts • Drops • Community</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="meta">
+            <small>META</small><strong>Meta World</strong><span>Avatars • Worlds • Portals</span>
+          </button>
+          <button class="rb-tv-card" type="button" data-route="store">
+            <small>STORE</small><strong>Creator Market</strong><span>Products • Unlocks • Sellers</span>
+          </button>
         </div>
       </div>
-
-      <div class="rb-orbit-track" id="rbOrbitTrack">
-        <a class="rb-tv-card active" href="/live.html" data-section="live">
-          <strong>LIVE</strong>
-          <h2>Go Live</h2>
-          <p>Broadcast • VIP • Realtime</p>
-        </a>
-
-        <a class="rb-tv-card" href="/music.html" data-section="music">
-          <strong>MUSIC</strong>
-          <h2>Music Universe</h2>
-          <p>Tracks • Playlists • Artists</p>
-        </a>
-
-        <a class="rb-tv-card" href="/gallery.html" data-section="gallery">
-          <strong>GALLERY</strong>
-          <h2>Visual Drops</h2>
-          <p>Photos • Clips • Moments</p>
-        </a>
-
-        <a class="rb-tv-card" href="/podcast.html" data-section="podcast">
-          <strong>PODCAST</strong>
-          <h2>Podcast Shows</h2>
-          <p>Episodes • Voices • Stories</p>
-        </a>
-
-        <a class="rb-tv-card" href="/radio.html" data-section="radio">
-          <strong>RADIO</strong>
-          <h2>Live Radio</h2>
-          <p>Stations • Streams • Audio</p>
-        </a>
-
-        <a class="rb-tv-card" href="/gaming.html" data-section="gaming">
-          <strong>GAMES</strong>
-          <h2>Arcade District</h2>
-          <p>Scores • Clips • Tournaments</p>
-        </a>
-
-        <a class="rb-tv-card" href="/upload.html" data-section="upload">
-          <strong>UPLOAD</strong>
-          <h2>Upload Content</h2>
-          <p>Share • Route • Publish</p>
-        </a>
-
-        <a class="rb-tv-card" href="/sports.html" data-section="sports">
-          <strong>SPORTS</strong>
-          <h2>Sports Arena</h2>
-          <p>Picks • Scores • Broadcasts</p>
-        </a>
-
-        <a class="rb-tv-card" href="/feed.html" data-section="feed">
-          <strong>FEED</strong>
-          <h2>Global Feed</h2>
-          <p>Posts • Drops • Community</p>
-        </a>
-
-        <a class="rb-tv-card" href="/meta.html" data-section="meta">
-          <strong>META</strong>
-          <h2>Meta World</h2>
-          <p>Avatars • Worlds • Portals</p>
-        </a>
-
-        <a class="rb-tv-card" href="/store.html" data-section="store">
-          <strong>STORE</strong>
-          <h2>Creator Market</h2>
-          <p>Products • Unlocks • Sellers</p>
-        </a>
-      </div>
-
-      <a class="rb-profile-card" href="/profile.html">
-        <i class="fa-solid fa-user-astronaut"></i>
-        <span>
-          <strong>Profile</strong>
-          <small>Your identity hub</small>
-        </span>
-      </a>
-
-      <nav class="rb-side-tabs" aria-label="Utility sections">
-        <a href="/admin.html"><i class="fa-solid fa-shield-halved"></i><span>Admin</span></a>
-        <a href="/creator.html"><i class="fa-solid fa-crown"></i><span>Creator</span></a>
-        <a href="/watch.html"><i class="fa-solid fa-tv"></i><span>Watch</span></a>
-        <a href="/notifications.html"><i class="fa-solid fa-bell"></i><span>Alerts</span></a>
-        <a href="/settings.html"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
-        <a href="/edit.html"><i class="fa-solid fa-pen-nib"></i><span>Edit</span></a>
-        <a href="/messages.html"><i class="fa-solid fa-comments"></i><span>Messages</span></a>
-      </nav>
     </section>
 
-    <section class="rb-bottom-nav" aria-label="Primary navigation">
-      <a href="/feed.html">Feed</a>
-      <a href="/live.html" class="active">Live</a>
-      <a href="/music.html">Music</a>
-      <a href="/gaming.html">Games</a>
-      <a href="/meta.html">Meta</a>
+    <section class="rb-main-copy">
+      <h2>ALL IN ONE <span>UNIVERSE</span></h2>
+      <p>SMOKE • POWER • LEGACY</p>
+      <button type="button" data-route="feed">ENTER REALITY</button>
     </section>
 
-    <section class="rb-enter-panel">
-      <h2>All in one <span>Universe</span></h2>
-      <p>Smoke • Power • Legacy</p>
-      <a href="/feed.html">Enter Reality</a>
-    </section>
+    <nav class="rb-bottom-nav" aria-label="Main quick links">
+      <button type="button" data-route="feed">Feed</button>
+      <button type="button" data-route="live" class="active">Live</button>
+      <button type="button" data-route="music">Music</button>
+      <button type="button" data-route="gaming">Games</button>
+      <button type="button" data-route="meta">Meta</button>
+    </nav>
   </main>
-
-  <script src="/core/engine/universe-preview.js"></script>
-  <script src="/core/pages/index.js"></script>
 </body>
 </html>
