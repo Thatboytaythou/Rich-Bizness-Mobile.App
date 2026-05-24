@@ -2,167 +2,916 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Rich Bizness • Universe</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
   <style>
+    :root {
+      --rb-bg: #071007;
+      --rb-black: #050705;
+      --rb-panel: rgba(8, 18, 10, 0.78);
+      --rb-green: #10b981;
+      --rb-green-soft: #34d399;
+      --rb-gold: #fbbf24;
+      --rb-border: rgba(251, 191, 36, 0.32);
+      --rb-border-green: rgba(16, 185, 129, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
     body {
-      background: #0a0f0a;
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: var(--rb-bg);
       overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      text-rendering: geometricPrecision;
     }
-    .burnt-gold { color: #fbbf24; }
-    .phone-hub {
-      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+    body {
+      color: #fff;
+      min-height: 100svh;
+      padding-bottom: max(24px, env(safe-area-inset-bottom));
+      background:
+        radial-gradient(circle at 50% 18%, rgba(16, 185, 129, 0.16), transparent 42%),
+        radial-gradient(circle at 15% 35%, rgba(52, 211, 153, 0.18), transparent 28%),
+        linear-gradient(180deg, #071007 0%, #020402 100%);
     }
+
+    #portal-container {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    #portal-container canvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      display: block;
+    }
+
+    .rb-shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: max(22px, env(safe-area-inset-top)) 18px 34px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .burnt-gold {
+      color: var(--rb-gold);
+    }
+
     .glass-smoke {
-      background: rgba(16, 185, 129, 0.06);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(251, 191, 36, 0.3);
+      background: var(--rb-panel);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--rb-border);
+      box-shadow:
+        0 0 60px rgba(16, 185, 129, 0.08),
+        inset 0 0 24px rgba(255, 255, 255, 0.025);
+    }
+
+    .rb-header {
+      min-height: 106px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-radius: 28px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+
+    .rb-title {
+      font-size: clamp(2.1rem, 6vw, 4.8rem);
+      line-height: 0.9;
+      font-weight: 950;
+      letter-spacing: -0.075em;
+    }
+
+    .rb-subtitle {
+      margin-top: 10px;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: clamp(0.74rem, 2vw, 1rem);
+      letter-spacing: 0.08em;
+    }
+
+    .rb-live-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.10);
+      border: 1px solid rgba(16, 185, 129, 0.68);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .rb-live-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      background: var(--rb-green);
+      box-shadow: 0 0 20px var(--rb-green);
+      animation: pulse 1.3s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.55; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .rb-hub {
+      position: relative;
+      min-height: 720px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 48px;
+    }
+
+    .rb-portal-ring {
+      position: absolute;
+      width: min(560px, 92vw);
+      height: min(560px, 92vw);
+      border: 4px solid rgba(16, 185, 129, 0.32);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 80px rgba(16, 185, 129, 0.18),
+        inset 0 0 60px rgba(251, 191, 36, 0.08);
+    }
+
+    .rb-portal-ring::before,
+    .rb-portal-ring::after {
+      content: "";
+      position: absolute;
+      border-radius: inherit;
+      border: 1px solid rgba(251, 191, 36, 0.38);
+      animation: spin 30s linear infinite;
+    }
+
+    .rb-portal-ring::before {
+      inset: 68px;
+    }
+
+    .rb-portal-ring::after {
+      inset: 118px;
+      border-color: rgba(16, 185, 129, 0.45);
+      animation-duration: 44s;
+      animation-direction: reverse;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .phone-hub {
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), filter 0.45s ease, opacity 0.45s ease;
+      cursor: pointer;
+    }
+
+    .phone-hub:hover {
+      transform: translateY(-8px) scale(1.04);
+      filter: brightness(1.12);
+    }
+
+    .phone-mockup {
+      width: 100%;
+    }
+
+    .rb-main-phone {
+      position: relative;
+      z-index: 30;
+      width: min(320px, 74vw);
+    }
+
+    .rb-main-card {
+      min-height: 520px;
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(16,185,129,0.10), transparent 34%),
+        #070807;
+      border: 1px solid rgba(251, 191, 36, 0.48);
+      box-shadow:
+        0 0 100px rgba(16, 185, 129, 0.16),
+        0 0 28px rgba(0,0,0,0.75);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .rb-main-icon {
+      width: 112px;
+      height: 112px;
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #34d399, #fbbf24);
+      box-shadow: 0 0 42px rgba(16, 185, 129, 0.35);
+      margin-bottom: 30px;
+    }
+
+    .rb-main-icon i {
+      font-size: 3.8rem;
+      color: #050705;
+    }
+
+    .rb-main-card h2 {
+      font-size: clamp(2.05rem, 6vw, 3rem);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+      margin: 0;
+    }
+
+    .rb-main-card p {
+      margin-top: 12px;
+      color: var(--rb-green-soft);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .rb-module {
+      position: absolute;
+      z-index: 24;
+      width: 112px;
+      height: 148px;
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,0.055), transparent 34%),
+        rgba(4, 5, 4, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.075);
+      box-shadow:
+        0 0 38px rgba(0, 0, 0, 0.62),
+        inset 0 0 20px rgba(255, 255, 255, 0.02);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .rb-module i {
+      font-size: 2rem;
+    }
+
+    .rb-module span {
+      font-size: 0.76rem;
+      font-weight: 900;
+      line-height: 1.05;
+    }
+
+    .rb-module small {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.42);
+      text-transform: uppercase;
+    }
+
+    .rb-pill-module {
+      position: absolute;
+      z-index: 25;
+      min-width: 112px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 11px 15px;
+      border-radius: 999px;
+      background: rgba(4, 8, 4, 0.85);
+      border: 1px solid var(--rb-border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 0 28px rgba(16,185,129,0.12);
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .rb-pill-module:hover,
+    .rb-module:hover {
+      border-color: rgba(52,211,153,0.62);
+      box-shadow: 0 0 48px rgba(16,185,129,0.27);
+    }
+
+    .c-feed i { color: #34d399; }
+    .c-messages i { color: #60a5fa; }
+    .c-notifications i { color: #facc15; }
+    .c-profile i { color: #a78bfa; }
+    .c-edit i { color: #fb923c; }
+    .c-settings i { color: #d1d5db; }
+    .c-upload i { color: #22c55e; }
+    .c-live i { color: #ef4444; }
+    .c-watch i { color: #f87171; }
+    .c-music i { color: #c084fc; }
+    .c-podcast i { color: #ec4899; }
+    .c-radio i { color: #2dd4bf; }
+    .c-gaming i { color: #22d3ee; }
+    .c-sports i { color: #fb923c; }
+    .c-gallery i { color: #f472b6; }
+    .c-store i { color: #fbbf24; }
+    .c-meta i { color: #38bdf8; }
+    .c-creator i { color: #8b5cf6; }
+    .c-admin i { color: #f43f5e; }
+
+    .pos-feed { top: 16px; left: 50%; transform: translateX(-50%); }
+    .pos-music { top: 105px; left: 7%; }
+    .pos-podcast { top: 252px; left: 1%; }
+    .pos-radio { bottom: 178px; left: 5%; }
+    .pos-gaming { bottom: 46px; left: 12%; }
+
+    .pos-gallery { top: 105px; right: 7%; }
+    .pos-watch { top: 252px; right: 1%; }
+    .pos-sports { bottom: 178px; right: 5%; }
+    .pos-store { bottom: 46px; right: 12%; }
+
+    .pos-messages { bottom: 0; left: 22%; }
+    .pos-notifications { bottom: 0; left: 50%; transform: translateX(-50%); }
+    .pos-profile { bottom: 0; right: 22%; }
+
+    .pos-upload { top: 52%; left: 50%; transform: translate(-50%, -50%) translateY(330px); }
+    .pos-meta { top: 50%; right: 3%; transform: translateY(-50%); }
+    .pos-creator { top: 50%; left: 3%; transform: translateY(-50%); }
+    .pos-edit { top: 2px; left: 19%; }
+    .pos-settings { top: 2px; right: 19%; }
+    .pos-admin { bottom: 86px; left: 50%; transform: translateX(-50%); }
+
+    .rb-hero-text {
+      text-align: center;
+      margin: 10px auto 44px;
+    }
+
+    .rb-hero-title {
+      font-size: clamp(2.7rem, 8vw, 5.2rem);
+      line-height: 0.9;
+      font-weight: 950;
+      letter-spacing: -0.08em;
+    }
+
+    .rb-hero-tag {
+      margin-top: 18px;
+      color: var(--rb-green-soft);
+      font-size: clamp(1rem, 3vw, 1.55rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .rb-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .rb-stat {
+      border-radius: 26px;
+      padding: 24px 12px;
+      text-align: center;
+    }
+
+    .rb-stat strong {
+      display: block;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      line-height: 1;
+      color: var(--rb-green-soft);
+      font-weight: 950;
+      letter-spacing: -0.045em;
+    }
+
+    .rb-stat span {
+      display: block;
+      margin-top: 8px;
+      color: rgba(255,255,255,0.56);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 860px) {
+      .rb-shell {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .rb-header {
+        min-height: 96px;
+        padding: 18px;
+        border-radius: 24px;
+      }
+
+      .rb-hub {
+        min-height: 690px;
+      }
+
+      .rb-module {
+        width: 88px;
+        height: 116px;
+        border-radius: 22px;
+        gap: 9px;
+      }
+
+      .rb-module i {
+        font-size: 1.45rem;
+      }
+
+      .rb-module span {
+        font-size: 0.66rem;
+      }
+
+      .rb-module small {
+        font-size: 0.48rem;
+      }
+
+      .rb-pill-module {
+        min-width: auto;
+        padding: 9px 12px;
+        font-size: 0.68rem;
+      }
+
+      .rb-main-phone {
+        width: min(286px, 70vw);
+      }
+
+      .rb-main-card {
+        min-height: 455px;
+        border-radius: 30px;
+      }
+
+      .rb-main-icon {
+        width: 92px;
+        height: 92px;
+        border-radius: 24px;
+      }
+
+      .rb-main-icon i {
+        font-size: 3rem;
+      }
+
+      .pos-music { top: 96px; left: 2%; }
+      .pos-podcast { top: 228px; left: -1%; }
+      .pos-radio { bottom: 194px; left: 1%; }
+      .pos-gaming { bottom: 74px; left: 4%; }
+
+      .pos-gallery { top: 96px; right: 2%; }
+      .pos-watch { top: 228px; right: -1%; }
+      .pos-sports { bottom: 194px; right: 1%; }
+      .pos-store { bottom: 74px; right: 4%; }
+
+      .pos-creator { top: 50%; left: -1%; }
+      .pos-meta { top: 50%; right: -1%; }
+
+      .pos-edit { top: 0; left: 7%; }
+      .pos-settings { top: 0; right: 7%; }
+
+      .pos-messages { bottom: 0; left: 7%; }
+      .pos-profile { bottom: 0; right: 7%; }
+      .pos-admin { bottom: 50px; }
+      .pos-upload { transform: translate(-50%, -50%) translateY(300px); }
+    }
+
+    @media (max-width: 520px) {
+      .rb-shell {
+        padding-top: max(18px, env(safe-area-inset-top));
+      }
+
+      .rb-header {
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .rb-subtitle {
+        font-size: 0.65rem;
+      }
+
+      .rb-live-pill {
+        padding: 10px 13px;
+        font-size: 0.68rem;
+      }
+
+      .rb-hub {
+        min-height: 650px;
+        margin-left: -6px;
+        margin-right: -6px;
+      }
+
+      .rb-portal-ring {
+        width: 365px;
+        height: 365px;
+      }
+
+      .rb-portal-ring::before {
+        inset: 46px;
+      }
+
+      .rb-portal-ring::after {
+        inset: 82px;
+      }
+
+      .rb-main-phone {
+        width: 246px;
+      }
+
+      .rb-main-card {
+        min-height: 392px;
+        padding: 22px;
+      }
+
+      .rb-main-icon {
+        width: 78px;
+        height: 78px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+      }
+
+      .rb-main-icon i {
+        font-size: 2.45rem;
+      }
+
+      .rb-module {
+        width: 72px;
+        height: 96px;
+        border-radius: 19px;
+        gap: 7px;
+        padding: 8px;
+      }
+
+      .rb-module i {
+        font-size: 1.15rem;
+      }
+
+      .rb-module span {
+        font-size: 0.56rem;
+      }
+
+      .rb-module small {
+        display: none;
+      }
+
+      .rb-pill-module {
+        padding: 8px 10px;
+        font-size: 0.58rem;
+        gap: 6px;
+      }
+
+      .pos-feed { top: 12px; }
+      .pos-edit { top: 54px; left: 7%; }
+      .pos-settings { top: 54px; right: 7%; }
+
+      .pos-music { top: 128px; left: 0; }
+      .pos-podcast { top: 240px; left: -2px; }
+      .pos-radio { bottom: 190px; left: 0; }
+      .pos-gaming { bottom: 84px; left: 10px; }
+
+      .pos-gallery { top: 128px; right: 0; }
+      .pos-watch { top: 240px; right: -2px; }
+      .pos-sports { bottom: 190px; right: 0; }
+      .pos-store { bottom: 84px; right: 10px; }
+
+      .pos-creator { top: 51%; left: 1px; }
+      .pos-meta { top: 51%; right: 1px; }
+
+      .pos-messages { bottom: 0; left: 4%; }
+      .pos-notifications { bottom: 0; }
+      .pos-profile { bottom: 0; right: 4%; }
+
+      .pos-admin { bottom: 44px; }
+      .pos-upload { transform: translate(-50%, -50%) translateY(282px); }
+
+      .rb-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .rb-stat {
+        padding: 20px 8px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .rb-main-phone {
+        width: 226px;
+      }
+
+      .rb-main-card {
+        min-height: 365px;
+      }
+
+      .rb-module {
+        width: 66px;
+        height: 90px;
+      }
+
+      .rb-pill-module {
+        font-size: 0.52rem;
+      }
     }
   </style>
 </head>
-<body class="text-white min-h-screen pb-20">
 
-  <!-- 3D Portal Background -->
-  <div id="portal-container" class="fixed inset-0 z-[-1]"></div>
+<body>
+  <div id="portal-container"></div>
 
-  <div class="max-w-5xl mx-auto px-6 pt-8 relative z-10">
-
-    <!-- Header -->
-    <div class="glass-smoke rounded-3xl p-6 flex justify-between items-center mb-12">
+  <main class="rb-shell">
+    <header class="rb-header glass-smoke">
       <div>
-        <h1 class="text-5xl font-black tracking-tighter">RICH <span class="burnt-gold">BIZNESS</span></h1>
-        <p class="text-gray-400">LLC • SMOKE & EMPIRE</p>
-      </div>
-      <div class="px-6 py-3 bg-emerald-500/10 border border-emerald-500 rounded-full flex items-center gap-3">
-        <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-        <span class="text-sm font-medium">LIVE</span>
-      </div>
-    </div>
-
-    <!-- PS5-Style Central Hub -->
-    <div class="relative h-[680px] flex items-center justify-center mb-16">
-      
-      <!-- Rotating Portal -->
-      <div id="portal" class="absolute w-[520px] h-[520px] border-4 border-emerald-400/40 rounded-full flex items-center justify-center">
-        <div class="w-[380px] h-[380px] border border-amber-400/60 rounded-full animate-[spin_25s_linear_infinite]"></div>
+        <h1 class="rb-title">RICH <span class="burnt-gold">BIZNESS</span></h1>
+        <p class="rb-subtitle">LLC • SMOKE &amp; EMPIRE</p>
       </div>
 
-      <!-- Central Main Phone -->
-      <div onclick="goLive()" class="phone-hub relative z-30 w-80">
+      <button class="rb-live-pill" type="button" onclick="selectModule('live')" aria-label="Go to live page">
+        <span class="rb-live-dot"></span>
+        LIVE
+      </button>
+    </header>
+
+    <section class="rb-hub" aria-label="Rich Bizness universe sections">
+      <div class="rb-portal-ring" aria-hidden="true"></div>
+
+      <button onclick="selectModule('feed')" class="rb-pill-module pos-feed c-feed" type="button">
+        <i class="fa-solid fa-fire"></i><span>Feed</span>
+      </button>
+
+      <button onclick="selectModule('edit')" class="rb-pill-module pos-edit c-edit" type="button">
+        <i class="fa-solid fa-pen-nib"></i><span>Edit</span>
+      </button>
+
+      <button onclick="selectModule('settings')" class="rb-pill-module pos-settings c-settings" type="button">
+        <i class="fa-solid fa-gear"></i><span>Settings</span>
+      </button>
+
+      <button onclick="selectModule('music')" class="phone-hub rb-module pos-music c-music" type="button">
+        <i class="fa-solid fa-music"></i><span>Music</span><small>Tracks</small>
+      </button>
+
+      <button onclick="selectModule('podcast')" class="phone-hub rb-module pos-podcast c-podcast" type="button">
+        <i class="fa-solid fa-microphone-lines"></i><span>Podcast</span><small>Shows</small>
+      </button>
+
+      <button onclick="selectModule('radio')" class="phone-hub rb-module pos-radio c-radio" type="button">
+        <i class="fa-solid fa-radio"></i><span>Radio</span><small>Live audio</small>
+      </button>
+
+      <button onclick="selectModule('gaming')" class="phone-hub rb-module pos-gaming c-gaming" type="button">
+        <i class="fa-solid fa-gamepad"></i><span>Gaming</span><small>Arcade</small>
+      </button>
+
+      <button onclick="selectModule('gallery')" class="phone-hub rb-module pos-gallery c-gallery" type="button">
+        <i class="fa-solid fa-image"></i><span>Gallery</span><small>Media</small>
+      </button>
+
+      <button onclick="selectModule('watch')" class="phone-hub rb-module pos-watch c-watch" type="button">
+        <i class="fa-solid fa-tv"></i><span>Watch</span><small>Live view</small>
+      </button>
+
+      <button onclick="selectModule('sports')" class="phone-hub rb-module pos-sports c-sports" type="button">
+        <i class="fa-solid fa-football"></i><span>Sports</span><small>Zone</small>
+      </button>
+
+      <button onclick="selectModule('store')" class="phone-hub rb-module pos-store c-store" type="button">
+        <i class="fa-solid fa-store"></i><span>Store</span><small>Market</small>
+      </button>
+
+      <button onclick="selectModule('creator')" class="phone-hub rb-module pos-creator c-creator" type="button">
+        <i class="fa-solid fa-crown"></i><span>Creator</span><small>Hub</small>
+      </button>
+
+      <button onclick="selectModule('meta')" class="phone-hub rb-module pos-meta c-meta" type="button">
+        <i class="fa-solid fa-globe"></i><span>Meta</span><small>World</small>
+      </button>
+
+      <button onclick="goLive()" class="phone-hub rb-main-phone" type="button" aria-label="Go live">
         <div class="phone-mockup">
-          <div class="bg-zinc-950 rounded-3xl h-[520px] flex flex-col items-center justify-center text-center p-8 border border-amber-400/50">
-            <div class="w-28 h-28 bg-gradient-to-br from-emerald-400 to-amber-500 rounded-3xl flex items-center justify-center mb-8 shadow-2xl">
-              <i class="fa-solid fa-broadcast-tower text-6xl text-black"></i>
+          <div class="rb-main-card">
+            <div class="rb-main-icon">
+              <i class="fa-solid fa-broadcast-tower"></i>
             </div>
-            <h2 class="text-4xl font-bold mb-2">Go Live</h2>
-            <p class="text-emerald-400">ENTER THE SMOKE</p>
+            <h2>Go Live</h2>
+            <p>ENTER THE SMOKE</p>
           </div>
         </div>
-      </div>
+      </button>
 
-      <!-- Sliding Side Phones -->
-      <div onclick="selectModule('music')" class="phone-hub absolute left-8 top-40 w-52 scale-75 hover:scale-90 cursor-pointer">
-        <div class="phone-mockup">
-          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-music text-5xl text-purple-400 mb-4"></i>
-            <p class="font-bold">Music</p>
-          </div>
-        </div>
-      </div>
+      <button onclick="selectModule('messages')" class="rb-pill-module pos-messages c-messages" type="button">
+        <i class="fa-solid fa-comments"></i><span>Messages</span>
+      </button>
 
-      <div onclick="selectModule('gaming')" class="phone-hub absolute left-6 bottom-40 w-52 scale-75 hover:scale-90 cursor-pointer">
-        <div class="phone-mockup">
-          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-gamepad text-5xl text-cyan-400 mb-4"></i>
-            <p class="font-bold">Gaming</p>
-          </div>
-        </div>
-      </div>
+      <button onclick="selectModule('notifications')" class="rb-pill-module pos-notifications c-notifications" type="button">
+        <i class="fa-solid fa-bell"></i><span>Alerts</span>
+      </button>
 
-      <div onclick="selectModule('meta')" class="phone-hub absolute right-8 top-40 w-52 scale-75 hover:scale-90 cursor-pointer">
-        <div class="phone-mockup">
-          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-globe text-5xl text-sky-400 mb-4"></i>
-            <p class="font-bold">Meta</p>
-          </div>
-        </div>
-      </div>
+      <button onclick="selectModule('profile')" class="rb-pill-module pos-profile c-profile" type="button">
+        <i class="fa-solid fa-user"></i><span>Profile</span>
+      </button>
 
-      <div onclick="selectModule('store')" class="phone-hub absolute right-6 bottom-40 w-52 scale-75 hover:scale-90 cursor-pointer">
-        <div class="phone-mockup">
-          <div class="bg-zinc-950 rounded-3xl h-72 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-store text-5xl text-amber-400 mb-4"></i>
-            <p class="font-bold">Store</p>
-          </div>
-        </div>
-      </div>
-    </div>
+      <button onclick="selectModule('admin')" class="rb-pill-module pos-admin c-admin" type="button">
+        <i class="fa-solid fa-shield-halved"></i><span>Admin</span>
+      </button>
 
-    <!-- Hero Text -->
-    <div class="text-center mb-16">
-      <h2 class="text-6xl font-black tracking-tighter">ALL IN ONE <span class="burnt-gold">UNIVERSE</span></h2>
-      <p class="text-emerald-400 text-2xl mt-4">SMOKE • POWER • LEGACY</p>
-    </div>
+      <button onclick="selectModule('upload')" class="rb-pill-module pos-upload c-upload" type="button">
+        <i class="fa-solid fa-cloud-arrow-up"></i><span>Upload</span>
+      </button>
+    </section>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">10M+</div><div class="text-gray-400">Members</div></div>
-      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">500K+</div><div class="text-gray-400">Creators</div></div>
-      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">100K+</div><div class="text-gray-400">Live Now</div></div>
-      <div class="glass-smoke rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-emerald-400">∞</div><div class="text-gray-400">Realms</div></div>
-    </div>
-  </div>
+    <section class="rb-hero-text">
+      <h2 class="rb-hero-title">ALL IN ONE <span class="burnt-gold">UNIVERSE</span></h2>
+      <p class="rb-hero-tag">SMOKE • POWER • LEGACY</p>
+    </section>
+
+    <section class="rb-stats" aria-label="Rich Bizness stats">
+      <div class="rb-stat glass-smoke"><strong>10M+</strong><span>Members</span></div>
+      <div class="rb-stat glass-smoke"><strong>500K+</strong><span>Creators</span></div>
+      <div class="rb-stat glass-smoke"><strong>100K+</strong><span>Live Now</span></div>
+      <div class="rb-stat glass-smoke"><strong>∞</strong><span>Realms</span></div>
+    </section>
+  </main>
 
   <script>
-    // Rotating Portal with Galaxy
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('portal-container').appendChild(renderer.domElement);
+    const RB_CONFIG = Object.freeze({
+      app: {
+        name: "Rich Bizness Mobile",
+        brand: "Rich Bizness LLC",
+        siteUrl: "https://rich-bizness-mobile-app.vercel.app"
+      },
 
-    const portal = new THREE.Mesh(
-      new THREE.SphereGeometry(13, 64, 64),
-      new THREE.MeshPhongMaterial({ 
-        color: 0x10b981, 
-        emissive: 0x064e3b,
-        shininess: 20 
-      })
-    );
-    scene.add(portal);
+      supabase: {
+        url: "https://xfsrqomsiulswbalgknx.supabase.co",
+        publishableKey: "sb_publishable_pW8c7eWAX1GPi5HbncKjpg_CicEceV8"
+      },
 
-    // Stars / Smoke Particles
-    const starsGeo = new THREE.BufferGeometry();
-    const positions = [];
-    for (let i = 0; i < 6000; i++) {
-      positions.push(THREE.MathUtils.randFloatSpread(300));
-      positions.push(THREE.MathUtils.randFloatSpread(300));
-      positions.push(THREE.MathUtils.randFloatSpread(300));
+      livekit: {
+        url: "wss://rich-bizness-mobile-app-ww6cieid.livekit.cloud"
+      },
+
+      routes: {
+        feed: "/feed.html",
+        messages: "/messages.html",
+        notifications: "/notifications.html",
+        profile: "/profile.html",
+        edit: "/edit.html",
+        settings: "/settings.html",
+        upload: "/upload.html",
+        live: "/live.html",
+        watch: "/watch.html",
+        music: "/music.html",
+        podcast: "/podcast.html",
+        radio: "/radio.html",
+        gaming: "/gaming.html",
+        sports: "/sports.html",
+        gallery: "/gallery.html",
+        store: "/store.html",
+        meta: "/meta.html",
+        creator: "/creator.html",
+        admin: "/admin.html"
+      },
+
+      sectionTables: {
+        feed: ["feed_posts", "feed_comments", "feed_post_likes", "feed_post_views", "followers"],
+        messages: ["dm_threads", "dm_thread_members", "dm_messages", "dm_message_attachments", "dm_message_reactions", "dm_message_reads", "dm_typing_status", "dm_call_sessions", "dm_call_participants"],
+        notifications: ["rich_notifications", "notification_groups", "notification_reads", "push_devices"],
+        profile: ["profiles", "user_levels", "user_badges", "profile_theme_settings", "creator_page_settings", "gamer_profiles", "sports_profiles", "store_seller_profiles", "meta_avatars"],
+        edit: ["profiles", "profile_theme_settings", "section_theme_settings", "user_custom_screens", "background_presets"],
+        settings: ["user_settings", "push_devices", "user_sessions", "section_theme_settings"],
+        upload: ["uploads", "upload_processing_queue", "storage_bucket_routes"],
+        live: ["live_streams", "live_stream_members", "live_chat_messages", "live_reactions", "live_stream_bans", "live_stream_cards", "live_tips", "livekit_room_events", "live_alert_subscriptions"],
+        watch: ["live_streams", "live_view_sessions", "live_chat_messages", "live_reactions", "live_stream_purchases", "vip_live_access", "live_stream_cards"],
+        music: ["music_tracks", "music_likes", "music_comments", "music_play_events", "playlists", "playlist_tracks"],
+        podcast: ["podcast_shows", "podcast_episodes", "podcast_likes", "podcast_comments"],
+        radio: ["radio_stations", "radio_sessions", "radio_likes"],
+        gaming: ["games", "game_categories", "gamer_profiles", "game_scores", "game_sessions", "game_clips", "game_comments", "game_likes", "game_challenges", "game_tournaments", "tournament_players", "game_rewards", "game_platform_accounts", "game_stream_links"],
+        sports: ["sports_profiles", "sports_posts", "sports_uploads", "sports_broadcasts", "sports_picks", "sports_pick_results", "sports_comments", "sports_reactions", "sports_brackets", "sports_leagues", "sports_teams"],
+        gallery: ["feed_posts", "uploads", "feed_post_likes", "feed_comments", "feed_post_views"],
+        store: ["products", "product_likes", "product_views", "store_cart_items", "store_comments", "store_orders", "store_notifications", "store_seller_profiles", "user_product_unlocks"],
+        meta: ["meta_worlds", "meta_avatars", "meta_rooms", "meta_room_members", "meta_chat_messages", "meta_portals", "meta_items", "meta_inventory", "meta_world_likes", "meta_visits", "meta_stream_links"],
+        creator: ["creator_page_settings", "creator_available_balances", "creator_alert_subscriptions", "live_streams", "music_tracks", "products", "games", "feed_posts", "store_orders", "live_stream_purchases", "live_tips"],
+        admin: ["admin_roles", "admin_audit_logs", "moderation_reports", "content_review_queue", "api_jobs", "api_request_logs", "api_webhook_events", "stripe_sync_events", "system_health_checks", "feature_flags", "platform_analytics_events", "platform_announcements", "trust_events"]
+      }
+    });
+
+    window.RB_CONFIG = RB_CONFIG;
+
+    function selectModule(section) {
+      const route = RB_CONFIG.routes[section];
+
+      if (!route) {
+        console.warn("Missing route for section:", section);
+        return;
+      }
+
+      window.location.href = route;
     }
-    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({color: 0xfacc15, size: 0.1}));
-    scene.add(stars);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const light = new THREE.PointLight(0xfacc15, 3);
-    light.position.set(40, 30, 50);
-    scene.add(light);
-
-    camera.position.z = 38;
-
-    function animate() {
-      requestAnimationFrame(animate);
-      portal.rotation.y += 0.0015;
-      stars.rotation.y += 0.0004;
-      renderer.render(scene, camera);
+    function goLive() {
+      window.location.href = RB_CONFIG.routes.live;
     }
-    animate();
 
-    function goLive() { alert("🌫️ Entering the Smoke Portal..."); }
-    function selectModule(mod) { alert(`Entering ${mod.toUpperCase()} Realm...`); }
+    const container = document.getElementById("portal-container");
+
+    if (container && window.THREE) {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance"
+      });
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      const portal = new THREE.Mesh(
+        new THREE.SphereGeometry(13, 64, 64),
+        new THREE.MeshPhongMaterial({
+          color: 0x10b981,
+          emissive: 0x064e3b,
+          shininess: 20,
+          transparent: true,
+          opacity: 0.92
+        })
+      );
+
+      scene.add(portal);
+
+      const starsGeo = new THREE.BufferGeometry();
+      const positions = [];
+
+      for (let i = 0; i < 5200; i++) {
+        positions.push(THREE.MathUtils.randFloatSpread(300));
+        positions.push(THREE.MathUtils.randFloatSpread(300));
+        positions.push(THREE.MathUtils.randFloatSpread(300));
+      }
+
+      starsGeo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+
+      const stars = new THREE.Points(
+        starsGeo,
+        new THREE.PointsMaterial({
+          color: 0xfacc15,
+          size: 0.095,
+          transparent: true,
+          opacity: 0.8
+        })
+      );
+
+      scene.add(stars);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+
+      const light = new THREE.PointLight(0xfacc15, 3);
+      light.position.set(40, 30, 50);
+      scene.add(light);
+
+      camera.position.z = 38;
+
+      function resizeScene() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      window.addEventListener("resize", resizeScene, { passive: true });
+      window.addEventListener("orientationchange", resizeScene, { passive: true });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        portal.rotation.y += 0.0015;
+        portal.rotation.x += 0.00025;
+        stars.rotation.y += 0.0004;
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    }
   </script>
 </body>
 </html>
