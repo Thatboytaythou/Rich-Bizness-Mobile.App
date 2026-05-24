@@ -1,160 +1,179 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Rich Bizness Universe</title>
-  <meta name="theme-color" content="#020602" />
-
-  <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/omni-fx.css" />
-  <link rel="stylesheet" href="/styles/omni-dial.css" />
-  <link rel="stylesheet" href="/styles/omni-portal.css" />
-  <link rel="stylesheet" href="/styles/three-avatar.css" />   <!-- 3D Avatar -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Bizness • Universe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body {
+      background: #0a0f0a;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .glow-green {
+      box-shadow: 0 0 60px -10px rgb(0 255 157);
+    }
+    .orbit-container {
+      position: relative;
+      width: 320px;
+      height: 320px;
+    }
+    .feature-card {
+      position: absolute;
+      width: 90px;
+      transition: all 0.4s ease;
+    }
+  </style>
 </head>
+<body class="min-h-screen text-white pb-20">
 
-<body class="rb-index-page" data-active-section="live">
-
-  <div class="rb-bg-layer"></div>
-  <div class="rb-bg-grid"></div>
-  <div class="rb-bg-vignette"></div>
-  <div class="rb-bg-noise"></div>
-
-  <main class="rb-index-shell">
-
-    <header class="rb-index-top">
-      <div class="rb-brand-lock">
-        <small>WELCOME BACK</small>
-        <h1><span>RICH</span> <strong>BIZNESS</strong></h1>
-        <b>LLC</b>
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-lg border-b border-green-500/20">
+    <div class="max-w-xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-black tracking-tighter">RICH <span class="text-[#00ff9d]">BIZNESS</span></h1>
+        <p class="text-xs text-gray-500 -mt-1">LLC</p>
       </div>
-
-      <!-- 3D AVATAR PROFILE PILL -->
-      <button class="rb-profile-pill" id="rb-open-profile" type="button">
-        <div class="rb-avatar-3d-container" id="rb-avatar-3d-container">
-          <canvas id="rb-avatar-canvas" width="64" height="64"></canvas>
-        </div>
-        <span>
-          <strong id="rb-home-name">Guest Mode</strong>
-          <small id="rb-home-badge">ENTER REALITY</small>
-        </span>
-      </button>
-    </header>
-
-    <section class="rb-index-hero">
-      <p>EVERYTHING YOU NEED</p>
-      <h2>ALL IN ONE <strong>UNIVERSE</strong></h2>
-      <small>CONNECT • CREATE • EARN</small>
-    </section>
-
-    <section class="rb-universe-stage" aria-label="Rich Bizness Universe">
-
-      <div class="rb-portal-core" aria-hidden="true">
-        <div class="rb-portal-ring"></div>
-        <div class="rb-portal-ring-two"></div>
-        <div class="rb-portal-ring-three"></div>
-        <div class="rb-portal-glow"></div>
-
-        <div class="rb-portal-center">
-          <b>RB</b>
-          <span>RICH BIZNESS</span>
-          <small>UNIVERSE</small>
+      <div class="flex items-center gap-3">
+        <div class="px-4 py-2 bg-zinc-900 rounded-full text-sm flex items-center gap-2 border border-green-500/30">
+          <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          Guest Mode
         </div>
       </div>
+    </div>
+  </header>
 
-      <div class="rb-dial-orbit" id="rb-dial-orbit">
+  <main class="pt-24 max-w-xl mx-auto px-6">
 
-        <button class="rb-orbit-card" data-section="sports" type="button">
-          <img src="/images/brand/sports-logo.png.jpeg" alt="Sports" />
-          <span>Sports</span>
-          <small>ACTION</small>
-        </button>
+    <!-- Hero -->
+    <div class="text-center mb-10">
+      <p class="uppercase text-xs tracking-[3px] text-gray-400 mb-3">EVERYTHING YOU NEED</p>
+      <h2 class="text-5xl md:text-6xl font-bold leading-none mb-4">
+        ALL IN ONE <span class="text-[#00ff9d]">UNIVERSE</span>
+      </h2>
+      <p class="text-[#00ff9d] tracking-widest text-lg">CONNECT • CREATE • EARN</p>
+    </div>
 
-        <button class="rb-orbit-card" data-section="music" type="button">
-          <img src="/images/brand/music-log.png.jpeg" alt="Music" />
-          <span>Music</span>
-          <small>UNIVERSE</small>
-        </button>
+    <!-- Mode Tabs -->
+    <div class="flex justify-center gap-2 mb-10 overflow-x-auto pb-2 hide-scroll">
+      <button onclick="switchMode('live')" class="mode-btn active px-8 py-3 rounded-full border border-green-500 bg-green-500/10 text-white font-medium">LIVE</button>
+      <button onclick="switchMode('gaming')" class="mode-btn px-8 py-3 rounded-full border border-white/10 hover:border-white/30">GAMING</button>
+      <button onclick="switchMode('meta')" class="mode-btn px-8 py-3 rounded-full border border-white/10 hover:border-white/30">META</button>
+    </div>
 
-        <button class="rb-orbit-card" data-section="feed" type="button">
-          <img src="/images/brand/project-avatar.png.jpeg" alt="Feed" />
-          <span>Global Feed</span>
-          <small>DISCOVER</small>
-        </button>
+    <!-- Central Orb Area -->
+    <div class="relative flex justify-center mb-12">
+      <div class="orbit-container">
+        <!-- Background Glow -->
+        <div class="absolute inset-0 bg-gradient-to-br from-green-500/20 to-transparent rounded-full blur-3xl"></div>
 
-        <button class="rb-orbit-card is-active" data-section="live" type="button">
-          <img src="/images/brand/omni-watch.png.jpeg" alt="Live" />
-          <span>Go Live</span>
-          <small>LIVE STREAM</small>
-        </button>
+        <!-- Central Phone / Go Live -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+          <div id="central-phone" class="w-64 bg-black rounded-3xl p-3 border-4 border-green-500 glow-green">
+            <div class="bg-zinc-950 rounded-2xl h-96 flex flex-col items-center justify-center text-center relative overflow-hidden">
+              <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center mb-4">
+                <i class="fa-solid fa-broadcast-tower text-3xl"></i>
+              </div>
+              <h3 class="font-bold text-xl">Go Live</h3>
+              <p class="text-green-400 text-sm">LIVE STREAM</p>
+            </div>
+          </div>
+        </div>
 
-        <button class="rb-orbit-card" data-section="store" type="button">
-          <img src="/images/brand/gta-studio.png.jpeg" alt="Store" />
-          <span>The Store</span>
-          <small>SHOP</small>
-        </button>
-
-        <button class="rb-orbit-card" data-section="gaming" type="button">
-          <img src="/images/brand/chess-gaming-logo.png.jpeg" alt="Gaming" />
-          <span>Gaming</span>
-          <small>PLAY</small>
-        </button>
-
-        <button class="rb-orbit-card" data-section="meta" type="button">
-          <img src="/images/brand/meta-avatar.png.jpeg" alt="Meta" />
-          <span>Meta</span>
-          <small>WORLD</small>
-        </button>
-
+        <!-- Orbiting Cards -->
+        <div id="orbiting-cards" class="absolute inset-0"></div>
       </div>
+    </div>
 
-      <article class="rb-live-focus">
-        <small id="rb-active-label">LIVE</small>
-        <div class="rb-signal-icon"></div>
-        <h3 id="rb-active-title">Go Live</h3>
-        <p id="rb-active-meta">LIVE STREAM</p>
-      </article>
-
-    </section>
-
-    <section class="rb-action-row">
-      <button id="rb-open-upload" class="rb-side-action" type="button">
-        Upload Content
-        <small>SHARE YOUR WORLD</small>
+    <!-- Action Buttons -->
+    <div class="space-y-4 px-2">
+      <button onclick="uploadContent()" class="w-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-3xl p-6 text-left transition">
+        <div class="font-semibold text-lg">Upload Content</div>
+        <div class="text-sm text-gray-400">SHARE YOUR WORLD</div>
       </button>
 
-      <button id="rb-launch-section" class="rb-main-action" type="button">
-        ENTER REALITY →
+      <button onclick="enterUniverse()" id="main-cta-button"
+        class="w-full py-7 text-2xl font-bold rounded-3xl bg-gradient-to-r from-[#00ff9d] to-[#a3ff00] text-black shadow-lg shadow-green-500/50">
+        ENTER LIVE →
       </button>
 
-      <button id="rb-create-channel" class="rb-side-action" type="button">
-        Create Channel
-        <small>BUILD YOUR BRAND</small>
+      <button onclick="createChannel()" class="w-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-3xl p-6 text-left transition">
+        <div class="font-semibold text-lg">Create Channel</div>
+        <div class="text-sm text-gray-400">BUILD YOUR BRAND</div>
       </button>
-    </section>
+    </div>
 
-    <nav class="rb-bottom-nav" aria-label="Main sections">
-      <button data-route="feed" type="button">⌂<span>Feed</span></button>
-      <button data-route="live" type="button" class="active">◉<span>Live</span></button>
-      <button data-route="music" type="button">♫<span>Music</span></button>
-      <button data-route="gaming" type="button">🎮<span>Games</span></button>
-      <button data-route="meta" type="button">◇<span>Meta</span></button>
-    </nav>
-
-    <section class="rb-stats-row">
-      <div><b id="rb-stat-members">10M+</b><small>MEMBERS</small></div>
-      <div><b id="rb-stat-creators">500K+</b><small>CREATORS</small></div>
-      <div><b id="rb-stat-live">100K+</b><small>LIVE NOW</small></div>
-      <div><b id="rb-stat-active">1M+</b><small>DAILY ACTIVE</small></div>
-    </section>
-
-    <footer class="rb-index-footer">
-      ONE PLATFORM • ENDLESS POSSIBILITIES
-      <small>WELCOME TO RICH BIZNESS UNIVERSE</small>
-    </footer>
+    <!-- Stats -->
+    <div class="mt-16 grid grid-cols-2 gap-y-8 text-center">
+      <div>
+        <div class="text-3xl font-bold text-green-400">10M+</div>
+        <div class="text-xs uppercase tracking-widest text-gray-500">Members</div>
+      </div>
+      <div>
+        <div class="text-3xl font-bold text-green-400">500K+</div>
+        <div class="text-xs uppercase tracking-widest text-gray-500">Creators</div>
+      </div>
+      <div>
+        <div class="text-3xl font-bold text-green-400">100K+</div>
+        <div class="text-xs uppercase tracking-widest text-gray-500">Live Now</div>
+      </div>
+      <div>
+        <div class="text-3xl font-bold text-green-400">1M+</div>
+        <div class="text-xs uppercase tracking-widest text-gray-500">Daily Active</div>
+      </div>
+    </div>
 
   </main>
 
-  <script type="module" src="/core/pages/index.js"></script>
+  <script>
+    function switchMode(mode) {
+      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active', 'border-green-500', 'bg-green-500/10'));
+      
+      const buttons = document.querySelectorAll('.mode-btn');
+      if (mode === 'live') buttons[0].classList.add('active', 'border-green-500', 'bg-green-500/10');
+      else if (mode === 'gaming') buttons[1].classList.add('active', 'border-green-500', 'bg-green-500/10');
+      else buttons[2].classList.add('active', 'border-green-500', 'bg-green-500/10');
+
+      const cta = document.getElementById('main-cta-button');
+      if (mode === 'live') {
+        cta.textContent = 'ENTER LIVE →';
+        cta.style.backgroundImage = 'linear-gradient(to right, #00ff9d, #a3ff00)';
+      } else if (mode === 'gaming') {
+        cta.textContent = 'ENTER GAMING →';
+        cta.style.backgroundImage = 'linear-gradient(to right, #22d3ee, #67e8f9)';
+      } else {
+        cta.textContent = 'ENTER META →';
+        cta.style.backgroundImage = 'linear-gradient(to right, #c084fc, #67e8f9)';
+      }
+    }
+
+    function uploadContent() {
+      alert("Upload Content flow would go here");
+    }
+    function createChannel() {
+      alert("Create Channel flow would go here");
+    }
+    function enterUniverse() {
+      alert("Welcome to the Rich Bizness Universe!");
+    }
+
+    // Initialize orbiting cards (simplified)
+    function initOrbit() {
+      const container = document.getElementById('orbiting-cards');
+      const labels = ['Global Feed', 'The Store', 'Gaming', 'Music'];
+      // You can replace this with actual images later
+      container.innerHTML = `
+        <div class="feature-card" style="top: 10%; left: 10%; transform: rotate(-25deg);">
+          <img src="https://via.placeholder.com/90x140/111827/00ff9d?text=Feed" class="rounded-2xl shadow-xl">
+        </div>
+        <div class="feature-card" style="top: 15%; right: 5%; transform: rotate(15deg);">
+          <img src="https://via.placeholder.com/90x140/111827/00ff9d?text=Store" class="rounded-2xl shadow-xl">
+        </div>
+      `;
+    }
+
+    window.onload = initOrbit;
+  </script>
 </body>
 </html>
