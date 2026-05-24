@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Rich Bizness Universe</title>
   <meta name="theme-color" content="#020602" />
 
@@ -15,6 +10,7 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
   <link rel="stylesheet" href="/styles/omni-dial.css" />
   <link rel="stylesheet" href="/styles/omni-portal.css" />
+  <link rel="stylesheet" href="/styles/three-avatar.css" />   <!-- 3D Avatar -->
 </head>
 
 <body class="rb-index-page" data-active-section="live">
@@ -33,12 +29,11 @@
         <b>LLC</b>
       </div>
 
+      <!-- 3D AVATAR PROFILE PILL -->
       <button class="rb-profile-pill" id="rb-open-profile" type="button">
-        <img
-          id="rb-home-avatar"
-          src="/images/brand/Avatar-hero-Banner.png.jpeg"
-          alt="Profile avatar"
-        />
+        <div class="rb-avatar-3d-container" id="rb-avatar-3d-container">
+          <canvas id="rb-avatar-canvas" width="64" height="64"></canvas>
+        </div>
         <span>
           <strong id="rb-home-name">Guest Mode</strong>
           <small id="rb-home-badge">ENTER REALITY</small>
