@@ -1,59 +1,538 @@
-.rb-live-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 999px;
-  background: var(--rb-green);
-  box-shadow: 0 0 20px var(--rb-green);
-  animation: rbPulse 1.3s infinite ease-in-out;
+/* =========================================
+   RICH BIZNESS MOBILE
+   /styles/omni-fx.css
+
+   CINEMATIC FX LAYER
+========================================= */
+
+/* =========================================
+   FX ROOT
+========================================= */
+
+.rb-fx-layer{
+  position:fixed;
+  inset:0;
+
+  z-index:-1;
+
+  overflow:hidden;
+  pointer-events:none;
 }
 
-@keyframes rbPulse {
-  0%, 100% {
-    opacity: 0.55;
-    transform: scale(0.9);
+/* =========================================
+   GLOBAL ATMOSPHERE
+========================================= */
+
+.rb-fx-vignette{
+  position:absolute;
+  inset:0;
+
+  background:
+    radial-gradient(
+      circle at center,
+      transparent 42%,
+      rgba(0,0,0,.32) 74%,
+      rgba(0,0,0,.84) 100%
+    );
+
+  mix-blend-mode:multiply;
+}
+
+.rb-fx-noise{
+  position:absolute;
+  inset:-200%;
+
+  opacity:.08;
+
+  background-image:
+    url("https://grainy-gradients.vercel.app/noise.svg");
+
+  animation:rbNoiseMove 14s linear infinite;
+}
+
+@keyframes rbNoiseMove{
+  0%{
+    transform:translate3d(0,0,0);
   }
 
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
+  100%{
+    transform:translate3d(10%,10%,0);
   }
 }
 
-.rb-portal-ring::before,
-.rb-portal-ring::after {
-  content: "";
-  position: absolute;
-  border-radius: inherit;
-  border: 1px solid rgba(251, 191, 36, 0.38);
-  animation: rbSpin 30s linear infinite;
+/* =========================================
+   GREEN FOG
+========================================= */
+
+.rb-green-fog{
+  position:absolute;
+
+  border-radius:50%;
+
+  filter:blur(120px);
+
+  opacity:.22;
+
+  mix-blend-mode:screen;
 }
 
-.rb-portal-ring::after {
-  animation-duration: 44s;
-  animation-direction: reverse;
+.rb-green-fog.fog-1{
+  width:620px;
+  height:620px;
+
+  top:-180px;
+  left:-120px;
+
+  background:#00ff95;
+
+  animation:rbFogFloatOne 18s ease-in-out infinite;
 }
 
-@keyframes rbSpin {
-  to {
-    transform: rotate(360deg);
+.rb-green-fog.fog-2{
+  width:520px;
+  height:520px;
+
+  right:-140px;
+  top:22%;
+
+  background:#22c55e;
+
+  animation:rbFogFloatTwo 22s ease-in-out infinite;
+}
+
+.rb-green-fog.fog-3{
+  width:760px;
+  height:760px;
+
+  left:50%;
+  bottom:-380px;
+
+  transform:translateX(-50%);
+
+  background:#facc15;
+
+  opacity:.16;
+
+  animation:rbFogFloatThree 28s ease-in-out infinite;
+}
+
+@keyframes rbFogFloatOne{
+  0%{
+    transform:translate3d(0,0,0) scale(1);
+  }
+
+  50%{
+    transform:translate3d(60px,40px,0) scale(1.08);
+  }
+
+  100%{
+    transform:translate3d(0,0,0) scale(1);
   }
 }
 
-.phone-hub {
-  transition:
-    transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-    filter 0.45s ease,
-    opacity 0.45s ease;
-  cursor: pointer;
+@keyframes rbFogFloatTwo{
+  0%{
+    transform:translate3d(0,0,0) scale(1);
+  }
+
+  50%{
+    transform:translate3d(-70px,50px,0) scale(1.12);
+  }
+
+  100%{
+    transform:translate3d(0,0,0) scale(1);
+  }
 }
 
-.phone-hub:hover {
-  transform: translateY(-8px) scale(1.04);
-  filter: brightness(1.12);
+@keyframes rbFogFloatThree{
+  0%{
+    transform:translateX(-50%) scale(1);
+  }
+
+  50%{
+    transform:translateX(-50%) scale(1.14);
+  }
+
+  100%{
+    transform:translateX(-50%) scale(1);
+  }
 }
 
-.rb-pill-module:hover,
-.rb-module:hover {
-  border-color: rgba(52, 211, 153, 0.62);
-  box-shadow: 0 0 48px rgba(16,185,129,0.27);
+/* =========================================
+   LIGHT BEAMS
+========================================= */
+
+.rb-light-beam{
+  position:absolute;
+
+  width:2px;
+  height:120vh;
+
+  top:-10vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(34,197,94,.22) 30%,
+      rgba(34,197,94,.55) 50%,
+      rgba(34,197,94,.18) 72%,
+      transparent 100%
+    );
+
+  filter:blur(.5px);
+
+  opacity:.32;
+}
+
+.rb-light-beam.beam-1{
+  left:14%;
+
+  animation:rbBeamMove 8s linear infinite;
+}
+
+.rb-light-beam.beam-2{
+  left:50%;
+
+  animation:rbBeamMove 12s linear infinite reverse;
+}
+
+.rb-light-beam.beam-3{
+  right:16%;
+
+  animation:rbBeamMove 10s linear infinite;
+}
+
+@keyframes rbBeamMove{
+  0%{
+    transform:translateY(-10%) scaleY(1);
+    opacity:.18;
+  }
+
+  50%{
+    transform:translateY(5%) scaleY(1.08);
+    opacity:.4;
+  }
+
+  100%{
+    transform:translateY(-10%) scaleY(1);
+    opacity:.18;
+  }
+}
+
+/* =========================================
+   FLOATING PARTICLES
+========================================= */
+
+.rb-particles{
+  position:absolute;
+  inset:0;
+}
+
+.rb-particle{
+  position:absolute;
+
+  border-radius:50%;
+
+  background:rgba(74,222,128,.72);
+
+  box-shadow:
+    0 0 18px rgba(74,222,128,.82);
+
+  animation:rbParticleFloat linear infinite;
+}
+
+.rb-particle.p1{
+  width:6px;
+  height:6px;
+
+  left:12%;
+  top:70%;
+
+  animation-duration:16s;
+}
+
+.rb-particle.p2{
+  width:10px;
+  height:10px;
+
+  left:28%;
+  top:82%;
+
+  animation-duration:22s;
+}
+
+.rb-particle.p3{
+  width:4px;
+  height:4px;
+
+  left:42%;
+  top:74%;
+
+  animation-duration:18s;
+}
+
+.rb-particle.p4{
+  width:8px;
+  height:8px;
+
+  left:56%;
+  top:88%;
+
+  animation-duration:24s;
+}
+
+.rb-particle.p5{
+  width:5px;
+  height:5px;
+
+  left:72%;
+  top:76%;
+
+  animation-duration:19s;
+}
+
+.rb-particle.p6{
+  width:12px;
+  height:12px;
+
+  left:86%;
+  top:84%;
+
+  animation-duration:28s;
+}
+
+@keyframes rbParticleFloat{
+  0%{
+    transform:
+      translate3d(0,0,0)
+      scale(.8);
+
+    opacity:0;
+  }
+
+  10%{
+    opacity:.85;
+  }
+
+  50%{
+    transform:
+      translate3d(20px,-260px,0)
+      scale(1.1);
+
+    opacity:1;
+  }
+
+  100%{
+    transform:
+      translate3d(-10px,-520px,0)
+      scale(.6);
+
+    opacity:0;
+  }
+}
+
+/* =========================================
+   PULSE ORBS
+========================================= */
+
+.rb-pulse-orb{
+  position:absolute;
+
+  border-radius:50%;
+
+  border:1px solid rgba(34,197,94,.24);
+
+  animation:rbOrbPulse ease-in-out infinite;
+}
+
+.rb-pulse-orb.orb-1{
+  width:280px;
+  height:280px;
+
+  left:8%;
+  top:22%;
+
+  animation-duration:6s;
+}
+
+.rb-pulse-orb.orb-2{
+  width:520px;
+  height:520px;
+
+  right:-120px;
+  top:46%;
+
+  animation-duration:9s;
+}
+
+.rb-pulse-orb.orb-3{
+  width:740px;
+  height:740px;
+
+  left:50%;
+  top:50%;
+
+  transform:translate(-50%,-50%);
+
+  animation-duration:12s;
+}
+
+@keyframes rbOrbPulse{
+  0%{
+    opacity:.12;
+    transform:scale(.92);
+  }
+
+  50%{
+    opacity:.34;
+    transform:scale(1.02);
+  }
+
+  100%{
+    opacity:.12;
+    transform:scale(.92);
+  }
+}
+
+/* =========================================
+   SCAN GRID
+========================================= */
+
+.rb-grid-overlay{
+  position:absolute;
+  inset:0;
+
+  background:
+    linear-gradient(
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.02) 1px,
+      transparent 1px
+    );
+
+  background-size:34px 34px;
+
+  opacity:.18;
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black 36%,
+      transparent 92%
+    );
+}
+
+/* =========================================
+   LIVE PULSE
+========================================= */
+
+.rb-live-pulse{
+  animation:rbLivePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes rbLivePulse{
+  0%{
+    box-shadow:
+      0 0 0 rgba(34,197,94,.0);
+  }
+
+  50%{
+    box-shadow:
+      0 0 30px rgba(34,197,94,.42);
+  }
+
+  100%{
+    box-shadow:
+      0 0 0 rgba(34,197,94,.0);
+  }
+}
+
+/* =========================================
+   HOLOGRAM SWEEP
+========================================= */
+
+.rb-hologram-sweep{
+  position:relative;
+  overflow:hidden;
+}
+
+.rb-hologram-sweep::after{
+  content:"";
+
+  position:absolute;
+
+  top:-120%;
+  left:-30%;
+
+  width:40%;
+  height:300%;
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(255,255,255,.12),
+      transparent
+    );
+
+  transform:rotate(24deg);
+
+  animation:rbSweep 7s linear infinite;
+}
+
+@keyframes rbSweep{
+  0%{
+    transform:
+      translateX(-220%)
+      rotate(24deg);
+  }
+
+  100%{
+    transform:
+      translateX(620%)
+      rotate(24deg);
+  }
+}
+
+/* =========================================
+   MOBILE FX TUNING
+========================================= */
+
+@media (max-width:768px){
+
+  .rb-green-fog{
+    filter:blur(90px);
+  }
+
+  .rb-green-fog.fog-1{
+    width:360px;
+    height:360px;
+  }
+
+  .rb-green-fog.fog-2{
+    width:300px;
+    height:300px;
+  }
+
+  .rb-green-fog.fog-3{
+    width:520px;
+    height:520px;
+  }
+
+  .rb-pulse-orb.orb-3{
+    width:480px;
+    height:480px;
+  }
+
+  .rb-light-beam{
+    opacity:.18;
+  }
+
+  .rb-grid-overlay{
+    opacity:.08;
+  }
 }
