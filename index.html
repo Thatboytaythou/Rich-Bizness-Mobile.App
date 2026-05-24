@@ -9,24 +9,26 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
     body { background: #0a0f0a; overflow-x: hidden; }
-    #globe-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.75; }
-    .glow-green { box-shadow: 0 0 90px -15px #00ff9d; }
+    #globe-container, #character-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+    .glow-green { box-shadow: 0 0 100px -20px #00ff9d; }
     .phone-mockup {
       background: #111;
       border: 14px solid #00ff9d;
       border-radius: 52px;
       padding: 10px;
-      box-shadow: 0 0 70px -10px #00ff9d;
+      box-shadow: 0 0 80px -15px #00ff9d;
       transition: all 0.4s ease;
       cursor: pointer;
     }
-    .phone-mockup:hover { transform: scale(1.1) rotate(2deg); }
   </style>
 </head>
 <body class="text-white min-h-screen pb-20">
 
-  <!-- 3D Globe + Stars Background -->
+  <!-- Globe Background -->
   <div id="globe-container"></div>
+
+  <!-- Character Canvas -->
+  <div id="character-container" class="opacity-90"></div>
 
   <div class="max-w-6xl mx-auto px-6 pt-8 relative z-10">
 
@@ -34,7 +36,7 @@
     <div class="flex justify-between items-center mb-8">
       <div>
         <h1 class="text-5xl font-black tracking-tighter">RICH <span class="text-[#00ff9d]">BIZNESS</span></h1>
-        <p class="text-gray-400">LLC • ALL IN ONE UNIVERSE</p>
+        <p class="text-gray-400">LLC • EMPIRE OF THE UNIVERSE</p>
       </div>
       <div class="flex items-center gap-4">
         <div class="px-4 py-2 bg-green-500/10 border border-green-500 rounded-full text-sm flex items-center gap-2">
@@ -44,56 +46,25 @@
       </div>
     </div>
 
-    <!-- Multiple Phones -->
-    <div class="relative h-[620px] flex items-center justify-center mb-12">
-      <div class="absolute w-[520px] h-[520px] border border-green-500/30 rounded-full animate-[spin_45s_linear_infinite]"></div>
-      <div class="absolute w-[620px] h-[620px] border border-green-500/20 rounded-full animate-[spin_65s_linear_infinite]"></div>
+    <!-- Cinematic Hero -->
+    <div class="relative h-[580px] flex items-center justify-center mb-12 rounded-3xl overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/60 to-black/90"></div>
+      
+      <div class="relative z-10 text-center">
+        <h2 class="text-6xl font-black tracking-tighter mb-4">ALL IN ONE <span class="text-[#00ff9d]">UNIVERSE</span></h2>
+        <p class="text-[#00ff9d] text-2xl">CONNECT • CREATE • CONQUER</p>
+      </div>
 
       <!-- Central Phone -->
-      <div onclick="goLive()" class="phone-mockup w-72 relative z-30">
+      <div onclick="goLive()" class="phone-mockup w-72 absolute bottom-12 left-1/2 -translate-x-1/2 z-20">
         <div class="bg-black rounded-3xl h-[520px] flex flex-col items-center justify-center text-center p-6">
           <div class="w-28 h-28 bg-gradient-to-br from-green-400 to-emerald-600 rounded-3xl flex items-center justify-center mb-8 glow-green">
             <i class="fa-solid fa-broadcast-tower text-6xl"></i>
           </div>
           <h2 class="text-3xl font-bold mb-2">Go Live</h2>
-          <p class="text-green-400">ENTER THE UNIVERSE</p>
+          <p class="text-green-400">ENTER THE EMPIRE</p>
         </div>
       </div>
-
-      <!-- Orbiting Phones -->
-      <div onclick="selectModule('music')" class="absolute left-12 top-24 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-music text-5xl text-purple-400 mb-4"></i>
-          <p class="font-bold">Music</p>
-        </div>
-      </div>
-
-      <div onclick="selectModule('gaming')" class="absolute left-20 bottom-24 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-gamepad text-5xl text-cyan-400 mb-4"></i>
-          <p class="font-bold">Gaming</p>
-        </div>
-      </div>
-
-      <div onclick="selectModule('meta')" class="absolute right-12 top-24 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-globe text-5xl text-sky-400 mb-4"></i>
-          <p class="font-bold">Meta</p>
-        </div>
-      </div>
-
-      <div onclick="selectModule('store')" class="absolute right-20 bottom-24 phone-mockup w-44 scale-75">
-        <div class="bg-black rounded-3xl h-80 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-store text-5xl text-amber-400 mb-4"></i>
-          <p class="font-bold">Store</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hero -->
-    <div class="text-center mb-12">
-      <h2 class="text-5xl font-bold">ALL IN ONE <span class="text-[#00ff9d]">UNIVERSE</span></h2>
-      <p class="text-[#00ff9d] text-xl mt-4">CONNECT • CREATE • EARN</p>
     </div>
 
     <!-- Stats -->
@@ -104,82 +75,102 @@
       <div class="bg-zinc-900/80 rounded-3xl p-6 text-center"><div class="text-4xl font-bold text-green-400">∞</div><div class="text-gray-400">Modules</div></div>
     </div>
 
+    <!-- Module Phones -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div onclick="selectModule('music')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-music text-5xl text-purple-400"></i><p class="mt-4 font-bold">Music</p></div></div>
+      <div onclick="selectModule('gaming')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-gamepad text-5xl text-cyan-400"></i><p class="mt-4 font-bold">Gaming</p></div></div>
+      <div onclick="selectModule('meta')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-globe text-5xl text-sky-400"></i><p class="mt-4 font-bold">Meta</p></div></div>
+      <div onclick="selectModule('store')" class="phone-mockup"><div class="bg-black rounded-3xl h-64 flex flex-col items-center justify-center"><i class="fa-solid fa-store text-5xl text-amber-400"></i><p class="mt-4 font-bold">Store</p></div></div>
+    </div>
   </div>
 
   <script>
-    // === ENHANCED 3D GLOBE + STARS ===
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('globe-container').appendChild(renderer.domElement);
+    // === GLOBE BACKGROUND ===
+    const globeScene = new THREE.Scene();
+    const globeCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const globeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    globeRenderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('globe-container').appendChild(globeRenderer.domElement);
 
-    // Globe
-    const globeGeo = new THREE.SphereGeometry(9, 64, 64);
-    const globeMat = new THREE.MeshPhongMaterial({
-      color: 0x00ff9d,
-      emissive: 0x008844,
-      shininess: 10
-    });
-    const globe = new THREE.Mesh(globeGeo, globeMat);
-    scene.add(globe);
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(9, 64, 64), new THREE.MeshPhongMaterial({color: 0x00ff9d, emissive: 0x004422}));
+    globeScene.add(globe);
+    globeScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const light = new THREE.PointLight(0x00ff9d, 2.5);
+    light.position.set(25, 20, 30);
+    globeScene.add(light);
+    globeCamera.position.z = 28;
 
-    // Glow layer
-    const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(9.4, 64, 64),
-      new THREE.MeshBasicMaterial({ color: 0x00ff9d, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending })
-    );
-    scene.add(glow);
+    // === REALISTIC 3D CHARACTER ===
+    const charScene = new THREE.Scene();
+    const charCamera = new THREE.PerspectiveCamera(45, 300/400, 0.1, 1000);
+    const charRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    charRenderer.setSize(300, 400);
+    document.getElementById('character-container').appendChild(charRenderer.domElement);
 
-    // Stars
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.07 });
-    const starsVertices = [];
-    for (let i = 0; i < 8000; i++) {
-      const x = THREE.MathUtils.randFloatSpread(200);
-      const y = THREE.MathUtils.randFloatSpread(200);
-      const z = THREE.MathUtils.randFloatSpread(200);
-      starsVertices.push(x, y, z);
-    }
-    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
-    const starField = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(starField);
+    // Hooded Character
+    const characterGroup = new THREE.Group();
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
-    const pointLight = new THREE.PointLight(0x00ff9d, 2.5);
-    pointLight.position.set(20, 15, 30);
-    scene.add(pointLight);
+    // Body (Hoodie)
+    const bodyGeo = new THREE.BoxGeometry(4, 7, 3);
+    const bodyMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 2;
+    characterGroup.add(body);
 
-    camera.position.z = 28;
+    // Head
+    const headGeo = new THREE.SphereGeometry(2.2, 32, 32);
+    const headMat = new THREE.MeshPhongMaterial({ color: 0xffdbac });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 6.5;
+    characterGroup.add(head);
+
+    // Beanie
+    const beanieGeo = new THREE.CylinderGeometry(2.1, 1.8, 2, 32);
+    const beanieMat = new THREE.MeshPhongMaterial({ color: 0x1e3a2f });
+    const beanie = new THREE.Mesh(beanieGeo, beanieMat);
+    beanie.position.y = 8;
+    beanie.rotation.x = Math.PI / 2;
+    characterGroup.add(beanie);
+
+    // Arms
+    const armGeo = new THREE.BoxGeometry(1.2, 4, 1.2);
+    const leftArm = new THREE.Mesh(armGeo, bodyMat);
+    leftArm.position.set(-2.5, 3, 0);
+    leftArm.rotation.z = 0.6;
+    characterGroup.add(leftArm);
+
+    const rightArm = leftArm.clone();
+    rightArm.position.x = 2.5;
+    rightArm.rotation.z = -0.6;
+    characterGroup.add(rightArm);
+
+    charScene.add(characterGroup);
+    charScene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const charLight = new THREE.PointLight(0x00ff9d, 1.5);
+    charLight.position.set(10, 15, 20);
+    charScene.add(charLight);
+
+    charCamera.position.set(0, 5, 15);
+    charCamera.lookAt(0, 5, 0);
 
     function animate() {
       requestAnimationFrame(animate);
+      
+      // Globe
       globe.rotation.y += 0.0015;
-      glow.rotation.y += 0.0015;
-      starField.rotation.y += 0.0001;
-      renderer.render(scene, camera);
+      globeRenderer.render(globeScene, globeCamera);
+
+      // Character subtle animation
+      characterGroup.rotation.y = Math.sin(Date.now() * 0.0008) * 0.08;
+      charRenderer.render(charScene, charCamera);
     }
     animate();
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Clickable Phones
-    function goLive() {
-      alert("🚀 Launching Live Stream Studio...");
-    }
-    function selectModule(module) {
-      const messages = {
-        music: "🎵 Opening Music Universe...",
-        gaming: "🎮 Loading Gaming Arcade...",
-        meta: "🌌 Entering Meta World...",
-        store: "🛒 Opening Creator Store..."
-      };
-      alert(messages[module]);
+    // Interactions
+    function goLive() { alert("🚀 Launching Live Stream Studio..."); }
+    function selectModule(mod) {
+      const map = { music: "🎵 Music Universe", gaming: "🎮 Gaming District", meta: "🌌 Meta World", store: "🛍️ Creator Market" };
+      alert(`Entering ${map[mod]}...`);
     }
   </script>
 </body>
