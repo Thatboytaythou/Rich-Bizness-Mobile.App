@@ -1,82 +1,66 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/sections.css
-
-   GLOBAL SECTION SYSTEM
-   feed / music / gaming / sports
-   gallery / live / upload / meta / store
+   GLOBAL SECTION SYSTEM - POLISHED
 ========================================= */
 
-:root{
-  --rb-bg:#020402;
+:root {
+  --rb-bg: #020402;
+  --rb-black: #000;
+  --rb-white: #fff;
 
-  --rb-black:#000;
-  --rb-white:#fff;
+  --rb-green: #66ff99;
+  --rb-green-2: #00ff88;
+  --rb-gold: #ffd86b;
+  --rb-gold-2: #ffb800;
 
-  --rb-green:#66ff99;
-  --rb-green-2:#00ff88;
+  --rb-text: #f4fff8;
+  --rb-muted: rgba(255,255,255,0.68);
 
-  --rb-gold:#ffd86b;
-  --rb-gold-2:#ffb800;
+  --rb-border: rgba(255,255,255,0.09);
+  --rb-glass: rgba(0,0,0,0.48);
 
-  --rb-text:#f4fff8;
-  --rb-muted:rgba(255,255,255,.64);
+  --rb-radius: 30px;
+  --rb-radius-sm: 18px;
 
-  --rb-border:rgba(255,255,255,.08);
-  --rb-glass:rgba(0,0,0,.44);
-
-  --rb-radius:30px;
-  --rb-radius-sm:18px;
-
-  --rb-shadow:
-    0 30px 80px rgba(0,0,0,.45);
-
-  --rb-glow:
-    0 0 40px rgba(0,255,136,.16);
+  --rb-shadow: 0 30px 80px rgba(0,0,0,0.48);
+  --rb-glow: 0 0 40px rgba(0,255,136,0.16);
 }
 
 /* =========================================
    BASE
 ========================================= */
 
-*{
-  box-sizing:border-box;
+* {
+  box-sizing: border-box;
 }
 
-html{
-  scroll-behavior:smooth;
+html {
+  scroll-behavior: smooth;
 }
 
-body{
-  margin:0;
-  color:var(--rb-text);
-  background:
-    radial-gradient(circle at top,rgba(0,255,136,.12),transparent 28%),
-    linear-gradient(180deg,#031108 0%,#010302 48%,#000 100%);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    sans-serif;
-  overflow-x:hidden;
+body {
+  margin: 0;
+  color: var(--rb-text);
+  background: 
+    radial-gradient(circle at top, rgba(0,255,136,0.14), transparent 32%),
+    linear-gradient(180deg, #031108 0%, #010302 48%, #000 100%);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
-img,
-video{
-  max-width:100%;
-  display:block;
+img, video {
+  max-width: 100%;
+  display: block;
 }
 
-a{
-  color:inherit;
-  text-decoration:none;
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-button,
-input,
-textarea,
-select{
-  font:inherit;
+button, input, textarea, select {
+  font: inherit;
 }
 
 /* =========================================
@@ -84,195 +68,145 @@ select{
 ========================================= */
 
 .rb-page-bg,
-.rb-bg{
-  position:fixed;
-  inset:0;
-  overflow:hidden;
-  pointer-events:none;
-  z-index:0;
+.rb-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.rb-page-bg img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-
-  opacity:.14;
-
-  filter:
-    saturate(1.12)
-    contrast(1.08)
-    brightness(.9);
+.rb-page-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.14;
+  filter: saturate(1.12) contrast(1.08) brightness(0.9);
 }
 
 .rb-page::before,
-.rb-body::before{
-  content:"";
-
-  position:fixed;
-  inset:0;
-
-  z-index:1;
-  pointer-events:none;
-
-  background:
-    radial-gradient(circle at center,transparent,rgba(0,0,0,.72) 72%),
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.12),
-      rgba(0,0,0,.92)
-    );
+.rb-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at center, transparent, rgba(0,0,0,0.75) 72%),
+    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.94));
 }
 
 /* =========================================
-   LAYOUT
+   LAYOUT SHELLS
 ========================================= */
 
 .rb-section-shell,
 .rb-shell,
 .live-shell,
-.meta-shell{
-  position:relative;
-  z-index:2;
-
-  width:min(1240px,94vw);
-
-  margin:0 auto;
-
-  padding:
-    110px
-    0
-    54px;
+.meta-shell {
+  position: relative;
+  z-index: 2;
+  width: min(1240px, 94vw);
+  margin: 0 auto;
+  padding: 110px 0 54px;
 }
 
-.rb-grid{
-  display:grid;
-  gap:18px;
+/* =========================================
+   GRID SYSTEMS
+========================================= */
+
+.rb-grid {
+  display: grid;
+  gap: 18px;
 }
 
-.rb-card-grid{
-  display:grid;
-  grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr));
-  gap:18px;
+.rb-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
 }
 
 .rb-gallery-grid,
 .meta-world-grid,
-.meta-room-grid{
-  display:grid;
-  grid-template-columns:
-    repeat(auto-fit,minmax(260px,1fr));
-  gap:18px;
+.meta-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
 }
 
-.rb-list-stack{
-  display:grid;
-  gap:12px;
+.rb-list-stack {
+  display: grid;
+  gap: 12px;
 }
 
 /* =========================================
    TOPBAR
 ========================================= */
 
-.rb-topbar{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-
-  z-index:50;
-
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-
-  padding:
-    max(14px,env(safe-area-inset-top))
-    20px
-    14px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.84),
-      rgba(0,0,0,.38)
-    );
-
-  border-bottom:
-    1px solid rgba(255,255,255,.06);
-
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
+.rb-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: max(14px, env(safe-area-inset-top)) 20px 14px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.88), rgba(0,0,0,0.42));
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
 }
 
-.rb-brand{
-  display:grid;
-  line-height:.8;
+.rb-brand {
+  display: grid;
+  line-height: 0.8;
 }
 
-.rb-brand span{
-  color:var(--rb-green);
-  font-size:.72rem;
-  font-weight:1000;
-  letter-spacing:.22em;
+.rb-brand span {
+  color: var(--rb-green);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.22em;
 }
 
-.rb-brand strong{
-  font-size:1.4rem;
-  letter-spacing:-.08em;
+.rb-brand strong {
+  font-size: 1.4rem;
+  letter-spacing: -0.08em;
 }
 
-.rb-brand small{
-  color:var(--rb-gold);
-  font-size:.62rem;
-  font-weight:1000;
-  letter-spacing:.2em;
+.rb-brand small {
+  color: var(--rb-gold);
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.2em;
 }
 
-.rb-topnav{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
+.rb-topnav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.rb-topnav a{
-  padding:10px 14px;
-
-  border-radius:999px;
-
-  color:rgba(255,255,255,.72);
-
-  font-size:.78rem;
-  font-weight:1000;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-
-  transition:
-    background .18s ease,
-    color .18s ease,
-    transform .18s ease;
+.rb-topnav a {
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.78rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
 }
 
-.rb-topnav a:hover{
-  transform:translateY(-1px);
-}
-
+.rb-topnav a:hover,
 .rb-topnav a.is-active,
-.rb-topnav a.active{
-  color:#031208;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-green),
-      var(--rb-gold)
-    );
-
-  box-shadow:
-    0 0 26px rgba(0,255,136,.24);
+.rb-topnav a.active {
+  color: #031208;
+  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+  box-shadow: 0 0 26px rgba(0,255,136,0.28);
 }
 
 /* =========================================
@@ -282,381 +216,174 @@ select{
 .rb-hero-panel,
 .rb-section-hero,
 .live-hero,
-.meta-hero{
-  position:relative;
-  overflow:hidden;
-
-  border-radius:36px;
-
-  border:1px solid rgba(255,255,255,.08);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.04),
-      rgba(0,0,0,.5)
-    );
-
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-
-  box-shadow:
-    var(--rb-shadow),
-    var(--rb-glow);
+.meta-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 36px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.55));
+  backdrop-filter: blur(16px);
+  box-shadow: var(--rb-shadow), var(--rb-glow);
 }
 
 .rb-hero-panel,
-.live-hero{
-  padding:30px;
+.live-hero {
+  padding: 30px;
 }
 
 .rb-section-hero,
-.meta-hero{
-  padding:34px;
+.meta-hero {
+  padding: 34px;
 }
 
 .rb-kicker,
-.eyebrow{
-  margin:0 0 10px;
-
-  color:var(--rb-green);
-
-  font-size:.74rem;
-  font-weight:1000;
-  letter-spacing:.18em;
-  text-transform:uppercase;
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--rb-green);
+  font-size: 0.74rem;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .rb-hero-panel h1,
 .rb-section-hero h1,
 .live-hero h1,
-.meta-hero h1{
-  margin:0;
-
-  font-size:clamp(2.6rem,8vw,6.5rem);
-  line-height:.88;
-  letter-spacing:-.08em;
+.meta-hero h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 8vw, 6.5rem);
+  line-height: 0.88;
+  letter-spacing: -0.08em;
 }
 
 .rb-subtitle,
 .hero-copy,
 .rb-hero-panel p,
-.rb-section-hero p{
-  color:var(--rb-muted);
-  line-height:1.55;
+.rb-section-hero p {
+  color: var(--rb-muted);
+  line-height: 1.55;
 }
 
 /* =========================================
-   STATS
+   STATS & PANELS
 ========================================= */
 
-.rb-stat-grid{
-  display:grid;
-  grid-template-columns:
-    repeat(auto-fit,minmax(130px,1fr));
-
-  gap:12px;
+.rb-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
 }
 
-.rb-stat-grid article{
-  padding:18px;
-
-  border-radius:24px;
-
-  border:1px solid rgba(255,255,255,.08);
-
-  background:rgba(0,0,0,.36);
-
-  text-align:center;
+.rb-stat-grid article {
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(0,0,0,0.4);
+  text-align: center;
 }
 
-.rb-stat-grid strong{
-  display:block;
-
-  color:var(--rb-green);
-
-  font-size:1.7rem;
-  line-height:1;
+.rb-stat-grid strong {
+  display: block;
+  color: var(--rb-green);
+  font-size: 1.7rem;
+  line-height: 1;
 }
 
-.rb-stat-grid span{
-  display:block;
-
-  margin-top:6px;
-
-  color:rgba(255,255,255,.62);
-
-  font-size:.72rem;
-  font-weight:1000;
-  letter-spacing:.12em;
-  text-transform:uppercase;
+.rb-stat-grid span {
+  display: block;
+  margin-top: 6px;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-
-/* =========================================
-   PANELS
-========================================= */
 
 .rb-panel,
-.live-panel{
-  position:relative;
-
-  overflow:hidden;
-
-  padding:22px;
-
-  border-radius:32px;
-
-  border:1px solid var(--rb-border);
-
-  background:var(--rb-glass);
-
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-
-  box-shadow:var(--rb-shadow);
+.live-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  border-radius: 32px;
+  border: 1px solid var(--rb-border);
+  background: var(--rb-glass);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--rb-shadow);
 }
 
-.rb-panel{
-  margin-top:18px;
-}
-
-.rb-panel.is-active{
-  display:block;
-}
-
-.rb-panel:not(.is-active){
-  display:none;
-}
-
-.rb-panel-head{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:18px;
-
-  margin-bottom:18px;
-}
-
-.rb-panel-head h2{
-  margin:0;
-
-  font-size:clamp(1.5rem,4vw,3rem);
-
-  line-height:1;
-  letter-spacing:-.05em;
+.rb-panel {
+  margin-top: 18px;
 }
 
 /* =========================================
-   BUTTONS
+   BUTTONS & TABS
 ========================================= */
 
 .rb-btn,
 .rb-main-launch,
-.rb-pill-btn,
-.rb-ghost-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-
-  min-height:50px;
-
-  padding:0 20px;
-
-  border:0;
-  border-radius:999px;
-
-  cursor:pointer;
-
-  font-weight:1000;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-
-  transition:
-    transform .18s ease,
-    opacity .18s ease,
-    box-shadow .18s ease;
-}
-
-.rb-btn:hover,
-.rb-main-launch:hover,
-.rb-pill-btn:hover,
-.rb-ghost-btn:hover{
-  transform:translateY(-1px);
+.rb-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.22s ease;
 }
 
 .rb-btn.primary,
 .rb-main-launch,
-.rb-pill-btn{
-  color:#041006;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-green),
-      var(--rb-gold)
-    );
-
-  box-shadow:
-    0 0 28px rgba(0,255,136,.22);
+.rb-pill-btn {
+  color: #041006;
+  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+  box-shadow: 0 0 28px rgba(0,255,136,0.28);
 }
 
-.rb-btn.gold{
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-gold),
-      #fff0a8
-    );
-
-  color:#151000;
-}
-
-.rb-btn.ghost,
-.rb-ghost-btn{
-  color:#fff;
-
-  border:1px solid rgba(255,255,255,.12);
-
-  background:rgba(255,255,255,.05);
-}
-
-.rb-btn.danger{
-  background:
-    linear-gradient(
-      135deg,
-      #ff5a5a,
-      #ff0033
-    );
-
-  color:#fff;
-}
-
-/* =========================================
-   TABS
-========================================= */
-
-.rb-tabs,
-.rb-tab-bar{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-
-  margin-top:18px;
-}
-
-.rb-tabs button,
-.rb-tab-bar button{
-  min-height:48px;
-
-  padding:0 18px;
-
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.08);
-
-  background:rgba(255,255,255,.04);
-
-  color:rgba(255,255,255,.72);
-
-  font-weight:1000;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-
-  cursor:pointer;
-}
-
-.rb-tabs button.is-active,
-.rb-tab-bar button.is-active{
-  color:#041006;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--rb-green),
-      var(--rb-gold)
-    );
-}
-
-/* =========================================
-   EMPTY STATES
-========================================= */
-
-.rb-empty,
-.rb-empty-card{
-  display:grid;
-  place-items:center;
-
-  min-height:160px;
-
-  padding:20px;
-
-  border-radius:24px;
-
-  border:1px dashed rgba(255,255,255,.12);
-
-  background:rgba(255,255,255,.03);
-
-  color:rgba(255,255,255,.58);
-
-  text-align:center;
+.rb-btn:hover,
+.rb-main-launch:hover {
+  transform: translateY(-2px);
 }
 
 /* =========================================
    MOBILE
 ========================================= */
 
-@media (max-width:920px){
-
+@media (max-width: 920px) {
   .rb-section-shell,
   .rb-shell,
   .live-shell,
-  .meta-shell{
-    width:92vw;
+  .meta-shell {
+    width: 92vw;
   }
 
-  .rb-panel-head{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  .rb-topbar{
-    gap:10px;
-  }
-
-  .rb-topnav{
-    display:none;
+  .rb-panel-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
-@media (max-width:640px){
-
+@media (max-width: 640px) {
   .rb-hero-panel,
   .rb-section-hero,
   .live-hero,
-  .meta-hero{
-    padding:22px;
-    border-radius:28px;
+  .meta-hero {
+    padding: 22px;
+    border-radius: 28px;
   }
 
   .rb-panel,
-  .live-panel{
-    padding:16px;
-    border-radius:24px;
+  .live-panel {
+    padding: 16px;
+    border-radius: 24px;
   }
 
-  .rb-stat-grid{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .rb-tabs,
-  .rb-tab-bar{
-    overflow-x:auto;
-    flex-wrap:nowrap;
-    padding-bottom:4px;
-  }
-
-  .rb-tabs::-webkit-scrollbar,
-  .rb-tab-bar::-webkit-scrollbar{
-    display:none;
+  .rb-stat-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
