@@ -1,7 +1,8 @@
-/* =========================
-   RICH BIZNESS MOBILE
+/* =========================================
+   RICH BIZNESS LLC
    /core/pages/settings.js
-========================= */
+   SETTINGS PAGE CONTROLLER - POLISHED
+========================================= */
 
 import {
   initApp,
@@ -30,52 +31,69 @@ const els = {
   signOutBtn: $("settings-signout-btn")
 };
 
+/* ====================== RENDERING ====================== */
+
 function paintSettings() {
   const state = getCurrentUserState();
   const user = state?.user || null;
   const profile = state?.profile || null;
 
   if (els.email) {
-    els.email.textContent = user?.email || "Guest";
+    els.email.textContent = user?.email || "Guest Mode";
   }
 
   if (els.role) {
-    els.role.textContent = profile?.role || "user";
+    els.role.textContent = (profile?.role || "user").toUpperCase();
   }
 
   if (els.status) {
     if (profile?.is_verified) {
-      els.status.textContent = "Verified";
+      els.status.textContent = "✅ Verified";
+      els.status.style.color = "#66ff99";
     } else if (profile?.is_creator || profile?.is_artist || profile?.is_seller) {
       els.status.textContent = "Creator Access";
     } else {
-      els.status.textContent = "Standard";
+      els.status.textContent = "Standard Member";
     }
   }
 }
 
+/* ====================== ACTIONS ====================== */
+
 function bindSettingsActions() {
+  // Edit Profile
   els.editBtn?.addEventListener("click", () => {
     window.location.href = RB_ROUTES.edit || "/edit";
   });
 
+  // View Profile
   els.profileBtn?.addEventListener("click", () => {
     window.location.href = RB_ROUTES.profile || "/profile";
   });
 
+  // Sign Out
   els.signOutBtn?.addEventListener("click", async () => {
+    if (!confirm("Are you sure you want to sign out?")) return;
+
     try {
+      els.signOutBtn.disabled = true;
+      els.signOutBtn.textContent = "Signing out...";
+
       await rbSignOut({
         redirectTo: RB_ROUTES.auth || "/auth"
       });
 
-      toastInfo("Signed out.");
+      toastInfo("Signed out successfully.");
     } catch (error) {
       console.error("[settings.js]", error);
       toastError(error?.message || "Sign out failed.");
+      els.signOutBtn.disabled = false;
+      els.signOutBtn.textContent = "Sign Out";
     }
   });
 }
+
+/* ====================== BOOT ====================== */
 
 async function bootSettingsPage() {
   try {
@@ -92,13 +110,14 @@ async function bootSettingsPage() {
 
     markPageReady("settings");
 
-    console.log("RB SETTINGS READY");
+    console.log("🚀 RB SETTINGS PAGE READY");
   } catch (error) {
-    console.error("[settings.js]", error);
+    console.error("[settings.js] Boot failed:", error);
     markPageError(error);
   }
 }
 
+// Initialize
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootSettingsPage);
 } else {
