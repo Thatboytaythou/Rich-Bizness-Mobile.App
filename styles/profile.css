@@ -1,616 +1,342 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/profile.css
-
-   PROFILE SYSTEM
-   CINEMATIC PROFILE EXPERIENCE
-   Uses:
-   - sections.css
-   - cards.css
-   - main.css
+   CINEMATIC PROFILE EXPERIENCE - POLISHED
 ========================================= */
 
 /* =========================================
-   PAGE
+   PROFILE PAGE
 ========================================= */
 
-.rb-profile-page{
-  position:relative;
-  min-height:100svh;
-  overflow-x:hidden;
+.rb-profile-page {
+  position: relative;
+  min-height: 100svh;
+  overflow-x: hidden;
+  background: var(--rb-black);
 }
 
 /* =========================================
-   HERO
+   HERO BANNER
 ========================================= */
 
-.rb-profile-hero{
-  position:relative;
+.rb-profile-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 38px;
+  min-height: 420px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.88));
+  box-shadow: 
+    0 40px 120px rgba(0,0,0,0.52),
+    0 0 60px rgba(0,255,136,0.1);
+  isolation: isolate;
+}
 
-  overflow:hidden;
+/* BANNER IMAGE */
+.rb-profile-banner {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.06);
+  filter: saturate(1.15) contrast(1.06) brightness(0.9);
+}
 
-  border-radius:38px;
+.rb-profile-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.38) 32%, rgba(0,0,0,0.92) 78%);
+}
 
-  min-height:420px;
+/* ATMOSPHERE GLOW */
+.rb-profile-hero::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -160px;
+  width: 720px;
+  height: 720px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,255,136,0.26) 0%, rgba(255,215,106,0.12) 28%, transparent 68%);
+  filter: blur(28px);
+  opacity: 0.88;
+  pointer-events: none;
+  animation: rbProfileAura 9s ease-in-out infinite;
+}
 
-  border:
-    1px solid rgba(255,255,255,.08);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.06),
-      rgba(0,0,0,.86)
-    );
-
-  box-shadow:
-    0 40px 120px rgba(0,0,0,.48),
-    0 0 60px rgba(0,255,136,.08);
-
-  isolation:isolate;
+.rb-profile-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 9px);
+  mix-blend-mode: soft-light;
+  opacity: 0.4;
 }
 
 /* =========================================
-   BANNER
+   INNER CONTENT
 ========================================= */
 
-.rb-profile-banner{
-  position:absolute;
-  inset:0;
-
-  background-size:cover;
-  background-position:center;
-
-  transform:scale(1.04);
-
-  filter:
-    saturate(1.12)
-    contrast(1.04)
-    brightness(.92);
-}
-
-.rb-profile-banner::after{
-  content:"";
-
-  position:absolute;
-  inset:0;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,.10),
-      rgba(0,0,0,.32) 28%,
-      rgba(0,0,0,.92)
-    );
-}
-
-/* =========================================
-   ATMOSPHERE
-========================================= */
-
-.rb-profile-hero::before{
-  content:"";
-
-  position:absolute;
-
-  left:50%;
-  bottom:-180px;
-
-  width:720px;
-  height:720px;
-
-  transform:translateX(-50%);
-
-  border-radius:50%;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(0,255,136,.24) 0%,
-      rgba(255,215,106,.10) 26%,
-      transparent 64%
-    );
-
-  filter:blur(26px);
-
-  opacity:.85;
-
-  pointer-events:none;
-
-  animation:
-    rbProfileAura 8s ease-in-out infinite;
-}
-
-.rb-profile-hero::after{
-  content:"";
-
-  position:absolute;
-  inset:0;
-
-  pointer-events:none;
-
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,.015) 0,
-      rgba(255,255,255,.015) 1px,
-      transparent 1px,
-      transparent 8px
-    );
-
-  mix-blend-mode:soft-light;
-
-  opacity:.35;
-}
-
-/* =========================================
-   INNER
-========================================= */
-
-.rb-profile-inner{
-  position:relative;
-  z-index:4;
-
-  display:flex;
-  align-items:flex-end;
-  gap:34px;
-
-  min-height:420px;
-
-  padding:
-    clamp(24px,4vw,48px);
+.rb-profile-inner {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: flex-end;
+  gap: 34px;
+  min-height: 420px;
+  padding: clamp(24px, 4vw, 48px);
 }
 
 /* =========================================
    AVATAR
 ========================================= */
 
-.rb-profile-avatar-wrap{
-  position:relative;
-
-  flex-shrink:0;
+.rb-profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.rb-profile-avatar-wrap::before{
-  content:"";
-
-  position:absolute;
-
-  inset:-12px;
-
-  border-radius:50%;
-
-  background:
-    conic-gradient(
-      from 0deg,
-      rgba(0,255,136,.82),
-      rgba(255,215,106,.65),
-      rgba(0,255,136,.82)
-    );
-
-  filter:blur(12px);
-
-  opacity:.6;
-
-  animation:
-    rbProfileSpin 12s linear infinite;
+.rb-profile-avatar-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(0,255,136,0.85), rgba(255,215,106,0.7), rgba(0,255,136,0.85));
+  filter: blur(14px);
+  opacity: 0.65;
+  animation: rbProfileSpin 14s linear infinite;
 }
 
-.rb-profile-avatar{
-  position:relative;
-  z-index:2;
+.rb-profile-avatar {
+  position: relative;
+  z-index: 2;
+  width: clamp(130px, 20vw, 190px);
+  height: clamp(130px, 20vw, 190px);
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.18);
+  background: #050505;
+  box-shadow: 
+    0 0 0 10px rgba(0,255,136,0.1),
+    0 30px 70px rgba(0,0,0,0.6),
+    0 0 65px rgba(0,255,136,0.22);
+}
 
-  width:clamp(130px,20vw,190px);
-  height:clamp(130px,20vw,190px);
-
-  object-fit:cover;
-
-  border-radius:50%;
-
-  border:
-    4px solid rgba(255,255,255,.14);
-
-  background:#050505;
-
-  box-shadow:
-    0 0 0 8px rgba(0,255,136,.08),
-    0 30px 70px rgba(0,0,0,.52),
-    0 0 60px rgba(0,255,136,.18);
+/* ONLINE INDICATOR */
+.rb-profile-online {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid #041008;
+  background: #66ff99;
+  box-shadow: 0 0 22px rgba(102,255,153,0.9);
 }
 
 /* =========================================
-   ONLINE DOT
+   PROFILE INFO
 ========================================= */
 
-.rb-profile-online{
-  position:absolute;
+.rb-profile-copy {
+  flex: 1;
+  min-width: 280px;
+}
 
-  right:10px;
-  bottom:10px;
+.rb-profile-kicker {
+  margin: 0 0 10px;
+  color: #8effcb;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
 
-  width:24px;
-  height:24px;
+.rb-profile-copy h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 0.88;
+  letter-spacing: -0.06em;
+  color: #fff;
+  text-shadow: 0 0 24px rgba(255,255,255,0.1);
+}
 
-  border-radius:50%;
+.rb-profile-username {
+  margin-top: 12px;
+  color: #8effcb;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
 
-  border:3px solid #041008;
+.rb-profile-bio {
+  margin-top: 18px;
+  max-width: 760px;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.75;
+  font-size: 1rem;
+}
 
-  background:#66ff99;
+/* STATUS */
+.rb-profile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(102,255,153,0.18);
+  background: rgba(0,255,136,0.08);
+  color: #8effcb;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  backdrop-filter: blur(14px);
+}
 
-  box-shadow:
-    0 0 20px rgba(102,255,153,.85);
+.rb-profile-status::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #66ff99;
+  box-shadow: 0 0 18px rgba(102,255,153,0.9);
 }
 
 /* =========================================
-   COPY
+   META PILLS & ACTIONS
 ========================================= */
 
-.rb-profile-copy{
-  flex:1;
-  min-width:280px;
+.rb-profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 20px;
 }
 
-.rb-profile-kicker{
-  margin:0 0 10px;
-
-  color:#8effcb;
-
-  font-size:.72rem;
-  font-weight:1000;
-
-  letter-spacing:.22em;
-  text-transform:uppercase;
+.rb-meta-pill {
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 0 18px rgba(0,255,136,0.06);
 }
 
-.rb-profile-copy h1{
-  margin:0;
-
-  font-size:
-    clamp(2.4rem,6vw,5rem);
-
-  line-height:.88;
-
-  letter-spacing:-.06em;
-
-  color:#fff;
-
-  text-shadow:
-    0 0 24px rgba(255,255,255,.08);
+.rb-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 26px;
 }
 
-.rb-profile-username{
-  margin-top:12px;
-
-  color:#8effcb;
-
-  font-size:.95rem;
-  font-weight:900;
-
-  letter-spacing:.16em;
-  text-transform:uppercase;
+/* SOCIAL LINKS */
+.rb-profile-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
 }
 
-.rb-profile-bio{
-  margin-top:18px;
-
-  max-width:760px;
-
-  color:rgba(255,255,255,.82);
-
-  line-height:1.75;
-
-  font-size:1rem;
+.rb-profile-socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.22s ease;
 }
 
-/* =========================================
-   STATUS
-========================================= */
-
-.rb-profile-status{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-
-  margin-top:18px;
-
-  padding:10px 16px;
-
-  border-radius:999px;
-
-  border:
-    1px solid rgba(102,255,153,.16);
-
-  background:
-    rgba(0,255,136,.06);
-
-  color:#8effcb;
-
-  font-size:.82rem;
-  font-weight:900;
-
-  letter-spacing:.12em;
-  text-transform:uppercase;
-
-  backdrop-filter:blur(14px);
-}
-
-.rb-profile-status::before{
-  content:"";
-
-  width:10px;
-  height:10px;
-
-  border-radius:50%;
-
-  background:#66ff99;
-
-  box-shadow:
-    0 0 18px rgba(102,255,153,.82);
-}
-
-/* =========================================
-   META
-========================================= */
-
-.rb-profile-meta{
-  display:flex;
-  flex-wrap:wrap;
-  gap:14px;
-
-  margin-top:20px;
-}
-
-.rb-meta-pill{
-  padding:11px 18px;
-
-  border-radius:999px;
-
-  border:
-    1px solid rgba(255,255,255,.08);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.06),
-      rgba(255,255,255,.02)
-    );
-
-  color:#fff;
-
-  font-size:.8rem;
-  font-weight:900;
-
-  letter-spacing:.08em;
-
-  backdrop-filter:blur(18px);
-
-  box-shadow:
-    0 0 18px rgba(0,255,136,.05);
-}
-
-/* =========================================
-   ACTIONS
-========================================= */
-
-.rb-profile-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:14px;
-
-  margin-top:26px;
-}
-
-.rb-profile-actions .rb-btn{
-  min-width:150px;
-}
-
-/* =========================================
-   SOCIALS
-========================================= */
-
-.rb-profile-socials{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-
-  margin-top:22px;
-}
-
-.rb-profile-socials a{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-
-  min-height:44px;
-
-  padding:0 18px;
-
-  border-radius:999px;
-
-  border:
-    1px solid rgba(255,255,255,.08);
-
-  background:
-    rgba(255,255,255,.04);
-
-  color:#fff;
-
-  font-size:.78rem;
-  font-weight:900;
-
-  letter-spacing:.08em;
-  text-transform:uppercase;
-
-  transition:
-    transform .18s ease,
-    border-color .18s ease,
-    background .18s ease;
-}
-
-.rb-profile-socials a:hover{
-  transform:translateY(-1px);
-
-  border-color:
-    rgba(102,255,153,.24);
-
-  background:
-    rgba(0,255,136,.08);
-}
-
-/* =========================================
-   STATS
-========================================= */
-
-.rb-profile-stats{
-  margin-top:26px;
-}
-
-/* =========================================
-   TABS
-========================================= */
-
-.rb-profile-tabs{
-  margin-top:30px;
-}
-
-/* =========================================
-   PANEL
-========================================= */
-
-.rb-profile-panel{
-  margin-top:20px;
-}
-
-/* =========================================
-   FEED
-========================================= */
-
-.rb-profile-feed{
-  display:grid;
-  gap:20px;
-}
-
-/* =========================================
-   EMPTY
-========================================= */
-
-.rb-mini-empty{
-  padding:34px;
-
-  text-align:center;
-}
-
-/* =========================================
-   MOBILE
-========================================= */
-
-@media (max-width:920px){
-
-  .rb-profile-inner{
-    align-items:center;
-    flex-direction:column;
-
-    text-align:center;
-  }
-
-  .rb-profile-copy{
-    width:100%;
-  }
-
-  .rb-profile-meta,
-  .rb-profile-actions,
-  .rb-profile-socials{
-    justify-content:center;
-  }
-
-  .rb-profile-bio{
-    margin-inline:auto;
-  }
-}
-
-@media (max-width:640px){
-
-  .rb-profile-hero{
-    min-height:unset;
-
-    border-radius:30px;
-  }
-
-  .rb-profile-inner{
-    min-height:unset;
-
-    padding:22px 18px 28px;
-  }
-
-  .rb-profile-avatar{
-    width:124px;
-    height:124px;
-  }
-
-  .rb-profile-copy h1{
-    font-size:2.2rem;
-  }
-
-  .rb-profile-bio{
-    font-size:.94rem;
-  }
-
-  .rb-profile-actions{
-    width:100%;
-  }
-
-  .rb-profile-actions .rb-btn{
-    flex:1;
-    min-width:0;
-  }
-
-  .rb-profile-meta{
-    gap:10px;
-  }
-
-  .rb-meta-pill{
-    width:100%;
-  }
-
-  .rb-profile-socials{
-    width:100%;
-  }
-
-  .rb-profile-socials a{
-    flex:1;
-  }
+.rb-profile-socials a:hover {
+  transform: translateY(-2px);
+  border-color: rgba(102,255,153,0.28);
+  background: rgba(0,255,136,0.1);
 }
 
 /* =========================================
    ANIMATIONS
 ========================================= */
 
-@keyframes rbProfileAura{
+@keyframes rbProfileAura {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.75; }
+  50%      { transform: translateX(-50%) scale(1.1); opacity: 1; }
+}
 
-  0%,100%{
-    transform:
-      translateX(-50%)
-      scale(1);
+@keyframes rbProfileSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
-    opacity:.72;
+/* =========================================
+   MOBILE RESPONSIVE
+========================================= */
+
+@media (max-width: 920px) {
+  .rb-profile-inner {
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
   }
 
-  50%{
-    transform:
-      translateX(-50%)
-      scale(1.08);
+  .rb-profile-copy {
+    width: 100%;
+  }
 
-    opacity:1;
+  .rb-profile-meta,
+  .rb-profile-actions,
+  .rb-profile-socials {
+    justify-content: center;
   }
 }
 
-@keyframes rbProfileSpin{
-
-  from{
-    transform:rotate(0deg);
+@media (max-width: 640px) {
+  .rb-profile-hero {
+    min-height: unset;
+    border-radius: 30px;
   }
 
-  to{
-    transform:rotate(360deg);
+  .rb-profile-inner {
+    min-height: unset;
+    padding: 22px 18px 28px;
+  }
+
+  .rb-profile-avatar {
+    width: 124px;
+    height: 124px;
+  }
+
+  .rb-profile-copy h1 {
+    font-size: 2.2rem;
+  }
+
+  .rb-profile-actions .rb-btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rb-profile-meta {
+    gap: 10px;
+  }
+
+  .rb-meta-pill {
+    width: 100%;
   }
 }
