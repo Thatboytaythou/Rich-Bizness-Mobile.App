@@ -1,282 +1,234 @@
-/* =========================================
-   RICH BIZNESS LLC
-   /styles/omni-dial.css
-   POLISHED ORBIT CARDS / CINEMATIC DIAL GEOMETRY
-========================================= */
-
-/* =========================================
-   ORBIT CONTAINER
-========================================= */
-
-.rb-dial-orbit {
-  position: absolute;
-  inset: 0;
-  z-index: 8;
-  pointer-events: none;
-  transform-style: preserve-3d;
-  perspective: 1200px;
-}
-
-/* =========================================
-   ORBIT CARD BASE
-========================================= */
-
-.rb-orbit-card {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-
-  width: clamp(108px, 13.5vw, 172px);
-  height: clamp(156px, 20vw, 246px);
-
-  margin-left: calc(clamp(108px, 13.5vw, 172px) / -2);
-  margin-top: calc(clamp(156px, 20vw, 246px) / -2);
-
-  border-radius: 26px;
+.rb-hub {
+  position: relative;
+  min-height: 720px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  margin-bottom: 48px;
+}
 
-  border: 1px solid rgba(123, 255, 102, 0.34);
-
-  background: linear-gradient(180deg, rgba(10, 26, 12, 0.98), rgba(0, 0, 0, 0.97));
-
+.rb-module {
+  position: absolute;
+  z-index: 24;
+  width: 112px;
+  height: 148px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255,255,255,0.055), transparent 34%),
+    rgba(4, 5, 4, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.075);
   box-shadow:
-    0 28px 80px rgba(0, 0, 0, 0.82),
-    0 0 26px rgba(123, 255, 102, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -18px 40px rgba(0, 0, 0, 0.46);
-
-  color: #fff;
-  pointer-events: auto;
-  transform-style: preserve-3d;
-
-  transition: 
-    transform 0.65s cubic-bezier(0.23, 1, 0.32, 1),
-    opacity 0.4s ease,
-    filter 0.4s ease,
-    border-color 0.4s ease,
-    box-shadow 0.4s ease;
-
-  will-change: transform, opacity, filter;
-  opacity: 0.84;
-
-  filter: saturate(0.98) brightness(0.88) contrast(1.05);
-}
-
-/* =========================================
-   CARD IMAGE
-========================================= */
-
-.rb-orbit-card img {
-  width: 100%;
-  height: 66%;
-  object-fit: cover;
-  transition: transform 0.8s ease;
-
-  filter: saturate(1.2) contrast(1.1) brightness(0.95);
-  transform: scale(1.05);
-}
-
-/* =========================================
-   CARD TEXT
-========================================= */
-
-.rb-orbit-card span {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 36px;
-  display: block;
+    0 0 38px rgba(0, 0, 0, 0.62),
+    inset 0 0 20px rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  font-size: clamp(0.82rem, 1.7vw, 1.16rem);
-  line-height: 1.03;
-  font-weight: 950;
-  text-shadow: 
-    0 8px 20px rgba(0, 0, 0, 0.92),
-    0 0 14px rgba(0, 0, 0, 0.75);
+  gap: 12px;
+  padding: 12px;
 }
 
-.rb-orbit-card small {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 16px;
+.rb-module i {
+  font-size: 2rem;
+}
+
+.rb-module span {
+  font-size: 0.76rem;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.rb-module small {
   display: block;
-  text-align: center;
-  color: var(--rb-green);
-  font-size: 0.54rem;
-  font-weight: 950;
-  letter-spacing: 0.25em;
-  text-shadow: 0 0 16px rgba(123, 255, 102, 0.65);
+  margin-top: 2px;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.42);
+  text-transform: uppercase;
 }
 
-/* =========================================
-   GLASS & LIGHT EFFECTS
-========================================= */
-
-.rb-orbit-card::before {
-  content: "";
+.rb-pill-module {
   position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  border-radius: inherit;
-  background: 
-    linear-gradient(135deg, rgba(255,255,255,0.22), transparent 22%, transparent 62%, rgba(123,255,102,0.18)),
-    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.12), transparent 45%);
-  opacity: 0.75;
+  z-index: 25;
+  min-width: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 15px;
+  border-radius: 999px;
+  background: rgba(4, 8, 4, 0.85);
+  border: 1px solid var(--rb-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 28px rgba(16,185,129,0.12);
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.rb-orbit-card::after {
-  content: "";
-  position: absolute;
-  left: -130%;
-  top: 0;
-  width: 72%;
-  height: 100%;
-  z-index: 4;
-  pointer-events: none;
-  transform: skewX(-18deg);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
-  animation: rbCardSweep 8s linear infinite;
-}
+.pos-feed { top: 16px; left: 50%; transform: translateX(-50%); }
+.pos-music { top: 105px; left: 7%; }
+.pos-podcast { top: 252px; left: 1%; }
+.pos-radio { bottom: 178px; left: 5%; }
+.pos-gaming { bottom: 46px; left: 12%; }
 
-@keyframes rbCardSweep {
-  0% { left: -130%; }
-  100% { left: 165%; }
-}
+.pos-gallery { top: 105px; right: 7%; }
+.pos-watch { top: 252px; right: 1%; }
+.pos-sports { bottom: 178px; right: 5%; }
+.pos-store { bottom: 46px; right: 12%; }
 
-/* =========================================
-   FIXED ORBIT POSITIONS (Improved Depth)
-========================================= */
+.pos-messages { bottom: 0; left: 22%; }
+.pos-notifications { bottom: 0; left: 50%; transform: translateX(-50%); }
+.pos-profile { bottom: 0; right: 22%; }
 
-.rb-orbit-card[data-section="sports"] {
-  z-index: 8;
-  transform: translate3d(-555px, 18px, -150px) rotateY(-36deg) rotateZ(-4deg) scale(0.76);
-  opacity: 0.66;
-}
+.pos-upload { top: 52%; left: 50%; transform: translate(-50%, -50%) translateY(330px); }
+.pos-meta { top: 50%; right: 3%; transform: translateY(-50%); }
+.pos-creator { top: 50%; left: 3%; transform: translateY(-50%); }
+.pos-edit { top: 2px; left: 19%; }
+.pos-settings { top: 2px; right: 19%; }
+.pos-admin { bottom: 86px; left: 50%; transform: translateX(-50%); }
 
-.rb-orbit-card[data-section="music"] {
-  z-index: 12;
-  transform: translate3d(-392px, -10px, -70px) rotateY(-26deg) rotateZ(-2deg) scale(0.93);
-  opacity: 0.88;
-}
+.c-feed i { color: #34d399; }
+.c-messages i { color: #60a5fa; }
+.c-notifications i { color: #facc15; }
+.c-profile i { color: #a78bfa; }
+.c-edit i { color: #fb923c; }
+.c-settings i { color: #d1d5db; }
+.c-upload i { color: #22c55e; }
+.c-live i { color: #ef4444; }
+.c-watch i { color: #f87171; }
+.c-music i { color: #c084fc; }
+.c-podcast i { color: #ec4899; }
+.c-radio i { color: #2dd4bf; }
+.c-gaming i { color: #22d3ee; }
+.c-sports i { color: #fb923c; }
+.c-gallery i { color: #f472b6; }
+.c-store i { color: #fbbf24; }
+.c-meta i { color: #38bdf8; }
+.c-creator i { color: #8b5cf6; }
+.c-admin i { color: #f43f5e; }
 
-.rb-orbit-card[data-section="feed"] {
-  z-index: 18;
-  transform: translate3d(-205px, -22px, 28px) rotateY(-15deg) rotateZ(1deg) scale(1.08);
-  opacity: 0.98;
-}
-
-.rb-orbit-card[data-section="live"] {
-  z-index: 32;
-  transform: translate3d(0, 192px, 140px) scale(1.18);
-  opacity: 1;
-}
-
-.rb-orbit-card[data-section="store"] {
-  z-index: 18;
-  transform: translate3d(205px, -22px, 28px) rotateY(15deg) rotateZ(-1deg) scale(1.08);
-  opacity: 0.98;
-}
-
-.rb-orbit-card[data-section="gaming"] {
-  z-index: 12;
-  transform: translate3d(392px, -10px, -70px) rotateY(26deg) rotateZ(2deg) scale(0.93);
-  opacity: 0.88;
-}
-
-.rb-orbit-card[data-section="meta"] {
-  z-index: 8;
-  transform: translate3d(555px, 18px, -150px) rotateY(36deg) rotateZ(4deg) scale(0.76);
-  opacity: 0.66;
-}
-
-/* =========================================
-   ACTIVE CARD (Center Focus)
-========================================= */
-
-.rb-orbit-card.is-active {
-  z-index: 34;
-  transform: translate3d(0, 192px, 150px) scale(1.22);
-  opacity: 1;
-  filter: saturate(1.38) contrast(1.18) brightness(1.1);
-  border-color: rgba(123, 255, 102, 0.85);
-  box-shadow: 
-    0 0 0 2px rgba(123, 255, 102, 0.5),
-    0 0 70px rgba(123, 255, 102, 0.45),
-    0 38px 110px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(255,255,255,0.2);
-}
-
-/* =========================================
-   HOVER STATES
-========================================= */
-
-.rb-orbit-card:hover {
-  opacity: 1;
-  filter: saturate(1.3) brightness(1.12) contrast(1.15);
-  border-color: rgba(255, 213, 74, 0.6);
-  transform: scale(1.06);
-  z-index: 35;
-}
-
-.rb-orbit-card:hover img {
-  transform: scale(1.12);
-}
-
-/* =========================================
-   RESPONSIVE ADJUSTMENTS
-========================================= */
-
-@media (min-width: 1100px) {
-  .rb-orbit-card.is-active {
-    transform: translate3d(0, 210px, 150px) scale(1.25);
+@media (max-width: 860px) {
+  .rb-hub {
+    min-height: 690px;
   }
-}
 
-@media (max-width: 980px) {
-  .rb-orbit-card {
-    width: 124px;
-    height: 182px;
-    margin-left: -62px;
-    margin-top: -91px;
+  .rb-module {
+    width: 88px;
+    height: 116px;
     border-radius: 22px;
+    gap: 9px;
   }
 
-  /* Adjusted positions for tablet */
-  .rb-orbit-card[data-section="sports"]  { transform: translate3d(-336px,20px,-120px) rotateY(-34deg) rotateZ(-4deg) scale(0.64); }
-  .rb-orbit-card[data-section="music"]   { transform: translate3d(-235px,0,-70px) rotateY(-24deg) rotateZ(-2deg) scale(0.80); }
-  .rb-orbit-card[data-section="feed"]    { transform: translate3d(-126px,-10px,12px) rotateY(-14deg) rotateZ(1deg) scale(0.98); }
-  .rb-orbit-card[data-section="store"]   { transform: translate3d(126px,-10px,12px) rotateY(14deg) rotateZ(-1deg) scale(0.98); }
-  .rb-orbit-card[data-section="gaming"]  { transform: translate3d(235px,0,-70px) rotateY(24deg) rotateZ(2deg) scale(0.80); }
-  .rb-orbit-card[data-section="meta"]    { transform: translate3d(336px,20px,-120px) rotateY(34deg) rotateZ(4deg) scale(0.64); }
-
-  .rb-orbit-card.is-active {
-    transform: translate3d(0, 150px, 130px) scale(1.08);
+  .rb-module i {
+    font-size: 1.45rem;
   }
+
+  .rb-module span {
+    font-size: 0.66rem;
+  }
+
+  .rb-module small {
+    font-size: 0.48rem;
+  }
+
+  .rb-pill-module {
+    min-width: auto;
+    padding: 9px 12px;
+    font-size: 0.68rem;
+  }
+
+  .pos-music { top: 96px; left: 2%; }
+  .pos-podcast { top: 228px; left: -1%; }
+  .pos-radio { bottom: 194px; left: 1%; }
+  .pos-gaming { bottom: 74px; left: 4%; }
+
+  .pos-gallery { top: 96px; right: 2%; }
+  .pos-watch { top: 228px; right: -1%; }
+  .pos-sports { bottom: 194px; right: 1%; }
+  .pos-store { bottom: 74px; right: 4%; }
+
+  .pos-creator { top: 50%; left: -1%; }
+  .pos-meta { top: 50%; right: -1%; }
+
+  .pos-edit { top: 0; left: 7%; }
+  .pos-settings { top: 0; right: 7%; }
+
+  .pos-messages { bottom: 0; left: 7%; }
+  .pos-profile { bottom: 0; right: 7%; }
+  .pos-admin { bottom: 50px; }
+  .pos-upload { transform: translate(-50%, -50%) translateY(300px); }
 }
 
-@media (max-width: 640px) {
-  .rb-orbit-card {
-    width: 104px;
-    height: 154px;
-    margin-left: -52px;
-    margin-top: -77px;
-    border-radius: 19px;
+@media (max-width: 520px) {
+  .rb-hub {
+    min-height: 650px;
+    margin-left: -6px;
+    margin-right: -6px;
   }
 
-  .rb-orbit-card span { bottom: 32px; font-size: 0.84rem; }
-  .rb-orbit-card small { bottom: 14px; font-size: 0.46rem; letter-spacing: 0.20em; }
+  .rb-module {
+    width: 72px;
+    height: 96px;
+    border-radius: 19px;
+    gap: 7px;
+    padding: 8px;
+  }
 
-  /* Mobile positions */
-  .rb-orbit-card[data-section="sports"]  { transform: translate3d(-265px,16px,-120px) rotateY(-34deg) rotateZ(-4deg) scale(0.54); }
-  .rb-orbit-card[data-section="music"]   { transform: translate3d(-182px,-2px,-70px) rotateY(-25deg) rotateZ(-2deg) scale(0.72); }
-  .rb-orbit-card[data-section="feed"]    { transform: translate3d(-96px,-10px,12px) rotateY(-14deg) rotateZ(1deg) scale(0.92); }
-  .rb-orbit-card[data-section="store"]   { transform: translate3d(96px,-10px,12px) rotateY(14deg) rotateZ(-1deg) scale(0.92); }
-  .rb-orbit-card[data-section="gaming"]  { transform: translate3d(182px,-2px,-70px) rotateY(25deg) rotateZ(2deg) scale(0.72); }
-  .rb-orbit-card[data-section="meta"]    { transform: translate3d(265px,16px,-120px) rotateY(34deg) rotateZ(4deg) scale(0.54); }
+  .rb-module i {
+    font-size: 1.15rem;
+  }
 
-  .rb-orbit-card.is-active {
-    transform: translate3d(0, 120px, 130px) scale(1.02);
+  .rb-module span {
+    font-size: 0.56rem;
+  }
+
+  .rb-module small {
+    display: none;
+  }
+
+  .rb-pill-module {
+    padding: 8px 10px;
+    font-size: 0.58rem;
+    gap: 6px;
+  }
+
+  .pos-feed { top: 12px; }
+  .pos-edit { top: 54px; left: 7%; }
+  .pos-settings { top: 54px; right: 7%; }
+
+  .pos-music { top: 128px; left: 0; }
+  .pos-podcast { top: 240px; left: -2px; }
+  .pos-radio { bottom: 190px; left: 0; }
+  .pos-gaming { bottom: 84px; left: 10px; }
+
+  .pos-gallery { top: 128px; right: 0; }
+  .pos-watch { top: 240px; right: -2px; }
+  .pos-sports { bottom: 190px; right: 0; }
+  .pos-store { bottom: 84px; right: 10px; }
+
+  .pos-creator { top: 51%; left: 1px; }
+  .pos-meta { top: 51%; right: 1px; }
+
+  .pos-messages { bottom: 0; left: 4%; }
+  .pos-notifications { bottom: 0; }
+  .pos-profile { bottom: 0; right: 4%; }
+
+  .pos-admin { bottom: 44px; }
+  .pos-upload { transform: translate(-50%, -50%) translateY(282px); }
+}
+
+@media (max-width: 380px) {
+  .rb-module {
+    width: 66px;
+    height: 90px;
+  }
+
+  .rb-pill-module {
+    font-size: 0.52rem;
   }
 }
