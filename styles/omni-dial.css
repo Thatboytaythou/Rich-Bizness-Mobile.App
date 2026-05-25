@@ -1,25 +1,376 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/omni-dial.css
+
+   ORBIT UI
+   - module labels
+   - profile chip
+   - side tabs
+   - cinematic overlays
+========================= */
+
+/* =========================
+   MODULE LABEL
 ========================= */
 
 .rb-module-label {
+  position: fixed;
+  left: 50%;
+  bottom: 42px;
+  transform: translateX(-50%) scale(.92);
+
+  z-index: 80;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 220px;
+  max-width: calc(100vw - 42px);
+
+  padding: 14px 22px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(5, 8, 5, .92),
+      rgba(0, 0, 0, .72)
+    );
+
+  border: 1px solid rgba(250, 204, 21, .18);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  color: #fefce8;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition:
+    opacity .24s ease,
+    transform .24s ease,
+    visibility .24s ease,
+    border-color .24s ease;
+
+  box-shadow:
+    0 0 20px rgba(250, 204, 21, .10),
+    0 0 50px rgba(16, 185, 129, .12),
+    inset 0 0 20px rgba(255, 255, 255, .02);
+
   text-shadow:
     0 0 10px rgba(250, 204, 21, .85),
     0 0 28px rgba(0, 255, 157, .30);
 }
 
+.rb-module-label.is-visible {
+  opacity: 1;
+  visibility: visible;
+
+  transform:
+    translateX(-50%)
+    scale(1);
+}
+
 .rb-module-label::before {
   content: "";
+
   position: absolute;
   inset: -1px;
+
   border-radius: inherit;
-  border: 1px solid rgba(250, 204, 21, .25);
+
+  border: 1px solid rgba(250, 204, 21, .24);
+
   pointer-events: none;
 }
 
-@media (max-width: 640px) {
+.rb-module-label::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  border-radius: inherit;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(255,255,255,.14),
+      transparent 65%
+    );
+
+  opacity: .45;
+
+  pointer-events: none;
+}
+
+/* =========================
+   PROFILE CHIP
+========================= */
+
+.rb-profile-chip {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top));
+  left: 18px;
+
+  z-index: 120;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 10px 14px 10px 10px;
+
+  border-radius: 999px;
+
+  border: 1px solid rgba(250, 204, 21, .18);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(5, 8, 5, .92),
+      rgba(0, 0, 0, .74)
+    );
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  cursor: pointer;
+
+  transform:
+    translateY(-10px)
+    scale(.92);
+
+  opacity: 0;
+
+  transition:
+    transform .28s ease,
+    opacity .28s ease,
+    border-color .28s ease,
+    box-shadow .28s ease;
+}
+
+.rb-profile-chip.is-visible {
+  opacity: 1;
+
+  transform:
+    translateY(0)
+    scale(1);
+}
+
+.rb-profile-chip:hover {
+  border-color: rgba(16, 185, 129, .52);
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, .18),
+    0 0 42px rgba(250, 204, 21, .12);
+
+  transform:
+    translateY(-2px)
+    scale(1.03);
+}
+
+.rb-profile-chip img {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border: 2px solid rgba(250, 204, 21, .45);
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, .24);
+}
+
+.rb-profile-chip span {
+  color: #fefce8;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+/* =========================
+   RIGHT TAB BAR
+========================= */
+
+.rb-side-tabs {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  z-index: 120;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rb-side-tabs button {
+  width: 56px;
+  height: 56px;
+
+  border-radius: 18px;
+
+  border: 1px solid rgba(250, 204, 21, .14);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(5, 8, 5, .90),
+      rgba(0, 0, 0, .74)
+    );
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  color: #fefce8;
+
+  font-size: 20px;
+
+  cursor: pointer;
+
+  opacity: 0;
+
+  transform:
+    translateX(22px)
+    scale(.88);
+
+  transition:
+    opacity .24s ease,
+    transform .24s ease,
+    border-color .24s ease,
+    box-shadow .24s ease,
+    background .24s ease;
+}
+
+.rb-side-tabs button.is-visible {
+  opacity: 1;
+
+  transform:
+    translateX(0)
+    scale(1);
+}
+
+.rb-side-tabs button:hover {
+  border-color: rgba(16, 185, 129, .48);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 20, 12, .96),
+      rgba(0, 0, 0, .82)
+    );
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, .22),
+    0 0 34px rgba(250, 204, 21, .12);
+
+  transform:
+    translateX(-4px)
+    scale(1.05);
+}
+
+.rb-side-tabs button.is-active {
+  transform:
+    scale(.92);
+
+  box-shadow:
+    0 0 26px rgba(16, 185, 129, .32);
+}
+
+/* =========================
+   PAGE FX
+========================= */
+
+.rb-page-transition::after {
+  content: "";
+
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(16,185,129,.18),
+      rgba(0,0,0,.92)
+    );
+
+  animation: rbFadeOut .24s ease forwards;
+
+  pointer-events: none;
+}
+
+@keyframes rbFadeOut {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 720px) {
+  .rb-profile-chip {
+    top: calc(env(safe-area-inset-top) + 12px);
+    left: 12px;
+
+    padding-right: 12px;
+  }
+
+  .rb-profile-chip img {
+    width: 42px;
+    height: 42px;
+  }
+
+  .rb-profile-chip span {
+    font-size: 11px;
+    letter-spacing: .14em;
+  }
+
+  .rb-side-tabs {
+    right: 12px;
+    gap: 10px;
+  }
+
+  .rb-side-tabs button {
+    width: 50px;
+    height: 50px;
+
+    border-radius: 16px;
+
+    font-size: 18px;
+  }
+
   .rb-module-label {
     bottom: 22px;
+
+    min-width: unset;
+
+    padding: 12px 18px;
+
+    font-size: 11px;
+    letter-spacing: .16em;
   }
 }
