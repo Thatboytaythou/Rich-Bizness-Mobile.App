@@ -1,7 +1,9 @@
-/* =========================================
+ /* =========================================
    RICH BIZNESS LLC
    /styles/forms.css
-   AUTH + FORM SYSTEM - POLISHED
+
+   AUTH + FORM SYSTEM
+   Portal Auth Upgrade
 ========================================= */
 
 /* =========================================
@@ -11,10 +13,17 @@
 .rb-auth-shell {
   position: relative;
   z-index: 2;
-  min-height: 100svh;
+
   width: min(100%, 980px);
+  min-height: 100svh;
+
   margin: 0 auto;
-  padding: 28px 16px;
+
+  padding:
+    max(28px, env(safe-area-inset-top))
+    16px
+    max(28px, env(safe-area-inset-bottom));
+
   display: grid;
   align-content: center;
   gap: 22px;
@@ -27,36 +36,56 @@
 .rb-auth-hero {
   position: relative;
   overflow: hidden;
-  padding: 26px;
-  border: 1px solid rgba(255,215,106,0.26);
-  border-radius: 32px;
-  background: linear-gradient(135deg, rgba(8,18,10,0.88), rgba(0,0,0,0.85));
-  backdrop-filter: blur(18px);
-  box-shadow: 
-    0 0 44px rgba(0,255,136,0.18),
-    inset 0 0 80px rgba(255,215,106,0.06);
+
+  padding: 28px;
+
+  border-radius: 34px;
+  border: 1px solid rgba(250, 204, 21, 0.26);
+
+  background:
+    radial-gradient(circle at 18% 18%, rgba(16, 185, 129, 0.16), transparent 34%),
+    radial-gradient(circle at 82% 72%, rgba(250, 204, 21, 0.14), transparent 38%),
+    linear-gradient(135deg, rgba(8, 18, 10, 0.9), rgba(0, 0, 0, 0.86));
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  box-shadow:
+    0 0 44px rgba(16, 185, 129, 0.18),
+    0 0 80px rgba(0, 0, 0, 0.36),
+    inset 0 0 80px rgba(250, 204, 21, 0.06);
 }
 
 .rb-auth-hero::before {
   content: "";
+
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  background: url("/images/brand/hero-logo.png.jpeg") center/cover;
-  opacity: 0.14;
+
+  background: url("/images/brand/hero-logo.png.jpeg") center / cover no-repeat;
+
+  opacity: 0.13;
+
   transform: scale(1.08);
-  filter: saturate(1.25) contrast(1.12) brightness(0.92);
+
+  filter:
+    saturate(1.25)
+    contrast(1.12)
+    brightness(0.92);
+
+  pointer-events: none;
 }
 
 .rb-auth-hero::after {
   content: "";
+
   position: absolute;
   inset: 0;
+
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.54));
+
   pointer-events: none;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(0,255,136,0.16), transparent 36%),
-    radial-gradient(circle at 80% 70%, rgba(255,215,106,0.14), transparent 38%),
-    linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.48));
 }
 
 .rb-auth-hero > * {
@@ -64,21 +93,41 @@
   z-index: 2;
 }
 
+.rb-kicker {
+  margin: 0 0 12px;
+
+  color: #34d399;
+
+  font-size: 0.78rem;
+  font-weight: 1000;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 14px rgba(16, 185, 129, 0.45);
+}
+
 .rb-auth-hero h1 {
   margin: 0;
-  color: var(--rb-gold);
-  font-size: clamp(2.4rem, 10vw, 5.8rem);
+
+  color: var(--rb-gold, #facc15);
+
+  font-size: clamp(2.5rem, 10vw, 5.8rem);
   line-height: 0.88;
   letter-spacing: -0.07em;
-  text-shadow: 
-    0 0 26px rgba(255,215,106,0.25),
-    0 0 48px rgba(0,255,136,0.1);
+
+  text-shadow:
+    0 0 26px rgba(250, 204, 21, 0.25),
+    0 0 48px rgba(16, 185, 129, 0.1);
 }
 
 .rb-auth-hero p {
-  margin: 12px 0 0;
+  margin: 14px 0 0;
+
   max-width: 680px;
-  color: var(--rb-muted);
+
+  color: var(--rb-muted, rgba(255, 255, 255, 0.72));
+
   line-height: 1.55;
 }
 
@@ -89,22 +138,40 @@
 .rb-auth-panel {
   position: relative;
   overflow: hidden;
+
   padding: 16px;
-  border: 1px solid rgba(102,255,102,0.35);
+
   border-radius: 30px;
-  background: linear-gradient(135deg, rgba(8,18,10,0.9), rgba(0,0,0,0.88));
+  border: 1px solid rgba(102, 255, 102, 0.35);
+
+  background:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.1), transparent 36%),
+    linear-gradient(135deg, rgba(8, 18, 10, 0.92), rgba(0, 0, 0, 0.88));
+
   backdrop-filter: blur(22px);
-  box-shadow: 
-    0 0 42px rgba(0,255,136,0.2),
-    inset 0 0 50px rgba(255,215,106,0.08);
+  -webkit-backdrop-filter: blur(22px);
+
+  box-shadow:
+    0 0 42px rgba(16, 185, 129, 0.2),
+    0 0 74px rgba(0, 0, 0, 0.42),
+    inset 0 0 50px rgba(250, 204, 21, 0.08);
 }
 
 .rb-auth-panel::before {
   content: "";
+
   position: absolute;
   inset: 0;
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 42%);
+
   pointer-events: none;
-  background: radial-gradient(circle at top, rgba(0,255,136,0.1), transparent 36%);
+}
+
+.rb-auth-panel > * {
+  position: relative;
+  z-index: 2;
 }
 
 /* =========================================
@@ -115,20 +182,42 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+
   margin-bottom: 14px;
 }
 
 .rb-auth-tabs button {
   min-height: 48px;
+
   border-radius: 999px;
-  border: 1px solid rgba(255,215,106,0.26);
-  background: rgba(0,0,0,0.52);
-  color: var(--rb-muted);
+  border: 1px solid rgba(250, 204, 21, 0.26);
+
+  background:
+    linear-gradient(145deg, rgba(0, 0, 0, 0.62), rgba(5, 12, 7, 0.82));
+
+  color: var(--rb-muted, rgba(255, 255, 255, 0.7));
+
   font-weight: 1000;
   letter-spacing: 0.06em;
+
   cursor: pointer;
   touch-action: manipulation;
-  transition: all 0.22s ease;
+
+  transition:
+    transform 0.22s ease,
+    color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.rb-auth-tabs button:hover {
+  border-color: rgba(16, 185, 129, 0.48);
+
+  color: #fefce8;
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.18);
 }
 
 .rb-auth-tabs button:active {
@@ -136,10 +225,18 @@
 }
 
 body[data-auth-mode="signin"] [data-auth-mode="signin"],
-body[data-auth-mode="signup"] [data-auth-mode="signup"] {
+body[data-auth-mode="signup"] [data-auth-mode="signup"],
+.rb-auth-tabs button.is-active {
   color: #001806;
-  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
-  box-shadow: 0 0 24px rgba(0,255,136,0.35);
+
+  background:
+    linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
+
+  border-color: rgba(250, 204, 21, 0.54);
+
+  box-shadow:
+    0 0 24px rgba(16, 185, 129, 0.35),
+    inset 0 0 18px rgba(255, 255, 255, 0.14);
 }
 
 /* =========================================
@@ -163,15 +260,21 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"] {
 
 .rb-auth-form h2 {
   margin: 4px 0 2px;
-  color: var(--rb-gold);
+
+  color: var(--rb-gold, #facc15);
+
   font-size: 1.5rem;
-  text-shadow: 0 0 20px rgba(255,215,106,0.16);
+
+  text-shadow:
+    0 0 20px rgba(250, 204, 21, 0.16);
 }
 
 .rb-auth-form label {
   display: grid;
   gap: 7px;
-  color: var(--rb-green);
+
+  color: var(--rb-green, #10b981);
+
   font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -182,14 +285,27 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"] {
 .rb-auth-form textarea,
 .rb-auth-form select {
   width: 100%;
+
   border-radius: 18px;
-  border: 1px solid rgba(255,215,106,0.24);
+  border: 1px solid rgba(250, 204, 21, 0.24);
+
   outline: none;
-  color: var(--rb-white);
-  background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(5,12,7,0.9));
-  box-shadow: inset 0 0 22px rgba(0,255,136,0.08);
+
+  color: var(--rb-white, #ffffff);
+
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.78), rgba(5, 12, 7, 0.92));
+
+  box-shadow:
+    inset 0 0 22px rgba(16, 185, 129, 0.08);
+
   font: inherit;
-  transition: all 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .rb-auth-form input,
@@ -204,12 +320,106 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"] {
   padding: 14px;
 }
 
+.rb-auth-form input::placeholder,
+.rb-auth-form textarea::placeholder {
+  color: rgba(255, 255, 255, 0.34);
+}
+
 .rb-auth-form input:focus,
 .rb-auth-form textarea:focus,
 .rb-auth-form select:focus {
-  border-color: rgba(102,255,102,0.75);
-  box-shadow: 0 0 22px rgba(0,255,136,0.25), inset 0 0 22px rgba(0,255,136,0.1);
+  border-color: rgba(102, 255, 102, 0.75);
+
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.82), rgba(5, 16, 8, 0.94));
+
+  box-shadow:
+    0 0 22px rgba(16, 185, 129, 0.25),
+    inset 0 0 22px rgba(16, 185, 129, 0.1);
+
   transform: translateY(-1px);
+}
+
+.rb-auth-form input:-webkit-autofill {
+  -webkit-text-fill-color: #ffffff;
+  box-shadow:
+    0 0 0 1000px #061008 inset,
+    0 0 22px rgba(16, 185, 129, 0.22);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* =========================================
+   AUTH MESSAGE
+========================================= */
+
+.rb-auth-message {
+  min-height: 22px;
+
+  margin: 14px 4px 0;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.rb-auth-message[data-type="success"] {
+  color: #34d399;
+  text-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+}
+
+.rb-auth-message[data-type="error"] {
+  color: #fca5a5;
+  text-shadow: 0 0 14px rgba(239, 68, 68, 0.24);
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.rb-main-launch {
+  min-height: 56px;
+
+  border: 0;
+  border-radius: 999px;
+
+  color: #001806;
+
+  background:
+    linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
+
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  box-shadow:
+    0 0 24px rgba(16, 185, 129, 0.34),
+    0 0 40px rgba(250, 204, 21, 0.16),
+    inset 0 0 18px rgba(255, 255, 255, 0.18);
+
+  transition:
+    transform 0.22s ease,
+    filter 0.22s ease,
+    opacity 0.22s ease;
+}
+
+.rb-main-launch:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+.rb-main-launch:active {
+  transform: scale(0.98);
+}
+
+.rb-main-launch:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
 }
 
 /* =========================================
@@ -218,17 +428,39 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"] {
 
 .rb-auth-home {
   justify-self: center;
-  color: var(--rb-gold);
+
+  color: var(--rb-gold, #facc15);
+
   text-decoration: none;
+
   font-weight: 1000;
   letter-spacing: 0.06em;
+
   cursor: pointer;
   touch-action: manipulation;
-  transition: all 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease,
+    text-shadow 0.2s ease;
 }
 
 .rb-auth-home:hover {
+  color: #fefce8;
+
+  text-shadow:
+    0 0 14px rgba(250, 204, 21, 0.35);
+
   transform: translateY(-1px);
+}
+
+/* =========================================
+   READY STATE
+========================================= */
+
+.rb-auth-page:not(.rb-auth-ready) .rb-auth-panel,
+.rb-auth-page:not(.rb-auth-ready) .rb-auth-hero {
+  opacity: 0.92;
 }
 
 /* =========================================
@@ -237,10 +469,12 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"] {
 
 @media (max-width: 720px) {
   .rb-auth-shell {
-    padding: 
+    padding:
       max(18px, env(safe-area-inset-top))
       12px
       calc(24px + env(safe-area-inset-bottom));
+
+    gap: 16px;
   }
 
   .rb-auth-hero {
@@ -250,9 +484,20 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"] {
 
   .rb-auth-panel {
     border-radius: 24px;
+    padding: 14px;
   }
 
   .rb-auth-hero h1 {
     font-size: clamp(2.3rem, 12vw, 4.4rem);
+  }
+
+  .rb-auth-tabs button {
+    min-height: 46px;
+    font-size: 0.82rem;
+  }
+
+  .rb-auth-form input,
+  .rb-auth-form select {
+    min-height: 52px;
   }
 }
