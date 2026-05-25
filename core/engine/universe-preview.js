@@ -3,217 +3,448 @@ import RB_CONFIG from "/core/shared/rb-config.js";
 const container = document.getElementById("canvas-container");
 const labelEl = document.getElementById("module-label");
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.1, 1000);
-camera.position.set(0, 4, 42);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-renderer.setSize(innerWidth, innerHeight);
-container.appendChild(renderer.domElement);
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-
-const light = new THREE.PointLight(0xfacc15, 3);
-light.position.set(20, 30, 40);
-scene.add(light);
-
-const portal = new THREE.Mesh(
-  new THREE.SphereGeometry(5.6, 64, 64),
-  new THREE.MeshPhongMaterial({
-    color: 0x10b981,
-    emissive: 0x064e3b,
-    shininess: 40
-  })
-);
-scene.add(portal);
-
-const glow = new THREE.Mesh(
-  new THREE.SphereGeometry(7.4, 64, 64),
-  new THREE.MeshBasicMaterial({
-    color: 0x10b981,
-    transparent: true,
-    opacity: 0.18,
-    blending: THREE.AdditiveBlending
-  })
-);
-scene.add(glow);
-
 const modules = [
-  "Feed",
-  "Live",
-  "Music",
-  "Podcast",
-  "Radio",
-  "Gaming",
-  "Upload",
-  "Sports",
-  "Gallery",
-  "Store",
-  "Meta"
+  {
+    key: "feed",
+    title: "Global Feed",
+    tag: "FEED",
+    image: "/images/brand/hero-banner.png",
+  },
+  {
+    key: "live",
+    title: "Go Live",
+    tag: "LIVE",
+    image: "/images/brand/omni-watch.png.jpeg",
+  },
+  {
+    key: "music",
+    title: "Music Universe",
+    tag: "MUSIC",
+    image: "/images/brand/music-log.png.jpeg",
+  },
+  {
+    key: "podcast",
+    title: "Podcast Shows",
+    tag: "PODCAST",
+    image: "/images/brand/Avatar-hero-Banner.png.jpeg",
+  },
+  {
+    key: "radio",
+    title: "Live Radio",
+    tag: "RADIO",
+    image: "/images/brand/background-v2.png.jpeg",
+  },
+  {
+    key: "gaming",
+    title: "Arcade District",
+    tag: "GAMING",
+    image: "/images/brand/gaming-hero.png.jpeg",
+  },
+  {
+    key: "upload",
+    title: "Upload Content",
+    tag: "UPLOAD",
+    image: "/images/brand/project-avatar.png.jpeg",
+  },
+  {
+    key: "sports",
+    title: "Sports Arena",
+    tag: "SPORTS",
+    image: "/images/brand/sports-logo.png.jpeg",
+  },
+  {
+    key: "gallery",
+    title: "Visual Drops",
+    tag: "GALLERY",
+    image: "/images/brand/father-son-elite.png.jpeg",
+  },
+  {
+    key: "store",
+    title: "Creator Market",
+    tag: "STORE",
+    image: "/images/brand/gta-style-elite.png.jpeg",
+  },
+  {
+    key: "meta",
+    title: "Meta World",
+    tag: "META",
+    image: "/images/brand/meta-verse-elite.png.jpeg",
+  },
 ];
 
-const phones = [];
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-let activePhone = null;
+let scene;
+let camera;
+let renderer;
+let portal;
+let orbitGroup;
+let raycaster;
+let pointer;
+let hoveredCard = null;
 
-function slug(text) {
-  return text.toLowerCase();
+let orbitOffset = 0;
+let targetOffset = 0;
+let isDragging = false;
+let startX = 0;
+let lastX = 0;
+let dragMoved = false;
+
+const cards = [];
+const loader = new THREE.TextureLoader();
+
+function initUniverse() {
+  if (!container || !window.THREE) return;
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1200
+  );
+
+  camera.position.set(0, 4, 44);
+
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    powerPreference: "high-performance",
+  });
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  container.appendChild(renderer.domElement);
+
+  raycaster = new THREE.Raycaster();
+  pointer = new THREE.Vector2();
+
+  buildLights();
+  buildStars();
+  buildPortal();
+  buildCards();
+
+  bindPointer();
+  resizeUniverse();
+  animateUniverse();
 }
 
-function makeTextTexture(title) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 768;
+function buildLights() {
+  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
 
-  const ctx = canvas.getContext("2d");
+  const goldLight = new THREE.PointLight(0xfbbf24, 3.4, 150);
+  goldLight.position.set(18, 18, 32);
+  scene.add(goldLight);
 
-  ctx.fillStyle = "#071007";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const gradient = ctx.createRadialGradient(256, 210, 20, 256, 240, 360);
-  gradient.addColorStop(0, "rgba(52,211,153,.5)");
-  gradient.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#34d399";
-  ctx.font = "bold 42px system-ui";
-  ctx.letterSpacing = "8px";
-  ctx.fillText(title.toUpperCase(), 54, 120);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 68px system-ui";
-  ctx.fillText(title, 54, 420);
-
-  ctx.fillStyle = "#fbbf24";
-  ctx.font = "700 28px system-ui";
-  ctx.fillText("Rich Bizness", 54, 480);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
+  const greenLight = new THREE.PointLight(0x10b981, 3, 150);
+  greenLight.position.set(-20, -4, 22);
+  scene.add(greenLight);
 }
 
-function createPhone(title) {
-  const group = new THREE.Group();
+function buildStars() {
+  const geo = new THREE.BufferGeometry();
+  const positions = [];
 
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(4.4, 7.6, 0.45),
+  for (let i = 0; i < 1800; i++) {
+    positions.push(THREE.MathUtils.randFloatSpread(160));
+    positions.push(THREE.MathUtils.randFloatSpread(110));
+    positions.push(THREE.MathUtils.randFloatSpread(130));
+  }
+
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+
+  scene.add(
+    new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        color: 0xfbbf24,
+        size: 0.05,
+        transparent: true,
+        opacity: 0.42,
+      })
+    )
+  );
+}
+
+function buildPortal() {
+  portal = new THREE.Group();
+
+  const core = new THREE.Mesh(
+    new THREE.SphereGeometry(6.6, 96, 96),
     new THREE.MeshPhongMaterial({
-      color: 0x030703,
-      shininess: 28
-    })
-  );
-
-  const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.05, 7.15),
-    new THREE.MeshBasicMaterial({
-      map: makeTextTexture(title),
+      color: 0x10b981,
+      emissive: 0x064e3b,
+      shininess: 48,
       transparent: true,
-      opacity: 0.92
+      opacity: 0.96,
     })
   );
 
-  screen.position.z = 0.26;
+  const glow = new THREE.Mesh(
+    new THREE.SphereGeometry(9.4, 96, 96),
+    new THREE.MeshBasicMaterial({
+      color: 0x10b981,
+      transparent: true,
+      opacity: 0.12,
+      depthWrite: false,
+    })
+  );
 
-  group.add(body);
-  group.add(screen);
-
-  group.userData = {
-    label: title,
-    section: slug(title)
-  };
-
-  scene.add(group);
-  phones.push(group);
+  portal.add(glow);
+  portal.add(core);
+  portal.position.set(0, -1, 0);
+  scene.add(portal);
 }
 
-modules.forEach(createPhone);
+function buildCards() {
+  orbitGroup = new THREE.Group();
+  scene.add(orbitGroup);
 
-function updateCards() {
-  const now = Date.now() * 0.00033;
-  const radiusX = innerWidth < 700 ? 12 : 18;
-  const radiusZ = innerWidth < 700 ? 8 : 11;
-
-  phones.forEach((phone, index) => {
-    const angle = now + index * ((Math.PI * 2) / phones.length);
-
-    phone.position.x = Math.cos(angle) * radiusX;
-    phone.position.y = Math.sin(angle) * 2.1;
-    phone.position.z = Math.sin(angle) * radiusZ + 6;
-
-    const depth = (phone.position.z + radiusZ) / (radiusZ * 2);
-    const scale = 0.72 + depth * 0.55;
-
-    phone.scale.set(scale, scale, scale);
-    phone.rotation.y = angle + Math.PI / 2;
-
-    phone.visible = true;
+  modules.forEach((mod, index) => {
+    const card = createPhoneCard(mod);
+    card.userData.module = mod;
+    card.userData.index = index;
+    cards.push(card);
+    orbitGroup.add(card);
   });
 }
 
-function setActive(phone) {
-  activePhone = phone;
+function createPhoneCard(mod) {
+  const group = new THREE.Group();
+
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(5.2, 8.4, 0.5),
+    new THREE.MeshPhongMaterial({
+      color: 0x050805,
+      specular: 0xfbbf24,
+      shininess: 78,
+      transparent: true,
+      opacity: 0.94,
+    })
+  );
+
+  const screenTexture = loader.load(
+    mod.image,
+    (texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      texture.needsUpdate = true;
+    },
+    undefined,
+    () => {
+      console.warn("Missing module image:", mod.image);
+    }
+  );
+
+  const screen = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.72, 7.72),
+    new THREE.MeshBasicMaterial({
+      map: screenTexture,
+      transparent: true,
+      opacity: 0.94,
+    })
+  );
+
+  screen.position.z = 0.28;
+
+  const tint = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.72, 7.72),
+    new THREE.MeshBasicMaterial({
+      color: 0x03140b,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false,
+    })
+  );
+
+  tint.position.z = 0.3;
+
+  const shine = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.35, 7.4),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.1,
+      depthWrite: false,
+    })
+  );
+
+  shine.position.set(1.25, 0, 0.32);
+  shine.rotation.z = -0.16;
+
+  const border = new THREE.Mesh(
+    new THREE.BoxGeometry(5.38, 8.58, 0.08),
+    new THREE.MeshBasicMaterial({
+      color: 0xfbbf24,
+      transparent: true,
+      opacity: 0.2,
+      wireframe: true,
+    })
+  );
+
+  border.position.z = 0.34;
+
+  group.add(body);
+  group.add(screen);
+  group.add(tint);
+  group.add(shine);
+  group.add(border);
+
+  group.scale.setScalar(0.82);
+
+  return group;
+}
+
+function updateCards() {
+  const isMobile = window.innerWidth <= RB_CONFIG.motion.mobileBreakpoint;
+
+  const radiusX = isMobile
+    ? RB_CONFIG.motion.orbit.mobileRadiusX / 10
+    : RB_CONFIG.motion.orbit.desktopRadiusX / 10;
+
+  const radiusZ = isMobile
+    ? RB_CONFIG.motion.orbit.mobileRadiusY / 10
+    : RB_CONFIG.motion.orbit.desktopRadiusY / 10;
+
+  const baseY = isMobile ? -1 : -0.4;
+
+  orbitOffset += (targetOffset - orbitOffset) * 0.055;
+
+  cards.forEach((card, index) => {
+    const angle = orbitOffset + (index / cards.length) * Math.PI * 2;
+
+    const x = Math.cos(angle) * radiusX;
+    const z = Math.sin(angle) * radiusZ;
+
+    const depth = (z + radiusZ) / (radiusZ * 2);
+    const scale = 0.56 + depth * 0.56;
+    const opacity = 0.28 + depth * 0.72;
+
+    card.position.set(x, baseY + depth * 1.15, z - 2);
+    card.rotation.y = -angle + Math.PI / 2;
+    card.scale.setScalar(card === hoveredCard ? scale * 1.13 : scale);
+
+    card.children.forEach((child, childIndex) => {
+      if (!child.material) return;
+
+      if (childIndex === 0) child.material.opacity = 0.72 + opacity * 0.24;
+      if (childIndex === 1) child.material.opacity = opacity;
+      if (childIndex === 2) child.material.opacity = 0.18 + depth * 0.1;
+      if (childIndex === 3) child.material.opacity = 0.08 + depth * 0.08;
+      if (childIndex === 4) child.material.opacity = 0.12 + depth * 0.14;
+    });
+
+    card.renderOrder = Math.round(depth * 100);
+  });
+}
+
+function bindPointer() {
+  window.addEventListener("pointerdown", onPointerDown, { passive: true });
+  window.addEventListener("pointermove", onPointerMove, { passive: true });
+  window.addEventListener("pointerup", onPointerUp, { passive: true });
+  window.addEventListener("pointercancel", onPointerUp, { passive: true });
+  window.addEventListener("resize", resizeUniverse, { passive: true });
+  window.addEventListener("orientationchange", resizeUniverse, { passive: true });
+}
+
+function onPointerDown(event) {
+  isDragging = true;
+  startX = event.clientX;
+  lastX = event.clientX;
+  dragMoved = false;
+}
+
+function onPointerMove(event) {
+  updatePointer(event);
+
+  if (!isDragging) {
+    checkHover();
+    return;
+  }
+
+  const delta = event.clientX - lastX;
+
+  if (Math.abs(event.clientX - startX) > 6) {
+    dragMoved = true;
+  }
+
+  targetOffset += delta * 0.008;
+  lastX = event.clientX;
+}
+
+function onPointerUp(event) {
+  updatePointer(event);
+  isDragging = false;
+
+  const hit = getHitCard();
+
+  if (!dragMoved && hit) {
+    window.dispatchEvent(
+      new CustomEvent("rb:module-select", {
+        detail: hit.userData.module,
+      })
+    );
+  }
+}
+
+function updatePointer(event) {
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+}
+
+function getHitCard() {
+  raycaster.setFromCamera(pointer, camera);
+
+  const hits = raycaster.intersectObjects(cards, true);
+  if (!hits.length) return null;
+
+  let obj = hits[0].object;
+
+  while (obj && !obj.userData.module) {
+    obj = obj.parent;
+  }
+
+  return obj || null;
+}
+
+function checkHover() {
+  const hit = getHitCard();
+  hoveredCard = hit;
 
   if (!labelEl) return;
 
-  if (!phone) {
-    labelEl.classList.remove("active");
-    labelEl.textContent = "";
-    return;
+  if (hit?.userData?.module) {
+    labelEl.textContent = hit.userData.module.title;
+    labelEl.classList.add("is-visible");
+  } else {
+    labelEl.classList.remove("is-visible");
   }
-
-  labelEl.textContent = phone.userData.label;
-  labelEl.classList.add("active");
-  document.body.dataset.activeSection = phone.userData.section;
 }
 
-window.addEventListener("mousemove", (event) => {
-  mouse.x = (event.clientX / innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / innerHeight) * 2 + 1;
+function resizeUniverse() {
+  if (!camera || !renderer) return;
 
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(phones, true);
-
-  if (!hits.length) {
-    setActive(null);
-    return;
-  }
-
-  let obj = hits[0].object;
-  while (obj && !phones.includes(obj)) obj = obj.parent;
-
-  if (obj) setActive(obj);
-});
-
-window.addEventListener("click", () => {
-  if (!activePhone) return;
-
-  const route = RB_CONFIG.routes[activePhone.userData.section];
-  if (route) window.location.href = route;
-});
-
-function resize() {
-  camera.aspect = innerWidth / innerHeight;
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-window.addEventListener("resize", resize);
-window.addEventListener("orientationchange", resize);
+function animateUniverse() {
+  requestAnimationFrame(animateUniverse);
 
-function animate() {
-  requestAnimationFrame(animate);
+  const t = performance.now() * 0.001;
 
-  portal.rotation.y += 0.0018;
-  portal.rotation.x += 0.0005;
-  glow.rotation.y -= 0.001;
+  targetOffset += RB_CONFIG.motion.orbit.speed;
+
+  portal.rotation.y += 0.002;
+  portal.rotation.x = Math.sin(t * 0.45) * 0.06;
+  portal.scale.setScalar(
+    1 + Math.sin(t * 1.8) * RB_CONFIG.motion.portal.scalePulse
+  );
 
   updateCards();
-
   renderer.render(scene, camera);
 }
 
-animate();
+initUniverse();
