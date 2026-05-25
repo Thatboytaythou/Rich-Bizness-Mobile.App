@@ -1,41 +1,247 @@
-/* =============================================
-   BASE STYLES - FOUNDATION
-   ============================================= */
+/* =========================
+   RICH BIZNESS MOBILE
+   styles/base.css
+========================= */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root{
+  --rb-black:#050805;
+
+  --rb-green:#00ff9d;
+  --rb-green-soft:#0cffb0;
+  --rb-green-deep:#052e22;
+
+  --rb-gold:#facc15;
+  --rb-gold-soft:#ffe27a;
+
+  --rb-white:#f5f7f7;
+
+  --rb-glass:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.08),
+      rgba(255,255,255,.02)
+    );
+
+  --rb-border:
+    rgba(255,255,255,.12);
+
+  --rb-shadow-green:
+    0 0 40px rgba(0,255,157,.35);
+
+  --rb-shadow-gold:
+    0 0 40px rgba(250,204,21,.22);
+
+  --rb-header-height:120px;
 }
 
-:root {
-  --emerald: #10b981;
-  --burnt-gold: #fbbf24;
-  --dark-bg: #0a0f0a;
-  --glass: rgba(16, 185, 129, 0.08);
+/* =========================
+   RESET
+========================= */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
-body {
-  background: var(--dark-bg);
-  color: #e5e7eb;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  overflow-x: hidden;
-  min-height: 100vh;
+html,
+body{
+  width:100%;
+  min-height:100%;
+  overflow:hidden;
+
+  background:
+    radial-gradient(circle at top,#102418 0%,#07110c 40%,#020302 100%);
+
+  color:var(--rb-white);
+
+  font-family:
+    Inter,
+    SF Pro Display,
+    system-ui,
+    sans-serif;
+
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
 }
 
-.universe-app {
-  min-height: 100vh;
-  position: relative;
+body{
+  position:relative;
 }
 
-/* General Utility */
-.glass-smoke {
-  background: var(--glass);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 24px;
+/* =========================
+   APP ROOT
+========================= */
+
+.rb-index-page{
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
 }
 
-.burnt-gold {
-  color: var(--burnt-gold);
+/* =========================
+   MAIN SHELL
+========================= */
+
+.rb-universe-shell{
+  position:relative;
+  width:100%;
+  height:100vh;
+  overflow:hidden;
+}
+
+.rb-universe-stage{
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+
+/* =========================
+   BRAND HEADER
+========================= */
+
+.rb-brand-header{
+  position:fixed;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+
+  z-index:100;
+
+  width:100%;
+  max-width:720px;
+
+  padding:
+    max(env(safe-area-inset-top),24px)
+    24px
+    0;
+
+  text-align:center;
+
+  pointer-events:none;
+}
+
+.rb-brand-header h1{
+  font-size:clamp(2.2rem,6vw,5rem);
+  font-weight:1000;
+  line-height:.9;
+  letter-spacing:-.06em;
+
+  color:#ffffff;
+
+  text-shadow:
+    0 0 30px rgba(255,255,255,.2),
+    0 0 60px rgba(0,255,157,.2);
+}
+
+.rb-brand-header h1 span{
+  color:var(--rb-gold);
+
+  text-shadow:
+    0 0 25px rgba(250,204,21,.55),
+    0 0 60px rgba(250,204,21,.25);
+}
+
+.rb-brand-header p{
+  margin-top:12px;
+
+  font-size:.82rem;
+  font-weight:700;
+  letter-spacing:.35em;
+  text-transform:uppercase;
+
+  color:var(--rb-green-soft);
+
+  opacity:.92;
+}
+
+/* =========================
+   LABEL
+========================= */
+
+.rb-module-label{
+  position:fixed;
+  left:50%;
+  bottom:48px;
+  transform:translateX(-50%);
+
+  z-index:120;
+
+  min-width:180px;
+
+  padding:14px 22px;
+
+  border:
+    1px solid rgba(255,255,255,.12);
+
+  border-radius:999px;
+
+  background:
+    rgba(0,0,0,.42);
+
+  backdrop-filter:blur(20px);
+
+  text-align:center;
+
+  font-size:.95rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+
+  color:var(--rb-gold);
+
+  opacity:0;
+  transition:
+    opacity .25s ease,
+    transform .25s ease;
+
+  pointer-events:none;
+
+  box-shadow:
+    0 0 25px rgba(0,255,157,.18),
+    inset 0 0 18px rgba(255,255,255,.04);
+}
+
+.rb-module-label.active{
+  opacity:1;
+  transform:
+    translateX(-50%)
+    translateY(-6px);
+}
+
+/* =========================
+   MOBILE SAFE
+========================= */
+
+@media (max-width:900px){
+
+  .rb-brand-header{
+    padding:
+      max(env(safe-area-inset-top),18px)
+      18px
+      0;
+  }
+
+  .rb-module-label{
+    bottom:30px;
+
+    min-width:auto;
+    width:calc(100% - 40px);
+
+    font-size:.8rem;
+    letter-spacing:.12em;
+  }
+}
+
+@media (max-width:640px){
+
+  .rb-brand-header h1{
+    font-size:2.5rem;
+  }
+
+  .rb-brand-header p{
+    font-size:.7rem;
+    letter-spacing:.24em;
+  }
 }
