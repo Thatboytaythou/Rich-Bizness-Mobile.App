@@ -1,54 +1,68 @@
-/* =============================================
-   OMNI FX - EFFECTS & HOVER UTILITIES
-   ============================================= */
+/* =========================
+   RICH BIZNESS MOBILE
+   styles/omni-fx.css
+========================= */
 
-/* Glassmorphism */
-.glass-smoke {
-  background: rgba(16, 185, 129, 0.08);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+.rb-fx-smoke {
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 20% 35%, rgba(0,255,157,.22), transparent 34%),
+    radial-gradient(circle at 78% 28%, rgba(250,204,21,.14), transparent 32%),
+    radial-gradient(circle at 50% 78%, rgba(16,185,129,.18), transparent 42%);
+
+  filter: blur(58px);
+  opacity: .72;
+
+  animation: rbSmokeDrift 18s ease-in-out infinite alternate;
 }
 
-/* Phone Mockup Base */
-.phone-mockup {
-  background: #111827;
-  border: 14px solid var(--emerald, #10b981);
-  border-radius: 52px;
-  padding: 12px;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6),
-              0 0 20px rgba(16, 185, 129, 0.4);
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  will-change: transform;
+.rb-bg-grid,
+.rb-bg-vignette,
+.rb-bg-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 
-/* Hover Utilities */
-.hover-lift:hover {
-  transform: scale(1.12) translateY(-8px);
-  box-shadow: 0 30px 80px -15px var(--burnt-gold, #fbbf24),
-              0 0 60px rgba(16, 185, 129, 0.7);
+.rb-bg-grid {
+  opacity: .12;
+  background-image:
+    linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
+  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
 }
 
-.hover-3d:hover {
-  transform: perspective(1100px) rotateY(12deg) rotateX(10deg) translateZ(60px);
-  box-shadow: 0 30px 80px -15px var(--burnt-gold, #fbbf24),
-              0 0 60px rgba(16, 185, 129, 0.7),
-              0 40px 100px -20px rgba(0, 0, 0, 0.8);
+.rb-bg-vignette {
+  background:
+    radial-gradient(circle at center, transparent 0%, rgba(0,0,0,.18) 48%, rgba(0,0,0,.72) 100%);
 }
 
-/* Icon & Label inside cards */
-.orbital-phone .icon {
-  font-size: 2.25rem;
-  margin-bottom: 10px;
-  transition: transform 0.3s ease;
+.rb-bg-noise {
+  opacity: .05;
+  background-image:
+    repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,.7) 0 1px, transparent 1px 4px);
+  mix-blend-mode: screen;
 }
 
-.orbital-phone:hover .icon {
-  transform: scale(1.15);
+@keyframes rbSmokeDrift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+
+  100% {
+    transform: translate3d(2%, 2%, 0) scale(1.08);
+  }
 }
 
-.orbital-phone .label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+@media (prefers-reduced-motion: reduce) {
+  .rb-fx-smoke {
+    animation: none;
+  }
 }
