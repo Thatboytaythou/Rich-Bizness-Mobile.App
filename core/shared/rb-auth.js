@@ -1,4 +1,4 @@
-/* =========================
+ /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-auth.js
 
@@ -69,6 +69,48 @@ function fallbackName(email = "") {
   );
 }
 
+function getMetadata(user) {
+  return user?.user_metadata || {};
+}
+
+function getAvatarFromUser(user) {
+  const metadata = getMetadata(user);
+
+  return (
+    metadata.avatar_url ||
+    metadata.picture ||
+    metadata.avatar ||
+    DEFAULT_AVATAR
+  );
+}
+
+function getBannerFromUser(user) {
+  const metadata = getMetadata(user);
+
+  return (
+    metadata.banner_url ||
+    metadata.cover_url ||
+    DEFAULT_BANNER
+  );
+}
+
+async function getExistingProfile(userId) {
+  if (!userId) return null;
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB PROFILE LOAD WARNING]", error.message);
+    return null;
+  }
+
+  return data || null;
+}
+
 async function upsertProfileFromAuth({
   user,
   email,
@@ -77,14 +119,37 @@ async function upsertProfileFromAuth({
 }) {
   if (!user?.id) return null;
 
+  const metadata = getMetadata(user);
+  const existingProfile = await getExistingProfile(user.id);
+
   const finalUsername =
+    existingProfile?.username ||
     cleanUsername(username) ||
-    cleanUsername(String(email || "").split("@")[0]) ||
+    cleanUsername(metadata.username) ||
+    cleanUsername(String(email || user.email || "").split("@")[0]) ||
     `rich_${user.id.slice(0, 8)}`;
 
   const finalDisplayName =
+    existingProfile?.display_name ||
     String(displayName || "").trim() ||
-    fallbackName(email);
+    metadata.display_name ||
+    metadata.full_name ||
+    fallbackName(email || user.email);
+
+  const finalAvatar =
+    existingProfile?.avatar_url ||
+    getAvatarFromUser(user);
+
+  const finalBanner =
+    existingProfile?.banner_url ||
+    getBannerFromUser(user);
+
+  const finalRole =
+    existingProfile?.role ||
+    metadata.role ||
+    "user";
+
+  const now = new Date().toISOString();
 
   const { data, error } = await supabase
     .from(RB_TABLES.profiles)
@@ -93,13 +158,13 @@ async function upsertProfileFromAuth({
         id: user.id,
         username: finalUsername,
         display_name: finalDisplayName,
-        full_name: finalDisplayName,
-        avatar_url: DEFAULT_AVATAR,
-        banner_url: DEFAULT_BANNER,
-        role: "user",
+        full_name: existingProfile?.full_name || finalDisplayName,
+        avatar_url: finalAvatar,
+        banner_url: finalBanner,
+        role: finalRole,
         online_status: "online",
-        last_seen_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        last_seen_at: now,
+        updated_at: now
       },
       { onConflict: "id" }
     )
@@ -125,7 +190,7 @@ export async function rbSignUp({
     email,
     password,
     metadata: {
-      username,
+      username: cleanUsername(username),
       display_name: displayName
     }
   });
@@ -133,6 +198,7 @@ export async function rbSignUp({
   const user =
     data?.user ||
     data?.session?.user ||
+    getUser() ||
     null;
 
   if (user?.id) {
@@ -142,6 +208,8 @@ export async function rbSignUp({
       username,
       displayName
     });
+
+    await refreshProfile();
   }
 
   return data;
@@ -169,6 +237,8 @@ export async function rbSignIn({
         user.user_metadata?.full_name ||
         ""
     });
+
+    await refreshProfile();
   }
 
   if (redirectTo) {
@@ -181,6 +251,19 @@ export async function rbSignIn({
 export async function rbSignOut({
   redirectTo = RB_ROUTES.auth
 } = {}) {
+  const user = getUser();
+
+  if (user?.id) {
+    await supabase
+      .from(RB_TABLES.profiles)
+      .update({
+        online_status: "offline",
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", user.id);
+  }
+
   await signOut();
 
   if (redirectTo) {
@@ -228,6 +311,21 @@ export async function refreshProfile() {
 window.addEventListener("focus", async () => {
   if (getUser()?.id) {
     await refreshProfile();
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  const user = getUser();
+
+  if (user?.id) {
+    supabase
+      .from(RB_TABLES.profiles)
+      .update({
+        online_status: "away",
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", user.id);
   }
 });
 
