@@ -1,70 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Rich Bizness — Enter The Universe</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
-  <link rel="stylesheet" href="/styles/main.css" />
+  <title>Rich Bizness • Auth</title>
+
+  <meta name="theme-color" content="#050805" />
+  <meta
+    name="description"
+    content="Rich Bizness Mobile identity login and signup."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-home rb-auth-page" data-auth-mode="signin">
-
-  <div class="rb-bg"></div>
-  <div class="rb-vignette"></div>
-  <div class="rb-grid"></div>
+<body class="rb-auth-page" data-auth-mode="signin">
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <main class="rb-auth-shell">
-
-    <!-- HERO -->
     <section class="rb-auth-hero">
       <p class="rb-kicker">RICH BIZNESS IDENTITY</p>
+
       <h1>Enter The Universe</h1>
+
       <p>
-        One identity. All platforms.<br>
+        One identity. All platforms.<br />
         Live • Music • Gaming • Store • Meta • Creator Economy
       </p>
     </section>
 
-    <!-- AUTH PANEL -->
     <section id="rb-auth-panel" class="rb-auth-panel is-signin">
-
-      <!-- TABS -->
       <div class="rb-auth-tabs">
         <button type="button" data-auth-mode="signin" class="is-active">
           TAP IN 💰
         </button>
+
         <button type="button" data-auth-mode="signup">
           CREATE ID ✨
         </button>
       </div>
 
-      <!-- SIGN IN FORM -->
-      <form id="rb-signin-form" class="rb-auth-form">
+      <form id="rb-signin-form" class="rb-auth-form" autocomplete="on">
         <h2>Welcome Back</h2>
 
         <label>
           Email
-          <input 
-            name="email" 
-            type="email" 
-            autocomplete="email" 
-            placeholder="you@richbizness.com" 
-            required 
+          <input
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@richbizness.com"
+            required
           />
         </label>
 
         <label>
           Password
-          <input 
-            name="password" 
-            type="password" 
-            autocomplete="current-password" 
-            placeholder="••••••••" 
-            required 
+          <input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
           />
         </label>
 
@@ -73,49 +81,48 @@
         </button>
       </form>
 
-      <!-- SIGN UP FORM -->
-      <form id="rb-signup-form" class="rb-auth-form">
+      <form id="rb-signup-form" class="rb-auth-form" autocomplete="on">
         <h2>Create Your Identity</h2>
 
         <label>
           Display Name
-          <input 
-            name="display_name" 
-            type="text" 
-            autocomplete="name" 
-            placeholder="ThatboyTayThou" 
+          <input
+            name="display_name"
+            type="text"
+            autocomplete="name"
+            placeholder="ThatboyTayThou"
           />
         </label>
 
         <label>
           Username
-          <input 
-            name="username" 
-            type="text" 
-            autocomplete="username" 
-            placeholder="thatboytaythou" 
+          <input
+            name="username"
+            type="text"
+            autocomplete="username"
+            placeholder="thatboytaythou"
           />
         </label>
 
         <label>
           Email
-          <input 
-            name="email" 
-            type="email" 
-            autocomplete="email" 
-            placeholder="you@richbizness.com" 
-            required 
+          <input
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@richbizness.com"
+            required
           />
         </label>
 
         <label>
           Password
-          <input 
-            name="password" 
-            type="password" 
-            autocomplete="new-password" 
-            placeholder="Create strong password" 
-            required 
+          <input
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Create strong password"
+            required
           />
         </label>
 
@@ -124,15 +131,17 @@
         </button>
       </form>
 
+      <p id="rb-auth-message" class="rb-auth-message" aria-live="polite"></p>
     </section>
 
-    <!-- BACK LINK -->
     <a href="/" class="rb-auth-home">
       ← Back To Portal
     </a>
-
   </main>
 
+  <script type="module" src="/core/shared/rb-config.js"></script>
+  <script type="module" src="/core/shared/rb-supabase.js"></script>
+  <script type="module" src="/core/shared/rb-auth.js"></script>
   <script type="module" src="/core/pages/auth.js"></script>
 </body>
 </html>
