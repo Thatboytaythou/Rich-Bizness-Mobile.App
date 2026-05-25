@@ -45,6 +45,8 @@
       <a href="/sports">Sports</a>
       <a href="/store">Store</a>
       <a href="/upload">Upload</a>
+      <a href="/creator">Creator</a>
+      <a href="/admin">Admin</a>
     </nav>
   </header>
 
@@ -106,6 +108,22 @@
             <button id="profileMessageBtn" class="rb-btn ghost" type="button">
               Message
             </button>
+
+            <button
+              class="rb-btn ghost"
+              type="button"
+              onclick="window.location.href='/creator'"
+            >
+              Creator
+            </button>
+
+            <button
+              class="rb-btn gold"
+              type="button"
+              onclick="window.location.href='/admin'"
+            >
+              Admin
+            </button>
           </div>
 
           <div class="rb-profile-socials">
@@ -151,6 +169,7 @@
       <button data-profile-tab="gaming" type="button">Gaming</button>
       <button data-profile-tab="sports" type="button">Sports</button>
       <button data-profile-tab="meta" type="button">Meta</button>
+      <button data-profile-tab="admin" type="button">Admin</button>
     </section>
 
     <section class="rb-profile-panels">
@@ -163,7 +182,20 @@
       </div>
 
       <div class="rb-profile-panel" data-profile-panel="creator" style="display:none;">
-        <div id="profileCreatorPanel" class="rb-profile-grid"></div>
+        <div class="rb-panel rb-profile-module">
+          <div class="rb-module-head">
+            <div>
+              <p class="rb-kicker">CREATOR SYSTEM</p>
+              <h2>Creator Hub</h2>
+            </div>
+
+            <a class="rb-btn ghost" href="/creator">
+              Open Creator
+            </a>
+          </div>
+
+          <div id="profileCreatorPanel" class="rb-profile-grid"></div>
+        </div>
       </div>
 
       <div class="rb-profile-panel" data-profile-panel="store" style="display:none;">
@@ -180,6 +212,38 @@
 
       <div class="rb-profile-panel" data-profile-panel="meta" style="display:none;">
         <div id="profileMetaPanel" class="rb-profile-grid"></div>
+      </div>
+
+      <div class="rb-profile-panel" data-profile-panel="admin" style="display:none;">
+        <div class="rb-panel rb-profile-module">
+          <div class="rb-module-head">
+            <div>
+              <p class="rb-kicker">UNIVERSE CONTROL</p>
+              <h2>Admin Core</h2>
+            </div>
+
+            <a class="rb-btn gold" href="/admin">
+              Open Admin
+            </a>
+          </div>
+
+          <div class="rb-profile-grid">
+            <article class="rb-mini-card">
+              <strong>Realtime</strong>
+              <span>System Synced</span>
+            </article>
+
+            <article class="rb-mini-card">
+              <strong>Moderation</strong>
+              <span>Controls Active</span>
+            </article>
+
+            <article class="rb-mini-card">
+              <strong>Universe</strong>
+              <span>Rich Bizness Mobile</span>
+            </article>
+          </div>
+        </div>
       </div>
     </section>
   </main>
