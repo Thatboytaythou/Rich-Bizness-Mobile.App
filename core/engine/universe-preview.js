@@ -1,255 +1,219 @@
-/* =========================
-   RICH BIZNESS MOBILE
-   core/engine/universe-preview.js
-========================= */
-
 import RB_CONFIG from "/core/shared/rb-config.js";
 
 const container = document.getElementById("canvas-container");
 const labelEl = document.getElementById("module-label");
 
-if (container && window.THREE) {
-  const scene = new THREE.Scene();
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.1, 1000);
+camera.position.set(0, 4, 42);
 
-  const camera = new THREE.PerspectiveCamera(
-    50,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.setSize(innerWidth, innerHeight);
+container.appendChild(renderer.domElement);
 
-  camera.position.set(0, 2, 45);
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
 
-  const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true,
-    powerPreference: "high-performance"
-  });
+const light = new THREE.PointLight(0xfacc15, 3);
+light.position.set(20, 30, 40);
+scene.add(light);
 
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  container.appendChild(renderer.domElement);
+const portal = new THREE.Mesh(
+  new THREE.SphereGeometry(5.6, 64, 64),
+  new THREE.MeshPhongMaterial({
+    color: 0x10b981,
+    emissive: 0x064e3b,
+    shininess: 40
+  })
+);
+scene.add(portal);
 
-  const portal = new THREE.Mesh(
-    new THREE.SphereGeometry(8, 64, 64),
-    new THREE.MeshPhongMaterial({
-      color: 0x10b981,
-      emissive: 0x064e3b,
-      shininess: 30
-    })
-  );
+const glow = new THREE.Mesh(
+  new THREE.SphereGeometry(7.4, 64, 64),
+  new THREE.MeshBasicMaterial({
+    color: 0x10b981,
+    transparent: true,
+    opacity: 0.18,
+    blending: THREE.AdditiveBlending
+  })
+);
+scene.add(glow);
 
-  scene.add(portal);
+const modules = [
+  "Feed",
+  "Live",
+  "Music",
+  "Podcast",
+  "Radio",
+  "Gaming",
+  "Upload",
+  "Sports",
+  "Gallery",
+  "Store",
+  "Meta"
+];
 
-  const glow = new THREE.Mesh(
-    new THREE.SphereGeometry(10.5, 64, 64),
-    new THREE.MeshBasicMaterial({
-      color: 0x10b981,
-      transparent: true,
-      opacity: 0.14,
-      blending: THREE.AdditiveBlending
-    })
-  );
+const phones = [];
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let activePhone = null;
 
-  scene.add(glow);
-
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-  const light = new THREE.PointLight(0xfacc15, 3);
-  light.position.set(20, 30, 40);
-  scene.add(light);
-
-  const phones = [];
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
-
-  let hoveredPhone = null;
-
-  const modules = RB_CONFIG.modules || [
-    "Feed",
-    "Live",
-    "Gaming",
-    "Sports",
-    "Music",
-    "Podcast",
-    "Radio",
-    "Gallery",
-    "Store",
-    "Meta"
-  ];
-
-  function makeSlug(label) {
-    return String(label).toLowerCase().replace(/\s+/g, "-");
-  }
-
-  function createPhone(label) {
-    const group = new THREE.Group();
-
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(3, 6, 0.4),
-      new THREE.MeshPhongMaterial({
-        color: 0x111827,
-        shininess: 18
-      })
-    );
-
-    group.add(body);
-
-    const screen = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.6, 5.2),
-      new THREE.MeshPhongMaterial({
-        color: 0x1f2937,
-        emissive: 0x10b981,
-        emissiveIntensity: 0.2
-      })
-    );
-
-    screen.position.z = 0.21;
-    group.add(screen);
-
-    const iconGlow = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.6, 1.6),
-      new THREE.MeshBasicMaterial({
-        color: 0xfacc15,
-        transparent: true,
-        opacity: 0.18,
-        blending: THREE.AdditiveBlending
-      })
-    );
-
-    iconGlow.position.z = 0.23;
-    iconGlow.position.y = 0.7;
-    group.add(iconGlow);
-
-    group.userData = {
-      label,
-      slug: makeSlug(label)
-    };
-
-    scene.add(group);
-    phones.push(group);
-
-    return group;
-  }
-
-  modules.forEach((label, index) => {
-    const phone = createPhone(label);
-    const angle = (index / modules.length) * Math.PI * 2;
-    const radius = 22;
-
-    phone.position.x = Math.cos(angle) * radius;
-    phone.position.z = Math.sin(angle) * radius - 5;
-    phone.rotation.y = angle + Math.PI / 2;
-  });
-
-  function setLabel(text) {
-    if (!labelEl) return;
-
-    labelEl.textContent = text || "";
-    labelEl.classList.toggle("active", Boolean(text));
-  }
-
-  function setHovered(phone) {
-    if (hoveredPhone && hoveredPhone !== phone) {
-      hoveredPhone.scale.set(1, 1, 1);
-    }
-
-    hoveredPhone = phone;
-
-    if (hoveredPhone) {
-      hoveredPhone.scale.set(1.22, 1.22, 1.22);
-      setLabel(hoveredPhone.userData.label);
-      document.body.dataset.activeSection = hoveredPhone.userData.slug;
-    } else {
-      setLabel("");
-      document.body.dataset.activeSection = "";
-    }
-  }
-
-  function updatePointer(clientX, clientY) {
-    mouse.x = (clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(phones, true);
-
-    if (!intersects.length) {
-      setHovered(null);
-      return;
-    }
-
-    let obj = intersects[0].object;
-
-    while (obj && !phones.includes(obj)) {
-      obj = obj.parent;
-    }
-
-    if (obj) {
-      setHovered(obj);
-    }
-  }
-
-  window.addEventListener(
-    "mousemove",
-    (event) => updatePointer(event.clientX, event.clientY),
-    { passive: true }
-  );
-
-  window.addEventListener(
-    "touchmove",
-    (event) => {
-      const touch = event.touches[0];
-      if (!touch) return;
-      updatePointer(touch.clientX, touch.clientY);
-    },
-    { passive: true }
-  );
-
-  window.addEventListener(
-    "click",
-    () => {
-      if (!hoveredPhone) return;
-
-      const route = RB_CONFIG.routes?.[hoveredPhone.userData.slug];
-
-      if (route) {
-        window.location.href = route;
-      }
-    },
-    { passive: true }
-  );
-
-  function resizeScene() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  }
-
-  window.addEventListener("resize", resizeScene, { passive: true });
-  window.addEventListener("orientationchange", resizeScene, { passive: true });
-
-  function animate() {
-    requestAnimationFrame(animate);
-
-    portal.rotation.y += 0.0012;
-    portal.rotation.x += 0.0003;
-
-    glow.rotation.y -= 0.0008;
-
-    phones.forEach((phone, index) => {
-      const time = Date.now() * 0.0004 + index;
-      const radius = window.innerWidth < 680 ? 16 : 22;
-
-      phone.position.x = Math.cos(time) * radius;
-      phone.position.z = Math.sin(time) * radius - 5;
-      phone.rotation.y = time + Math.PI / 2;
-    });
-
-    renderer.render(scene, camera);
-  }
-
-  animate();
+function slug(text) {
+  return text.toLowerCase();
 }
+
+function makeTextTexture(title) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 768;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#071007";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const gradient = ctx.createRadialGradient(256, 210, 20, 256, 240, 360);
+  gradient.addColorStop(0, "rgba(52,211,153,.5)");
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#34d399";
+  ctx.font = "bold 42px system-ui";
+  ctx.letterSpacing = "8px";
+  ctx.fillText(title.toUpperCase(), 54, 120);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 68px system-ui";
+  ctx.fillText(title, 54, 420);
+
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "700 28px system-ui";
+  ctx.fillText("Rich Bizness", 54, 480);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createPhone(title) {
+  const group = new THREE.Group();
+
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(4.4, 7.6, 0.45),
+    new THREE.MeshPhongMaterial({
+      color: 0x030703,
+      shininess: 28
+    })
+  );
+
+  const screen = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.05, 7.15),
+    new THREE.MeshBasicMaterial({
+      map: makeTextTexture(title),
+      transparent: true,
+      opacity: 0.92
+    })
+  );
+
+  screen.position.z = 0.26;
+
+  group.add(body);
+  group.add(screen);
+
+  group.userData = {
+    label: title,
+    section: slug(title)
+  };
+
+  scene.add(group);
+  phones.push(group);
+}
+
+modules.forEach(createPhone);
+
+function updateCards() {
+  const now = Date.now() * 0.00033;
+  const radiusX = innerWidth < 700 ? 12 : 18;
+  const radiusZ = innerWidth < 700 ? 8 : 11;
+
+  phones.forEach((phone, index) => {
+    const angle = now + index * ((Math.PI * 2) / phones.length);
+
+    phone.position.x = Math.cos(angle) * radiusX;
+    phone.position.y = Math.sin(angle) * 2.1;
+    phone.position.z = Math.sin(angle) * radiusZ + 6;
+
+    const depth = (phone.position.z + radiusZ) / (radiusZ * 2);
+    const scale = 0.72 + depth * 0.55;
+
+    phone.scale.set(scale, scale, scale);
+    phone.rotation.y = angle + Math.PI / 2;
+
+    phone.visible = true;
+  });
+}
+
+function setActive(phone) {
+  activePhone = phone;
+
+  if (!labelEl) return;
+
+  if (!phone) {
+    labelEl.classList.remove("active");
+    labelEl.textContent = "";
+    return;
+  }
+
+  labelEl.textContent = phone.userData.label;
+  labelEl.classList.add("active");
+  document.body.dataset.activeSection = phone.userData.section;
+}
+
+window.addEventListener("mousemove", (event) => {
+  mouse.x = (event.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(phones, true);
+
+  if (!hits.length) {
+    setActive(null);
+    return;
+  }
+
+  let obj = hits[0].object;
+  while (obj && !phones.includes(obj)) obj = obj.parent;
+
+  if (obj) setActive(obj);
+});
+
+window.addEventListener("click", () => {
+  if (!activePhone) return;
+
+  const route = RB_CONFIG.routes[activePhone.userData.section];
+  if (route) window.location.href = route;
+});
+
+function resize() {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+
+window.addEventListener("resize", resize);
+window.addEventListener("orientationchange", resize);
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  portal.rotation.y += 0.0018;
+  portal.rotation.x += 0.0005;
+  glow.rotation.y -= 0.001;
+
+  updateCards();
+
+  renderer.render(scene, camera);
+}
+
+animate();
