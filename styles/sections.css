@@ -1,55 +1,93 @@
-/* =========================================
+ /* =========================================
    RICH BIZNESS LLC
    /styles/sections.css
-   GLOBAL SECTION SYSTEM - POLISHED
+
+   GLOBAL SECTION SYSTEM
+   Cinematic Green + Gold Foundation
 ========================================= */
 
 :root {
   --rb-bg: #020402;
-  --rb-black: #000;
-  --rb-white: #fff;
+  --rb-black: #000000;
+  --rb-white: #ffffff;
 
   --rb-green: #66ff99;
   --rb-green-2: #00ff88;
+  --rb-green-3: #10b981;
+
   --rb-gold: #ffd86b;
   --rb-gold-2: #ffb800;
+  --rb-gold-3: #facc15;
 
   --rb-text: #f4fff8;
-  --rb-muted: rgba(255,255,255,0.68);
+  --rb-muted: rgba(255, 255, 255, 0.68);
+  --rb-soft: rgba(255, 255, 255, 0.44);
 
-  --rb-border: rgba(255,255,255,0.09);
-  --rb-glass: rgba(0,0,0,0.48);
+  --rb-border: rgba(255, 255, 255, 0.09);
+  --rb-border-gold: rgba(255, 216, 107, 0.18);
+  --rb-border-green: rgba(102, 255, 153, 0.22);
+
+  --rb-glass: rgba(0, 0, 0, 0.48);
+  --rb-glass-2: rgba(5, 12, 7, 0.72);
 
   --rb-radius: 30px;
+  --rb-radius-lg: 38px;
   --rb-radius-sm: 18px;
 
-  --rb-shadow: 0 30px 80px rgba(0,0,0,0.48);
-  --rb-glow: 0 0 40px rgba(0,255,136,0.16);
+  --rb-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
+  --rb-shadow-2: 0 40px 120px rgba(0, 0, 0, 0.56);
+  --rb-glow: 0 0 40px rgba(0, 255, 136, 0.16);
+  --rb-gold-glow: 0 0 38px rgba(255, 216, 107, 0.14);
+
+  --rb-topbar-height: 82px;
 }
 
 /* =========================================
    BASE
 ========================================= */
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  background: var(--rb-bg);
 }
 
 body {
   margin: 0;
+
+  min-height: 100svh;
+
   color: var(--rb-text);
-  background: 
-    radial-gradient(circle at top, rgba(0,255,136,0.14), transparent 32%),
-    linear-gradient(180deg, #031108 0%, #010302 48%, #000 100%);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+
+  background:
+    radial-gradient(circle at top, rgba(0, 255, 136, 0.14), transparent 32%),
+    radial-gradient(circle at 82% 8%, rgba(255, 216, 107, 0.1), transparent 28%),
+    linear-gradient(180deg, #031108 0%, #010302 48%, #000000 100%);
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
   overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-img, video {
+img,
+video,
+canvas,
+svg {
   max-width: 100%;
   display: block;
 }
@@ -59,8 +97,20 @@ a {
   text-decoration: none;
 }
 
-button, input, textarea, select {
+button,
+input,
+textarea,
+select {
   font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  color: #041006;
+  background: var(--rb-green);
 }
 
 /* =========================================
@@ -68,32 +118,94 @@ button, input, textarea, select {
 ========================================= */
 
 .rb-page-bg,
-.rb-bg {
+.rb-bg,
+.rb-bg-layer {
   position: fixed;
   inset: 0;
-  overflow: hidden;
-  pointer-events: none;
   z-index: 0;
+
+  overflow: hidden;
+
+  pointer-events: none;
 }
 
 .rb-page-bg img {
   width: 100%;
   height: 100%;
+
   object-fit: cover;
+
   opacity: 0.14;
-  filter: saturate(1.12) contrast(1.08) brightness(0.9);
+
+  filter:
+    saturate(1.12)
+    contrast(1.08)
+    brightness(0.9);
+}
+
+.rb-bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+
+  background-size: 42px 42px;
+
+  mask-image:
+    radial-gradient(circle at center, black, transparent 76%);
+
+  pointer-events: none;
+}
+
+.rb-bg-vignette,
+.rb-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+
+  background:
+    radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.35) 48%, rgba(0, 0, 0, 0.92) 100%);
+
+  pointer-events: none;
+}
+
+.rb-bg-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+
+  opacity: 0.12;
+
+  background-image:
+    repeating-radial-gradient(
+      circle at 0 0,
+      rgba(255, 255, 255, 0.12) 0,
+      rgba(255, 255, 255, 0.12) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+
+  mix-blend-mode: soft-light;
+
+  pointer-events: none;
 }
 
 .rb-page::before,
 .rb-body::before {
   content: "";
+
   position: fixed;
   inset: 0;
   z-index: 1;
+
+  background:
+    radial-gradient(circle at center, transparent, rgba(0, 0, 0, 0.75) 72%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.94));
+
   pointer-events: none;
-  background: 
-    radial-gradient(circle at center, transparent, rgba(0,0,0,0.75) 72%),
-    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.94));
 }
 
 /* =========================================
@@ -106,9 +218,25 @@ button, input, textarea, select {
 .meta-shell {
   position: relative;
   z-index: 2;
+
   width: min(1240px, 94vw);
+
   margin: 0 auto;
-  padding: 110px 0 54px;
+
+  padding:
+    calc(var(--rb-topbar-height) + 28px)
+    0
+    calc(54px + env(safe-area-inset-bottom));
+}
+
+.rb-section-shell.is-compact,
+.rb-shell.is-compact {
+  padding-top: calc(var(--rb-topbar-height) + 16px);
+}
+
+.rb-section-stack {
+  display: grid;
+  gap: 18px;
 }
 
 /* =========================================
@@ -128,7 +256,8 @@ button, input, textarea, select {
 
 .rb-gallery-grid,
 .meta-world-grid,
-.meta-room-grid {
+.meta-room-grid,
+.rb-profile-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 18px;
@@ -148,65 +277,120 @@ button, input, textarea, select {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 80;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: max(14px, env(safe-area-inset-top)) 20px 14px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.88), rgba(0,0,0,0.42));
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+
+  padding:
+    max(14px, env(safe-area-inset-top))
+    20px
+    14px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.44));
+
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.36);
 }
 
 .rb-brand {
   display: grid;
-  line-height: 0.8;
+
+  line-height: 0.82;
+
+  text-transform: uppercase;
 }
 
 .rb-brand span {
   color: var(--rb-green);
+
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.22em;
+
+  text-shadow:
+    0 0 14px rgba(102, 255, 153, 0.32);
 }
 
 .rb-brand strong {
+  color: #ffffff;
+
   font-size: 1.4rem;
   letter-spacing: -0.08em;
+
+  text-shadow:
+    0 0 18px rgba(255, 255, 255, 0.1);
 }
 
 .rb-brand small {
   color: var(--rb-gold);
+
   font-size: 0.62rem;
   font-weight: 1000;
   letter-spacing: 0.2em;
+
+  text-shadow:
+    0 0 14px rgba(255, 216, 107, 0.32);
 }
 
 .rb-topnav {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
 }
 
 .rb-topnav a {
-  padding: 10px 14px;
+  min-height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
   border-radius: 999px;
-  color: rgba(255,255,255,0.75);
+  border: 1px solid transparent;
+
+  color: rgba(255, 255, 255, 0.75);
+
   font-size: 0.78rem;
   font-weight: 1000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: all 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .rb-topnav a:hover,
 .rb-topnav a.is-active,
 .rb-topnav a.active {
   color: #031208;
-  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
-  box-shadow: 0 0 26px rgba(0,255,136,0.28);
+
+  border-color: rgba(255, 216, 107, 0.34);
+
+  background:
+    linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+
+  box-shadow:
+    0 0 26px rgba(0, 255, 136, 0.28),
+    inset 0 0 16px rgba(255, 255, 255, 0.16);
+
+  transform: translateY(-1px);
 }
 
 /* =========================================
@@ -219,11 +403,47 @@ button, input, textarea, select {
 .meta-hero {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+
   border-radius: 36px;
-  border: 1px solid rgba(255,255,255,0.09);
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.55));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(255, 216, 107, 0.1), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.58));
+
   backdrop-filter: blur(16px);
-  box-shadow: var(--rb-shadow), var(--rb-glow);
+  -webkit-backdrop-filter: blur(16px);
+
+  box-shadow:
+    var(--rb-shadow),
+    var(--rb-glow);
+}
+
+.rb-hero-panel::before,
+.rb-section-hero::before,
+.live-hero::before,
+.meta-hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 28%, transparent 68%, rgba(16, 185, 129, 0.08));
+
+  pointer-events: none;
+}
+
+.rb-hero-panel > *,
+.rb-section-hero > *,
+.live-hero > *,
+.meta-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .rb-hero-panel,
@@ -239,11 +459,16 @@ button, input, textarea, select {
 .rb-kicker,
 .eyebrow {
   margin: 0 0 10px;
+
   color: var(--rb-green);
+
   font-size: 0.74rem;
   font-weight: 1000;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+
+  text-shadow:
+    0 0 14px rgba(102, 255, 153, 0.32);
 }
 
 .rb-hero-panel h1,
@@ -251,9 +476,16 @@ button, input, textarea, select {
 .live-hero h1,
 .meta-hero h1 {
   margin: 0;
+
+  color: #ffffff;
+
   font-size: clamp(2.6rem, 8vw, 6.5rem);
   line-height: 0.88;
   letter-spacing: -0.08em;
+
+  text-shadow:
+    0 0 26px rgba(255, 255, 255, 0.1),
+    0 0 46px rgba(16, 185, 129, 0.11);
 }
 
 .rb-subtitle,
@@ -261,11 +493,12 @@ button, input, textarea, select {
 .rb-hero-panel p,
 .rb-section-hero p {
   color: var(--rb-muted);
+
   line-height: 1.55;
 }
 
 /* =========================================
-   STATS & PANELS
+   STATS + PANELS
 ========================================= */
 
 .rb-stat-grid {
@@ -275,24 +508,43 @@ button, input, textarea, select {
 }
 
 .rb-stat-grid article {
+  position: relative;
+  overflow: hidden;
+
   padding: 18px;
+
   border-radius: 24px;
-  border: 1px solid rgba(255,255,255,0.09);
-  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  background:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.1), transparent 60%),
+    rgba(0, 0, 0, 0.4);
+
   text-align: center;
+
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.018);
 }
 
 .rb-stat-grid strong {
   display: block;
+
   color: var(--rb-green);
+
   font-size: 1.7rem;
   line-height: 1;
+
+  text-shadow:
+    0 0 18px rgba(102, 255, 153, 0.34);
 }
 
 .rb-stat-grid span {
   display: block;
+
   margin-top: 6px;
-  color: rgba(255,255,255,0.65);
+
+  color: rgba(255, 255, 255, 0.65);
+
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.12em;
@@ -303,51 +555,219 @@ button, input, textarea, select {
 .live-panel {
   position: relative;
   overflow: hidden;
+
   padding: 22px;
+
   border-radius: 32px;
   border: 1px solid var(--rb-border);
-  background: var(--rb-glass);
+
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 42%),
+    var(--rb-glass);
+
   backdrop-filter: blur(16px);
-  box-shadow: var(--rb-shadow);
+  -webkit-backdrop-filter: blur(16px);
+
+  box-shadow:
+    var(--rb-shadow),
+    inset 0 0 24px rgba(255, 255, 255, 0.018);
 }
 
 .rb-panel {
   margin-top: 18px;
 }
 
+.rb-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-bottom: 14px;
+}
+
+.rb-panel-title {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 1.2rem;
+  letter-spacing: -0.04em;
+}
+
+.rb-panel-copy {
+  color: var(--rb-muted);
+
+  line-height: 1.55;
+}
+
 /* =========================================
-   BUTTONS & TABS
+   BUTTONS + TABS
 ========================================= */
 
 .rb-btn,
 .rb-main-launch,
 .rb-pill-btn {
+  min-height: 50px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 50px;
+
   padding: 0 20px;
+
   border: 0;
   border-radius: 999px;
+
   cursor: pointer;
+
   font-weight: 1000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: all 0.22s ease;
+  text-decoration: none;
+
+  transition:
+    transform 0.22s ease,
+    filter 0.22s ease,
+    box-shadow 0.22s ease,
+    opacity 0.22s ease;
 }
 
 .rb-btn.primary,
 .rb-main-launch,
 .rb-pill-btn {
   color: #041006;
-  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
-  box-shadow: 0 0 28px rgba(0,255,136,0.28);
+
+  background:
+    linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+
+  box-shadow:
+    0 0 28px rgba(0, 255, 136, 0.28),
+    inset 0 0 16px rgba(255, 255, 255, 0.14);
+}
+
+.rb-btn.gold {
+  color: #160e00;
+
+  background:
+    linear-gradient(135deg, var(--rb-gold), var(--rb-gold-2));
+
+  box-shadow:
+    0 0 28px rgba(255, 216, 107, 0.2);
+}
+
+.rb-btn.ghost {
+  color: #ffffff;
+
+  border: 1px solid rgba(255, 255, 255, 0.13);
+
+  background:
+    rgba(255, 255, 255, 0.055);
 }
 
 .rb-btn:hover,
-.rb-main-launch:hover {
+.rb-main-launch:hover,
+.rb-pill-btn:hover {
   transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.rb-btn:disabled,
+.rb-main-launch:disabled,
+.rb-pill-btn:disabled {
+  opacity: 0.58;
+  cursor: wait;
+  transform: none;
+}
+
+.rb-tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rb-tabs button,
+.rb-tab {
+  min-height: 44px;
+
+  padding: 0 16px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background:
+    rgba(255, 255, 255, 0.045);
+
+  color: rgba(255, 255, 255, 0.7);
+
+  cursor: pointer;
+
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  transition:
+    transform 0.22s ease,
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.rb-tabs button:hover,
+.rb-tabs button.is-active,
+.rb-tab:hover,
+.rb-tab.is-active {
+  color: #041006;
+
+  border-color: rgba(255, 216, 107, 0.38);
+
+  background:
+    linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+
+  box-shadow:
+    0 0 22px rgba(0, 255, 136, 0.24);
+
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   EMPTY + FOOTER
+========================================= */
+
+.rb-empty {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 216, 107, 0.14);
+
+  background:
+    linear-gradient(145deg, rgba(5, 8, 5, 0.82), rgba(0, 0, 0, 0.74));
+
+  color: rgba(255, 255, 255, 0.7);
+
+  padding: 18px;
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.rb-footer {
+  position: relative;
+  z-index: 2;
+
+  padding:
+    20px
+    16px
+    max(22px, env(safe-area-inset-bottom));
+
+  color: rgba(255, 255, 255, 0.48);
+
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 /* =========================================
@@ -362,6 +782,26 @@ button, input, textarea, select {
     width: 92vw;
   }
 
+  .rb-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rb-topnav {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+
+    padding-bottom: 2px;
+
+    scrollbar-width: none;
+  }
+
+  .rb-topnav::-webkit-scrollbar {
+    display: none;
+  }
+
   .rb-panel-head {
     flex-direction: column;
     align-items: flex-start;
@@ -369,6 +809,19 @@ button, input, textarea, select {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --rb-topbar-height: 118px;
+  }
+
+  .rb-section-shell,
+  .rb-shell,
+  .live-shell,
+  .meta-shell {
+    width: min(100%, calc(100vw - 20px));
+
+    padding-top: calc(var(--rb-topbar-height) + 16px);
+  }
+
   .rb-hero-panel,
   .rb-section-hero,
   .live-hero,
@@ -385,5 +838,23 @@ button, input, textarea, select {
 
   .rb-stat-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .rb-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+
+    padding-bottom: 2px;
+
+    scrollbar-width: none;
+  }
+
+  .rb-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rb-tabs button,
+  .rb-tab {
+    white-space: nowrap;
   }
 }
