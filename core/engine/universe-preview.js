@@ -4,9 +4,10 @@ import RB_CONFIG from "/core/shared/rb-config.js";
    RICH BIZNESS MOBILE
    /core/engine/universe-preview.js
 
-   REAL ORBIT UNIVERSE
+   LOCKED PORTAL HUB UPGRADE
    - Three.js portal
-   - Real branded image cards
+   - Real branded orbit cards
+   - 3D words under phones
    - Swipe / drag orbit
    - Tap card routing
    - Galaxy energy
@@ -158,7 +159,6 @@ function buildGalaxy() {
     })
   );
 
-  galaxyCloud.name = "rbGalaxyCloud";
   scene.add(galaxyCloud);
 }
 
@@ -283,16 +283,86 @@ function createPhoneCard(mod) {
 
   border.position.z = 0.34;
 
+  const textLabel = createTextLabel(mod.tag, mod.title);
+  textLabel.position.set(0, -5.05, 0.42);
+
   group.add(body);
   group.add(screen);
   group.add(tint);
   group.add(shine);
   group.add(border);
+  group.add(textLabel);
 
   group.scale.setScalar(0.72);
   group.renderOrder = 20;
 
   return group;
+}
+
+function createTextLabel(tag, title) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 256;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.shadowColor = "rgba(16, 185, 129, 0.95)";
+  ctx.shadowBlur = 28;
+
+  ctx.fillStyle = "rgba(5, 8, 5, 0.70)";
+  roundRect(ctx, 64, 28, 896, 190, 46);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(251, 191, 36, 0.45)";
+  ctx.lineWidth = 4;
+  roundRect(ctx, 64, 28, 896, 190, 46);
+  ctx.stroke();
+
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = "#34d399";
+  ctx.font = "900 52px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.letterSpacing = "10px";
+  ctx.fillText(tag, 512, 82);
+
+  ctx.shadowColor = "rgba(251, 191, 36, 0.75)";
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = "#fff7ed";
+  ctx.font = "900 64px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.letterSpacing = "0px";
+  ctx.fillText(title, 512, 152);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.94,
+      depthWrite: false,
+    })
+  );
+
+  sprite.scale.set(6.2, 1.55, 1);
+  sprite.renderOrder = 60;
+  sprite.userData.isLabel = true;
+
+  return sprite;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 function updateCards() {
@@ -332,6 +402,15 @@ function updateCards() {
       if (childIndex === 2) child.material.opacity = 0.12 + depth * 0.07;
       if (childIndex === 3) child.material.opacity = 0.05 + depth * 0.06;
       if (childIndex === 4) child.material.opacity = 0.13 + depth * 0.14;
+
+      if (child.userData?.isLabel) {
+        child.material.opacity = 0.18 + depth * 0.82;
+        child.scale.set(
+          5.2 + depth * 1.3,
+          1.25 + depth * 0.35,
+          1
+        );
+      }
     });
 
     card.renderOrder = 20 + Math.round(depth * 100);
