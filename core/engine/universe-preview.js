@@ -1,450 +1,176 @@
 import RB_CONFIG from "/core/shared/rb-config.js";
 
-const container = document.getElementById("canvas-container");
-const labelEl = document.getElementById("module-label");
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/pages/index.js
 
-const modules = [
-  {
-    key: "feed",
-    title: "Global Feed",
-    tag: "FEED",
-    image: "/images/brand/hero-banner.png",
-  },
-  {
-    key: "live",
-    title: "Go Live",
-    tag: "LIVE",
-    image: "/images/brand/omni-watch.png.jpeg",
-  },
-  {
-    key: "music",
-    title: "Music Universe",
-    tag: "MUSIC",
-    image: "/images/brand/music-log.png.jpeg",
-  },
-  {
-    key: "podcast",
-    title: "Podcast Shows",
-    tag: "PODCAST",
-    image: "/images/brand/Avatar-hero-Banner.png.jpeg",
-  },
-  {
-    key: "radio",
-    title: "Live Radio",
-    tag: "RADIO",
-    image: "/images/brand/background-v2.png.jpeg",
-  },
-  {
-    key: "gaming",
-    title: "Arcade District",
-    tag: "GAMING",
-    image: "/images/brand/gaming-hero.png.jpeg",
-  },
-  {
-    key: "upload",
-    title: "Upload Content",
-    tag: "UPLOAD",
-    image: "/images/brand/project-avatar.png.jpeg",
-  },
-  {
-    key: "sports",
-    title: "Sports Arena",
-    tag: "SPORTS",
-    image: "/images/brand/sports-logo.png.jpeg",
-  },
-  {
-    key: "gallery",
-    title: "Visual Drops",
-    tag: "GALLERY",
-    image: "/images/brand/father-son-elite.png.jpeg",
-  },
-  {
-    key: "store",
-    title: "Creator Market",
-    tag: "STORE",
-    image: "/images/brand/gta-style-elite.png.jpeg",
-  },
-  {
-    key: "meta",
-    title: "Meta World",
-    tag: "META",
-    image: "/images/brand/meta-verse-elite.png.jpeg",
-  },
-];
+   UNIVERSE ROUTING LAYER
+   - Orbit card routing
+   - Quick tab routing
+   - Profile chip routing
+   - Smooth navigation hooks
+========================= */
 
-let scene;
-let camera;
-let renderer;
-let portal;
-let orbitGroup;
-let raycaster;
-let pointer;
-let hoveredCard = null;
+const quickRoutes = {
+  profile: RB_CONFIG.routes.profile,
 
-let orbitOffset = 0;
-let targetOffset = 0;
-let isDragging = false;
-let startX = 0;
-let lastX = 0;
-let dragMoved = false;
+  admin: "/admin",
+  creator: "/creator",
 
-const cards = [];
-const loader = new THREE.TextureLoader();
+  watch: RB_CONFIG.routes.watch,
 
-function initUniverse() {
-  if (!container || !window.THREE) return;
+  alerts: RB_CONFIG.routes.notifications,
+  notifications: RB_CONFIG.routes.notifications,
 
-  scene = new THREE.Scene();
+  settings: RB_CONFIG.routes.settings,
+  edit: RB_CONFIG.routes.edit,
+  messages: RB_CONFIG.routes.messages,
+};
 
-  camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1200
-  );
+/* =========================
+   NAVIGATION
+========================= */
 
-  camera.position.set(0, 4, 44);
+function goToRoute(route) {
+  if (!route) return;
 
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true,
-    powerPreference: "high-performance",
-  });
+  document.body.classList.add("rb-page-transition");
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  container.appendChild(renderer.domElement);
-
-  raycaster = new THREE.Raycaster();
-  pointer = new THREE.Vector2();
-
-  buildLights();
-  buildStars();
-  buildPortal();
-  buildCards();
-
-  bindPointer();
-  resizeUniverse();
-  animateUniverse();
+  setTimeout(() => {
+    window.location.href = route;
+  }, 180);
 }
 
-function buildLights() {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
+function goToSection(sectionKey) {
+  if (!sectionKey) return;
 
-  const goldLight = new THREE.PointLight(0xfbbf24, 3.4, 150);
-  goldLight.position.set(18, 18, 32);
-  scene.add(goldLight);
+  const route = RB_CONFIG.routes[sectionKey];
 
-  const greenLight = new THREE.PointLight(0x10b981, 3, 150);
-  greenLight.position.set(-20, -4, 22);
-  scene.add(greenLight);
-}
-
-function buildStars() {
-  const geo = new THREE.BufferGeometry();
-  const positions = [];
-
-  for (let i = 0; i < 1800; i++) {
-    positions.push(THREE.MathUtils.randFloatSpread(160));
-    positions.push(THREE.MathUtils.randFloatSpread(110));
-    positions.push(THREE.MathUtils.randFloatSpread(130));
-  }
-
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-
-  scene.add(
-    new THREE.Points(
-      geo,
-      new THREE.PointsMaterial({
-        color: 0xfbbf24,
-        size: 0.05,
-        transparent: true,
-        opacity: 0.42,
-      })
-    )
-  );
-}
-
-function buildPortal() {
-  portal = new THREE.Group();
-
-  const core = new THREE.Mesh(
-    new THREE.SphereGeometry(6.6, 96, 96),
-    new THREE.MeshPhongMaterial({
-      color: 0x10b981,
-      emissive: 0x064e3b,
-      shininess: 48,
-      transparent: true,
-      opacity: 0.96,
-    })
-  );
-
-  const glow = new THREE.Mesh(
-    new THREE.SphereGeometry(9.4, 96, 96),
-    new THREE.MeshBasicMaterial({
-      color: 0x10b981,
-      transparent: true,
-      opacity: 0.12,
-      depthWrite: false,
-    })
-  );
-
-  portal.add(glow);
-  portal.add(core);
-  portal.position.set(0, -1, 0);
-  scene.add(portal);
-}
-
-function buildCards() {
-  orbitGroup = new THREE.Group();
-  scene.add(orbitGroup);
-
-  modules.forEach((mod, index) => {
-    const card = createPhoneCard(mod);
-    card.userData.module = mod;
-    card.userData.index = index;
-    cards.push(card);
-    orbitGroup.add(card);
-  });
-}
-
-function createPhoneCard(mod) {
-  const group = new THREE.Group();
-
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(5.2, 8.4, 0.5),
-    new THREE.MeshPhongMaterial({
-      color: 0x050805,
-      specular: 0xfbbf24,
-      shininess: 78,
-      transparent: true,
-      opacity: 0.94,
-    })
-  );
-
-  const screenTexture = loader.load(
-    mod.image,
-    (texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      texture.needsUpdate = true;
-    },
-    undefined,
-    () => {
-      console.warn("Missing module image:", mod.image);
-    }
-  );
-
-  const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.72, 7.72),
-    new THREE.MeshBasicMaterial({
-      map: screenTexture,
-      transparent: true,
-      opacity: 0.94,
-    })
-  );
-
-  screen.position.z = 0.28;
-
-  const tint = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.72, 7.72),
-    new THREE.MeshBasicMaterial({
-      color: 0x03140b,
-      transparent: true,
-      opacity: 0.2,
-      depthWrite: false,
-    })
-  );
-
-  tint.position.z = 0.3;
-
-  const shine = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.35, 7.4),
-    new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.1,
-      depthWrite: false,
-    })
-  );
-
-  shine.position.set(1.25, 0, 0.32);
-  shine.rotation.z = -0.16;
-
-  const border = new THREE.Mesh(
-    new THREE.BoxGeometry(5.38, 8.58, 0.08),
-    new THREE.MeshBasicMaterial({
-      color: 0xfbbf24,
-      transparent: true,
-      opacity: 0.2,
-      wireframe: true,
-    })
-  );
-
-  border.position.z = 0.34;
-
-  group.add(body);
-  group.add(screen);
-  group.add(tint);
-  group.add(shine);
-  group.add(border);
-
-  group.scale.setScalar(0.82);
-
-  return group;
-}
-
-function updateCards() {
-  const isMobile = window.innerWidth <= RB_CONFIG.motion.mobileBreakpoint;
-
-  const radiusX = isMobile
-    ? RB_CONFIG.motion.orbit.mobileRadiusX / 10
-    : RB_CONFIG.motion.orbit.desktopRadiusX / 10;
-
-  const radiusZ = isMobile
-    ? RB_CONFIG.motion.orbit.mobileRadiusY / 10
-    : RB_CONFIG.motion.orbit.desktopRadiusY / 10;
-
-  const baseY = isMobile ? -1 : -0.4;
-
-  orbitOffset += (targetOffset - orbitOffset) * 0.055;
-
-  cards.forEach((card, index) => {
-    const angle = orbitOffset + (index / cards.length) * Math.PI * 2;
-
-    const x = Math.cos(angle) * radiusX;
-    const z = Math.sin(angle) * radiusZ;
-
-    const depth = (z + radiusZ) / (radiusZ * 2);
-    const scale = 0.56 + depth * 0.56;
-    const opacity = 0.28 + depth * 0.72;
-
-    card.position.set(x, baseY + depth * 1.15, z - 2);
-    card.rotation.y = -angle + Math.PI / 2;
-    card.scale.setScalar(card === hoveredCard ? scale * 1.13 : scale);
-
-    card.children.forEach((child, childIndex) => {
-      if (!child.material) return;
-
-      if (childIndex === 0) child.material.opacity = 0.72 + opacity * 0.24;
-      if (childIndex === 1) child.material.opacity = opacity;
-      if (childIndex === 2) child.material.opacity = 0.18 + depth * 0.1;
-      if (childIndex === 3) child.material.opacity = 0.08 + depth * 0.08;
-      if (childIndex === 4) child.material.opacity = 0.12 + depth * 0.14;
-    });
-
-    card.renderOrder = Math.round(depth * 100);
-  });
-}
-
-function bindPointer() {
-  window.addEventListener("pointerdown", onPointerDown, { passive: true });
-  window.addEventListener("pointermove", onPointerMove, { passive: true });
-  window.addEventListener("pointerup", onPointerUp, { passive: true });
-  window.addEventListener("pointercancel", onPointerUp, { passive: true });
-  window.addEventListener("resize", resizeUniverse, { passive: true });
-  window.addEventListener("orientationchange", resizeUniverse, { passive: true });
-}
-
-function onPointerDown(event) {
-  isDragging = true;
-  startX = event.clientX;
-  lastX = event.clientX;
-  dragMoved = false;
-}
-
-function onPointerMove(event) {
-  updatePointer(event);
-
-  if (!isDragging) {
-    checkHover();
+  if (!route) {
+    console.warn("[RB] Missing section route:", sectionKey);
     return;
   }
 
-  const delta = event.clientX - lastX;
+  goToRoute(route);
+}
 
-  if (Math.abs(event.clientX - startX) > 6) {
-    dragMoved = true;
+/* =========================
+   ORBIT CARD CLICK
+========================= */
+
+window.addEventListener("rb:module-select", (event) => {
+  const mod = event.detail;
+
+  if (!mod?.key) return;
+
+  goToSection(mod.key);
+});
+
+/* =========================
+   QUICK BUTTON ROUTING
+========================= */
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-route]");
+
+  if (!button) return;
+
+  const routeKey = button.dataset.route;
+
+  const route =
+    quickRoutes[routeKey] ||
+    RB_CONFIG.routes[routeKey];
+
+  if (!route) {
+    console.warn("[RB] Missing quick route:", routeKey);
+    return;
   }
 
-  targetOffset += delta * 0.008;
-  lastX = event.clientX;
-}
+  button.classList.add("is-active");
 
-function onPointerUp(event) {
-  updatePointer(event);
-  isDragging = false;
+  setTimeout(() => {
+    button.classList.remove("is-active");
+  }, 220);
 
-  const hit = getHitCard();
+  goToRoute(route);
+});
 
-  if (!dragMoved && hit) {
-    window.dispatchEvent(
-      new CustomEvent("rb:module-select", {
-        detail: hit.userData.module,
-      })
-    );
-  }
-}
+/* =========================
+   GLOBAL HELPERS
+========================= */
 
-function updatePointer(event) {
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-}
+window.RB_GO = goToSection;
+window.RB_ROUTE = goToRoute;
 
-function getHitCard() {
-  raycaster.setFromCamera(pointer, camera);
+/* =========================
+   INTRO FX
+========================= */
 
-  const hits = raycaster.intersectObjects(cards, true);
-  if (!hits.length) return null;
+window.addEventListener("load", () => {
+  document.body.classList.add("rb-loaded");
 
-  let obj = hits[0].object;
+  const profileChip = document.querySelector(".rb-profile-chip");
 
-  while (obj && !obj.userData.module) {
-    obj = obj.parent;
+  if (profileChip) {
+    profileChip.classList.add("is-visible");
   }
 
-  return obj || null;
-}
+  const tabs = document.querySelectorAll(".rb-side-tabs button");
 
-function checkHover() {
-  const hit = getHitCard();
-  hoveredCard = hit;
+  tabs.forEach((tab, index) => {
+    setTimeout(() => {
+      tab.classList.add("is-visible");
+    }, 100 + index * 70);
+  });
+});
 
-  if (!labelEl) return;
+/* =========================
+   KEYBOARD SUPPORT
+========================= */
 
-  if (hit?.userData?.module) {
-    labelEl.textContent = hit.userData.module.title;
-    labelEl.classList.add("is-visible");
-  } else {
-    labelEl.classList.remove("is-visible");
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    document.activeElement?.blur?.();
   }
-}
 
-function resizeUniverse() {
-  if (!camera || !renderer) return;
+  if (event.key === "m") {
+    goToSection("messages");
+  }
 
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+  if (event.key === "l") {
+    goToSection("live");
+  }
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
+  if (event.key === "g") {
+    goToSection("gaming");
+  }
+});
 
-function animateUniverse() {
-  requestAnimationFrame(animateUniverse);
+/* =========================
+   MOBILE SAFE HEIGHT
+========================= */
 
-  const t = performance.now() * 0.001;
+function updateViewportHeight() {
+  const vh = window.innerHeight * 0.01;
 
-  targetOffset += RB_CONFIG.motion.orbit.speed;
-
-  portal.rotation.y += 0.002;
-  portal.rotation.x = Math.sin(t * 0.45) * 0.06;
-  portal.scale.setScalar(
-    1 + Math.sin(t * 1.8) * RB_CONFIG.motion.portal.scalePulse
+  document.documentElement.style.setProperty(
+    "--rb-vh",
+    `${vh}px`
   );
-
-  updateCards();
-  renderer.render(scene, camera);
 }
 
-initUniverse();
+updateViewportHeight();
+
+window.addEventListener(
+  "resize",
+  updateViewportHeight,
+  { passive: true }
+);
+
+window.addEventListener(
+  "orientationchange",
+  updateViewportHeight,
+  { passive: true }
+);
+
+console.log("RB INDEX READY");
