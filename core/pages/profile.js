@@ -4,6 +4,7 @@
 
    PROFILE PAGE CONTROLLER
    Synced with auth + profile-state
+   Auto Profile Ensure Enabled
 ========================= */
 
 import {
@@ -13,7 +14,8 @@ import {
 
 import {
   getSupabase,
-  getUser
+  getUser,
+  ensureMyProfile
 } from "/core/shared/rb-auth.js";
 
 import {
@@ -29,8 +31,7 @@ import {
   profileName,
   profileHandle,
   profileBadge,
-  profileLevel,
-  buildProfileUrl
+  profileLevel
 } from "/core/shared/rb-profile.js";
 
 import {
@@ -124,20 +125,9 @@ async function fetchCounts(profileId) {
   if (!profileId) return state.counts;
 
   const [followers, following, posts] = await Promise.allSettled([
-    supabase
-      .from(RB_TABLES.followers)
-      .select("id", { count: "exact", head: true })
-      .eq("following_id", profileId),
-
-    supabase
-      .from(RB_TABLES.followers)
-      .select("id", { count: "exact", head: true })
-      .eq("follower_id", profileId),
-
-    supabase
-      .from(RB_TABLES.feedPosts)
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", profileId)
+    supabase.from(RB_TABLES.followers).select("id", { count: "exact", head: true }).eq("following_id", profileId),
+    supabase.from(RB_TABLES.followers).select("id", { count: "exact", head: true }).eq("follower_id", profileId),
+    supabase.from(RB_TABLES.feedPosts).select("id", { count: "exact", head: true }).eq("user_id", profileId)
   ]);
 
   state.counts = {
@@ -244,6 +234,10 @@ function renderProfile() {
     profileBanner(profile) ||
     DEFAULT_BANNER;
 
+  if (els.status) {
+    els.status.textContent = state.isMine ? "Your Universe Profile" : "Universe Profile";
+  }
+
   if (els.banner) els.banner.style.backgroundImage = `url("${banner}")`;
 
   if (els.avatar) {
@@ -257,6 +251,7 @@ function renderProfile() {
 
   if (els.name) els.name.textContent = profileName(profile);
   if (els.username) els.username.textContent = profileHandle(profile);
+
   if (els.bio) {
     els.bio.textContent =
       profile.bio || "Building in the Rich Bizness Universe.";
@@ -524,8 +519,8 @@ async function reloadSoft() {
 
   const profileState = getProfileState();
 
-  state.profile = profileState.profile;
-  state.identity = profileState.identity;
+  state.profile = profileState.profile || state.profile;
+  state.identity = profileState.identity || state.identity;
   state.isMine = profileState.isMine;
 
   await Promise.all([
@@ -538,11 +533,25 @@ async function reloadSoft() {
 }
 
 async function loadEverything() {
-  const profileState = await loadProfileByRoute();
+  let profileState = await loadProfileByRoute();
 
   state.profile = profileState.profile;
   state.identity = profileState.identity;
   state.isMine = profileState.isMine;
+
+  if (!state.profile?.id && getUser()?.id) {
+    const ensuredProfile = await ensureMyProfile();
+
+    if (ensuredProfile?.id) {
+      await refreshProfileState();
+
+      profileState = getProfileState();
+
+      state.profile = profileState.profile || ensuredProfile;
+      state.identity = profileState.identity;
+      state.isMine = true;
+    }
+  }
 
   const profileId = state.profile?.id;
 
