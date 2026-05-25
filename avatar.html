@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rich Bizness • Avatar</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #0a0f0a;
+      font-family: system-ui, sans-serif;
+    }
+    .overlay {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      text-align: center;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="overlay">
+    <h1 class="text-4xl font-black tracking-tighter">RICH <span class="text-emerald-400">BIZNESS</span></h1>
+    <p class="text-yellow-400">YOUR AVATAR</p>
+  </div>
+
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    // GTA-Style Avatar Group
+    const avatar = new THREE.Group();
+
+    // Hoodie Body
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(4, 6.5, 2.5),
+      new THREE.MeshPhongMaterial({ color: 0x111827 })
+    );
+    avatar.add(body);
+
+    // Head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(1.9, 32, 32),
+      new THREE.MeshPhongMaterial({ color: 0xf5c6a5 })
+    );
+    head.position.y = 4.8;
+    avatar.add(head);
+
+    // Beanie
+    const beanie = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.05, 1.75, 1.4, 32),
+      new THREE.MeshPhongMaterial({ color: 0x1e40af })
+    );
+    beanie.position.y = 6.2;
+    beanie.rotation.x = Math.PI / 2;
+    avatar.add(beanie);
+
+    // Gold Chain
+    const chain = new THREE.Mesh(
+      new THREE.TorusGeometry(1.9, 0.18, 16, 32),
+      new THREE.MeshPhongMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.5 })
+    );
+    chain.position.y = 3.6;
+    chain.rotation.x = Math.PI / 2;
+    avatar.add(chain);
+
+    avatar.position.set(0, -4, 0);
+    scene.add(avatar);
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const pointLight = new THREE.PointLight(0xfacc15, 4);
+    pointLight.position.set(15, 25, 30);
+    scene.add(pointLight);
+
+    camera.position.set(8, 6, 25);
+    camera.lookAt(0, 2, 0);
+
+    let time = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.016;
+
+      // Breathing & Idle Motion
+      avatar.position.y = -4 + Math.sin(time * 2) * 0.12;
+      head.position.y = 4.8 + Math.sin(time * 3) * 0.04;
+      avatar.rotation.y = Math.sin(time * 0.8) * 0.06;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Click to interact
+    window.addEventListener('click', () => {
+      alert("🔥 Rich Bizness Avatar Activated!");
+    });
+  </script>
+</body>
+</html>
