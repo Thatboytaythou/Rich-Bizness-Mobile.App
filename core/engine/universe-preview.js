@@ -1,14 +1,21 @@
+/* =========================================
+   7. core/engine/universe-preview.js
+   THREE.JS CENTER UNIVERSE PREVIEW
+========================================= */
+
 const container = document.getElementById("portal-container");
 
 if (container && window.THREE) {
   const scene = new THREE.Scene();
 
   const camera = new THREE.PerspectiveCamera(
-    50,
+    45,
     window.innerWidth / window.innerHeight,
     0.1,
-    1200
+    1000
   );
+
+  camera.position.z = 34;
 
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -20,93 +27,83 @@ if (container && window.THREE) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   container.appendChild(renderer.domElement);
 
-  camera.position.z = 38;
-
   const portal = new THREE.Mesh(
-    new THREE.SphereGeometry(8, 64, 64),
+    new THREE.SphereGeometry(5.8, 72, 72),
     new THREE.MeshPhongMaterial({
       color: 0x10b981,
       emissive: 0x064e3b,
-      shininess: 24,
+      shininess: 32,
       transparent: true,
-      opacity: 0.78
+      opacity: 0.82
     })
   );
 
   scene.add(portal);
 
-  const innerGlow = new THREE.Mesh(
-    new THREE.SphereGeometry(5.4, 64, 64),
+  const glow = new THREE.Mesh(
+    new THREE.SphereGeometry(8.8, 72, 72),
     new THREE.MeshBasicMaterial({
-      color: 0xfacc15,
+      color: 0x22c55e,
       transparent: true,
       opacity: 0.14,
       blending: THREE.AdditiveBlending
     })
   );
 
-  scene.add(innerGlow);
+  scene.add(glow);
 
-  const starsGeo = new THREE.BufferGeometry();
-  const positions = [];
-
-  for (let i = 0; i < 5200; i += 1) {
-    positions.push(THREE.MathUtils.randFloatSpread(320));
-    positions.push(THREE.MathUtils.randFloatSpread(320));
-    positions.push(THREE.MathUtils.randFloatSpread(320));
-  }
-
-  starsGeo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-
-  const stars = new THREE.Points(
-    starsGeo,
-    new THREE.PointsMaterial({
+  const goldCore = new THREE.Mesh(
+    new THREE.SphereGeometry(2.2, 48, 48),
+    new THREE.MeshBasicMaterial({
       color: 0xfacc15,
-      size: 0.08,
       transparent: true,
-      opacity: 0.72
-    })
-  );
-
-  scene.add(stars);
-
-  const smokeGeo = new THREE.BufferGeometry();
-  const smokePositions = [];
-
-  for (let i = 0; i < 900; i += 1) {
-    smokePositions.push(THREE.MathUtils.randFloatSpread(190));
-    smokePositions.push(THREE.MathUtils.randFloatSpread(120));
-    smokePositions.push(THREE.MathUtils.randFloatSpread(120));
-  }
-
-  smokeGeo.setAttribute("position", new THREE.Float32BufferAttribute(smokePositions, 3));
-
-  const smoke = new THREE.Points(
-    smokeGeo,
-    new THREE.PointsMaterial({
-      color: 0x22c55e,
-      size: 0.25,
-      transparent: true,
-      opacity: 0.12,
+      opacity: 0.26,
       blending: THREE.AdditiveBlending
     })
   );
 
-  scene.add(smoke);
+  scene.add(goldCore);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.38));
+  const starsGeometry = new THREE.BufferGeometry();
+  const stars = [];
+
+  for (let i = 0; i < 4600; i++) {
+    stars.push(THREE.MathUtils.randFloatSpread(280));
+    stars.push(THREE.MathUtils.randFloatSpread(280));
+    stars.push(THREE.MathUtils.randFloatSpread(280));
+  }
+
+  starsGeometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(stars, 3)
+  );
+
+  const starField = new THREE.Points(
+    starsGeometry,
+    new THREE.PointsMaterial({
+      color: 0xfbbf24,
+      size: 0.075,
+      transparent: true,
+      opacity: 0.7
+    })
+  );
+
+  scene.add(starField);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+
+  const greenLight = new THREE.PointLight(0x22c55e, 2.4);
+  greenLight.position.set(-22, 18, 34);
+  scene.add(greenLight);
 
   const goldLight = new THREE.PointLight(0xfacc15, 2.8);
-  goldLight.position.set(34, 24, 42);
+  goldLight.position.set(26, 22, 38);
   scene.add(goldLight);
-
-  const greenLight = new THREE.PointLight(0x22c55e, 2.2);
-  greenLight.position.set(-34, -18, 34);
-  scene.add(greenLight);
 
   function resizeScene() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
   }
@@ -118,12 +115,12 @@ if (container && window.THREE) {
     requestAnimationFrame(animate);
 
     portal.rotation.y += 0.0016;
-    portal.rotation.x += 0.00025;
+    portal.rotation.x += 0.00035;
 
-    innerGlow.rotation.y -= 0.002;
+    glow.rotation.y -= 0.001;
+    goldCore.rotation.y += 0.0025;
 
-    stars.rotation.y += 0.0003;
-    smoke.rotation.y -= 0.00024;
+    starField.rotation.y += 0.00022;
 
     renderer.render(scene, camera);
   }
