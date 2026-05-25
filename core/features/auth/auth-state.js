@@ -1,4 +1,4 @@
-/* =========================
+ /* =========================
    RICH BIZNESS MOBILE
    /core/features/auth/auth-state.js
 
@@ -12,7 +12,7 @@ import {
   getUser,
   getProfile,
   loadProfile
-} from "/core/shared/rb-supabase.js";
+} from "/core/shared/rb-auth.js";
 
 let authReady = false;
 let refreshRunning = false;
