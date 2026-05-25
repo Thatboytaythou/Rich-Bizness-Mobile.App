@@ -1,82 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>Rich Bizness — Messages</title>
+  <title>Messages • Rich Bizness Mobile</title>
 
+  <meta
+    name="theme-color"
+    content="#050805"
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-home rb-messages-page">
+<body class="rb-body rb-messages-page">
 
-  <div class="rb-bg"></div>
-  <div class="rb-vignette"></div>
-  <div class="rb-grid"></div>
+  <div class="rb-bg-layer"></div>
+  <div class="rb-bg-grid"></div>
+  <div class="rb-bg-vignette"></div>
+  <div class="rb-bg-noise"></div>
+  <div class="rb-fx-smoke"></div>
 
-  <main class="rb-profile-shell">
+  <header class="rb-topbar">
 
-    <header class="rb-profile-top">
-      <a href="/" class="rb-auth-home">← Portal</a>
-      <a href="/profile" class="rb-auth-home">Profile</a>
-      <a href="/settings" class="rb-auth-home">Settings</a>
-    </header>
+    <a class="rb-brand" href="/">
+      <span>WELCOME BACK</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Messages navigation">
+      <a href="/feed">Feed</a>
+      <a href="/notifications">Alerts</a>
+      <a href="/profile">Profile</a>
+      <a href="/settings">Settings</a>
+    </nav>
+
+  </header>
+
+  <main class="rb-section-shell rb-messages-shell">
 
     <section class="rb-profile-card">
 
-      <p class="rb-kicker">RICH BIZNESS DMS</p>
+      <p class="rb-kicker">
+        RICH BIZNESS DMS
+      </p>
 
-      <div class="rb-profile-avatar-wrap" style="position:relative;left:auto;bottom:auto;transform:none;margin:0 auto 18px;">
+      <div class="rb-profile-avatar-wrap">
+
         <img
           id="messages-user-avatar"
           src="/images/brand/Avatar-hero-Banner.png.jpeg"
           alt="Profile"
         />
+
       </div>
 
-      <h1 id="messages-user-name">Rich User</h1>
+      <h1 id="messages-user-name">
+        Rich User
+      </h1>
 
-      <p id="messages-user-handle" class="rb-profile-handle">
+      <p
+        id="messages-user-handle"
+        class="rb-profile-handle"
+      >
         @richuser
       </p>
 
-      <p id="messages-status" class="rb-profile-bio">
+      <p
+        id="messages-status"
+        class="rb-profile-bio"
+      >
         Loading messages...
       </p>
 
-      <button
-        id="messages-new-btn"
-        class="rb-main-launch"
-        type="button"
-      >
-        START MESSAGE
-      </button>
+      <div class="rb-form-actions">
+
+        <button
+          id="messages-new-btn"
+          class="rb-main-launch"
+          type="button"
+        >
+          START MESSAGE
+        </button>
+
+      </div>
 
     </section>
 
     <section class="rb-profile-grid">
 
-      <article>
-        <strong>Threads</strong>
-        <span id="messages-thread-count">0 active conversations</span>
+      <article class="rb-mini-card">
+
+        <strong>
+          Threads
+        </strong>
+
+        <span id="messages-thread-count">
+          0 active conversations
+        </span>
+
       </article>
 
-      <article>
-        <strong>Status</strong>
-        <span id="messages-sync-status">Realtime ready</span>
+      <article class="rb-mini-card">
+
+        <strong>
+          Status
+        </strong>
+
+        <span id="messages-sync-status">
+          Realtime ready
+        </span>
+
       </article>
 
-      <article>
-        <strong>Identity</strong>
-        <span id="messages-identity-status">Profile synced</span>
+      <article class="rb-mini-card">
+
+        <strong>
+          Identity
+        </strong>
+
+        <span id="messages-identity-status">
+          Profile synced
+        </span>
+
       </article>
 
     </section>
+
+    <a
+      href="/"
+      class="rb-auth-home"
+    >
+      ← Back To Portal
+    </a>
 
   </main>
 
