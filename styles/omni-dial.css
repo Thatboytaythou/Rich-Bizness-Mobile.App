@@ -6,6 +6,7 @@
    - module labels
    - profile chip
    - side tabs
+   - bottom nav
    - cinematic overlays
 ========================= */
 
@@ -16,7 +17,7 @@
 .rb-module-label {
   position: fixed;
   left: 50%;
-  bottom: 42px;
+  bottom: 118px;
   z-index: 9999;
 
   display: flex;
@@ -261,6 +262,126 @@
 }
 
 /* =========================
+   BOTTOM NAV
+========================= */
+
+.rb-bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 9999;
+
+  width: min(680px, calc(100vw - 24px));
+
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+
+  padding: 10px;
+
+  border-radius: 28px;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.11), transparent 70%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.94), rgba(0, 0, 0, 0.82));
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  transform: translateX(-50%);
+
+  box-shadow:
+    0 0 35px rgba(0, 0, 0, 0.45),
+    0 0 24px rgba(16, 185, 129, 0.12),
+    inset 0 0 24px rgba(255, 255, 255, 0.025);
+
+  pointer-events: auto;
+}
+
+.rb-bottom-nav button {
+  position: relative;
+
+  min-width: 0;
+  height: 58px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  border-radius: 20px;
+  border: 1px solid transparent;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: rgba(254, 252, 232, 0.78);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    color 0.22s ease;
+}
+
+.rb-bottom-nav button:hover,
+.rb-bottom-nav button.is-active {
+  color: #fefce8;
+  border-color: rgba(16, 185, 129, 0.44);
+
+  background:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 72%),
+    rgba(255, 255, 255, 0.04);
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.2),
+    inset 0 0 18px rgba(255, 255, 255, 0.025);
+
+  transform:
+    translateY(-3px)
+    scale(1.03);
+}
+
+.rb-nav-icon {
+  display: block;
+  font-size: 21px;
+  line-height: 1;
+  filter:
+    drop-shadow(0 0 8px rgba(16, 185, 129, 0.35))
+    drop-shadow(0 0 8px rgba(250, 204, 21, 0.18));
+}
+
+.rb-bottom-nav button span:last-child {
+  display: block;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rb-live-nav-dot {
+  animation: rbLiveNavPulse 1.35s ease-in-out infinite;
+}
+
+@keyframes rbLiveNavPulse {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+/* =========================
    PAGE FX
 ========================= */
 
@@ -325,7 +446,7 @@
   }
 
   .rb-module-label {
-    bottom: 22px;
+    bottom: 106px;
 
     min-width: unset;
 
@@ -333,6 +454,29 @@
 
     font-size: 11px;
     letter-spacing: 0.16em;
+  }
+
+  .rb-bottom-nav {
+    width: calc(100vw - 18px);
+    bottom: max(10px, env(safe-area-inset-bottom));
+
+    padding: 8px;
+    border-radius: 24px;
+    gap: 5px;
+  }
+
+  .rb-bottom-nav button {
+    height: 54px;
+    border-radius: 18px;
+  }
+
+  .rb-nav-icon {
+    font-size: 19px;
+  }
+
+  .rb-bottom-nav button span:last-child {
+    font-size: 9px;
+    letter-spacing: 0.05em;
   }
 }
 
@@ -361,5 +505,24 @@
     height: 44px;
     border-radius: 14px;
     font-size: 16px;
+  }
+
+  .rb-bottom-nav {
+    width: calc(100vw - 12px);
+    padding: 7px;
+    border-radius: 22px;
+  }
+
+  .rb-bottom-nav button {
+    height: 50px;
+    border-radius: 16px;
+  }
+
+  .rb-nav-icon {
+    font-size: 18px;
+  }
+
+  .rb-bottom-nav button span:last-child {
+    font-size: 8px;
   }
 }
