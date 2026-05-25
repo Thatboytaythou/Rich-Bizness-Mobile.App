@@ -1,22 +1,19 @@
 /* =========================================
    RICH BIZNESS LLC
    /core/features/auth/auth-ui.js
-   CINEMATIC AUTH UI BINDINGS - POLISHED
+   CINEMATIC AUTH UI BINDINGS
 ========================================= */
 
 import { RB_ROUTES } from "/core/shared/rb-config.js";
 
 import {
-  rbSignIn,
-  rbSignUp,
   rbSignOut,
   signInWithProvider
 } from "/core/shared/rb-auth.js";
 
 import {
   initAuthState,
-  onAuthState,
-  refreshAuthProfile
+  onAuthState
 } from "/core/features/auth/auth-state.js";
 
 import {
@@ -28,7 +25,6 @@ import {
 
 import {
   toastError,
-  toastSuccess,
   toastInfo
 } from "/core/shared/rb-toast.js";
 
@@ -36,26 +32,6 @@ const DEFAULT_AVATAR = "/images/brand/project-avatar.png.jpeg";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
-
-/* ====================== UTILITIES ====================== */
-
-function getFormValue(form, name) {
-  return String(new FormData(form).get(name) || "").trim();
-}
-
-function setLoading(form, isLoading) {
-  if (!form) return;
-
-  form.classList.toggle("is-loading", isLoading);
-
-  form.querySelectorAll("button, input, textarea, select").forEach((el) => {
-    el.disabled = isLoading;
-  });
-}
-
-function resetForm(form) {
-  if (form) form.reset();
-}
 
 function bindOnce(el, key) {
   if (!el) return false;
@@ -65,14 +41,13 @@ function bindOnce(el, key) {
   return true;
 }
 
-/* ====================== UI STATE ====================== */
-
-function switchMode(mode = "signin") {
+export function switchMode(mode = "signin") {
   const nextMode = mode === "signup" ? "signup" : "signin";
 
   document.body.dataset.authMode = nextMode;
 
   const panel = $(".rb-auth-panel");
+
   if (panel) {
     panel.classList.remove("is-signin", "is-signup");
     panel.classList.add(nextMode === "signup" ? "is-signup" : "is-signin");
@@ -86,7 +61,7 @@ function switchMode(mode = "signin") {
 export function paintAuthIdentity(state = {}) {
   const user = state?.user || null;
   const profile = state?.profile || null;
-  const isAuthed = !!user;
+  const isAuthed = !!user?.id;
 
   document.body.classList.toggle("is-authed", isAuthed);
   document.body.classList.toggle("is-guest", !isAuthed);
@@ -109,6 +84,7 @@ export function paintAuthIdentity(state = {}) {
 
   $$("[data-rb-auth-avatar]").forEach((el) => {
     const src = isAuthed ? profileAvatar(profile) : DEFAULT_AVATAR;
+
     if (el.tagName === "IMG") {
       el.src = src;
       el.alt = isAuthed ? profileName(profile) : "Guest";
@@ -117,75 +93,6 @@ export function paintAuthIdentity(state = {}) {
     }
   });
 }
-
-/* ====================== FORM HANDLERS ====================== */
-
-export function bindSignInForm(selector = "#rb-signin-form") {
-  const form = $(selector);
-  if (!form || !bindOnce(form, "Signin")) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = getFormValue(form, "email");
-    const password = getFormValue(form, "password");
-
-    if (!email || !password) {
-      toastError("Please enter email and password.");
-      return;
-    }
-
-    try {
-      setLoading(form, true);
-      await rbSignIn({ email, password, redirectTo: RB_ROUTES.profile || "/" });
-      toastSuccess("Welcome back to the Universe.");
-    } catch (error) {
-      console.error(error);
-      toastError(error?.message || "Sign in failed.");
-    } finally {
-      setLoading(form, false);
-    }
-  });
-}
-
-export function bindSignUpForm(selector = "#rb-signup-form") {
-  const form = $(selector);
-  if (!form || !bindOnce(form, "Signup")) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const displayName = getFormValue(form, "display_name");
-    const username = getFormValue(form, "username").replace("@", "").toLowerCase();
-    const email = getFormValue(form, "email");
-    const password = getFormValue(form, "password");
-
-    if (!email || !password) {
-      toastError("Email and password are required.");
-      return;
-    }
-
-    if (password.length < 6) {
-      toastError("Password must be at least 6 characters.");
-      return;
-    }
-
-    try {
-      setLoading(form, true);
-      await rbSignUp({ email, password, username, displayName });
-      await refreshAuthProfile();
-      toastSuccess("Account created successfully!");
-      resetForm(form);
-      switchMode("signin");
-    } catch (error) {
-      console.error(error);
-      toastError(error?.message || "Sign up failed.");
-    } finally {
-      setLoading(form, false);
-    }
-  });
-}
-
-/* ====================== OAUTH & SIGN OUT ====================== */
 
 export function bindOAuthButtons() {
   $$("[data-oauth-provider]").forEach((btn) => {
@@ -216,7 +123,6 @@ export function bindSignOutButtons(selector = "[data-rb-signout]") {
       try {
         btn.disabled = true;
         await rbSignOut({ redirectTo: RB_ROUTES.auth || "/" });
-        toastInfo("Signed out successfully.");
       } catch (error) {
         console.error(error);
         toastError(error?.message || "Sign out failed.");
@@ -226,8 +132,6 @@ export function bindSignOutButtons(selector = "[data-rb-signout]") {
     });
   });
 }
-
-/* ====================== MODE TOGGLES ====================== */
 
 export function bindAuthModeToggles() {
   $$("[data-auth-mode]").forEach((btn) => {
@@ -239,8 +143,6 @@ export function bindAuthModeToggles() {
   });
 }
 
-/* ====================== GLOBAL AUTH LISTENER ====================== */
-
 export function bindAuthStatus() {
   if (document.body.dataset.rbAuthStatusBound === "true") return;
   document.body.dataset.rbAuthStatusBound = "true";
@@ -250,32 +152,28 @@ export function bindAuthStatus() {
   });
 }
 
-/* ====================== MAIN INIT ====================== */
-
 export async function initAuthUI({ showBootToast = false } = {}) {
   try {
     const state = await initAuthState();
-    paintAuthIdentity(state);
 
-    bindSignInForm();
-    bindSignUpForm();
+    paintAuthIdentity(state);
     bindOAuthButtons();
     bindSignOutButtons();
     bindAuthModeToggles();
     bindAuthStatus();
 
-    // Default to signin if no mode set
     switchMode(document.body.dataset.authMode || "signin");
 
     if (showBootToast) {
-      toastInfo("Identity system online.", "Rich Bizness");
+      toastInfo("Identity system online.");
     }
 
-    console.log("🚀 RB AUTH UI INITIALIZED");
+    console.log("RB AUTH UI INITIALIZED");
     return state;
   } catch (error) {
     console.error("Auth UI init failed:", error);
     toastError("Failed to initialize auth system.");
+    return null;
   }
 }
 
