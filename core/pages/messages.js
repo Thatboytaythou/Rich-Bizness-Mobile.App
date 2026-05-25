@@ -1,24 +1,42 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/messages.js
+
+   MESSAGES PAGE CONTROLLER
+   Synced with auth + profile-state
 ========================= */
 
 import {
   initApp,
   getCurrentUserState,
   markPageReady,
-  markPageError
+  markPageError,
+  refreshAppIdentity
 } from "/core/app.js";
 
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  RB_TABLES,
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
+
+import {
+  ensureMyProfile
+} from "/core/shared/rb-auth.js";
+
+import {
+  refreshProfileState,
+  onProfileState
+} from "/core/features/profile/profile-state.js";
 
 import {
   profileName,
   profileAvatar,
   profileHandle
 } from "/core/shared/rb-profile.js";
-
-import { RB_TABLES } from "/core/shared/rb-config.js";
 
 import {
   toastInfo,
@@ -40,15 +58,42 @@ const els = {
 
 let supabase = null;
 let channel = null;
+let actionsBound = false;
+
+function currentState() {
+  return getCurrentUserState() || {};
+}
+
+function currentUser() {
+  return currentState().user || null;
+}
+
+function currentProfile() {
+  return currentState().profile || null;
+}
 
 function paintMessages() {
-  const state = getCurrentUserState();
-  const user = state?.user || null;
-  const profile = state?.profile || null;
+  const user = currentUser();
+  const profile = currentProfile();
 
-  if (els.name) els.name.textContent = profileName(profile);
-  if (els.handle) els.handle.textContent = profileHandle(profile);
-  if (els.avatar) els.avatar.src = profileAvatar(profile);
+  if (els.name) {
+    els.name.textContent = profileName(profile);
+  }
+
+  if (els.handle) {
+    els.handle.textContent = profileHandle(profile);
+  }
+
+  if (els.avatar) {
+    const avatar = profileAvatar(profile);
+
+    if (els.avatar.tagName === "IMG") {
+      els.avatar.src = avatar;
+      els.avatar.alt = profileName(profile);
+    } else {
+      els.avatar.style.backgroundImage = `url("${avatar}")`;
+    }
+  }
 
   if (els.status) {
     els.status.textContent = user?.id
@@ -64,10 +109,19 @@ function paintMessages() {
 }
 
 async function loadThreadCount() {
-  const state = getCurrentUserState();
-  const user = state?.user || null;
+  const user = currentUser();
 
-  if (!user?.id) return;
+  if (!user?.id) {
+    if (els.threadCount) {
+      els.threadCount.textContent = "0 active conversations";
+    }
+
+    if (els.syncStatus) {
+      els.syncStatus.textContent = "Sign in required";
+    }
+
+    return;
+  }
 
   try {
     const { count, error } = await supabase
@@ -89,7 +143,11 @@ async function loadThreadCount() {
       els.syncStatus.textContent = "Messages synced";
     }
   } catch (error) {
-    console.warn("[messages.js]", error.message);
+    console.warn("[RB MESSAGES THREAD COUNT WARNING]", error.message);
+
+    if (els.threadCount) {
+      els.threadCount.textContent = "0 active conversations";
+    }
 
     if (els.syncStatus) {
       els.syncStatus.textContent = "Messages table waiting";
@@ -97,16 +155,19 @@ async function loadThreadCount() {
   }
 }
 
-function bindRealtime() {
-  const state = getCurrentUserState();
-  const user = state?.user || null;
-
-  if (!user?.id) return;
-
+function clearRealtime() {
   if (channel) {
-    supabase.removeChannel(channel);
+    supabase?.removeChannel(channel);
     channel = null;
   }
+}
+
+function bindRealtime() {
+  const user = currentUser();
+
+  if (!user?.id || !supabase) return;
+
+  clearRealtime();
 
   channel = supabase
     .channel(`rb-messages-${user.id}`)
@@ -120,10 +181,36 @@ function bindRealtime() {
       },
       loadThreadCount
     )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.dmMessages
+      },
+      loadThreadCount
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.profiles,
+        filter: `id=eq.${user.id}`
+      },
+      async () => {
+        await refreshProfileState();
+        await refreshAppIdentity();
+        paintMessages();
+      }
+    )
     .subscribe();
 }
 
 function bindMessagesActions() {
+  if (actionsBound) return;
+  actionsBound = true;
+
   els.newBtn?.addEventListener("click", () => {
     toastInfo(
       "Message composer is next in order.",
@@ -131,9 +218,7 @@ function bindMessagesActions() {
     );
   });
 
-  window.addEventListener("beforeunload", () => {
-    if (channel) supabase?.removeChannel(channel);
-  });
+  window.addEventListener("beforeunload", clearRealtime);
 }
 
 async function bootMessagesPage() {
@@ -146,18 +231,28 @@ async function bootMessagesPage() {
 
     supabase = getSupabase();
 
+    await ensureMyProfile();
+    await refreshProfileState();
+    await refreshAppIdentity();
+
     paintMessages();
     bindMessagesActions();
+
+    onProfileState((profileState) => {
+      if (!profileState.ready) return;
+      paintMessages();
+    });
 
     await loadThreadCount();
     bindRealtime();
 
     document.body.classList.add("rb-messages-ready");
+
     markPageReady("messages");
 
     console.log("RB MESSAGES READY");
   } catch (error) {
-    console.error("[messages.js]", error);
+    console.error("[RB MESSAGES BOOT FAILED]", error);
     markPageError(error);
     toastError(error?.message || "Messages failed to load.");
   }
