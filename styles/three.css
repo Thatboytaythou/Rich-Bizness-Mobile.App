@@ -1,6 +1,8 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/three.css
+
+   THREE.JS CANVAS LAYER
 ========================= */
 
 #canvas-container {
@@ -22,23 +24,25 @@
   position: absolute;
   inset: 0;
 
-  width: 100% !important;
-  height: 100% !important;
+  width: 100vw !important;
+  height: 100svh !important;
 
   display: block;
 
   touch-action: none;
   outline: none;
-}
 
-.rb-index-page canvas {
-  image-rendering: auto;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
+.rb-index-page canvas {
+  image-rendering: auto;
+}
+
 @media (max-width: 640px) {
-  #canvas-container {
-    height: 100dvh;
+  #canvas-container,
+  #canvas-container canvas {
+    height: 100dvh !important;
   }
 }
