@@ -1,21 +1,54 @@
+/* =============================================
+   OMNI FX - EFFECTS & HOVER UTILITIES
+   ============================================= */
+
+/* Glassmorphism */
 .glass-smoke {
   background: rgba(16, 185, 129, 0.08);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
-.burnt-gold { color: #fbbf24; }
-
+/* Phone Mockup Base */
 .phone-mockup {
   background: #111827;
-  border: 14px solid #10b981;
+  border: 14px solid var(--emerald, #10b981);
   border-radius: 52px;
   padding: 12px;
-  box-shadow: 0 0 80px -15px #10b981;
-  transition: all 0.5s ease;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6),
+              0 0 20px rgba(16, 185, 129, 0.4);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
 }
 
-.phone-mockup:hover {
-  transform: scale(1.12);
-  box-shadow: 0 0 110px -10px #fbbf24;
+/* Hover Utilities */
+.hover-lift:hover {
+  transform: scale(1.12) translateY(-8px);
+  box-shadow: 0 30px 80px -15px var(--burnt-gold, #fbbf24),
+              0 0 60px rgba(16, 185, 129, 0.7);
+}
+
+.hover-3d:hover {
+  transform: perspective(1100px) rotateY(12deg) rotateX(10deg) translateZ(60px);
+  box-shadow: 0 30px 80px -15px var(--burnt-gold, #fbbf24),
+              0 0 60px rgba(16, 185, 129, 0.7),
+              0 40px 100px -20px rgba(0, 0, 0, 0.8);
+}
+
+/* Icon & Label inside cards */
+.orbital-phone .icon {
+  font-size: 2.25rem;
+  margin-bottom: 10px;
+  transition: transform 0.3s ease;
+}
+
+.orbital-phone:hover .icon {
+  transform: scale(1.15);
+}
+
+.orbital-phone .label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
