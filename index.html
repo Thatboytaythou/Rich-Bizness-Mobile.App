@@ -2,9 +2,18 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
   <title>Rich Bizness • Universe</title>
+
+  <meta name="theme-color" content="#050805" />
+  <meta
+    name="description"
+    content="Rich Bizness Mobile — rotating universe portal hub."
+  />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
@@ -17,17 +26,32 @@
 </head>
 
 <body class="rb-index-page">
-  <div id="canvas-container"></div>
+  <div id="canvas-container" aria-hidden="true"></div>
 
-  <div class="rb-fx-smoke"></div>
-  <div class="rb-bg-grid"></div>
-  <div class="rb-bg-vignette"></div>
-  <div class="rb-bg-noise"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
 
   <header class="rb-brand-header">
     <h1>RICH <span>BIZNESS</span></h1>
     <p>LLC • SMOKE &amp; EMPIRE</p>
   </header>
+
+  <button class="rb-profile-chip" data-route="profile" type="button" aria-label="Open profile">
+    <img src="/images/brand/project-avatar.png.jpeg" alt="" />
+    <span>Profile</span>
+  </button>
+
+  <nav class="rb-side-tabs" aria-label="Quick actions">
+    <button data-route="admin" type="button" aria-label="Admin">🛡️</button>
+    <button data-route="creator" type="button" aria-label="Creator">👑</button>
+    <button data-route="watch" type="button" aria-label="Watch">📺</button>
+    <button data-route="notifications" type="button" aria-label="Notifications">🔔</button>
+    <button data-route="settings" type="button" aria-label="Settings">⚙️</button>
+    <button data-route="edit" type="button" aria-label="Edit">✒️</button>
+    <button data-route="messages" type="button" aria-label="Messages">💬</button>
+  </nav>
 
   <main class="rb-universe-shell">
     <section class="rb-universe-stage" aria-label="Rich Bizness Universe Hub">
@@ -35,7 +59,7 @@
         <div class="rb-portal-core"></div>
       </div>
 
-      <div id="module-label" class="rb-module-label" aria-hidden="true"></div>
+      <div id="module-label" class="rb-module-label" aria-live="polite"></div>
     </section>
   </main>
 
