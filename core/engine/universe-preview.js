@@ -9,6 +9,7 @@ import RB_CONFIG from "/core/shared/rb-config.js";
    - Real branded orbit cards
    - 3D words under phones
    - Dynamic orbit reactions
+   - Floating universe particles
    - Swipe / drag orbit
    - Tap card routing
    - Galaxy energy
@@ -38,6 +39,7 @@ let portal;
 let orbitGroup;
 let galaxyCloud;
 let starField;
+let floatingParticles;
 let raycaster;
 let pointer;
 let hoveredCard = null;
@@ -93,6 +95,7 @@ function initUniverse() {
   buildLights();
   buildStars();
   buildGalaxy();
+  buildFloatingParticles();
   buildPortal();
   buildCards();
 
@@ -119,9 +122,11 @@ function buildStars() {
   const positions = [];
 
   for (let i = 0; i < 2600; i++) {
-    positions.push(THREE.MathUtils.randFloatSpread(180));
-    positions.push(THREE.MathUtils.randFloatSpread(130));
-    positions.push(THREE.MathUtils.randFloatSpread(150));
+    positions.push(
+      THREE.MathUtils.randFloatSpread(180),
+      THREE.MathUtils.randFloatSpread(130),
+      THREE.MathUtils.randFloatSpread(150)
+    );
   }
 
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -170,6 +175,43 @@ function buildGalaxy() {
   );
 
   scene.add(galaxyCloud);
+}
+
+function buildFloatingParticles() {
+  const geo = new THREE.BufferGeometry();
+  const positions = [];
+  const colors = [];
+
+  for (let i = 0; i < 900; i++) {
+    positions.push(
+      THREE.MathUtils.randFloatSpread(90),
+      THREE.MathUtils.randFloatSpread(70),
+      THREE.MathUtils.randFloatSpread(80) - 10
+    );
+
+    if (Math.random() > 0.72) {
+      colors.push(1.0, 0.74, 0.18);
+    } else {
+      colors.push(0.06, 0.72, 0.5);
+    }
+  }
+
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
+  floatingParticles = new THREE.Points(
+    geo,
+    new THREE.PointsMaterial({
+      size: 0.09,
+      transparent: true,
+      opacity: 0.48,
+      vertexColors: true,
+      depthWrite: false,
+    })
+  );
+
+  floatingParticles.position.z = -6;
+  scene.add(floatingParticles);
 }
 
 function buildPortal() {
