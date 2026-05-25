@@ -1,1 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Admin • Rich Bizness Mobile</title>
+
+  <meta
+    name="theme-color"
+    content="#050805"
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-body rb-admin-page">
+
+  <div class="rb-bg-layer"></div>
+  <div class="rb-bg-grid"></div>
+  <div class="rb-bg-vignette"></div>
+  <div class="rb-bg-noise"></div>
+  <div class="rb-fx-smoke"></div>
+
+  <header class="rb-topbar">
+
+    <a class="rb-brand" href="/">
+      <span>CONTROL CENTER</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Admin navigation">
+      <a href="/feed">Feed</a>
+      <a href="/live">Live</a>
+      <a href="/upload">Upload</a>
+      <a href="/profile">Profile</a>
+      <a href="/settings">Settings</a>
+    </nav>
+
+  </header>
+
+  <main class="rb-section-shell rb-admin-shell">
+
+    <section class="rb-section-hero">
+
+      <div class="rb-section-hero-copy">
+
+        <p class="rb-kicker">
+          RICH BIZNESS CONTROL
+        </p>
+
+        <h1>
+          Admin Dashboard
+        </h1>
+
+        <p class="rb-subtitle">
+          Monitor platform systems, creator activity, uploads,
+          monetization, realtime sync, and universe operations.
+        </p>
+
+      </div>
+
+      <a class="rb-back" href="/">
+        ← Back To Portal
+      </a>
+
+    </section>
+
+    <section class="rb-profile-grid">
+
+      <article class="rb-mini-card">
+
+        <strong>
+          Platform Status
+        </strong>
+
+        <span id="admin-platform-status">
+          Booting systems...
+        </span>
+
+      </article>
+
+      <article class="rb-mini-card">
+
+        <strong>
+          Connected Users
+        </strong>
+
+        <span id="admin-user-count">
+          0 online
+        </span>
+
+      </article>
+
+      <article class="rb-mini-card">
+
+        <strong>
+          Upload Queue
+        </strong>
+
+        <span id="admin-upload-status">
+          Monitoring uploads
+        </span>
+
+      </article>
+
+      <article class="rb-mini-card">
+
+        <strong>
+          Monetization
+        </strong>
+
+        <span id="admin-money-status">
+          Revenue sync ready
+        </span>
+
+      </article>
+
+    </section>
+
+    <section class="rb-feed-layout">
+
+      <aside class="rb-card rb-composer-card">
+
+        <p class="rb-kicker">
+          QUICK ACTIONS
+        </p>
+
+        <div class="rb-form-actions">
+
+          <button
+            id="admin-open-users"
+            class="rb-main-launch"
+            type="button"
+          >
+            MANAGE USERS
+          </button>
+
+          <button
+            id="admin-open-reports"
+            class="rb-btn ghost"
+            type="button"
+          >
+            VIEW REPORTS
+          </button>
+
+          <button
+            id="admin-open-payouts"
+            class="rb-btn ghost"
+            type="button"
+          >
+            PAYOUTS
+          </button>
+
+          <button
+            id="admin-open-live"
+            class="rb-btn ghost"
+            type="button"
+          >
+            LIVE CONTROL
+          </button>
+
+        </div>
+
+      </aside>
+
+      <section class="rb-feed-main">
+
+        <div class="rb-card">
+
+          <div class="rb-card-head">
+
+            <div>
+              <p class="rb-kicker">
+                REALTIME ADMIN FEED
+              </p>
+
+              <h2>
+                System Activity
+              </h2>
+            </div>
+
+          </div>
+
+          <div
+            id="admin-activity-feed"
+            class="rb-feed-list"
+          >
+
+            <article class="feed-card">
+
+              <header class="feed-card-head">
+
+                <div class="feed-user">
+
+                  <img
+                    src="/images/brand/project-avatar.png.jpeg"
+                    alt=""
+                  />
+
+                  <span>
+
+                    <strong>
+                      Rich Bizness System
+                    </strong>
+
+                    <small>
+                      Live monitoring active
+                    </small>
+
+                  </span>
+
+                </div>
+
+              </header>
+
+              <p class="feed-body">
+                Admin realtime systems are online and synced to the Rich Bizness universe.
+              </p>
+
+            </article>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+  <script
+    type="module"
+    src="/core/pages/admin.js"
+  ></script>
+
+</body>
+</html>
