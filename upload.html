@@ -1,65 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Rich Bizness — Upload</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
-  <link rel="stylesheet" href="/styles/main.css" />
-  <link rel="stylesheet" href="/styles/mobile.css" />
+  <title>Upload • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
-  <link rel="stylesheet" href="/styles/upload.css
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/upload.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-page rb-upload-page">
-  <div class="rb-page-bg">
-    <img src="/images/brand/hero-banner.png" alt="" />
-  </div>
+<body class="rb-body rb-upload-page">
+  <div class="rb-bg-layer"></div>
+  <div class="rb-bg-grid"></div>
+  <div class="rb-bg-vignette"></div>
+  <div class="rb-bg-noise"></div>
+  <div class="rb-fx-smoke"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/index.html">
-      <span>RICH</span>
-      <strong>BIZNESS</strong>
+    <a class="rb-brand" href="/">
+      <span>UPLOAD CORE</span>
+      <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
-    <nav class="rb-topnav">
-      <a href="/feed.html">Feed</a>
-      <a href="/music.html">Music</a>
-      <a href="/gaming.html">Gaming</a>
-      <a href="/sports.html">Sports</a>
-      <a href="/gallery.html">Gallery</a>
-      <a class="is-active" href="/upload.html">Upload</a>
-      <a href="/profile.html">Profile</a>
+    <nav class="rb-topnav" aria-label="Upload navigation">
+      <a href="/feed">Feed</a>
+      <a href="/music">Music</a>
+      <a href="/gaming">Gaming</a>
+      <a href="/sports">Sports</a>
+      <a href="/gallery">Gallery</a>
+      <a class="is-active" href="/upload">Upload</a>
+      <a href="/profile">Profile</a>
     </nav>
   </header>
 
-  <main class="rb-section-shell">
-    <section class="rb-hero-panel">
-      <div>
+  <main class="rb-section-shell rb-upload-shell">
+    <section class="rb-section-hero">
+      <div class="rb-section-hero-copy">
         <p class="rb-kicker">RICH BIZNESS UPLOAD CORE</p>
-        <h1>Drop Anything Into The Right Section</h1>
-        <p>
-          Upload once. The system routes it to the correct bucket, records it in uploads,
+
+        <h1>Drop Anything</h1>
+
+        <p class="rb-subtitle">
+          Upload once. The system routes it to the right bucket, records it in uploads,
           and creates the matching section record.
         </p>
       </div>
 
-      <div class="rb-stat-grid">
-        <article>
-          <strong id="upload-status-label">READY</strong>
-          <span>Status</span>
-        </article>
-        <article>
-          <strong id="upload-route-label">general</strong>
-          <span>Route</span>
-        </article>
-      </div>
+      <a class="rb-back" href="/">
+        ← Back To Portal
+      </a>
     </section>
 
-    <section class="rb-panel is-active">
+    <section class="rb-profile-grid">
+      <article class="rb-mini-card">
+        <strong id="upload-status-label">READY</strong>
+        <span>Status</span>
+      </article>
+
+      <article class="rb-mini-card">
+        <strong id="upload-route-label">general</strong>
+        <span>Route</span>
+      </article>
+    </section>
+
+    <section class="rb-panel rb-upload-panel">
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">CREATE DROP</p>
@@ -91,44 +107,83 @@
 
         <label>
           Title
-          <input name="title" id="uploadTitle" type="text" placeholder="Drop title" />
+          <input
+            name="title"
+            id="uploadTitle"
+            type="text"
+            placeholder="Drop title"
+          />
         </label>
 
         <label>
           Description / Caption
-          <textarea name="description" id="uploadDescription" rows="4" placeholder="Write the caption..."></textarea>
+          <textarea
+            name="description"
+            id="uploadDescription"
+            rows="4"
+            placeholder="Write the caption..."
+          ></textarea>
         </label>
 
         <div class="rb-form-grid">
           <label>
             Category / Genre / Sport
-            <input name="category" id="uploadCategory" type="text" placeholder="general" />
+            <input
+              name="category"
+              id="uploadCategory"
+              type="text"
+              placeholder="general"
+            />
           </label>
 
           <label>
             Team / Game / Mood
-            <input name="tag" id="uploadTag" type="text" placeholder="optional" />
+            <input
+              name="tag"
+              id="uploadTag"
+              type="text"
+              placeholder="optional"
+            />
           </label>
         </div>
 
         <label>
           File
-          <input name="file" id="uploadFile" type="file" />
+          <input
+            name="file"
+            id="uploadFile"
+            type="file"
+          />
         </label>
 
-        <div class="rb-upload-preview" id="uploadPreview">
+        <div
+          class="rb-upload-preview"
+          id="uploadPreview"
+        >
           <span>No file selected</span>
         </div>
 
-        <button class="rb-main-launch" type="submit" id="uploadSubmitBtn">
-          UPLOAD DROP
-        </button>
+        <div class="rb-form-actions">
+          <button
+            class="rb-main-launch"
+            type="submit"
+            id="uploadSubmitBtn"
+          >
+            UPLOAD DROP
+          </button>
+        </div>
 
-        <p class="rb-form-note" id="uploadMessage"></p>
+        <p
+          class="rb-form-note"
+          id="uploadMessage"
+        ></p>
       </form>
     </section>
   </main>
 
-  <script type="module" src="/core/pages/upload.js"></script>
+  <script
+    type="module"
+    src="/core/pages/upload.js"
+  ></script>
 </body>
 </html>
