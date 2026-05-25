@@ -3,10 +3,12 @@
    /core/nav.js
 
    GLOBAL NAV SYSTEM
-   Uses locked router + auth/profile engines.
+   Synced with router + auth + profile-state
 ========================= */
 
-import { RB_ROUTES } from "/core/shared/rb-config.js";
+import {
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
 
 import {
   getCurrentPath,
@@ -20,10 +22,21 @@ import {
 } from "/core/features/auth/auth-state.js";
 
 import {
+  refreshProfileState,
+  onProfileState
+} from "/core/features/profile/profile-state.js";
+
+import {
+  ensureMyProfile
+} from "/core/shared/rb-auth.js";
+
+import {
   profileAvatar,
   profileName,
   profileHandle
 } from "/core/shared/rb-profile.js";
+
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const NAV_ITEMS = [
   { key: "home", label: "Home", href: RB_ROUTES.home, icon: "⌂" },
@@ -37,6 +50,8 @@ const NAV_ITEMS = [
   { key: "store", label: "Store", href: RB_ROUTES.store, icon: "🛒" },
   { key: "meta", label: "Meta", href: RB_ROUTES.meta, icon: "◎" },
   { key: "upload", label: "Upload", href: RB_ROUTES.upload, icon: "＋" },
+  { key: "creator", label: "Creator", href: RB_ROUTES.creator || "/creator", icon: "👑" },
+  { key: "admin", label: "Admin", href: RB_ROUTES.admin || "/admin", icon: "🛡️" },
   { key: "messages", label: "DMs", href: RB_ROUTES.messages, icon: "💨" },
   { key: "notifications", label: "Alerts", href: RB_ROUTES.notifications, icon: "⚡" },
   { key: "profile", label: "Profile", href: RB_ROUTES.profile, icon: "◉" },
@@ -44,18 +59,32 @@ const NAV_ITEMS = [
 ];
 
 let navMounted = false;
+let navIdentityBound = false;
+
+function normalizePath(path = "") {
+  if (!path || path === "/index.html") return "/";
+
+  return String(path)
+    .replace(/\/index\.html$/, "/")
+    .replace(/\.html$/, "")
+    .replace(/\/$/, "") || "/";
+}
+
+function isActiveRoute(href) {
+  const current = normalizePath(getCurrentPath());
+  const target = normalizePath(href);
+
+  return current === target;
+}
 
 function navItemTemplate(item) {
-  const active =
-    getCurrentPath() === item.href ||
-    getCurrentPath() === `${item.href}.html`;
-
   return `
     <button
-      class="rb-nav-item ${active ? "is-active" : ""}"
+      class="rb-nav-item ${isActiveRoute(item.href) ? "is-active" : ""}"
       type="button"
       data-route="${item.href}"
       data-key="${item.key}"
+      aria-label="${item.label}"
     >
       <span class="rb-nav-icon">${item.icon}</span>
       <span class="rb-nav-label">${item.label}</span>
@@ -66,39 +95,48 @@ function navItemTemplate(item) {
 function renderNavShell(target) {
   target.innerHTML = `
     <nav class="rb-global-nav" data-rb-global-nav>
-      <div class="rb-nav-brand" data-route="/">
+      <button class="rb-nav-brand" type="button" data-route="${RB_ROUTES.home || "/"}">
         <span class="rb-brand-mark">R</span>
         <span>
           <strong>Rich Bizness</strong>
           <small>Mobile Universe</small>
         </span>
-      </div>
+      </button>
 
       <div class="rb-nav-scroll">
         ${NAV_ITEMS.map(navItemTemplate).join("")}
       </div>
 
-      <div class="rb-nav-profile" data-route="/profile">
+      <button class="rb-nav-profile" type="button" data-route="${RB_ROUTES.profile || "/profile"}">
         <img
           data-nav-avatar
-          src="/images/brand/project-avatar.png.jpeg"
+          src="${DEFAULT_AVATAR}"
           alt="Profile"
         />
         <span>
           <strong data-nav-name>Guest</strong>
           <small data-nav-handle>@guest</small>
         </span>
-      </div>
+      </button>
     </nav>
   `;
 }
 
 function bindNavClicks(target) {
   target.querySelectorAll("[data-route]").forEach((el) => {
+    if (el.dataset.rbNavBound === "true") return;
+    el.dataset.rbNavBound = "true";
+
     el.addEventListener("click", () => {
       const route = el.dataset.route;
       if (route) goTo(route);
     });
+  });
+}
+
+function paintActiveNav() {
+  document.querySelectorAll(".rb-nav-item[data-route]").forEach((item) => {
+    item.classList.toggle("is-active", isActiveRoute(item.dataset.route));
   });
 }
 
@@ -109,7 +147,7 @@ function paintNavIdentity() {
   document.querySelectorAll("[data-nav-avatar]").forEach((img) => {
     img.src = state.isAuthed
       ? profileAvatar(profile)
-      : "/images/brand/project-avatar.png.jpeg";
+      : DEFAULT_AVATAR;
   });
 
   document.querySelectorAll("[data-nav-name]").forEach((el) => {
@@ -123,6 +161,24 @@ function paintNavIdentity() {
       ? profileHandle(profile)
       : "@guest";
   });
+}
+
+function bindIdentityWatchers() {
+  if (navIdentityBound) return;
+  navIdentityBound = true;
+
+  onAuthState(() => {
+    paintNavIdentity();
+  });
+
+  onProfileState((profileState) => {
+    if (!profileState.ready) return;
+    paintNavIdentity();
+  });
+
+  window.addEventListener("popstate", paintActiveNav);
+  window.addEventListener("rb:route-change", paintActiveNav);
+  window.addEventListener("rb:profile-updated", paintNavIdentity);
 }
 
 export async function mountNav({
@@ -141,13 +197,17 @@ export async function mountNav({
 
   await initAuthState();
 
+  if (getAuthState().isAuthed) {
+    await ensureMyProfile();
+    await refreshProfileState();
+  }
+
   renderNavShell(mount);
   bindNavClicks(mount);
-  paintNavIdentity();
+  bindIdentityWatchers();
 
-  onAuthState(() => {
-    paintNavIdentity();
-  });
+  paintActiveNav();
+  paintNavIdentity();
 
   navMounted = true;
 
@@ -158,6 +218,11 @@ export async function mountNav({
 
 export function isNavMounted() {
   return navMounted;
+}
+
+export function refreshNav() {
+  paintActiveNav();
+  paintNavIdentity();
 }
 
 export { NAV_ITEMS };
