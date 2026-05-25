@@ -4,16 +4,16 @@
 
    PROFILE STATE ENGINE
    Auth-linked profile state
+   Auto profile ensure
    Public profile loading
    Realtime profile refresh
 ========================= */
 
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
+import { RB_TABLES } from "/core/shared/rb-config.js";
 
 import {
-  getSupabase
+  getSupabase,
+  ensureMyProfile
 } from "/core/shared/rb-auth.js";
 
 import {
@@ -65,7 +65,6 @@ export async function initProfileState({
   });
 
   activeIdentity = getProfileIdentity(activeProfile);
-
   profileReady = true;
 
   if (realtime) {
@@ -73,7 +72,6 @@ export async function initProfileState({
   }
 
   notifyProfileListeners();
-
   return getProfileState();
 }
 
@@ -97,7 +95,7 @@ export async function refreshProfileState() {
 
   try {
     if (activeProfileMode === "me") {
-      activeProfile = await refreshMyProfile();
+      activeProfile = await ensureMyProfile();
     } else if (activeProfile?.username) {
       activeProfile = await getProfileByUsername(activeProfile.username);
     } else if (activeProfile?.id) {
@@ -118,6 +116,7 @@ export async function refreshProfileState() {
 
 export async function loadProfileByRoute() {
   const params = new URLSearchParams(window.location.search);
+
   const username = params.get("u") || params.get("username");
   const userId = params.get("id") || params.get("user");
 
@@ -135,16 +134,13 @@ export async function setActiveProfile(profile) {
   activeProfileMode = isMyProfile(activeProfile) ? "me" : "public";
 
   bindProfileRealtime(activeProfile?.id);
-
   notifyProfileListeners();
 
   return getProfileState();
 }
 
 export function onProfileState(callback) {
-  if (typeof callback !== "function") {
-    return () => {};
-  }
+  if (typeof callback !== "function") return () => {};
 
   listeners.add(callback);
 
@@ -154,9 +150,7 @@ export function onProfileState(callback) {
     console.warn("[RB PROFILE LISTENER ERROR]", error);
   }
 
-  return () => {
-    listeners.delete(callback);
-  };
+  return () => listeners.delete(callback);
 }
 
 export function notifyProfileListeners() {
@@ -231,7 +225,14 @@ async function loadActiveProfile({
 
     if (mode === "me") {
       await refreshAuthProfile();
-      return await refreshMyProfile();
+
+      let profile = await refreshMyProfile();
+
+      if (!profile?.id) {
+        profile = await ensureMyProfile();
+      }
+
+      return profile;
     }
 
     return null;
