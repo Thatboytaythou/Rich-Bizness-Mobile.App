@@ -3,113 +3,232 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
   <title>Rich Bizness • Universe</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
 
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/three.css" />
   <link rel="stylesheet" href="/styles/omni-portal.css" />
   <link rel="stylesheet" href="/styles/omni-dial.css" />
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" defer></script>
-  <script src="/core/engine/universe-preview.js" defer></script>
-  <script src="/core/pages/index.js" defer></script>
 </head>
 
 <body class="rb-index-page">
+  <div class="rb-bg-grid"></div>
+  <div class="rb-bg-vignette"></div>
+  <div class="rb-bg-noise"></div>
+  <div class="rb-fx-smoke"></div>
+
   <div id="portal-container" aria-hidden="true"></div>
 
-  <main class="rb-index-shell">
-    <header class="rb-hero-lock">
-      <p class="rb-kicker">RICH BIZNESS MOBILE</p>
-      <h1>Reality <span>Changers</span></h1>
+  <main class="rb-shell">
+    <header class="rb-header glass-smoke">
+      <div class="rb-brand-wrap">
+        <h1 class="rb-title">RICH <span class="burnt-gold">BIZNESS</span></h1>
+        <p class="rb-subtitle">LLC • SMOKE &amp; EMPIRE</p>
+      </div>
 
-      <button class="rb-guest-card" type="button" data-route="auth">
-        <span class="rb-guest-icon">?</span>
-        <span>
-          <strong>Guest Mode</strong>
-          <small>SIGN IN</small>
-        </span>
+      <button class="rb-live-pill" type="button" data-route="live">
+        <span class="rb-live-dot"></span>
+        LIVE
       </button>
     </header>
 
-    <section class="rb-universe-stage" aria-label="Rich Bizness Universe Hub">
-      <button class="rb-profile-side" type="button" data-route="profile">
-        <i class="fa-solid fa-user"></i>
-        <span>Profile</span>
-      </button>
+    <section class="rb-hub" aria-label="Rich Bizness universe hub">
+      <div class="rb-universe-core">
+        <div class="rb-portal-energy"></div>
+      </div>
 
-      <nav class="rb-right-tabs" aria-label="Utility sections">
-        <button type="button" data-route="admin"><i class="fa-solid fa-shield-halved"></i><span>Admin</span></button>
-        <button type="button" data-route="creator"><i class="fa-solid fa-crown"></i><span>Creator</span></button>
-        <button type="button" data-route="watch"><i class="fa-solid fa-tv"></i><span>Watch</span></button>
-        <button type="button" data-route="notifications"><i class="fa-solid fa-bell"></i><span>Alerts</span></button>
-        <button type="button" data-route="settings"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
-        <button type="button" data-route="edit"><i class="fa-solid fa-pen-nib"></i><span>Edit</span></button>
-      </nav>
+      <div class="rb-orbit-system">
+        <div class="rb-orbit-track track-main">
 
-      <div class="rb-orbit-wrap">
-        <div class="rb-portal-core">
-          <div class="rb-portal-rings"></div>
-          <button class="rb-center-action" type="button" data-route="live">
-            <span class="rb-live-chip">LIVE</span>
-            <i class="fa-solid fa-broadcast-tower"></i>
-            <strong>Go Live</strong>
-            <small>ENTER THE SMOKE</small>
+          <button class="rb-phone-card orbit-feed" type="button" data-route="feed">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Feed</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Feed</div>
+                <div class="rb-screen-sub">Home Stream</div>
+              </div>
+            </div>
           </button>
-        </div>
 
-        <div class="rb-orbit-track" id="rbOrbitTrack">
-          <button class="rb-tv-card is-front" type="button" data-route="live">
-            <small>LIVE</small><strong>Go Live</strong><span>Broadcast • VIP • Realtime</span>
+          <button class="rb-phone-card orbit-music" type="button" data-route="music">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Music</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Music</div>
+                <div class="rb-screen-sub">Tracks</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="music">
-            <small>MUSIC</small><strong>Music Universe</strong><span>Tracks • Playlists • Artists</span>
+
+          <button class="rb-phone-card orbit-live" type="button" data-route="live">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Live</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Live</div>
+                <div class="rb-screen-sub">Go Live</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="gallery">
-            <small>GALLERY</small><strong>Visual Drops</strong><span>Photos • Clips • Moments</span>
+
+          <button class="rb-phone-card orbit-gallery" type="button" data-route="gallery">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Gallery</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Gallery</div>
+                <div class="rb-screen-sub">Media</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="podcast">
-            <small>PODCAST</small><strong>Podcast Shows</strong><span>Episodes • Voices • Stories</span>
+
+          <button class="rb-phone-card orbit-podcast" type="button" data-route="podcast">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Podcast</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Podcast</div>
+                <div class="rb-screen-sub">Shows</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="radio">
-            <small>RADIO</small><strong>Live Radio</strong><span>Stations • Streams • Audio</span>
+
+          <button class="rb-phone-card orbit-radio" type="button" data-route="radio">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Radio</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Radio</div>
+                <div class="rb-screen-sub">Stations</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="gaming">
-            <small>GAMES</small><strong>Arcade District</strong><span>Scores • Clips • Tournaments</span>
+
+          <button class="rb-phone-card orbit-gaming" type="button" data-route="gaming">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Gaming</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Gaming</div>
+                <div class="rb-screen-sub">Arcade</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="upload">
-            <small>UPLOAD</small><strong>Upload Content</strong><span>Share • Route • Publish</span>
+
+          <button class="rb-phone-card orbit-upload" type="button" data-route="upload">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Upload</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Upload</div>
+                <div class="rb-screen-sub">Drop Content</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="sports">
-            <small>SPORTS</small><strong>Sports Arena</strong><span>Picks • Scores • Broadcasts</span>
+
+          <button class="rb-phone-card orbit-sports" type="button" data-route="sports">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Sports</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Sports</div>
+                <div class="rb-screen-sub">Zone</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="feed">
-            <small>FEED</small><strong>Global Feed</strong><span>Posts • Drops • Community</span>
+
+          <button class="rb-phone-card orbit-store" type="button" data-route="store">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Store</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Store</div>
+                <div class="rb-screen-sub">Market</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="meta">
-            <small>META</small><strong>Meta World</strong><span>Avatars • Worlds • Portals</span>
+
+          <button class="rb-phone-card orbit-meta" type="button" data-route="meta">
+            <div class="rb-phone-screen">
+              <div class="rb-screen-overlay"></div>
+              <div class="rb-screen-top">
+                <span class="rb-screen-pill">Meta</span>
+                <span class="rb-live-dot-mini"></span>
+              </div>
+              <div class="rb-screen-info">
+                <div class="rb-screen-title">Meta</div>
+                <div class="rb-screen-sub">World</div>
+              </div>
+            </div>
           </button>
-          <button class="rb-tv-card" type="button" data-route="store">
-            <small>STORE</small><strong>Creator Market</strong><span>Products • Unlocks • Sellers</span>
-          </button>
+
         </div>
       </div>
+
+      <aside class="rb-side-tabs left">
+        <button class="rb-side-tab" type="button" data-route="profile"><i class="fa-solid fa-user"></i> Profile</button>
+      </aside>
+
+      <aside class="rb-side-tabs right">
+        <button class="rb-side-tab" type="button" data-route="admin"><i class="fa-solid fa-shield-halved"></i> Admin</button>
+        <button class="rb-side-tab" type="button" data-route="creator"><i class="fa-solid fa-crown"></i> Creator</button>
+        <button class="rb-side-tab" type="button" data-route="watch"><i class="fa-solid fa-tv"></i> Watch</button>
+        <button class="rb-side-tab" type="button" data-route="notifications"><i class="fa-solid fa-bell"></i> Alerts</button>
+        <button class="rb-side-tab" type="button" data-route="settings"><i class="fa-solid fa-gear"></i> Settings</button>
+        <button class="rb-side-tab" type="button" data-route="edit"><i class="fa-solid fa-pen-nib"></i> Edit</button>
+        <button class="rb-side-tab" type="button" data-route="messages"><i class="fa-solid fa-comments"></i> Messages</button>
+      </aside>
     </section>
 
-    <section class="rb-main-copy">
-      <h2>ALL IN ONE <span>UNIVERSE</span></h2>
-      <p>SMOKE • POWER • LEGACY</p>
-      <button type="button" data-route="feed">ENTER REALITY</button>
+    <section class="rb-hero-text">
+      <h2 class="rb-hero-title">ALL IN ONE <span class="burnt-gold">UNIVERSE</span></h2>
+      <p class="rb-hero-tag">SMOKE • POWER • LEGACY</p>
     </section>
 
-    <nav class="rb-bottom-nav" aria-label="Main quick links">
-      <button type="button" data-route="feed">Feed</button>
-      <button type="button" data-route="live" class="active">Live</button>
-      <button type="button" data-route="music">Music</button>
-      <button type="button" data-route="gaming">Games</button>
-      <button type="button" data-route="meta">Meta</button>
-    </nav>
+    <button class="rb-enter-btn" type="button" data-route="live">
+      ENTER THE PORTAL
+    </button>
   </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="/core/engine/universe-preview.js"></script>
+  <script src="/core/pages/index.js"></script>
 </body>
 </html>
