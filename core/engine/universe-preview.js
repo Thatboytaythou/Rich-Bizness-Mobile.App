@@ -8,6 +8,7 @@ import RB_CONFIG from "/core/shared/rb-config.js";
    - Three.js portal
    - Real branded orbit cards
    - 3D words under phones
+   - Dynamic orbit reactions
    - Swipe / drag orbit
    - Tap card routing
    - Galaxy energy
@@ -47,6 +48,14 @@ let isDragging = false;
 let startX = 0;
 let lastX = 0;
 let dragMoved = false;
+
+const activityState = {
+  liveActive: false,
+  liveCount: 0,
+  onlineCount: 0,
+  orbitBoost: 1,
+  portalBoost: 1,
+};
 
 const cards = [];
 const loader = new THREE.TextureLoader();
@@ -88,6 +97,7 @@ function initUniverse() {
   buildCards();
 
   bindPointer();
+  bindActivityReactions();
   resizeUniverse();
   animateUniverse();
 }
@@ -203,6 +213,9 @@ function buildCards() {
     const card = createPhoneCard(mod);
     card.userData.module = mod;
     card.userData.index = index;
+    card.userData.isHot = false;
+    card.userData.activityCount = 0;
+    card.userData.presenceBoost = 0;
     cards.push(card);
     orbitGroup.add(card);
   });
@@ -283,6 +296,18 @@ function createPhoneCard(mod) {
 
   border.position.z = 0.34;
 
+  const hotAura = new THREE.Mesh(
+    new THREE.PlaneGeometry(5.95, 9.15),
+    new THREE.MeshBasicMaterial({
+      color: 0x10b981,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    })
+  );
+
+  hotAura.position.z = 0.18;
+
   const textLabel = createTextLabel(mod.tag, mod.title);
   textLabel.position.set(0, -5.05, 0.42);
 
@@ -291,6 +316,7 @@ function createPhoneCard(mod) {
   group.add(tint);
   group.add(shine);
   group.add(border);
+  group.add(hotAura);
   group.add(textLabel);
 
   group.scale.setScalar(0.72);
@@ -365,6 +391,42 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+function bindActivityReactions() {
+  window.addEventListener("rb:activity-update", (event) => {
+    const live = event.detail?.live;
+
+    if (!live) return;
+
+    activityState.liveActive = Boolean(live.active);
+    activityState.liveCount = live.count || 0;
+    activityState.orbitBoost = live.active ? 1.22 : 1;
+    activityState.portalBoost = live.active ? 1.16 : 1;
+
+    cards.forEach((card) => {
+      const mod = card.userData.module;
+
+      if (mod?.key === "live") {
+        card.userData.isHot = live.active;
+        card.userData.activityCount = live.count || 0;
+      }
+    });
+
+    document.body.classList.toggle("rb-orbit-live-energy", live.active);
+  });
+
+  window.addEventListener("rb:presence-update", (event) => {
+    const onlineCount = event.detail?.onlineCount || 0;
+
+    activityState.onlineCount = onlineCount;
+
+    cards.forEach((card) => {
+      card.userData.presenceBoost = onlineCount > 0 ? 1 : 0;
+    });
+
+    document.body.classList.toggle("rb-orbit-presence-energy", onlineCount > 0);
+  });
+}
+
 function updateCards() {
   const isMobile = window.innerWidth <= RB_CONFIG.motion.mobileBreakpoint;
 
@@ -390,9 +452,13 @@ function updateCards() {
     const scale = 0.42 + depth * 0.42;
     const opacity = 0.62 + depth * 0.38;
 
+    const hotBoost = card.userData.isHot ? 1.12 : 1;
+    const presenceBoost = card.userData.presenceBoost ? 1.035 : 1;
+    const hoverBoost = card === hoveredCard ? 1.12 : 1;
+
     card.position.set(x, baseY + depth * 1.05, z + 1.2);
     card.rotation.y = -angle + Math.PI / 2;
-    card.scale.setScalar(card === hoveredCard ? scale * 1.12 : scale);
+    card.scale.setScalar(scale * hotBoost * presenceBoost * hoverBoost);
 
     card.children.forEach((child, childIndex) => {
       if (!child.material) return;
@@ -403,6 +469,12 @@ function updateCards() {
       if (childIndex === 3) child.material.opacity = 0.05 + depth * 0.06;
       if (childIndex === 4) child.material.opacity = 0.13 + depth * 0.14;
 
+      if (childIndex === 5) {
+        child.material.opacity = card.userData.isHot
+          ? 0.08 + Math.sin(performance.now() * 0.004) * 0.035
+          : 0;
+      }
+
       if (child.userData?.isLabel) {
         child.material.opacity = 0.18 + depth * 0.82;
         child.scale.set(
@@ -410,6 +482,10 @@ function updateCards() {
           1.25 + depth * 0.35,
           1
         );
+      }
+
+      if (card.userData.isHot && child.material) {
+        child.material.opacity = Math.min(1, child.material.opacity + 0.12);
       }
     });
 
@@ -515,16 +591,34 @@ function animateUniverse() {
 
   const t = performance.now() * 0.001;
 
-  targetOffset += RB_CONFIG.motion.orbit.speed || 0.0022;
+  const baseSpeed = RB_CONFIG.motion.orbit.speed || 0.0022;
+  targetOffset += baseSpeed * activityState.orbitBoost;
 
-  portal.rotation.y += 0.002;
+  portal.rotation.y += 0.002 * activityState.portalBoost;
   portal.rotation.x = Math.sin(t * 0.45) * 0.06;
+
   portal.scale.setScalar(
-    1 + Math.sin(t * 1.8) * RB_CONFIG.motion.portal.scalePulse
+    1 +
+      Math.sin(t * 1.8) *
+        RB_CONFIG.motion.portal.scalePulse *
+        activityState.portalBoost
   );
 
-  if (galaxyCloud) galaxyCloud.rotation.y += 0.0007;
-  if (starField) starField.rotation.y += 0.00025;
+  if (galaxyCloud) {
+    galaxyCloud.rotation.y += 0.0007 * activityState.orbitBoost;
+
+    if (galaxyCloud.material) {
+      galaxyCloud.material.opacity = activityState.liveActive ? 0.46 : 0.34;
+    }
+  }
+
+  if (starField) {
+    starField.rotation.y += 0.00025 * activityState.orbitBoost;
+
+    if (starField.material) {
+      starField.material.opacity = activityState.onlineCount > 0 ? 0.46 : 0.38;
+    }
+  }
 
   updateCards();
   renderer.render(scene, camera);
