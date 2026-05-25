@@ -1,7 +1,9 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/profile.css
-   CINEMATIC PROFILE EXPERIENCE - POLISHED
+
+   CINEMATIC PROFILE EXPERIENCE
+   Locked Profile Foundation
 ========================================= */
 
 /* =========================================
@@ -10,9 +12,73 @@
 
 .rb-profile-page {
   position: relative;
+
   min-height: 100svh;
+
   overflow-x: hidden;
-  background: var(--rb-black);
+
+  background:
+    radial-gradient(circle at 18% 8%, rgba(16, 185, 129, 0.16), transparent 34%),
+    radial-gradient(circle at 86% 12%, rgba(250, 204, 21, 0.13), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.1), transparent 44%),
+    var(--rb-black, #020302);
+
+  color: var(--rb-white, #ffffff);
+}
+
+.rb-profile-page::before {
+  content: "";
+
+  position: fixed;
+  inset: 0;
+
+  z-index: 0;
+
+  background:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+
+  background-size: 42px 42px;
+
+  mask-image:
+    radial-gradient(circle at center, black, transparent 78%);
+
+  pointer-events: none;
+}
+
+.rb-profile-page::after {
+  content: "";
+
+  position: fixed;
+  inset: 0;
+
+  z-index: 0;
+
+  background:
+    radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.22) 44%, rgba(0,0,0,0.82) 100%);
+
+  pointer-events: none;
+}
+
+.rb-profile-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================
+   PROFILE SHELL
+========================================= */
+
+.rb-profile-shell,
+.rb-page-shell {
+  width: min(1180px, calc(100vw - 28px));
+
+  margin: 0 auto;
+
+  padding:
+    max(22px, env(safe-area-inset-top))
+    0
+    calc(32px + env(safe-area-inset-bottom));
 }
 
 /* =========================================
@@ -21,59 +87,111 @@
 
 .rb-profile-hero {
   position: relative;
-  overflow: hidden;
-  border-radius: 38px;
-  min-height: 420px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.88));
-  box-shadow: 
-    0 40px 120px rgba(0,0,0,0.52),
-    0 0 60px rgba(0,255,136,0.1);
   isolation: isolate;
+  overflow: hidden;
+
+  min-height: 420px;
+
+  border-radius: 38px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.88));
+
+  box-shadow:
+    0 40px 120px rgba(0,0,0,0.52),
+    0 0 60px rgba(16,185,129,0.12),
+    inset 0 0 90px rgba(250,204,21,0.04);
 }
 
-/* BANNER IMAGE */
 .rb-profile-banner {
   position: absolute;
   inset: 0;
+
+  z-index: 0;
+
+  background-image: url("/images/brand/Avatar-hero-Banner.png.jpeg");
   background-size: cover;
   background-position: center;
+
   transform: scale(1.06);
-  filter: saturate(1.15) contrast(1.06) brightness(0.9);
+
+  filter:
+    saturate(1.18)
+    contrast(1.08)
+    brightness(0.88);
 }
 
 .rb-profile-banner::after {
   content: "";
+
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.38) 32%, rgba(0,0,0,0.92) 78%);
+
+  background:
+    radial-gradient(circle at 22% 28%, rgba(16,185,129,0.2), transparent 36%),
+    radial-gradient(circle at 78% 34%, rgba(250,204,21,0.16), transparent 34%),
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,0.12),
+      rgba(0,0,0,0.38) 32%,
+      rgba(0,0,0,0.94) 82%
+    );
 }
 
-/* ATMOSPHERE GLOW */
 .rb-profile-hero::before {
   content: "";
+
   position: absolute;
   left: 50%;
   bottom: -160px;
+
   width: 720px;
   height: 720px;
+
   transform: translateX(-50%);
+
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,255,136,0.26) 0%, rgba(255,215,106,0.12) 28%, transparent 68%);
-  filter: blur(28px);
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(16,185,129,0.28) 0%,
+      rgba(250,204,21,0.13) 28%,
+      transparent 68%
+    );
+
+  filter: blur(30px);
+
   opacity: 0.88;
+
   pointer-events: none;
+
   animation: rbProfileAura 9s ease-in-out infinite;
 }
 
 .rb-profile-hero::after {
   content: "";
+
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(90deg, rgba(255,255,255,0.018) 0, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 9px);
+
+  z-index: 2;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.018) 0,
+      rgba(255,255,255,0.018) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+
   mix-blend-mode: soft-light;
+
   opacity: 0.4;
+
+  pointer-events: none;
 }
 
 /* =========================================
@@ -83,10 +201,13 @@
 .rb-profile-inner {
   position: relative;
   z-index: 4;
+
+  min-height: 420px;
+
   display: flex;
   align-items: flex-end;
   gap: 34px;
-  min-height: 420px;
+
   padding: clamp(24px, 4vw, 48px);
 }
 
@@ -96,46 +217,94 @@
 
 .rb-profile-avatar-wrap {
   position: relative;
+
   flex-shrink: 0;
 }
 
 .rb-profile-avatar-wrap::before {
   content: "";
+
   position: absolute;
   inset: -14px;
+
   border-radius: 50%;
-  background: conic-gradient(from 0deg, rgba(0,255,136,0.85), rgba(255,215,106,0.7), rgba(0,255,136,0.85));
+
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(16,185,129,0.88),
+      rgba(250,204,21,0.72),
+      rgba(16,185,129,0.88)
+    );
+
   filter: blur(14px);
-  opacity: 0.65;
+
+  opacity: 0.66;
+
   animation: rbProfileSpin 14s linear infinite;
+}
+
+.rb-profile-avatar-wrap::after {
+  content: "";
+
+  position: absolute;
+  inset: -22px;
+
+  border-radius: 50%;
+  border: 1px solid rgba(250,204,21,0.18);
+
+  box-shadow:
+    0 0 42px rgba(16,185,129,0.18),
+    inset 0 0 28px rgba(250,204,21,0.08);
+
+  pointer-events: none;
 }
 
 .rb-profile-avatar {
   position: relative;
   z-index: 2;
+
   width: clamp(130px, 20vw, 190px);
   height: clamp(130px, 20vw, 190px);
+
   object-fit: cover;
+
   border-radius: 50%;
-  border: 4px solid rgba(255,255,255,0.18);
-  background: #050505;
-  box-shadow: 
-    0 0 0 10px rgba(0,255,136,0.1),
-    0 30px 70px rgba(0,0,0,0.6),
-    0 0 65px rgba(0,255,136,0.22);
+
+  border: 4px solid rgba(255,255,255,0.2);
+
+  background:
+    #050505
+    url("/images/brand/Avatar-hero-Banner.png.jpeg")
+    center / cover no-repeat;
+
+  box-shadow:
+    0 0 0 10px rgba(16,185,129,0.1),
+    0 30px 70px rgba(0,0,0,0.62),
+    0 0 65px rgba(16,185,129,0.24);
 }
 
-/* ONLINE INDICATOR */
 .rb-profile-online {
   position: absolute;
   right: 12px;
   bottom: 12px;
+
+  z-index: 4;
+
   width: 26px;
   height: 26px;
+
   border-radius: 50%;
+
   border: 3px solid #041008;
+
   background: #66ff99;
-  box-shadow: 0 0 22px rgba(102,255,153,0.9);
+
+  box-shadow:
+    0 0 22px rgba(102,255,153,0.9),
+    0 0 44px rgba(16,185,129,0.35);
+
+  animation: rbOnlinePulse 1.8s ease-in-out infinite;
 }
 
 /* =========================================
@@ -144,30 +313,43 @@
 
 .rb-profile-copy {
   flex: 1;
+
   min-width: 280px;
 }
 
 .rb-profile-kicker {
   margin: 0 0 10px;
+
   color: #8effcb;
+
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+
+  text-shadow:
+    0 0 16px rgba(16,185,129,0.42);
 }
 
 .rb-profile-copy h1 {
   margin: 0;
+
+  color: #ffffff;
+
   font-size: clamp(2.4rem, 6vw, 5rem);
   line-height: 0.88;
   letter-spacing: -0.06em;
-  color: #fff;
-  text-shadow: 0 0 24px rgba(255,255,255,0.1);
+
+  text-shadow:
+    0 0 24px rgba(255,255,255,0.1),
+    0 0 50px rgba(16,185,129,0.12);
 }
 
 .rb-profile-username {
   margin-top: 12px;
+
   color: #8effcb;
+
   font-size: 0.95rem;
   font-weight: 900;
   letter-spacing: 0.16em;
@@ -176,99 +358,350 @@
 
 .rb-profile-bio {
   margin-top: 18px;
+
   max-width: 760px;
+
   color: rgba(255,255,255,0.85);
+
   line-height: 1.75;
   font-size: 1rem;
 }
 
-/* STATUS */
 .rb-profile-status {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+
   margin-top: 18px;
   padding: 10px 16px;
+
   border-radius: 999px;
   border: 1px solid rgba(102,255,153,0.18);
-  background: rgba(0,255,136,0.08);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,0.12), rgba(0,0,0,0.34));
+
   color: #8effcb;
+
   font-size: 0.82rem;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 0 18px rgba(16,185,129,0.14);
 }
 
 .rb-profile-status::before {
   content: "";
+
   width: 10px;
   height: 10px;
+
   border-radius: 50%;
+
   background: #66ff99;
-  box-shadow: 0 0 18px rgba(102,255,153,0.9);
+
+  box-shadow:
+    0 0 18px rgba(102,255,153,0.9);
 }
 
 /* =========================================
-   META PILLS & ACTIONS
+   META PILLS + ACTIONS
 ========================================= */
 
 .rb-profile-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
+
   margin-top: 20px;
 }
 
 .rb-meta-pill {
   padding: 11px 18px;
+
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.1);
-  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
-  color: #fff;
+
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+
+  color: #ffffff;
+
   font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0.08em;
+
   backdrop-filter: blur(18px);
-  box-shadow: 0 0 18px rgba(0,255,136,0.06);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 0 18px rgba(16,185,129,0.07);
 }
 
 .rb-profile-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
+
   margin-top: 26px;
 }
 
-/* SOCIAL LINKS */
+.rb-profile-actions .rb-btn,
+.rb-profile-actions button,
+.rb-profile-actions a {
+  min-height: 48px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 18px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250,204,21,0.22);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,0.16), rgba(250,204,21,0.08));
+
+  color: #fefce8;
+
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease;
+}
+
+.rb-profile-actions .rb-btn:hover,
+.rb-profile-actions button:hover,
+.rb-profile-actions a:hover,
+.rb-profile-actions .is-active {
+  transform: translateY(-2px);
+
+  border-color: rgba(16,185,129,0.52);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,0.26), rgba(250,204,21,0.16));
+
+  box-shadow:
+    0 0 22px rgba(16,185,129,0.2),
+    0 0 42px rgba(250,204,21,0.1);
+}
+
+/* =========================================
+   SOCIAL LINKS
+========================================= */
+
 .rb-profile-socials {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+
   margin-top: 22px;
 }
 
-.rb-profile-socials a {
+.rb-profile-socials a,
+#profileWebsite {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   min-height: 44px;
+
   padding: 0 18px;
+
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.1);
+
   background: rgba(255,255,255,0.04);
-  color: #fff;
+
+  color: #ffffff;
+
   font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: all 0.22s ease;
+  text-decoration: none;
+
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
-.rb-profile-socials a:hover {
+.rb-profile-socials a:hover,
+#profileWebsite:hover {
   transform: translateY(-2px);
+
   border-color: rgba(102,255,153,0.28);
-  background: rgba(0,255,136,0.1);
+
+  background: rgba(16,185,129,0.1);
+
+  box-shadow:
+    0 0 18px rgba(16,185,129,0.16);
+}
+
+/* =========================================
+   TABS + PANELS
+========================================= */
+
+.rb-profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin: 22px 0;
+}
+
+.rb-profile-tabs button,
+[data-profile-tab] {
+  min-height: 44px;
+
+  padding: 0 16px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250,204,21,0.16);
+
+  background:
+    rgba(255,255,255,0.04);
+
+  color: rgba(255,255,255,0.76);
+
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease,
+    background 0.22s ease;
+}
+
+.rb-profile-tabs button:hover,
+[data-profile-tab]:hover,
+[data-profile-tab].is-active {
+  color: #ffffff;
+
+  border-color: rgba(16,185,129,0.46);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,0.18), rgba(250,204,21,0.08));
+
+  transform: translateY(-2px);
+}
+
+[data-profile-panel] {
+  animation: rbProfilePanelIn 0.28s ease both;
+}
+
+/* =========================================
+   FEED + MINI PANELS
+========================================= */
+
+.rb-profile-feed,
+#profileFeed {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rb-feed-card,
+.rb-mini-card,
+.rb-mini-empty,
+#profileEmpty {
+  border-radius: 24px;
+  border: 1px solid rgba(250,204,21,0.14);
+
+  background:
+    linear-gradient(145deg, rgba(5,8,5,0.84), rgba(0,0,0,0.72));
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 0 28px rgba(0,0,0,0.28),
+    inset 0 0 20px rgba(255,255,255,0.02);
+}
+
+.rb-feed-card {
+  overflow: hidden;
+}
+
+.rb-feed-card .rb-card-body {
+  display: grid;
+  gap: 10px;
+
+  padding: 14px;
+}
+
+.rb-feed-card p {
+  margin: 0;
+
+  color: rgba(255,255,255,0.86);
+
+  line-height: 1.5;
+}
+
+.rb-feed-card img,
+.rb-feed-card video {
+  width: 100%;
+
+  border-radius: 18px;
+
+  object-fit: cover;
+
+  background: #000;
+}
+
+.rb-feed-card audio {
+  width: 100%;
+}
+
+.rb-mini-card,
+.rb-mini-empty,
+#profileEmpty {
+  padding: 18px;
+
+  color: rgba(255,255,255,0.74);
+}
+
+.rb-mini-card h3 {
+  margin: 0 0 8px;
+
+  color: #facc15;
+}
+
+/* =========================================
+   READY + ERROR STATES
+========================================= */
+
+.rb-profile-page:not(.rb-profile-ready) .rb-profile-hero {
+  opacity: 0.94;
+}
+
+.rb-page-error .rb-profile-status,
+.rb-page-error #profileStatus {
+  color: #fca5a5;
+
+  border-color: rgba(239,68,68,0.28);
+
+  background: rgba(239,68,68,0.12);
 }
 
 /* =========================================
@@ -276,13 +709,51 @@
 ========================================= */
 
 @keyframes rbProfileAura {
-  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.75; }
-  50%      { transform: translateX(-50%) scale(1.1); opacity: 1; }
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.75;
+  }
+
+  50% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 1;
+  }
 }
 
 @keyframes rbProfileSpin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rbOnlinePulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.78;
+  }
+
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes rbProfilePanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* =========================================
@@ -293,29 +764,46 @@
   .rb-profile-inner {
     align-items: center;
     flex-direction: column;
+
     text-align: center;
   }
 
   .rb-profile-copy {
     width: 100%;
+    min-width: 0;
   }
 
   .rb-profile-meta,
   .rb-profile-actions,
-  .rb-profile-socials {
+  .rb-profile-socials,
+  .rb-profile-tabs {
     justify-content: center;
+  }
+
+  .rb-profile-feed,
+  #profileFeed {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
+  .rb-profile-shell,
+  .rb-page-shell {
+    width: min(100%, calc(100vw - 20px));
+
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+
   .rb-profile-hero {
     min-height: unset;
+
     border-radius: 30px;
   }
 
   .rb-profile-inner {
     min-height: unset;
-    padding: 22px 18px 28px;
+
+    padding: 24px 18px 28px;
   }
 
   .rb-profile-avatar {
@@ -327,7 +815,13 @@
     font-size: 2.2rem;
   }
 
-  .rb-profile-actions .rb-btn {
+  .rb-profile-bio {
+    font-size: 0.94rem;
+  }
+
+  .rb-profile-actions .rb-btn,
+  .rb-profile-actions button,
+  .rb-profile-actions a {
     flex: 1;
     min-width: 0;
   }
@@ -338,5 +832,10 @@
 
   .rb-meta-pill {
     width: 100%;
+  }
+
+  .rb-profile-feed,
+  #profileFeed {
+    grid-template-columns: 1fr;
   }
 }
