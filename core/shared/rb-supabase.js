@@ -168,7 +168,7 @@ export async function signUp({
   currentUser = data.user || data.session?.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    currentProfile = null;
   }
 
   authBooted = true;
