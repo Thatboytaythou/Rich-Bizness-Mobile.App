@@ -1,20 +1,39 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/upload.js
+
+   UPLOAD PAGE CONTROLLER
+   Synced with auth + profile-state
 ========================= */
 
 import {
   initApp,
   getCurrentUserState,
   markPageReady,
-  markPageError
+  markPageError,
+  refreshAppIdentity
 } from "/core/app.js";
 
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
+
+import {
+  ensureMyProfile
+} from "/core/shared/rb-auth.js";
+
+import {
+  refreshProfileState
+} from "/core/features/profile/profile-state.js";
+
+import {
+  syncAvatarToUniverse
+} from "/core/features/profile/avatar-sync.js";
 
 import {
   RB_TABLES,
-  RB_BUCKETS
+  RB_BUCKETS,
+  RB_ROUTES
 } from "/core/shared/rb-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -53,6 +72,7 @@ const els = {
 
 let supabase = null;
 let authState = null;
+let isUploading = false;
 
 function setStatus(text) {
   if (els.statusLabel) els.statusLabel.textContent = text;
@@ -67,34 +87,49 @@ function safeName(name) {
   return String(name || "upload")
     .toLowerCase()
     .replace(/[^a-z0-9._-]+/g, "-")
-    .replace(/-+/g, "-");
+    .replace(/-+/g, "-")
+    .slice(0, 140);
+}
+
+function safeValue(el, fallback = "") {
+  return String(el?.value || fallback).trim();
 }
 
 function getMediaType(file, config) {
   const mime = file?.type || "";
+
   if (mime.startsWith("image/")) return "image";
   if (mime.startsWith("video/")) return "video";
   if (mime.startsWith("audio/")) return "audio";
+
   return config.mediaType || "file";
 }
 
 function setLoading(active) {
   els.form?.classList.toggle("is-loading", active);
-  els.form?.querySelectorAll("button,input,textarea,select").forEach((el) => {
-    el.disabled = active;
-  });
+
+  els.form
+    ?.querySelectorAll("button,input,textarea,select")
+    .forEach((el) => {
+      el.disabled = active;
+    });
 }
 
 function publicUrl(bucket, path) {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  const { data } = supabase.storage
+    .from(bucket)
+    .getPublicUrl(path);
+
   return data?.publicUrl || "";
 }
 
 function paintPreview() {
   const file = els.file?.files?.[0];
 
+  if (!els.preview) return;
+
   if (!file) {
-    if (els.preview) els.preview.innerHTML = "<span>No file selected</span>";
+    els.preview.innerHTML = "<span>No file selected</span>";
     return;
   }
 
@@ -136,15 +171,23 @@ function profilePayload(profile, user) {
     display_name:
       profile?.display_name ||
       profile?.full_name ||
+      profile?.username ||
       user?.email?.split("@")[0] ||
       "Rich User"
   };
 }
 
-async function insertUploadRecord({ user, config, file, filePath, url, mediaType }) {
-  const title = els.title.value.trim();
-  const description = els.description.value.trim();
-  const category = els.category.value.trim() || config.section;
+async function insertUploadRecord({
+  user,
+  config,
+  file,
+  filePath,
+  url,
+  mediaType
+}) {
+  const title = safeValue(els.title);
+  const description = safeValue(els.description);
+  const category = safeValue(els.category, config.section);
 
   const { data, error } = await supabase
     .from(RB_TABLES.uploads)
@@ -163,7 +206,7 @@ async function insertUploadRecord({ user, config, file, filePath, url, mediaType
       visibility: "public",
       processing_status: "completed",
       metadata: {
-        route_key: els.routeKey.value,
+        route_key: els.routeKey?.value || "general",
         source: "Rich Bizness Mobile",
         target_table: config.targetTable
       }
@@ -175,11 +218,19 @@ async function insertUploadRecord({ user, config, file, filePath, url, mediaType
   return data;
 }
 
-async function createSectionRecord({ user, profile, config, upload, url, mediaType }) {
-  const title = els.title.value.trim() || "Untitled Drop";
-  const description = els.description.value.trim();
-  const category = els.category.value.trim() || config.section;
-  const tag = els.tag.value.trim();
+async function createSectionRecord({
+  user,
+  profile,
+  config,
+  upload,
+  url,
+  mediaType
+}) {
+  const routeKey = els.routeKey?.value || "general";
+  const title = safeValue(els.title, "Untitled Drop");
+  const description = safeValue(els.description);
+  const category = safeValue(els.category, config.section);
+  const tag = safeValue(els.tag);
   const identity = profilePayload(profile, user);
 
   if (config.targetTable === RB_TABLES.feedPosts) {
@@ -193,13 +244,23 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
       thumbnail_url: mediaType === "image" ? url : null,
       section: config.section,
       visibility: "public",
-      metadata: { upload_id: upload.id, route_key: els.routeKey.value, category, tag }
+      like_count: 0,
+      comment_count: 0,
+      repost_count: 0,
+      view_count: 0,
+      metadata: {
+        upload_id: upload.id,
+        route_key: routeKey,
+        category,
+        tag
+      }
     });
   }
 
   if (config.targetTable === RB_TABLES.musicTracks) {
     return supabase.from(RB_TABLES.musicTracks).insert({
       user_id: user.id,
+      creator_id: user.id,
       ...identity,
       title,
       description,
@@ -208,13 +269,17 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
       genre: category,
       mood: tag,
       is_published: true,
-      metadata: { upload_id: upload.id, route_key: els.routeKey.value }
+      metadata: {
+        upload_id: upload.id,
+        route_key: routeKey
+      }
     });
   }
 
   if (config.targetTable === RB_TABLES.podcastEpisodes) {
     return supabase.from(RB_TABLES.podcastEpisodes).insert({
       user_id: user.id,
+      creator_id: user.id,
       ...identity,
       title,
       description,
@@ -223,7 +288,10 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
       episode_number: 1,
       season_number: 1,
       is_published: true,
-      metadata: { upload_id: upload.id, route_key: els.routeKey.value }
+      metadata: {
+        upload_id: upload.id,
+        route_key: routeKey
+      }
     });
   }
 
@@ -238,7 +306,10 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
       cover_url: url,
       genre: category,
       is_public: true,
-      metadata: { upload_id: upload.id, route_key: els.routeKey.value }
+      metadata: {
+        upload_id: upload.id,
+        route_key: routeKey
+      }
     });
   }
 
@@ -254,7 +325,10 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
       clip_type: "highlight",
       file_url: url,
       thumbnail_url: null,
-      metadata: { upload_id: upload.id, route_key: els.routeKey.value }
+      metadata: {
+        upload_id: upload.id,
+        route_key: routeKey
+      }
     });
   }
 
@@ -267,15 +341,19 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
       caption: description,
       clip_url: url,
       thumbnail_url: null,
-      metadata: { upload_id: upload.id, route_key: els.routeKey.value }
+      metadata: {
+        upload_id: upload.id,
+        route_key: routeKey
+      }
     });
   }
 
   if (config.targetTable === RB_TABLES.products) {
-    const isDigital = els.routeKey.value === "store-digital";
+    const isDigital = routeKey === "store-digital";
 
     return supabase.from(RB_TABLES.products).insert({
       seller_id: user.id,
+      creator_id: user.id,
       title,
       description,
       category,
@@ -289,12 +367,17 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
       is_digital: isDigital,
       is_public: true,
       status: "active",
-      metadata: { upload_id: upload.id, route_key: els.routeKey.value, tag }
+      metadata: {
+        upload_id: upload.id,
+        route_key: routeKey,
+        tag
+      }
     });
   }
 
   if (config.targetTable === RB_TABLES.profiles) {
-    const column = els.routeKey.value === "profile-banner" ? "banner_url" : "avatar_url";
+    const column =
+      routeKey === "profile-banner" ? "banner_url" : "avatar_url";
 
     return supabase
       .from(RB_TABLES.profiles)
@@ -314,7 +397,10 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
         aura: "green-gold",
         rank: "Traveler",
         is_active: true,
-        metadata: { upload_id: upload.id, route_key: els.routeKey.value },
+        metadata: {
+          upload_id: upload.id,
+          route_key: routeKey
+        },
         updated_at: new Date().toISOString()
       },
       { onConflict: "user_id" }
@@ -327,15 +413,17 @@ async function createSectionRecord({ user, profile, config, upload, url, mediaTy
 async function handleUpload(event) {
   event.preventDefault();
 
+  if (isUploading) return;
+
   authState = getCurrentUserState();
 
   const user = authState?.user;
-  const profile = authState?.profile;
+  let profile = authState?.profile;
   const file = els.file?.files?.[0];
 
-  if (!user) {
+  if (!user?.id) {
     setStatus("SIGN IN REQUIRED");
-    window.location.href = "/auth";
+    window.location.href = RB_ROUTES.auth || "/auth";
     return;
   }
 
@@ -349,7 +437,12 @@ async function handleUpload(event) {
   const filePath = `${user.id}/${Date.now()}-${safeName(file.name)}`;
 
   try {
+    isUploading = true;
     setLoading(true);
+    setStatus("SYNCING IDENTITY");
+
+    profile = await ensureMyProfile();
+
     setStatus("UPLOADING");
 
     const uploadResult = await supabase.storage
@@ -384,15 +477,27 @@ async function handleUpload(event) {
 
     if (sectionResult?.error) throw sectionResult.error;
 
+    await refreshProfileState();
+    await refreshAppIdentity();
+
+    if (
+      els.routeKey?.value === "profile-avatar" ||
+      els.routeKey?.value === "profile-banner" ||
+      els.routeKey?.value === "meta-avatar"
+    ) {
+      await syncAvatarToUniverse();
+    }
+
     setStatus("DROP LIVE");
 
-    els.form.reset();
+    els.form?.reset();
     paintPreview();
     syncRouteLabel();
   } catch (error) {
-    console.error("[upload.js]", error);
+    console.error("[RB UPLOAD FAILED]", error);
     setStatus(error?.message || "UPLOAD FAILED");
   } finally {
+    isUploading = false;
     setLoading(false);
   }
 }
@@ -405,8 +510,13 @@ async function bootUploadPage() {
       toast: false
     });
 
-    authState = getCurrentUserState();
     supabase = getSupabase();
+
+    await ensureMyProfile();
+    await refreshProfileState();
+    await refreshAppIdentity();
+
+    authState = getCurrentUserState();
 
     const params = new URLSearchParams(window.location.search);
     const section = params.get("section");
@@ -421,10 +531,13 @@ async function bootUploadPage() {
     els.file?.addEventListener("change", paintPreview);
     els.form?.addEventListener("submit", handleUpload);
 
+    document.body.classList.add("rb-upload-ready");
+
     markPageReady("upload");
+
     console.log("RB UPLOAD READY");
   } catch (error) {
-    console.error("[upload.js]", error);
+    console.error("[RB UPLOAD BOOT FAILED]", error);
     markPageError(error);
   }
 }
