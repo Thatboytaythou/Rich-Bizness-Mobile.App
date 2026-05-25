@@ -1,347 +1,135 @@
-.rb-universe-stage {
-  position: relative;
-  min-height: 980px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  isolation: isolate;
-}
+/* =========================================
+   6. styles/omni-portal.css
+   CENTER PORTAL VISUALS ONLY
+========================================= */
 
-.rb-orbit-wrap {
-  position: relative;
-  width: min(980px, 100%);
-  height: 980px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.rb-portal-core {
+.rb-universe-core {
   position: absolute;
-  width: 420px;
-  height: 420px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 20;
+  left: 50%;
+  top: 50%;
+  z-index: 40;
+
+  width: clamp(150px, 18vw, 240px);
+  height: clamp(150px, 18vw, 240px);
+
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+
+  pointer-events: none;
 }
 
-.rb-portal-rings {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  border: 2px solid rgba(52, 211, 153, 0.34);
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(52,211,153,0.18) 0%,
-      rgba(16,185,129,0.10) 28%,
-      rgba(16,185,129,0.04) 48%,
-      transparent 72%
-    );
-  box-shadow:
-    0 0 120px rgba(16,185,129,0.24),
-    inset 0 0 80px rgba(251,191,36,0.08);
-  animation: rbPortalSpin 24s linear infinite;
-}
-
-.rb-portal-rings::before,
-.rb-portal-rings::after {
+.rb-universe-core::before {
   content: "";
   position: absolute;
-  border-radius: inherit;
-}
+  inset: 0;
 
-.rb-portal-rings::before {
-  inset: 42px;
-  border: 1px dashed rgba(251,191,36,0.30);
-  animation: rbPortalSpinReverse 18s linear infinite;
-}
+  border-radius: 50%;
 
-.rb-portal-rings::after {
-  inset: 88px;
-  border: 2px solid rgba(16,185,129,0.22);
-  box-shadow: inset 0 0 40px rgba(16,185,129,0.18);
-  animation: rbPortalPulse 6s ease-in-out infinite;
-}
-
-.rb-center-action {
-  position: relative;
-  z-index: 25;
-  width: 280px;
-  height: 280px;
-  border-radius: 42px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
   background:
-    radial-gradient(
-      circle at 50% 20%,
-      rgba(16,185,129,0.18),
-      transparent 40%
-    ),
-    rgba(0,0,0,0.82);
-  border: 1px solid rgba(251,191,36,0.42);
-  box-shadow:
-    0 0 80px rgba(16,185,129,0.22),
-    inset 0 0 50px rgba(255,255,255,0.02);
-  cursor: pointer;
-}
-
-.rb-center-action i {
-  font-size: 4.6rem;
-  background: linear-gradient(135deg, #34d399, #fbbf24);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.rb-center-action strong {
-  font-size: 3rem;
-  line-height: 0.9;
-  font-weight: 950;
-  letter-spacing: -0.08em;
-}
-
-.rb-center-action small {
-  color: var(--rb-green-soft);
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-}
-
-.rb-live-chip {
-  min-width: 90px;
-  min-height: 34px;
-  padding: 0 18px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(16,185,129,0.14);
-  border: 1px solid rgba(16,185,129,0.42);
-  color: #7cf7c2;
-  font-size: 0.76rem;
-  font-weight: 950;
-  letter-spacing: 0.22em;
-}
-
-.rb-orbit-track {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  z-index: 10;
-}
-
-.rb-tv-card {
-  position: absolute;
-  width: 170px;
-  height: 250px;
-  padding: 22px 18px;
-  border-radius: 34px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  text-align: left;
-  overflow: hidden;
-  cursor: pointer;
-  background:
-    radial-gradient(
-      circle at 50% 14%,
-      rgba(255,255,255,0.10),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(18,22,18,0.96),
-      rgba(5,5,5,0.96)
+    radial-gradient(circle at 50% 45%,
+      rgba(255,255,255,.92) 0%,
+      rgba(110,231,183,.72) 16%,
+      rgba(16,185,129,.34) 38%,
+      rgba(16,185,129,.10) 64%,
+      transparent 78%
     );
-  border: 1px solid rgba(255,255,255,0.08);
+
   box-shadow:
-    0 0 50px rgba(0,0,0,0.44),
-    inset 0 0 40px rgba(255,255,255,0.02);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+    0 0 38px rgba(110,231,183,.55),
+    0 0 110px rgba(16,185,129,.32),
+    0 0 210px rgba(251,191,36,.10);
+
+  animation: rbPortalPulse 3.8s ease-in-out infinite;
 }
 
-.rb-tv-card small {
-  margin-bottom: 10px;
-  color: var(--rb-green-soft);
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.26em;
+.rb-universe-core::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+
+  border-radius: 50%;
+
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(251,191,36,.00),
+      rgba(251,191,36,.52),
+      rgba(16,185,129,.22),
+      rgba(255,255,255,.32),
+      rgba(251,191,36,.00)
+    );
+
+  mask:
+    radial-gradient(circle, transparent 52%, #000 54%, #000 66%, transparent 68%);
+  -webkit-mask:
+    radial-gradient(circle, transparent 52%, #000 54%, #000 66%, transparent 68%);
+
+  filter: blur(.4px);
+
+  animation: rbPortalSpin 9s linear infinite;
 }
 
-.rb-tv-card strong {
-  font-size: 1.7rem;
-  line-height: 0.92;
-  font-weight: 950;
-  letter-spacing: -0.06em;
-}
+.rb-portal-energy {
+  position: absolute;
+  left: 50%;
+  top: 50%;
 
-.rb-tv-card span {
-  margin-top: 10px;
-  color: rgba(255,255,255,0.58);
-  font-size: 0.8rem;
-  line-height: 1.3;
-}
+  width: 48%;
+  height: 48%;
 
-.rb-tv-card.is-front {
-  border-color: rgba(251,191,36,0.42);
-  box-shadow:
-    0 0 90px rgba(16,185,129,0.22),
-    0 0 24px rgba(251,191,36,0.14);
-}
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
 
-@keyframes rbPortalSpin {
-  from {
-    transform: rotate(0deg);
-  }
+  background:
+    radial-gradient(circle,
+      rgba(255,255,255,.95) 0%,
+      rgba(253,230,138,.70) 22%,
+      rgba(16,185,129,.34) 54%,
+      transparent 76%
+    );
 
-  to {
-    transform: rotate(360deg);
-  }
-}
+  filter: blur(1px);
 
-@keyframes rbPortalSpinReverse {
-  from {
-    transform: rotate(360deg);
-  }
-
-  to {
-    transform: rotate(0deg);
-  }
+  animation: rbPortalEnergy 2.8s ease-in-out infinite;
 }
 
 @keyframes rbPortalPulse {
   0%, 100% {
-    transform: scale(1);
-    opacity: 0.72;
+    transform: scale(.96);
+    opacity: .86;
   }
 
   50% {
-    transform: scale(1.03);
+    transform: scale(1.08);
     opacity: 1;
   }
 }
 
-@media (max-width: 1100px) {
-  .rb-universe-stage {
-    min-height: 900px;
-  }
-
-  .rb-orbit-wrap {
-    height: 900px;
-  }
-
-  .rb-portal-core {
-    width: 360px;
-    height: 360px;
-  }
-
-  .rb-center-action {
-    width: 240px;
-    height: 240px;
-  }
-
-  .rb-center-action strong {
-    font-size: 2.4rem;
-  }
-
-  .rb-tv-card {
-    width: 146px;
-    height: 220px;
+@keyframes rbPortalSpin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@media (max-width: 720px) {
-  .rb-universe-stage {
-    min-height: 820px;
+@keyframes rbPortalEnergy {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(.88);
+    opacity: .72;
   }
 
-  .rb-orbit-wrap {
-    height: 820px;
-  }
-
-  .rb-portal-core {
-    width: 300px;
-    height: 300px;
-  }
-
-  .rb-center-action {
-    width: 208px;
-    height: 208px;
-    border-radius: 34px;
-  }
-
-  .rb-center-action i {
-    font-size: 3.6rem;
-  }
-
-  .rb-center-action strong {
-    font-size: 2rem;
-  }
-
-  .rb-center-action small {
-    font-size: 0.82rem;
-  }
-
-  .rb-tv-card {
-    width: 118px;
-    height: 178px;
-    padding: 16px 14px;
-    border-radius: 26px;
-  }
-
-  .rb-tv-card strong {
-    font-size: 1.2rem;
-  }
-
-  .rb-tv-card span {
-    font-size: 0.64rem;
+  50% {
+    transform: translate(-50%, -50%) scale(1.14);
+    opacity: 1;
   }
 }
 
-@media (max-width: 480px) {
-  .rb-universe-stage {
-    min-height: 760px;
+@media (max-width: 680px) {
+  .rb-universe-core {
+    width: 138px;
+    height: 138px;
   }
 
-  .rb-orbit-wrap {
-    height: 760px;
-  }
-
-  .rb-portal-core {
-    width: 250px;
-    height: 250px;
-  }
-
-  .rb-center-action {
-    width: 184px;
-    height: 184px;
-  }
-
-  .rb-center-action i {
-    font-size: 3rem;
-  }
-
-  .rb-center-action strong {
-    font-size: 1.7rem;
-  }
-
-  .rb-tv-card {
-    width: 102px;
-    height: 156px;
-    border-radius: 22px;
-  }
-
-  .rb-tv-card strong {
-    font-size: 1rem;
-  }
-
-  .rb-tv-card span {
-    display: none;
+  .rb-universe-core::after {
+    inset: 12px;
   }
 }
