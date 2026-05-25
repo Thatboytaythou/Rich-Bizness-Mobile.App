@@ -1,95 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>Rich Bizness — Settings</title>
+  <title>Settings • Rich Bizness LLC</title>
 
-  <link rel="stylesheet" href="/styles/main.css" />
-  <link rel="stylesheet" href="/styles/mobile.css" />
+  <meta name="theme-color" content="#050805" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-home rb-settings-page">
+<body class="rb-body rb-settings-page">
 
-  <div class="rb-bg"></div>
-  <div class="rb-vignette"></div>
-  <div class="rb-grid"></div>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <main class="rb-auth-shell">
+  <header class="rb-topbar">
+
+    <a class="rb-brand" href="/">
+      <span>WELCOME</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Main navigation">
+      <a href="/profile">Profile</a>
+      <a href="/edit">Edit</a>
+      <a href="/feed">Feed</a>
+      <a href="/upload">Upload</a>
+    </nav>
+
+  </header>
+
+  <main class="rb-section-shell rb-settings-shell">
 
     <section class="rb-auth-hero">
+
       <p class="rb-kicker">RICH BIZNESS CONTROL</p>
 
       <h1>Settings</h1>
 
       <p>
-        Manage your identity, session, profile, and universe access.
+        Manage your identity, session, creator access, and universe controls.
       </p>
+
     </section>
 
     <section class="rb-auth-panel">
 
       <div class="rb-profile-grid">
 
-        <article>
+        <article class="rb-mini-card">
           <strong>Email</strong>
           <span id="settings-email">Loading...</span>
         </article>
 
-        <article>
+        <article class="rb-mini-card">
           <strong>Role</strong>
-          <span id="settings-role">user</span>
+          <span id="settings-role">USER</span>
         </article>
 
-        <article>
+        <article class="rb-mini-card">
           <strong>Status</strong>
-          <span id="settings-status">Standard</span>
+          <span id="settings-status">Standard Member</span>
         </article>
 
       </div>
 
-      <section class="rb-quick-actions" style="margin-top:16px;">
+      <section class="rb-quick-actions">
 
         <button
           id="settings-profile-btn"
+          class="rb-main-launch"
           type="button"
         >
-          Profile
+          PROFILE
         </button>
 
         <button
           id="settings-edit-btn"
+          class="rb-btn ghost"
           type="button"
         >
-          Edit
+          EDIT PROFILE
         </button>
 
       </section>
 
-      <section class="rb-quick-actions" style="margin-top:12px;">
+      <section class="rb-quick-actions">
 
         <button
           id="settings-signout-btn"
+          class="rb-btn danger"
           type="button"
         >
-          I’m Out ✌🏽
+          I’M OUT ✌🏽
         </button>
 
       </section>
 
-    </section>
+      <a class="rb-auth-home" href="/">
+        ← Back To Portal
+      </a>
 
-    <a class="rb-auth-home" href="/">
-      ← Back to Portal
-    </a>
+    </section>
 
   </main>
 
