@@ -91,6 +91,17 @@ const els = {
   metaPanel: $("profileMetaPanel")
 };
 
+function hasPublicProfileRoute() {
+  const params = new URLSearchParams(window.location.search);
+
+  return !!(
+    params.get("u") ||
+    params.get("username") ||
+    params.get("id") ||
+    params.get("user")
+  );
+}
+
 function money(cents = 0) {
   return `$${(Number(cents || 0) / 100).toFixed(2)}`;
 }
@@ -125,9 +136,20 @@ async function fetchCounts(profileId) {
   if (!profileId) return state.counts;
 
   const [followers, following, posts] = await Promise.allSettled([
-    supabase.from(RB_TABLES.followers).select("id", { count: "exact", head: true }).eq("following_id", profileId),
-    supabase.from(RB_TABLES.followers).select("id", { count: "exact", head: true }).eq("follower_id", profileId),
-    supabase.from(RB_TABLES.feedPosts).select("id", { count: "exact", head: true }).eq("user_id", profileId)
+    supabase
+      .from(RB_TABLES.followers)
+      .select("id", { count: "exact", head: true })
+      .eq("following_id", profileId),
+
+    supabase
+      .from(RB_TABLES.followers)
+      .select("id", { count: "exact", head: true })
+      .eq("follower_id", profileId),
+
+    supabase
+      .from(RB_TABLES.feedPosts)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profileId)
   ]);
 
   state.counts = {
@@ -235,14 +257,19 @@ function renderProfile() {
     DEFAULT_BANNER;
 
   if (els.status) {
-    els.status.textContent = state.isMine ? "Your Universe Profile" : "Universe Profile";
+    els.status.textContent = state.isMine
+      ? "Your Universe Profile"
+      : "Universe Profile";
   }
 
-  if (els.banner) els.banner.style.backgroundImage = `url("${banner}")`;
+  if (els.banner) {
+    els.banner.style.backgroundImage = `url("${banner}")`;
+  }
 
   if (els.avatar) {
     els.avatar.src = avatar;
     els.avatar.alt = profileName(profile);
+
     attachProfileRoute(els.avatar, {
       id: profile.id,
       username: profile.username
@@ -438,7 +465,9 @@ function bindActions() {
 
   els.messageBtn?.addEventListener("click", () => {
     if (!state.profile?.id) return;
-    window.location.href = `${RB_ROUTES.messages}?user=${encodeURIComponent(state.profile.id)}`;
+
+    window.location.href =
+      `${RB_ROUTES.messages}?user=${encodeURIComponent(state.profile.id)}`;
   });
 }
 
@@ -521,7 +550,7 @@ async function reloadSoft() {
 
   state.profile = profileState.profile || state.profile;
   state.identity = profileState.identity || state.identity;
-  state.isMine = profileState.isMine;
+  state.isMine = profileState.isMine || state.isMine;
 
   await Promise.all([
     fetchCounts(profileId),
@@ -533,13 +562,28 @@ async function reloadSoft() {
 }
 
 async function loadEverything() {
+  if (els.status) {
+    els.status.textContent = "Loading profile...";
+  }
+
+  const isPublicRoute = hasPublicProfileRoute();
+
+  if (!isPublicRoute && getUser()?.id) {
+    const ensuredProfile = await ensureMyProfile();
+
+    if (ensuredProfile?.id) {
+      state.profile = ensuredProfile;
+      state.isMine = true;
+    }
+  }
+
   let profileState = await loadProfileByRoute();
 
-  state.profile = profileState.profile;
-  state.identity = profileState.identity;
-  state.isMine = profileState.isMine;
+  state.profile = profileState.profile || state.profile;
+  state.identity = profileState.identity || state.identity;
+  state.isMine = profileState.isMine || state.isMine;
 
-  if (!state.profile?.id && getUser()?.id) {
+  if (!state.profile?.id && !isPublicRoute && getUser()?.id) {
     const ensuredProfile = await ensureMyProfile();
 
     if (ensuredProfile?.id) {
@@ -575,6 +619,7 @@ async function loadEverything() {
 
 function markReady() {
   document.body.classList.add("rb-page-ready");
+  document.body.classList.remove("rb-page-error");
   console.log("RB PROFILE PAGE READY");
 }
 
