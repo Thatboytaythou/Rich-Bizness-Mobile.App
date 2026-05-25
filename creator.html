@@ -1,1 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Creator • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-body rb-creator-page">
+  <div class="rb-bg-layer"></div>
+  <div class="rb-bg-grid"></div>
+  <div class="rb-bg-vignette"></div>
+  <div class="rb-bg-noise"></div>
+  <div class="rb-fx-smoke"></div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/">
+      <span>CREATOR CENTER</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Creator navigation">
+      <a href="/profile">Profile</a>
+      <a href="/upload">Upload</a>
+      <a href="/live">Live</a>
+      <a href="/store">Store</a>
+      <a href="/settings">Settings</a>
+    </nav>
+  </header>
+
+  <main class="rb-section-shell rb-creator-shell">
+    <section class="rb-profile-card">
+      <p class="rb-kicker">RICH BIZNESS CREATOR</p>
+
+      <div class="rb-profile-avatar-wrap">
+        <img
+          id="creator-user-avatar"
+          src="/images/brand/Avatar-hero-Banner.png.jpeg"
+          alt="Creator Avatar"
+        />
+      </div>
+
+      <h1 id="creator-user-name">Rich Creator</h1>
+
+      <p id="creator-user-handle" class="rb-profile-handle">
+        @richcreator
+      </p>
+
+      <div id="creator-user-badge" class="rb-meta-pill">
+        CREATOR
+      </div>
+
+      <p id="creator-status" class="rb-profile-bio">
+        Loading creator dashboard...
+      </p>
+
+      <div class="rb-form-actions">
+        <button id="creator-enable-btn" class="rb-main-launch" type="button">
+          ENABLE CREATOR
+        </button>
+
+        <button id="creator-refresh-btn" class="rb-btn ghost" type="button">
+          REFRESH
+        </button>
+      </div>
+
+      <small id="creator-sync-status">
+        Syncing creator systems...
+      </small>
+    </section>
+
+    <section class="rb-profile-grid">
+      <article class="rb-mini-card">
+        <strong>Posts</strong>
+        <span id="creator-posts-count">0</span>
+      </article>
+
+      <article class="rb-mini-card">
+        <strong>Live</strong>
+        <span id="creator-live-count">0</span>
+      </article>
+
+      <article class="rb-mini-card">
+        <strong>Uploads</strong>
+        <span id="creator-uploads-count">0</span>
+      </article>
+
+      <article class="rb-mini-card">
+        <strong>Products</strong>
+        <span id="creator-products-count">0</span>
+      </article>
+
+      <article class="rb-mini-card">
+        <strong>Available</strong>
+        <span id="creator-balance">$0.00</span>
+      </article>
+
+      <article class="rb-mini-card">
+        <strong>Revenue</strong>
+        <span id="creator-revenue">$0.00</span>
+      </article>
+    </section>
+
+    <section class="rb-feed-layout">
+      <aside class="rb-card rb-composer-card">
+        <p class="rb-kicker">CREATOR ACTIONS</p>
+
+        <div class="rb-form-actions">
+          <button id="creator-profile-btn" class="rb-btn ghost" type="button">
+            PROFILE
+          </button>
+
+          <button id="creator-upload-btn" class="rb-main-launch" type="button">
+            UPLOAD
+          </button>
+
+          <button id="creator-live-btn" class="rb-btn ghost" type="button">
+            GO LIVE
+          </button>
+
+          <button id="creator-store-btn" class="rb-btn ghost" type="button">
+            STORE
+          </button>
+        </div>
+      </aside>
+
+      <section class="rb-feed-main">
+        <div id="creator-empty" class="rb-card rb-empty" style="display:none;">
+          <h2>No Creator Activity Yet</h2>
+          <p>Upload, post, go live, or list a product to start building your creator empire.</p>
+        </div>
+
+        <div id="creator-activity-list" class="rb-feed-list"></div>
+      </section>
+    </section>
+
+    <a href="/" class="rb-auth-home">
+      ← Back To Portal
+    </a>
+  </main>
+
+  <script type="module" src="/core/pages/creator.js"></script>
+</body>
+</html>
