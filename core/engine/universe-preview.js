@@ -16,72 +16,17 @@ const container = document.getElementById("canvas-container");
 const labelEl = document.getElementById("module-label");
 
 const modules = [
-  {
-    key: "feed",
-    title: "Global Feed",
-    tag: "FEED",
-    image: "/images/brand/hero-banner.png",
-  },
-  {
-    key: "live",
-    title: "Go Live",
-    tag: "LIVE",
-    image: "/images/brand/omni-watch.png.jpeg",
-  },
-  {
-    key: "music",
-    title: "Music Universe",
-    tag: "MUSIC",
-    image: "/images/brand/music-log.png.jpeg",
-  },
-  {
-    key: "podcast",
-    title: "Podcast Shows",
-    tag: "PODCAST",
-    image: "/images/brand/Avatar-hero-Banner.png.jpeg",
-  },
-  {
-    key: "radio",
-    title: "Live Radio",
-    tag: "RADIO",
-    image: "/images/brand/background-v2.png.jpeg",
-  },
-  {
-    key: "gaming",
-    title: "Arcade District",
-    tag: "GAMING",
-    image: "/images/brand/gaming-hero.png.jpeg",
-  },
-  {
-    key: "upload",
-    title: "Upload Content",
-    tag: "UPLOAD",
-    image: "/images/brand/project-avatar.png.jpeg",
-  },
-  {
-    key: "sports",
-    title: "Sports Arena",
-    tag: "SPORTS",
-    image: "/images/brand/sports-logo.png.jpeg",
-  },
-  {
-    key: "gallery",
-    title: "Visual Drops",
-    tag: "GALLERY",
-    image: "/images/brand/father-son-elite.png.jpeg",
-  },
-  {
-    key: "store",
-    title: "Creator Market",
-    tag: "STORE",
-    image: "/images/brand/gta-style-elite.png.jpeg",
-  },
-  {
-    key: "meta",
-    title: "Meta World",
-    tag: "META",
-    image: "/images/brand/meta-verse-elite.png.jpeg",
-  },
+  { key: "feed", title: "Global Feed", tag: "FEED", image: "/images/brand/hero-banner.png" },
+  { key: "live", title: "Go Live", tag: "LIVE", image: "/images/brand/omni-watch.png.jpeg" },
+  { key: "music", title: "Music Universe", tag: "MUSIC", image: "/images/brand/music-log.png.jpeg" },
+  { key: "podcast", title: "Podcast Shows", tag: "PODCAST", image: "/images/brand/Avatar-hero-Banner.png.jpeg" },
+  { key: "radio", title: "Live Radio", tag: "RADIO", image: "/images/brand/background-v2.png.jpeg" },
+  { key: "gaming", title: "Arcade District", tag: "GAMING", image: "/images/brand/gaming-hero.png.jpeg" },
+  { key: "upload", title: "Upload Content", tag: "UPLOAD", image: "/images/brand/project-avatar.png.jpeg" },
+  { key: "sports", title: "Sports Arena", tag: "SPORTS", image: "/images/brand/sports-logo.png.jpeg" },
+  { key: "gallery", title: "Visual Drops", tag: "GALLERY", image: "/images/brand/father-son-elite.png.jpeg" },
+  { key: "store", title: "Creator Market", tag: "STORE", image: "/images/brand/gta-style-elite.png.jpeg" },
+  { key: "meta", title: "Meta World", tag: "META", image: "/images/brand/meta-verse-elite.png.jpeg" },
 ];
 
 let scene;
@@ -117,7 +62,7 @@ function initUniverse() {
     1200
   );
 
-  camera.position.set(0, 4, 44);
+  camera.position.set(0, 4, 52);
 
   renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -128,6 +73,8 @@ function initUniverse() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.sortObjects = true;
+
+  container.innerHTML = "";
   container.appendChild(renderer.domElement);
 
   raycaster = new THREE.Raycaster();
@@ -145,13 +92,13 @@ function initUniverse() {
 }
 
 function buildLights() {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.64));
 
   const goldLight = new THREE.PointLight(0xfbbf24, 3.4, 150);
   goldLight.position.set(18, 18, 32);
   scene.add(goldLight);
 
-  const greenLight = new THREE.PointLight(0x10b981, 3, 150);
+  const greenLight = new THREE.PointLight(0x10b981, 3.1, 150);
   greenLight.position.set(-20, -4, 22);
   scene.add(greenLight);
 }
@@ -160,10 +107,10 @@ function buildStars() {
   const geo = new THREE.BufferGeometry();
   const positions = [];
 
-  for (let i = 0; i < 2200; i++) {
-    positions.push(THREE.MathUtils.randFloatSpread(170));
-    positions.push(THREE.MathUtils.randFloatSpread(120));
-    positions.push(THREE.MathUtils.randFloatSpread(140));
+  for (let i = 0; i < 2600; i++) {
+    positions.push(THREE.MathUtils.randFloatSpread(180));
+    positions.push(THREE.MathUtils.randFloatSpread(130));
+    positions.push(THREE.MathUtils.randFloatSpread(150));
   }
 
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -172,13 +119,14 @@ function buildStars() {
     geo,
     new THREE.PointsMaterial({
       color: 0xfbbf24,
-      size: 0.05,
+      size: 0.045,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.38,
       depthWrite: false,
     })
   );
 
+  starField.position.z = -18;
   scene.add(starField);
 }
 
@@ -186,14 +134,14 @@ function buildGalaxy() {
   const galaxyGeo = new THREE.BufferGeometry();
   const galaxy = [];
 
-  for (let i = 0; i < 3200; i++) {
-    const radius = Math.random() * 52;
-    const angle = radius * 0.32 + Math.random() * Math.PI * 2;
+  for (let i = 0; i < 3600; i++) {
+    const radius = Math.random() * 56;
+    const angle = radius * 0.34 + Math.random() * Math.PI * 2;
 
     galaxy.push(
       Math.cos(angle) * radius,
-      THREE.MathUtils.randFloatSpread(20),
-      Math.sin(angle) * radius - 8
+      THREE.MathUtils.randFloatSpread(22),
+      Math.sin(angle) * radius - 14
     );
   }
 
@@ -203,9 +151,9 @@ function buildGalaxy() {
     galaxyGeo,
     new THREE.PointsMaterial({
       color: 0x10b981,
-      size: 0.075,
+      size: 0.065,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.34,
       depthWrite: false,
     })
   );
@@ -218,21 +166,21 @@ function buildPortal() {
   portal = new THREE.Group();
 
   const glow = new THREE.Mesh(
-    new THREE.SphereGeometry(8.2, 96, 96),
+    new THREE.SphereGeometry(7.65, 96, 96),
     new THREE.MeshBasicMaterial({
       color: 0x10b981,
       transparent: true,
-      opacity: 0.045,
+      opacity: 0.032,
       depthWrite: false,
     })
   );
 
   const core = new THREE.Mesh(
-    new THREE.SphereGeometry(6.6, 96, 96),
+    new THREE.SphereGeometry(5.9, 96, 96),
     new THREE.MeshPhongMaterial({
       color: 0x10b981,
       emissive: 0x064e3b,
-      shininess: 48,
+      shininess: 52,
       transparent: true,
       opacity: 0.96,
     })
@@ -240,7 +188,7 @@ function buildPortal() {
 
   portal.add(glow);
   portal.add(core);
-  portal.position.set(0, -1, -1);
+  portal.position.set(0, -1.15, -1.6);
   portal.renderOrder = 1;
 
   scene.add(portal);
@@ -302,7 +250,7 @@ function createPhoneCard(mod) {
     new THREE.MeshBasicMaterial({
       color: 0x03140b,
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.13,
       depthWrite: false,
     })
   );
@@ -314,7 +262,7 @@ function createPhoneCard(mod) {
     new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.065,
       depthWrite: false,
     })
   );
@@ -341,7 +289,7 @@ function createPhoneCard(mod) {
   group.add(shine);
   group.add(border);
 
-  group.scale.setScalar(0.82);
+  group.scale.setScalar(0.72);
   group.renderOrder = 20;
 
   return group;
@@ -358,7 +306,7 @@ function updateCards() {
     ? RB_CONFIG.motion.orbit.mobileRadiusY / 10
     : RB_CONFIG.motion.orbit.desktopRadiusY / 10;
 
-  const baseY = isMobile ? -1 : -0.4;
+  const baseY = isMobile ? -1.15 : -0.55;
 
   orbitOffset += (targetOffset - orbitOffset) * 0.055;
 
@@ -369,21 +317,21 @@ function updateCards() {
     const z = Math.sin(angle) * radiusZ;
 
     const depth = (z + radiusZ) / (radiusZ * 2);
-    const scale = 0.56 + depth * 0.56;
-    const opacity = 0.55 + depth * 0.45;
+    const scale = 0.42 + depth * 0.42;
+    const opacity = 0.62 + depth * 0.38;
 
-    card.position.set(x, baseY + depth * 1.15, z + 3);
+    card.position.set(x, baseY + depth * 1.05, z + 1.2);
     card.rotation.y = -angle + Math.PI / 2;
-    card.scale.setScalar(card === hoveredCard ? scale * 1.13 : scale);
+    card.scale.setScalar(card === hoveredCard ? scale * 1.12 : scale);
 
     card.children.forEach((child, childIndex) => {
       if (!child.material) return;
 
-      if (childIndex === 0) child.material.opacity = 0.8 + opacity * 0.16;
+      if (childIndex === 0) child.material.opacity = 0.82 + opacity * 0.14;
       if (childIndex === 1) child.material.opacity = opacity;
-      if (childIndex === 2) child.material.opacity = 0.14 + depth * 0.08;
-      if (childIndex === 3) child.material.opacity = 0.06 + depth * 0.08;
-      if (childIndex === 4) child.material.opacity = 0.14 + depth * 0.16;
+      if (childIndex === 2) child.material.opacity = 0.12 + depth * 0.07;
+      if (childIndex === 3) child.material.opacity = 0.05 + depth * 0.06;
+      if (childIndex === 4) child.material.opacity = 0.13 + depth * 0.14;
     });
 
     card.renderOrder = 20 + Math.round(depth * 100);
@@ -488,7 +436,7 @@ function animateUniverse() {
 
   const t = performance.now() * 0.001;
 
-  targetOffset += RB_CONFIG.motion.orbit.speed;
+  targetOffset += RB_CONFIG.motion.orbit.speed || 0.0022;
 
   portal.rotation.y += 0.002;
   portal.rotation.x = Math.sin(t * 0.45) * 0.06;
