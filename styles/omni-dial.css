@@ -1,4 +1,4 @@
-/* =========================
+ /* =========================
    RICH BIZNESS MOBILE
    styles/omni-dial.css
 
@@ -7,6 +7,7 @@
    - profile chip
    - side tabs
    - bottom nav
+   - realtime notifications
    - cinematic overlays
 ========================= */
 
@@ -134,7 +135,8 @@
     0 0 18px rgba(16, 185, 129, 0.12);
 }
 
-.rb-profile-chip:hover {
+.rb-profile-chip:hover,
+.rb-profile-chip.rb-online-active {
   border-color: rgba(16, 185, 129, 0.52);
 
   box-shadow:
@@ -144,6 +146,39 @@
   transform:
     translateY(-2px)
     scale(1.03);
+}
+
+.rb-profile-chip::after {
+  content: attr(data-online);
+
+  position: absolute;
+  right: 8px;
+  bottom: -5px;
+
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(145deg, #10b981, #fbbf24);
+
+  color: #020403;
+  font-size: 10px;
+  font-weight: 900;
+
+  box-shadow:
+    0 0 12px rgba(16, 185, 129, 0.65),
+    0 0 24px rgba(250, 204, 21, 0.35);
+}
+
+.rb-profile-chip.rb-online-active::after {
+  display: flex;
 }
 
 .rb-profile-chip img {
@@ -226,7 +261,8 @@
     0 0 22px rgba(16, 185, 129, 0.08);
 }
 
-.rb-side-tabs button:hover {
+.rb-side-tabs button:hover,
+.rb-side-tabs button.rb-live-active {
   border-color: rgba(16, 185, 129, 0.5);
 
   background:
@@ -259,6 +295,36 @@
     radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 70%);
 
   pointer-events: none;
+}
+
+.rb-side-tabs button.rb-live-active::before,
+.rb-bottom-nav button.rb-live-active::before {
+  content: attr(data-count);
+
+  position: absolute;
+  top: -6px;
+  right: -5px;
+
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(145deg, #10b981, #fbbf24);
+
+  color: #020403;
+  font-size: 10px;
+  font-weight: 900;
+
+  box-shadow:
+    0 0 12px rgba(16, 185, 129, 0.6),
+    0 0 24px rgba(250, 204, 21, 0.32);
 }
 
 /* =========================
@@ -329,7 +395,8 @@
 }
 
 .rb-bottom-nav button:hover,
-.rb-bottom-nav button.is-active {
+.rb-bottom-nav button.is-active,
+.rb-bottom-nav button.rb-live-active {
   color: #fefce8;
   border-color: rgba(16, 185, 129, 0.44);
 
@@ -379,6 +446,132 @@
     transform: scale(1.12);
     opacity: 1;
   }
+}
+
+/* =========================
+   REALTIME NOTIFICATIONS
+========================= */
+
+#rb-notify-root {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 148px);
+  right: 18px;
+  z-index: 99999;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  width: 320px;
+  max-width: calc(100vw - 24px);
+
+  pointer-events: none;
+}
+
+.rb-notify-toast {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 14px;
+
+  border-radius: 22px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,0.10), transparent 70%),
+    linear-gradient(145deg, rgba(5,8,5,0.96), rgba(0,0,0,0.82));
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  transform:
+    translateX(120%)
+    scale(0.92);
+
+  opacity: 0;
+
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+
+  box-shadow:
+    0 0 30px rgba(16,185,129,0.14),
+    0 0 80px rgba(0,0,0,0.44);
+}
+
+.rb-notify-toast.is-visible {
+  opacity: 1;
+
+  transform:
+    translateX(0)
+    scale(1);
+}
+
+.rb-notify-icon {
+  position: relative;
+  z-index: 2;
+
+  width: 48px;
+  height: 48px;
+
+  border-radius: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 22px;
+
+  background:
+    linear-gradient(145deg, rgba(16,185,129,0.18), rgba(250,204,21,0.10));
+
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.rb-notify-copy {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rb-notify-copy strong {
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  letter-spacing: 0.18em;
+}
+
+.rb-notify-copy span {
+  color: rgba(255,255,255,0.72);
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rb-notify-glow {
+  position: absolute;
+
+  width: 180px;
+  height: 180px;
+
+  right: -60px;
+  top: -90px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle, rgba(16,185,129,0.22), transparent 72%);
+
+  pointer-events: none;
 }
 
 /* =========================
@@ -477,6 +670,23 @@
   .rb-bottom-nav button span:last-child {
     font-size: 9px;
     letter-spacing: 0.05em;
+  }
+
+  #rb-notify-root {
+    top: calc(env(safe-area-inset-top) + 132px);
+    right: 10px;
+    width: calc(100vw - 20px);
+  }
+
+  .rb-notify-toast {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .rb-notify-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
   }
 }
 
