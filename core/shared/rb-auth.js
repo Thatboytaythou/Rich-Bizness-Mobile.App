@@ -5,6 +5,7 @@
    AUTH SYSTEM
    Synced To rb-supabase.js
    Profile Upsert Locked
+   Auto Profile Ensure Enabled
 ========================= */
 
 import {
@@ -28,7 +29,7 @@ import {
 const supabase = getSupabase();
 
 const DEFAULT_AVATAR =
-  "/images/brand/project-avatar.png.jpeg";
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const DEFAULT_BANNER =
   "/images/brand/Avatar-hero-Banner.png.jpeg";
@@ -56,6 +57,7 @@ function cleanUsername(username = "") {
   return String(username || "")
     .trim()
     .toLowerCase()
+    .replace("@", "")
     .replace(/[^a-z0-9_]/g, "")
     .slice(0, 24);
 }
@@ -151,23 +153,26 @@ async function upsertProfileFromAuth({
 
   const now = new Date().toISOString();
 
+  const payload = {
+    id: user.id,
+    username: finalUsername,
+    display_name: finalDisplayName,
+    full_name: existingProfile?.full_name || finalDisplayName,
+    avatar_url: finalAvatar,
+    banner_url: finalBanner,
+    role: finalRole,
+    online_status: "online",
+    last_seen_at: now,
+    updated_at: now
+  };
+
+  if (!existingProfile?.created_at) {
+    payload.created_at = now;
+  }
+
   const { data, error } = await supabase
     .from(RB_TABLES.profiles)
-    .upsert(
-      {
-        id: user.id,
-        username: finalUsername,
-        display_name: finalDisplayName,
-        full_name: existingProfile?.full_name || finalDisplayName,
-        avatar_url: finalAvatar,
-        banner_url: finalBanner,
-        role: finalRole,
-        online_status: "online",
-        last_seen_at: now,
-        updated_at: now
-      },
-      { onConflict: "id" }
-    )
+    .upsert(payload, { onConflict: "id" })
     .select()
     .maybeSingle();
 
@@ -178,6 +183,40 @@ async function upsertProfileFromAuth({
 
   await loadProfile(user.id);
   return data;
+}
+
+export async function ensureMyProfile() {
+  await bootAuth();
+
+  const user = getUser();
+  if (!user?.id) return null;
+
+  const existingProfile = await getExistingProfile(user.id);
+
+  if (existingProfile) {
+    await loadProfile(user.id);
+
+    await supabase
+      .from(RB_TABLES.profiles)
+      .update({
+        online_status: "online",
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", user.id);
+
+    return existingProfile;
+  }
+
+  return await upsertProfileFromAuth({
+    user,
+    email: user.email || "",
+    username: user.user_metadata?.username || "",
+    displayName:
+      user.user_metadata?.display_name ||
+      user.user_metadata?.full_name ||
+      ""
+  });
 }
 
 export async function rbSignUp({
@@ -310,6 +349,7 @@ export async function refreshProfile() {
 
 window.addEventListener("focus", async () => {
   if (getUser()?.id) {
+    await ensureMyProfile();
     await refreshProfile();
   }
 });
