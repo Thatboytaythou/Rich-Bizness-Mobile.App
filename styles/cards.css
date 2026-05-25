@@ -1,7 +1,9 @@
-/* =========================================
+ /* =========================================
    RICH BIZNESS LLC
    /styles/cards.css
-   GLOBAL CARD SYSTEM - POLISHED
+
+   GLOBAL CARD SYSTEM
+   Cinematic Green + Gold Polish
 ========================================= */
 
 /* =========================================
@@ -23,24 +25,33 @@
 .rb-profile-card,
 .rb-creator-card {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
+
   border-radius: 32px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.58));
+  border: 1px solid rgba(250, 204, 21, 0.12);
+
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(250, 204, 21, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.62));
+
   backdrop-filter: blur(16px);
-  box-shadow: 
-    0 30px 80px rgba(0,0,0,0.45),
-    0 0 30px rgba(0,255,136,0.09);
-  transition: 
+  -webkit-backdrop-filter: blur(16px);
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.46),
+    0 0 30px rgba(16, 185, 129, 0.1),
+    inset 0 0 28px rgba(255, 255, 255, 0.018);
+
+  transform: translateZ(0);
+
+  transition:
     transform 0.28s cubic-bezier(0.23, 1, 0.32, 1),
     border-color 0.28s ease,
-    box-shadow 0.28s ease;
-  isolation: isolate;
+    box-shadow 0.28s ease,
+    background 0.28s ease;
 }
-
-/* =========================================
-   UNIVERSAL HOVER
-========================================= */
 
 .rb-card:hover,
 .rb-media-card:hover,
@@ -56,11 +67,14 @@
 .rb-meta-card:hover,
 .rb-profile-card:hover,
 .rb-creator-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(102,255,153,0.28);
-  box-shadow: 
-    0 40px 100px rgba(0,0,0,0.55),
-    0 0 45px rgba(0,255,136,0.18);
+  transform: translateY(-6px) scale(1.01);
+
+  border-color: rgba(102, 255, 153, 0.32);
+
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.56),
+    0 0 45px rgba(16, 185, 129, 0.2),
+    0 0 75px rgba(250, 204, 21, 0.08);
 }
 
 /* =========================================
@@ -82,12 +96,76 @@
 .rb-profile-card::before,
 .rb-creator-card::before {
   content: "";
+
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  background: linear-gradient(135deg, rgba(255,255,255,0.16), transparent 22%, transparent 68%, rgba(0,255,136,0.10));
-  opacity: 0.85;
   z-index: 1;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15),
+      transparent 22%,
+      transparent 68%,
+      rgba(16, 185, 129, 0.11)
+    );
+
+  opacity: 0.84;
+
+  pointer-events: none;
+}
+
+.rb-card::after,
+.rb-media-card::after,
+.rb-live-card::after,
+.rb-feed-card::after,
+.rb-music-card::after,
+.rb-podcast-card::after,
+.rb-radio-card::after,
+.rb-game-card::after,
+.rb-sports-card::after,
+.rb-gallery-card::after,
+.rb-store-card::after,
+.rb-meta-card::after,
+.rb-profile-card::after,
+.rb-creator-card::after {
+  content: "";
+
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(16, 185, 129, 0.22),
+      transparent 36%,
+      rgba(250, 204, 21, 0.16)
+    );
+
+  opacity: 0;
+  transition: opacity 0.28s ease;
+
+  pointer-events: none;
+}
+
+.rb-card:hover::after,
+.rb-media-card:hover::after,
+.rb-live-card:hover::after,
+.rb-feed-card:hover::after,
+.rb-music-card:hover::after,
+.rb-podcast-card:hover::after,
+.rb-radio-card:hover::after,
+.rb-game-card:hover::after,
+.rb-sports-card:hover::after,
+.rb-gallery-card:hover::after,
+.rb-store-card:hover::after,
+.rb-meta-card:hover::after,
+.rb-profile-card:hover::after,
+.rb-creator-card:hover::after {
+  opacity: 1;
 }
 
 /* =========================================
@@ -99,11 +177,16 @@
 .rb-live-cover,
 .rb-game-cover,
 .rb-gallery-cover,
-.rb-store-cover {
+.rb-store-cover,
+.rb-card-cover {
   position: relative;
-  aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: #020402;
+
+  aspect-ratio: 16 / 10;
+
+  background:
+    radial-gradient(circle at center, rgba(16, 185, 129, 0.12), transparent 62%),
+    #020402;
 }
 
 .rb-card-media img,
@@ -112,17 +195,29 @@
 .rb-game-cover img,
 .rb-gallery-cover img,
 .rb-store-cover img,
+.rb-card-cover img,
 .rb-card-media video,
 .rb-media-cover video,
 .rb-live-cover video,
 .rb-game-cover video,
 .rb-gallery-cover video,
-.rb-store-cover video {
+.rb-store-cover video,
+.rb-card-cover video {
   width: 100%;
   height: 100%;
+
+  display: block;
+
   object-fit: cover;
-  transition: transform 0.6s ease, filter 0.4s ease;
-  filter: saturate(1.08) contrast(1.06);
+
+  filter:
+    saturate(1.08)
+    contrast(1.06)
+    brightness(0.96);
+
+  transition:
+    transform 0.6s ease,
+    filter 0.4s ease;
 }
 
 .rb-card:hover img,
@@ -138,9 +233,27 @@
 .rb-store-card:hover img,
 .rb-meta-card:hover img,
 .rb-profile-card:hover img,
-.rb-creator-card:hover img {
+.rb-creator-card:hover img,
+.rb-card:hover video,
+.rb-media-card:hover video,
+.rb-live-card:hover video,
+.rb-feed-card:hover video,
+.rb-music-card:hover video,
+.rb-podcast-card:hover video,
+.rb-radio-card:hover video,
+.rb-game-card:hover video,
+.rb-sports-card:hover video,
+.rb-gallery-card:hover video,
+.rb-store-card:hover video,
+.rb-meta-card:hover video,
+.rb-profile-card:hover video,
+.rb-creator-card:hover video {
   transform: scale(1.06);
-  filter: saturate(1.18) contrast(1.12);
+
+  filter:
+    saturate(1.18)
+    contrast(1.12)
+    brightness(1.02);
 }
 
 /* =========================================
@@ -150,45 +263,59 @@
 .rb-card-overlay {
   position: absolute;
   inset: 0;
+  z-index: 3;
+
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+
   padding: 18px;
-  z-index: 3;
-  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.85));
+
+  background:
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.88));
 }
 
 .rb-card-body {
   position: relative;
   z-index: 2;
-  padding: 18px;
+
   display: grid;
   gap: 12px;
+
+  padding: 18px;
 }
 
 .rb-card-kicker {
-  color: var(--rb-green);
+  color: var(--rb-green, #10b981);
+
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+
+  text-shadow:
+    0 0 12px rgba(16, 185, 129, 0.35);
 }
 
 .rb-card-title {
   margin: 0;
+
+  color: #ffffff;
+
   font-size: clamp(1.05rem, 2vw, 1.45rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
 }
 
 .rb-card-copy {
-  color: var(--rb-muted);
+  color: var(--rb-muted, rgba(255, 255, 255, 0.68));
+
   line-height: 1.55;
   font-size: 0.92rem;
 }
 
 /* =========================================
-   META & USER ROW
+   META + USER ROW
 ========================================= */
 
 .rb-card-meta {
@@ -200,7 +327,8 @@
 }
 
 .rb-card-meta span {
-  color: rgba(255,255,255,0.65);
+  color: rgba(255, 255, 255, 0.65);
+
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -216,10 +344,37 @@
 .rb-card-user img {
   width: 48px;
   height: 48px;
+
   border-radius: 50%;
+
   object-fit: cover;
-  border: 1px solid rgba(255,215,106,0.28);
-  background: #081008;
+
+  border: 1px solid rgba(250, 204, 21, 0.3);
+
+  background:
+    #081008
+    url("/images/brand/Avatar-hero-Banner.png.jpeg")
+    center / cover no-repeat;
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.18);
+}
+
+.rb-card-user strong {
+  display: block;
+
+  color: #ffffff;
+
+  font-size: 0.9rem;
+}
+
+.rb-card-user small {
+  display: block;
+
+  color: rgba(255, 255, 255, 0.58);
+
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 /* =========================================
@@ -227,8 +382,19 @@
 ========================================= */
 
 .rb-live-card {
-  border-color: rgba(255,70,70,0.22);
-  box-shadow: 0 30px 80px rgba(0,0,0,0.48), 0 0 34px rgba(255,0,60,0.12);
+  border-color: rgba(255, 70, 70, 0.24);
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.48),
+    0 0 34px rgba(255, 0, 60, 0.13);
+}
+
+.rb-live-card:hover {
+  border-color: rgba(255, 70, 70, 0.42);
+
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.58),
+    0 0 48px rgba(255, 0, 60, 0.22);
 }
 
 .rb-live-badge {
@@ -236,39 +402,79 @@
   top: 14px;
   left: 14px;
   z-index: 4;
+
+  min-height: 32px;
+
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 32px;
+
   padding: 0 14px;
+
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff3355, #ff0033);
-  color: #fff;
+
+  background:
+    linear-gradient(135deg, #ff3355, #ff0033);
+
+  color: #ffffff;
+
   font-size: 0.68rem;
   font-weight: 1000;
   letter-spacing: 0.12em;
-  box-shadow: 0 0 18px rgba(255,0,60,0.38);
+
+  box-shadow:
+    0 0 18px rgba(255, 0, 60, 0.38);
+}
+
+.rb-live-badge::before {
+  content: "";
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, 0.9);
 }
 
 .rb-store-price {
-  color: var(--rb-gold);
+  color: var(--rb-gold, #facc15);
+
   font-size: 1.22rem;
   font-weight: 1000;
+
+  text-shadow:
+    0 0 14px rgba(250, 204, 21, 0.24);
 }
 
 .rb-music-wave {
   position: relative;
-  height: 52px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(255,215,106,0.08));
   overflow: hidden;
+
+  height: 52px;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(250, 204, 21, 0.08));
 }
 
 .rb-music-wave::before {
   content: "";
+
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(90deg, rgba(102,255,153,0.25) 0 2px, transparent 2px 8px);
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(102, 255, 153, 0.25) 0 2px,
+      transparent 2px 8px
+    );
+
   animation: rbWaveMove 6.5s linear infinite;
 }
 
@@ -286,24 +492,45 @@
 .rb-card-actions button,
 .rb-card-actions a {
   min-height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   padding: 0 16px;
+
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: #ffffff;
+
   font-size: 0.74rem;
   font-weight: 1000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-decoration: none;
+
   cursor: pointer;
-  transition: all 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .rb-card-actions button:hover,
 .rb-card-actions a:hover {
   transform: translateY(-1px);
-  border-color: rgba(102,255,153,0.3);
-  background: rgba(0,255,136,0.1);
+
+  border-color: rgba(102, 255, 153, 0.32);
+
+  background: rgba(16, 185, 129, 0.12);
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.14);
 }
 
 /* =========================================
@@ -314,13 +541,27 @@
   position: absolute;
   top: -120%;
   left: -30%;
+  z-index: 2;
+
   width: 55%;
   height: 300%;
+
   transform: rotate(18deg);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.16),
+      transparent
+    );
+
   opacity: 0;
-  transition: all 0.7s ease;
-  z-index: 2;
+
+  transition:
+    left 0.7s ease,
+    opacity 0.7s ease;
+
   pointer-events: none;
 }
 
@@ -343,12 +584,41 @@
 }
 
 /* =========================================
+   EMPTY / LOADING CARDS
+========================================= */
+
+.rb-empty,
+.rb-mini-empty,
+.rb-card-empty {
+  border-radius: 24px;
+  border: 1px solid rgba(250, 204, 21, 0.14);
+
+  background:
+    linear-gradient(145deg, rgba(5, 8, 5, 0.82), rgba(0, 0, 0, 0.74));
+
+  color: rgba(255, 255, 255, 0.7);
+
+  padding: 18px;
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.02);
+}
+
+/* =========================================
    ANIMATIONS
 ========================================= */
 
 @keyframes rbWaveMove {
-  from { transform: translateX(0); }
-  to   { transform: translateX(40px); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(40px);
+  }
 }
 
 /* =========================================
