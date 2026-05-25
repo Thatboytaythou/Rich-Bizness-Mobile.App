@@ -1,48 +1,60 @@
-/* =========================================
-   RICH BIZNESS LLC
-   Profile Page Controller
-   Fully Polished + Production Ready
-========================================= */
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/pages/profile.js
 
-import {
-  initApp,
-  getCurrentUserState,
-  markPageReady,
-  markPageError
-} from "/core/app.js";
-
-import {
-  getSupabase
-} from "/core/shared/rb-supabase.js";
+   PROFILE PAGE CONTROLLER
+   Synced with auth + profile-state
+========================= */
 
 import {
   RB_TABLES,
   RB_ROUTES
 } from "/core/shared/rb-config.js";
 
-const PROFILE_TABLE = RB_TABLES.profiles;
-const FEED_TABLE = RB_TABLES.feedPosts;
-const FOLLOW_TABLE = RB_TABLES.followers;
-const THEME_TABLE = RB_TABLES.profileThemeSettings;
-const LEVEL_TABLE = RB_TABLES.userLevels;
-const META_AVATAR_TABLE = RB_TABLES.metaAvatars;
-const SELLER_TABLE = RB_TABLES.storeSellerProfiles;
-const GAMER_TABLE = RB_TABLES.gamerProfiles;
-const SPORTS_TABLE = RB_TABLES.sportsProfiles;
-const CREATOR_TABLE = RB_TABLES.creatorPageSettings;
+import {
+  getSupabase,
+  getUser
+} from "/core/shared/rb-auth.js";
 
-const DEFAULT_AVATAR = "/images/brand/project-avatar.png.jpeg";
+import {
+  loadProfileByRoute,
+  refreshProfileState,
+  getProfileState,
+  onProfileState
+} from "/core/features/profile/profile-state.js";
+
+import {
+  profileAvatar,
+  profileBanner,
+  profileName,
+  profileHandle,
+  profileBadge,
+  profileLevel,
+  buildProfileUrl
+} from "/core/shared/rb-profile.js";
+
+import {
+  bootProfileLinks,
+  attachProfileRoute
+} from "/core/features/profile/profile-links.js";
+
+const supabase = getSupabase();
+
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const state = {
-  supabase: null,
-  session: null,
-  user: null,
   profile: null,
-  targetId: null,
-  isOwner: false,
+  identity: null,
+  isMine: false,
   isFollowing: false,
+  counts: {
+    followers: 0,
+    following: 0,
+    posts: 0
+  },
   posts: [],
+  extras: {},
   channels: []
 };
 
@@ -82,24 +94,8 @@ function money(cents = 0) {
   return `$${(Number(cents || 0) / 100).toFixed(2)}`;
 }
 
-function safeText(value, fallback = "") {
-  return String(value ?? fallback).trim();
-}
-
-function publicName(profile) {
-  return safeText(profile?.display_name) ||
-         safeText(profile?.full_name) ||
-         safeText(profile?.username) ||
-         "Rich Bizness User";
-}
-
-function getUsername(profile) {
-  const name = safeText(profile?.username);
-  return name ? `@${name}` : "@richbizness";
-}
-
-function escapeHtml(str = "") {
-  return String(str)
+function escapeHtml(value = "") {
+  return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -107,201 +103,260 @@ function escapeHtml(str = "") {
     .replace(/'/g, "&#039;");
 }
 
-function mediaTypeFromUrl(url = "") {
+function mediaMarkup(post) {
+  const url = post.media_url || post.file_url || post.image_url || "";
+  if (!url) return "";
+
   const lower = url.toLowerCase();
-  if (/\.(mp4|mov|webm|m4v)(\?|$)/.test(lower)) return "video";
-  if (/\.(mp3|wav|m4a|ogg)(\?|$)/.test(lower)) return "audio";
-  if (/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/.test(lower)) return "image";
-  return "";
-}
 
-function getQueryProfileId() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id") || params.get("user") || params.get("u");
-}
-
-/* ====================== INIT ====================== */
-
-async function initAuth() {
-  await initApp({ guard: false, bindProfile: true, toast: false });
-
-  state.supabase = getSupabase();
-  const auth = getCurrentUserState();
-
-  state.session = auth?.session || null;
-  state.user = auth?.user || null;
-  state.profile = auth?.profile || null;
-
-  state.targetId = getQueryProfileId() || state.user?.id || null;
-  state.isOwner = !!(state.user?.id && state.user.id === state.targetId);
-
-  return true;
-}
-
-/* ====================== DATA FETCHING ====================== */
-
-async function fetchProfile() {
-  if (!state.targetId) return null;
-
-  let { data, error } = await state.supabase
-    .from(PROFILE_TABLE)
-    .select("*")
-    .eq("id", state.targetId)
-    .maybeSingle();
-
-  if (error) throw error;
-
-  // Auto-create profile for owner if missing
-  if (!data && state.isOwner) {
-    const userMeta = state.user?.user_metadata || {};
-
-    const seed = {
-      id: state.user.id,
-      username: userMeta.username || state.user.email?.split("@")[0],
-      display_name: userMeta.display_name || userMeta.full_name || "Rich Bizness User",
-      full_name: userMeta.full_name || null,
-      avatar_url: userMeta.avatar_url || DEFAULT_AVATAR,
-      banner_url: DEFAULT_BANNER,
-      online_status: "online",
-      last_seen_at: new Date().toISOString()
-    };
-
-    ({ data, error } = await state.supabase
-      .from(PROFILE_TABLE)
-      .insert(seed)
-      .select("*")
-      .single());
-
-    if (error) throw error;
+  if (/\.(mp4|mov|webm|m4v)(\?|$)/.test(lower)) {
+    return `<video src="${escapeHtml(url)}" controls playsinline></video>`;
   }
 
-  state.profile = data;
-  return data;
+  if (/\.(mp3|wav|m4a|ogg)(\?|$)/.test(lower)) {
+    return `<audio src="${escapeHtml(url)}" controls></audio>`;
+  }
+
+  return `<img src="${escapeHtml(url)}" alt="" loading="lazy" />`;
 }
 
-async function fetchCounts() {
-  const [followers, following, posts] = await Promise.all([
-    state.supabase.from(FOLLOW_TABLE).select("id", { count: "exact", head: true }).eq("following_id", state.targetId),
-    state.supabase.from(FOLLOW_TABLE).select("id", { count: "exact", head: true }).eq("follower_id", state.targetId),
-    state.supabase.from(FEED_TABLE).select("id", { count: "exact", head: true }).eq("user_id", state.targetId)
+async function fetchCounts(profileId) {
+  if (!profileId) return state.counts;
+
+  const [followers, following, posts] = await Promise.allSettled([
+    supabase
+      .from(RB_TABLES.followers)
+      .select("id", { count: "exact", head: true })
+      .eq("following_id", profileId),
+
+    supabase
+      .from(RB_TABLES.followers)
+      .select("id", { count: "exact", head: true })
+      .eq("follower_id", profileId),
+
+    supabase
+      .from(RB_TABLES.feedPosts)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profileId)
   ]);
 
-  return {
-    followers: followers.count || 0,
-    following: following.count || 0,
-    posts: posts.count || 0
+  state.counts = {
+    followers: followers.value?.count || 0,
+    following: following.value?.count || 0,
+    posts: posts.value?.count || 0
   };
+
+  return state.counts;
 }
 
-async function fetchOwnerExtras() {
-  const [theme, level, meta, seller, gamer, sports, creator] = await Promise.allSettled([
-    state.supabase.from(THEME_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(LEVEL_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(META_AVATAR_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(SELLER_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(GAMER_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(SPORTS_TABLE).select("*").eq("user_id", state.targetId).maybeSingle(),
-    state.supabase.from(CREATOR_TABLE).select("*").eq("user_id", state.targetId).maybeSingle()
-  ]);
+async function fetchPosts(profileId) {
+  if (!profileId) {
+    state.posts = [];
+    return [];
+  }
 
-  return {
-    theme: theme.value?.data || null,
-    level: level.value?.data || null,
-    meta: meta.value?.data || null,
-    seller: seller.value?.data || null,
-    gamer: gamer.value?.data || null,
-    sports: sports.value?.data || null,
-    creator: creator.value?.data || null
-  };
-}
-
-async function fetchPosts() {
-  const { data, error } = await state.supabase
-    .from(FEED_TABLE)
+  const { data, error } = await supabase
+    .from(RB_TABLES.feedPosts)
     .select("*")
-    .eq("user_id", state.targetId)
+    .eq("user_id", profileId)
     .order("created_at", { ascending: false })
     .limit(24);
 
-  if (error) throw error;
+  if (error) {
+    console.warn("[RB PROFILE POSTS WARNING]", error.message);
+    state.posts = [];
+    return [];
+  }
+
   state.posts = data || [];
+  return state.posts;
 }
 
-/* ====================== RENDERING ====================== */
+async function fetchFollowing(profileId) {
+  const user = getUser();
 
-function renderProfile(counts, extras) {
-  const p = state.profile || {};
+  if (!user?.id || !profileId || user.id === profileId) {
+    state.isFollowing = false;
+    return false;
+  }
 
-  const avatar = p.avatar_url || DEFAULT_AVATAR;
-  const banner = extras?.theme?.background_url || p.banner_url || DEFAULT_BANNER;
+  const { data, error } = await supabase
+    .from(RB_TABLES.followers)
+    .select("id")
+    .eq("follower_id", user.id)
+    .eq("following_id", profileId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB FOLLOW CHECK WARNING]", error.message);
+    state.isFollowing = false;
+    return false;
+  }
+
+  state.isFollowing = !!data;
+  return state.isFollowing;
+}
+
+async function fetchExtras(profileId) {
+  if (!profileId) {
+    state.extras = {};
+    return {};
+  }
+
+  const tables = {
+    theme: RB_TABLES.profileThemeSettings,
+    level: RB_TABLES.userLevels,
+    meta: RB_TABLES.metaAvatars,
+    seller: RB_TABLES.storeSellerProfiles,
+    gamer: RB_TABLES.gamerProfiles,
+    sports: RB_TABLES.sportsProfiles,
+    creator: RB_TABLES.creatorPageSettings
+  };
+
+  const entries = await Promise.allSettled(
+    Object.entries(tables).map(async ([key, table]) => {
+      const { data } = await supabase
+        .from(table)
+        .select("*")
+        .eq("user_id", profileId)
+        .maybeSingle();
+
+      return [key, data || null];
+    })
+  );
+
+  state.extras = Object.fromEntries(
+    entries
+      .filter((entry) => entry.status === "fulfilled")
+      .map((entry) => entry.value)
+  );
+
+  return state.extras;
+}
+
+function renderProfile() {
+  const profile = state.profile || {};
+  const extras = state.extras || {};
+
+  const avatar = profileAvatar(profile) || DEFAULT_AVATAR;
+  const banner =
+    extras.theme?.background_url ||
+    profileBanner(profile) ||
+    DEFAULT_BANNER;
 
   if (els.banner) els.banner.style.backgroundImage = `url("${banner}")`;
-  if (els.avatar) els.avatar.src = avatar;
-  if (els.name) els.name.textContent = publicName(p);
-  if (els.username) els.username.textContent = getUsername(p);
-  if (els.bio) els.bio.textContent = safeText(p.bio, "Building in the Rich Bizness Universe.");
 
-  if (els.rank) els.rank.textContent = safeText(extras?.level?.rank_title || p.rank_title, "Member");
-  if (els.level) els.level.textContent = `Lv.${extras?.level?.level || p.rich_level || 1}`;
-  if (els.points) els.points.textContent = `${extras?.level?.rich_points || p.rich_points || 0} pts`;
-  if (els.balance) els.balance.textContent = money(p.balance_cents);
+  if (els.avatar) {
+    els.avatar.src = avatar;
+    els.avatar.alt = profileName(profile);
+    attachProfileRoute(els.avatar, {
+      id: profile.id,
+      username: profile.username
+    });
+  }
 
-  if (els.followers) els.followers.textContent = counts.followers;
-  if (els.following) els.following.textContent = counts.following;
-  if (els.postsCount) els.postsCount.textContent = counts.posts;
+  if (els.name) els.name.textContent = profileName(profile);
+  if (els.username) els.username.textContent = profileHandle(profile);
+  if (els.bio) {
+    els.bio.textContent =
+      profile.bio || "Building in the Rich Bizness Universe.";
+  }
 
-  if (els.editBtn) els.editBtn.style.display = state.isOwner ? "block" : "none";
+  if (els.rank) {
+    els.rank.textContent =
+      extras.level?.rank_title ||
+      profileBadge(profile);
+  }
+
+  if (els.level) {
+    els.level.textContent = `LVL ${extras.level?.level || profileLevel(profile)}`;
+  }
+
+  if (els.points) {
+    els.points.textContent =
+      `${extras.level?.rich_points || profile.rich_points || 0} pts`;
+  }
+
+  if (els.balance) {
+    els.balance.textContent = money(profile.balance_cents);
+  }
+
+  if (els.followers) els.followers.textContent = state.counts.followers;
+  if (els.following) els.following.textContent = state.counts.following;
+  if (els.postsCount) els.postsCount.textContent = state.counts.posts;
+
+  if (els.editBtn) {
+    els.editBtn.style.display = state.isMine ? "block" : "none";
+  }
 
   renderFollowButton();
-  renderLinks(p);
-  renderExtras(extras);
+  renderLinks(profile);
+  renderExtras();
 }
 
 function renderFollowButton() {
   if (!els.followBtn) return;
-  if (state.isOwner || !state.user) {
+
+  if (state.isMine || !getUser()?.id) {
     els.followBtn.style.display = "none";
     return;
   }
+
   els.followBtn.style.display = "block";
   els.followBtn.textContent = state.isFollowing ? "Following" : "Follow";
   els.followBtn.classList.toggle("is-active", state.isFollowing);
 }
 
 function renderLinks(profile) {
+  if (els.website) {
+    if (profile.website_url) {
+      els.website.href = profile.website_url;
+      els.website.textContent = "Website";
+      els.website.style.display = "inline-flex";
+    } else {
+      els.website.style.display = "none";
+    }
+  }
+
   if (!els.socials) return;
 
-  const socialLinks = [
-    { label: "Instagram", url: profile.instagram_url },
-    { label: "YouTube", url: profile.youtube_url },
-    { label: "TikTok", url: profile.tiktok_url },
-    { label: "Facebook", url: profile.facebook_url },
-    { label: "Snapchat", url: profile.snapchat_url }
-  ].filter(item => safeText(item.url));
+  const links = [
+    ["Instagram", profile.instagram_url],
+    ["YouTube", profile.youtube_url],
+    ["TikTok", profile.tiktok_url],
+    ["Facebook", profile.facebook_url],
+    ["Snapchat", profile.snapchat_url]
+  ].filter(([, url]) => url);
 
-  els.socials.innerHTML = socialLinks.map(({ label, url }) => `
-    <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${label}</a>
-  `).join("");
-}
-
-function renderExtras(extras) {
-  // Creator, Store, Gaming, Sports, Meta panels rendering...
-  // (kept logic but cleaned up)
-  fillPanel(els.creatorPanel, extras.creator, "Creator Hub");
-  fillPanel(els.storePanel, extras.seller, "Store");
-  fillPanel(els.gamingPanel, extras.gamer, "Gaming");
-  fillPanel(els.sportsPanel, extras.sports, "Sports");
-  fillPanel(els.metaPanel, extras.meta, "Meta Avatar");
+  els.socials.innerHTML = links
+    .map(([label, url]) => {
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    })
+    .join("");
 }
 
 function fillPanel(el, data, title) {
   if (!el) return;
+
   if (!data) {
-    el.innerHTML = `<div class="rb-mini-empty">No ${title} data yet.</div>`;
+    el.innerHTML = `<div class="rb-mini-empty">No ${escapeHtml(title)} data yet.</div>`;
     return;
   }
-  // Add more detailed rendering as needed
-  el.innerHTML = `<div class="rb-mini-card"><h3>${title}</h3><p>Connected</p></div>`;
+
+  el.innerHTML = `
+    <div class="rb-mini-card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>Connected</p>
+    </div>
+  `;
+}
+
+function renderExtras() {
+  fillPanel(els.creatorPanel, state.extras.creator, "Creator Hub");
+  fillPanel(els.storePanel, state.extras.seller, "Store");
+  fillPanel(els.gamingPanel, state.extras.gamer, "Gaming");
+  fillPanel(els.sportsPanel, state.extras.sports, "Sports");
+  fillPanel(els.metaPanel, state.extras.meta, "Meta Avatar");
 }
 
 function renderPosts() {
@@ -314,126 +369,240 @@ function renderPosts() {
   }
 
   if (els.empty) els.empty.style.display = "none";
-  els.feed.innerHTML = state.posts.map(post => `
-    <article class="rb-card rb-feed-card">
-      <div class="rb-card-body">
-        <p>${escapeHtml(post.body || "")}</p>
-        ${post.media_url ? `<img src="${escapeHtml(post.media_url)}" alt="" loading="lazy" />` : ''}
-      </div>
-    </article>
-  `).join("");
+
+  els.feed.innerHTML = state.posts
+    .map((post) => {
+      const body =
+        post.body ||
+        post.caption ||
+        post.content ||
+        post.description ||
+        "";
+
+      return `
+        <article class="rb-card rb-feed-card">
+          <div class="rb-card-body">
+            ${body ? `<p>${escapeHtml(body)}</p>` : ""}
+            ${mediaMarkup(post)}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
 }
 
-/* ====================== INTERACTIONS ====================== */
-
 async function toggleFollow() {
-  if (!state.user || state.isOwner || !els.followBtn) return;
+  const user = getUser();
+  const profileId = state.profile?.id;
+
+  if (!user?.id || !profileId || state.isMine || !els.followBtn) return;
 
   els.followBtn.disabled = true;
 
   try {
     if (state.isFollowing) {
-      await state.supabase.from(FOLLOW_TABLE).delete()
-        .eq("follower_id", state.user.id)
-        .eq("following_id", state.targetId);
+      await supabase
+        .from(RB_TABLES.followers)
+        .delete()
+        .eq("follower_id", user.id)
+        .eq("following_id", profileId);
+
       state.isFollowing = false;
     } else {
-      await state.supabase.from(FOLLOW_TABLE).insert({
-        follower_id: state.user.id,
-        following_id: state.targetId
-      });
+      await supabase
+        .from(RB_TABLES.followers)
+        .upsert(
+          {
+            follower_id: user.id,
+            following_id: profileId,
+            created_at: new Date().toISOString()
+          },
+          {
+            onConflict: "follower_id,following_id"
+          }
+        );
+
       state.isFollowing = true;
     }
 
-    const counts = await fetchCounts();
-    renderProfile(counts, {});
-  } catch (err) {
-    console.error(err);
+    await fetchCounts(profileId);
+    renderProfile();
+  } catch (error) {
+    console.warn("[RB FOLLOW TOGGLE FAILED]", error.message);
   } finally {
     els.followBtn.disabled = false;
   }
 }
 
 function bindActions() {
-  els.editBtn?.addEventListener("click", () => window.location.href = "/edit");
+  els.editBtn?.addEventListener("click", () => {
+    window.location.href = RB_ROUTES.edit;
+  });
+
   els.followBtn?.addEventListener("click", toggleFollow);
+
   els.messageBtn?.addEventListener("click", () => {
-    if (state.targetId) window.location.href = `/messages?user=${state.targetId}`;
+    if (!state.profile?.id) return;
+    window.location.href = `${RB_ROUTES.messages}?user=${encodeURIComponent(state.profile.id)}`;
   });
 }
 
 function bindTabs() {
-  els.tabs.forEach(tab => {
+  els.tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       const target = tab.dataset.profileTab;
 
-      els.tabs.forEach(t => t.classList.toggle("is-active", t === tab));
-      els.panels.forEach(p => {
-        p.style.display = p.dataset.profilePanel === target ? "block" : "none";
+      els.tabs.forEach((item) => {
+        item.classList.toggle("is-active", item === tab);
+      });
+
+      els.panels.forEach((panel) => {
+        panel.style.display =
+          panel.dataset.profilePanel === target ? "block" : "none";
       });
     });
   });
 }
 
-/* ====================== REALTIME ====================== */
+function clearRealtime() {
+  state.channels.forEach((channel) => {
+    supabase.removeChannel(channel);
+  });
 
-function subscribeRealtime() {
-  if (!state.supabase || !state.targetId) return;
-
-  const channel = state.supabase.channel(`profile-${state.targetId}`)
-    .on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: PROFILE_TABLE,
-      filter: `id=eq.${state.targetId}`
-    }, () => reloadSoft())
-    .on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: FEED_TABLE,
-      filter: `user_id=eq.${state.targetId}`
-    }, async () => {
-      await fetchPosts();
-      renderPosts();
-    })
-    .subscribe();
-
-  state.channels = [channel];
+  state.channels = [];
 }
 
-/* ====================== BOOT ====================== */
+function subscribeRealtime(profileId) {
+  if (!profileId) return;
 
-async function boot() {
-  bindTabs();
-  bindActions();
+  clearRealtime();
 
-  try {
-    await initAuth();
-    if (!state.supabase) throw new Error("Supabase not initialized");
+  const channel = supabase
+    .channel(`rb-profile-page-${profileId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.profiles,
+        filter: `id=eq.${profileId}`
+      },
+      reloadSoft
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.feedPosts,
+        filter: `user_id=eq.${profileId}`
+      },
+      async () => {
+        await fetchPosts(profileId);
+        renderPosts();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.followers
+      },
+      reloadSoft
+    )
+    .subscribe();
 
-    await fetchProfile();
-    await checkFollowing();
+  state.channels.push(channel);
+}
 
-    const [counts, extras] = await Promise.all([
-      fetchCounts(),
-      fetchOwnerExtras(),
-      fetchPosts()
-    ]);
+async function reloadSoft() {
+  const profileId = state.profile?.id;
+  if (!profileId) return;
 
-    renderProfile(counts, extras);
-    renderPosts();
-    subscribeRealtime();
+  await refreshProfileState();
 
-    markPageReady("profile");
-  } catch (error) {
-    console.error("Profile boot failed:", error);
-    markPageError(error);
+  const profileState = getProfileState();
+
+  state.profile = profileState.profile;
+  state.identity = profileState.identity;
+  state.isMine = profileState.isMine;
+
+  await Promise.all([
+    fetchCounts(profileId),
+    fetchFollowing(profileId),
+    fetchExtras(profileId)
+  ]);
+
+  renderProfile();
+}
+
+async function loadEverything() {
+  const profileState = await loadProfileByRoute();
+
+  state.profile = profileState.profile;
+  state.identity = profileState.identity;
+  state.isMine = profileState.isMine;
+
+  const profileId = state.profile?.id;
+
+  if (!profileId) {
+    throw new Error("Profile not found.");
+  }
+
+  await Promise.all([
+    fetchCounts(profileId),
+    fetchFollowing(profileId),
+    fetchExtras(profileId),
+    fetchPosts(profileId)
+  ]);
+
+  renderProfile();
+  renderPosts();
+  subscribeRealtime(profileId);
+
+  document.body.classList.add("rb-profile-ready");
+}
+
+function markReady() {
+  document.body.classList.add("rb-page-ready");
+  console.log("RB PROFILE PAGE READY");
+}
+
+function markError(error) {
+  document.body.classList.add("rb-page-error");
+  console.warn("[RB PROFILE PAGE ERROR]", error.message);
+
+  if (els.status) {
+    els.status.textContent = error.message || "Profile failed to load.";
   }
 }
 
-// Start
+async function bootProfilePage() {
+  bindTabs();
+  bindActions();
+  bootProfileLinks();
+
+  onProfileState((profileState) => {
+    if (!profileState.ready || !profileState.profile) return;
+
+    state.profile = profileState.profile;
+    state.identity = profileState.identity;
+    state.isMine = profileState.isMine;
+
+    renderProfile();
+  });
+
+  try {
+    await loadEverything();
+    markReady();
+  } catch (error) {
+    markError(error);
+  }
+}
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot);
+  document.addEventListener("DOMContentLoaded", bootProfilePage);
 } else {
-  boot();
+  bootProfilePage();
 }
