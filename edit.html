@@ -1,135 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>Rich Bizness — Edit Profile</title>
+  <title>Edit Profile • Rich Bizness LLC</title>
 
-  <link rel="stylesheet" href="/styles/main.css" />
-  <link rel="stylesheet" href="/styles/mobile.css" />
+  <meta name="theme-color" content="#050805" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-home rb-edit-page">
+<body class="rb-body rb-edit-page">
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <div class="rb-bg"></div>
-  <div class="rb-vignette"></div>
-  <div class="rb-grid"></div>
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/">
+      <span>WELCOME</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
 
-  <main class="rb-auth-shell">
+    <nav class="rb-topnav" aria-label="Main navigation">
+      <a href="/profile">Profile</a>
+      <a href="/feed">Feed</a>
+      <a href="/upload">Upload</a>
+      <a href="/settings">Settings</a>
+    </nav>
+  </header>
 
+  <main class="rb-section-shell rb-edit-shell">
     <section class="rb-auth-hero">
       <p class="rb-kicker">RICH BIZNESS IDENTITY</p>
-
       <h1>Edit Profile</h1>
-
       <p>
-        Update your display name, handle, bio, avatar, and banner across the whole Rich Bizness universe.
+        Update your name, handle, bio, avatar, and banner across the Rich Bizness universe.
       </p>
     </section>
 
     <section class="rb-auth-panel">
-
-      <form
-        id="edit-profile-form"
-        class="rb-auth-form"
-      >
-
+      <form id="edit-profile-form" class="rb-auth-form">
         <h2>Identity Settings</h2>
 
         <label>
           Display Name
-
-          <input
-            id="edit-display-name"
-            name="display_name"
-            type="text"
-            autocomplete="name"
-            placeholder="Your display name"
-          />
+          <input id="edit-display-name" name="display_name" type="text" autocomplete="name" placeholder="Your display name" />
         </label>
 
         <label>
           Username
-
-          <input
-            id="edit-username"
-            name="username"
-            type="text"
-            autocomplete="username"
-            placeholder="yourhandle"
-          />
+          <input id="edit-username" name="username" type="text" autocomplete="username" placeholder="yourhandle" />
         </label>
 
         <label>
           Bio
-
-          <textarea
-            id="edit-bio"
-            name="bio"
-            rows="5"
-            placeholder="Tell the universe who you are..."
-          ></textarea>
+          <textarea id="edit-bio" name="bio" rows="5" placeholder="Tell the universe who you are..."></textarea>
         </label>
 
         <label>
           Avatar
-
-          <input
-            id="edit-avatar-file"
-            name="avatar"
-            type="file"
-            accept="image/*"
-          />
+          <input id="edit-avatar-file" name="avatar" type="file" accept="image/*" />
         </label>
 
         <label>
           Banner
-
-          <input
-            id="edit-banner-file"
-            name="banner"
-            type="file"
-            accept="image/*"
-          />
+          <input id="edit-banner-file" name="banner" type="file" accept="image/*" />
         </label>
 
-        <button
-          class="rb-main-launch"
-          type="submit"
-        >
+        <button class="rb-main-launch" type="submit">
           SAVE PROFILE
         </button>
 
-        <button
-          id="edit-back-btn"
-          class="rb-auth-home"
-          type="button"
-        >
-          ← Back
+        <button id="edit-back-btn" class="rb-btn ghost" type="button">
+          ← Back To Profile
         </button>
-
       </form>
-
     </section>
-
-    <a class="rb-auth-home" href="/profile">
-      ← Back to Profile
-    </a>
-
   </main>
 
-  <script
-    type="module"
-    src="/core/pages/edit.js"
-  ></script>
-
+  <script type="module" src="/core/pages/edit.js"></script>
 </body>
 </html>
