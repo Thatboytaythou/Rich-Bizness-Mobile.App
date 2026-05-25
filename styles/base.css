@@ -1,11 +1,41 @@
-* { margin:0; padding:0; box-sizing:border-box; }
+/* =============================================
+   BASE STYLES - FOUNDATION
+   ============================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --emerald: #10b981;
+  --burnt-gold: #fbbf24;
+  --dark-bg: #0a0f0a;
+  --glass: rgba(16, 185, 129, 0.08);
+}
 
 body {
-  background: #0a0f0a;
+  background: var(--dark-bg);
   color: #e5e7eb;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
 }
 
-.universe-app { min-height: 100vh; position: relative; }
+.universe-app {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* General Utility */
+.glass-smoke {
+  background: var(--glass);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 24px;
+}
+
+.burnt-gold {
+  color: var(--burnt-gold);
+}
