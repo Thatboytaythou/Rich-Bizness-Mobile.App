@@ -3,14 +3,16 @@
    /core/app.js
 
    APP ORCHESTRATOR
-   Safe boot lock.
-   Does not force profile binding on index.
+   Safe boot lock
+   Auth + profile-state synced
+   Does not force profile binding on index
 ========================= */
 
-import { RB_APP } from "/core/shared/rb-config.js";
+import {
+  RB_APP
+} from "/core/shared/rb-config.js";
 
 import {
-  bootAuth,
   getSession,
   getUser,
   getProfile,
@@ -18,9 +20,18 @@ import {
 } from "/core/shared/rb-supabase.js";
 
 import {
+  initAuthState,
   getAuthState,
   refreshAuthProfile
 } from "/core/features/auth/auth-state.js";
+
+import {
+  refreshProfileState
+} from "/core/features/profile/profile-state.js";
+
+import {
+  ensureMyProfile
+} from "/core/shared/rb-auth.js";
 
 import {
   autoGuardCurrentPage
@@ -42,7 +53,8 @@ let appBootPromise = null;
 export async function initApp({
   guard = true,
   bindProfile = true,
-  toast = false
+  toast = false,
+  ensureProfile = true
 } = {}) {
   if (appReady) {
     return getAppState();
@@ -58,7 +70,8 @@ export async function initApp({
   appBootPromise = bootApp({
     guard,
     bindProfile,
-    toast
+    toast,
+    ensureProfile
   });
 
   await appBootPromise;
@@ -69,30 +82,32 @@ export async function initApp({
 async function bootApp({
   guard,
   bindProfile,
-  toast
+  toast,
+  ensureProfile
 }) {
   try {
     document.body.classList.add("rb-app-booting");
 
-    await bootAuth();
+    await initAuthState();
 
     if (guard) {
       await autoGuardCurrentPage();
     }
 
-    if (bindProfile) {
-      const profileModule = await import("/core/shared/rb-profile.js");
+    if (ensureProfile && getUser()?.id) {
+      await ensureMyProfile();
+      await refreshProfileState();
+    }
 
-      if (typeof profileModule.bindProfileShell === "function") {
-        profileModule.bindProfileShell();
-      }
+    if (bindProfile) {
+      await bindProfileShellSafe();
     }
 
     bindRuntimeEvents();
 
     appReady = true;
 
-    document.body.classList.remove("rb-app-booting");
+    document.body.classList.remove("rb-app-booting", "rb-app-error");
     document.body.classList.add("rb-app-ready");
 
     if (toast) {
@@ -100,12 +115,27 @@ async function bootApp({
     }
   } catch (error) {
     appReady = false;
+
     document.body.classList.remove("rb-app-booting");
     document.body.classList.add("rb-app-error");
+
     console.error("[RB APP BOOT ERROR]", error);
+
     throw error;
   } finally {
     appBooting = false;
+  }
+}
+
+async function bindProfileShellSafe() {
+  try {
+    const profileModule = await import("/core/shared/rb-profile.js");
+
+    if (typeof profileModule.bindProfileShell === "function") {
+      profileModule.bindProfileShell();
+    }
+  } catch (error) {
+    console.warn("[RB PROFILE BIND SKIPPED]", error);
   }
 }
 
@@ -122,6 +152,16 @@ export function getAppState() {
   };
 }
 
+export function getCurrentUserState() {
+  return {
+    session: getSession(),
+    user: getUser(),
+    profile: getProfile(),
+    auth: getAuthState(),
+    authed: !!getUser()?.id
+  };
+}
+
 export function isAppReady() {
   return appReady;
 }
@@ -129,15 +169,17 @@ export function isAppReady() {
 export async function refreshAppIdentity() {
   await refreshAuthProfile();
 
-  try {
-    const profileModule = await import("/core/shared/rb-profile.js");
-
-    if (typeof profileModule.bindProfileShell === "function") {
-      profileModule.bindProfileShell();
-    }
-  } catch (error) {
-    console.warn("[RB PROFILE BIND SKIPPED]", error);
+  if (getUser()?.id) {
+    await refreshProfileState();
   }
+
+  await bindProfileShellSafe();
+
+  window.dispatchEvent(
+    new CustomEvent("rb:app-identity-refreshed", {
+      detail: getAppState()
+    })
+  );
 
   return getAppState();
 }
