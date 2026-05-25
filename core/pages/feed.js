@@ -1,13 +1,41 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { RB_SUPABASE, RB_TABLES, RB_ROUTES } from "/core/shared/rb-config.js";
+/* =========================================
+   RICH BIZNESS LLC
+   /core/pages/feed.js
 
-const supabase = createClient(RB_SUPABASE.url, RB_SUPABASE.publishableKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
+   FEED PAGE CONTROLLER
+   Synced with auth + profile-state
+========================================= */
+
+import {
+  RB_TABLES,
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase,
+  getUser,
+  ensureMyProfile
+} from "/core/shared/rb-auth.js";
+
+import {
+  initAuthState,
+  getAuthState
+} from "/core/features/auth/auth-state.js";
+
+import {
+  refreshProfileState,
+  onProfileState
+} from "/core/features/profile/profile-state.js";
+
+import {
+  profileAvatar,
+  profileName,
+  profileHandle
+} from "/core/shared/rb-profile.js";
+
+const supabase = getSupabase();
+
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const $ = (id) => document.getElementById(id);
 
@@ -32,7 +60,8 @@ const FEED = {
   user: null,
   profile: null,
   posts: [],
-  channel: null
+  channel: null,
+  actionsBound: false
 };
 
 function safeText(value, fallback = "") {
@@ -43,50 +72,58 @@ function setStatus(text) {
   if (els.status) els.status.textContent = text;
 }
 
-function avatarUrl(profile = FEED.profile) {
-  return profile?.avatar_url || "/images/brand/background-v2.png.jpeg";
-}
-
-function displayName(profile = FEED.profile, user = FEED.user) {
-  return (
-    profile?.display_name ||
-    profile?.username ||
-    user?.email ||
-    "Rich Bizness User"
-  );
-}
-
-function username(profile = FEED.profile, user = FEED.user) {
-  return profile?.username || user?.email || "rich_user";
-}
-
-function route(path) {
-  return path || "/";
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function timeAgo(value) {
   if (!value) return "";
+
   const diff = Date.now() - new Date(value).getTime();
   const mins = Math.floor(diff / 60000);
+
   if (mins < 1) return "now";
   if (mins < 60) return `${mins}m`;
+
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d`;
+
+  return `${Math.floor(hrs / 24)}d`;
+}
+
+function currentAvatar() {
+  return profileAvatar(FEED.profile) || DEFAULT_AVATAR;
+}
+
+function currentName() {
+  return profileName(FEED.profile) || "Rich Bizness User";
+}
+
+function currentUsername() {
+  return String(profileHandle(FEED.profile) || "@rich_user").replace("@", "");
+}
+
+function profileUrl(userId) {
+  return `${RB_ROUTES.profile || "/profile"}?user=${encodeURIComponent(userId)}`;
+}
+
+function paintComposer() {
+  if (els.composerAvatar) {
+    els.composerAvatar.src = currentAvatar();
+  }
+
+  if (els.composerName) {
+    els.composerName.textContent = currentName();
+  }
 }
 
 function mediaHtml(post) {
-  const url = safeText(post.media_url);
+  const url = safeText(post.media_url || post.file_url || post.image_url);
   if (!url) return "";
 
   const type = safeText(post.media_type, "image").toLowerCase();
@@ -103,18 +140,21 @@ function mediaHtml(post) {
 }
 
 function postCard(post) {
-  const profileUrl = `${route(RB_ROUTES.profile)}?user=${encodeURIComponent(post.user_id)}`;
+  const avatar = post.avatar_url || DEFAULT_AVATAR;
+  const name = post.display_name || post.username || "Rich User";
+  const username = post.username || "rich_user";
 
   return `
-    <article class="feed-card" data-post-id="${escapeHtml(post.id)}">
+    <article class="feed-card rb-feed-card" data-post-id="${escapeHtml(post.id)}">
       <header class="feed-card-head">
-        <a class="feed-user" href="${profileUrl}">
-          <img src="${escapeHtml(post.avatar_url || "/images/brand/project-avatar.png.jpeg")}" alt="" />
+        <a class="feed-user" href="${profileUrl(post.user_id)}">
+          <img src="${escapeHtml(avatar)}" alt="" />
           <span>
-            <strong>${escapeHtml(post.display_name || post.username || "Rich User")}</strong>
-            <small>@${escapeHtml(post.username || "rich_user")} · ${escapeHtml(timeAgo(post.created_at))}</small>
+            <strong>${escapeHtml(name)}</strong>
+            <small>@${escapeHtml(username)} · ${escapeHtml(timeAgo(post.created_at))}</small>
           </span>
         </a>
+
         <span class="feed-chip">${escapeHtml(post.section || "feed")}</span>
       </header>
 
@@ -124,10 +164,10 @@ function postCard(post) {
       ${mediaHtml(post)}
 
       <footer class="feed-actions">
-        <button data-action="like" data-id="${escapeHtml(post.id)}">💚 <span>${Number(post.like_count || 0)}</span></button>
-        <button data-action="comment" data-id="${escapeHtml(post.id)}">💬 <span>${Number(post.comment_count || 0)}</span></button>
-        <button data-action="repost" data-id="${escapeHtml(post.id)}">🔁 <span>${Number(post.repost_count || 0)}</span></button>
-        <button data-action="view" data-id="${escapeHtml(post.id)}">👁 <span>${Number(post.view_count || 0)}</span></button>
+        <button type="button" data-action="like" data-id="${escapeHtml(post.id)}">💚 <span>${Number(post.like_count || 0)}</span></button>
+        <button type="button" data-action="comment" data-id="${escapeHtml(post.id)}">💬 <span>${Number(post.comment_count || 0)}</span></button>
+        <button type="button" data-action="repost" data-id="${escapeHtml(post.id)}">🔁 <span>${Number(post.repost_count || 0)}</span></button>
+        <button type="button" data-action="view" data-id="${escapeHtml(post.id)}">👁 <span>${Number(post.view_count || 0)}</span></button>
       </footer>
 
       <form class="feed-comment-form" data-comment-form="${escapeHtml(post.id)}">
@@ -140,34 +180,28 @@ function postCard(post) {
   `;
 }
 
-async function initAuth() {
-  const { data, error } = await supabase.auth.getUser();
+async function initFeedAuth() {
+  await initAuthState();
 
-  if (error || !data?.user) {
-    setStatus("Sign in to post, like, and comment.");
-    return false;
+  const auth = getAuthState();
+
+  FEED.user = auth.user || null;
+  FEED.profile = auth.profile || null;
+
+  if (FEED.user?.id) {
+    FEED.profile = await ensureMyProfile();
+    await refreshProfileState();
   }
 
-  FEED.user = data.user;
+  paintComposer();
 
-  const { data: profile } = await supabase
-    .from(RB_TABLES.profiles)
-    .select("*")
-    .eq("id", data.user.id)
-    .maybeSingle();
+  setStatus(
+    FEED.user?.id
+      ? `Signed in as ${currentName()}`
+      : "Sign in to post, like, and comment."
+  );
 
-  FEED.profile = profile || {
-    id: data.user.id,
-    username: data.user.email,
-    display_name: data.user.email,
-    avatar_url: "/images/brand/project-avatar.png.jpeg"
-  };
-
-  if (els.composerAvatar) els.composerAvatar.src = avatarUrl();
-  if (els.composerName) els.composerName.textContent = displayName();
-
-  setStatus(`Signed in as ${displayName()}`);
-  return true;
+  return !!FEED.user?.id;
 }
 
 async function loadPosts() {
@@ -188,26 +222,36 @@ async function loadPosts() {
     return;
   }
 
-  const userIds = [...new Set((data || []).map((post) => post.user_id).filter(Boolean))];
+  const userIds = [
+    ...new Set((data || []).map((post) => post.user_id).filter(Boolean))
+  ];
 
   let profilesById = {};
+
   if (userIds.length) {
     const { data: profiles } = await supabase
       .from(RB_TABLES.profiles)
       .select("id, username, display_name, avatar_url")
       .in("id", userIds);
 
-    profilesById = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+    profilesById = Object.fromEntries(
+      (profiles || []).map((profile) => [profile.id, profile])
+    );
   }
 
-  FEED.posts = (data || []).map((post) => ({
-    ...post,
-    avatar_url: profilesById[post.user_id]?.avatar_url,
-    username: post.username || profilesById[post.user_id]?.username,
-    display_name: post.display_name || profilesById[post.user_id]?.display_name
-  }));
+  FEED.posts = (data || []).map((post) => {
+    const profile = profilesById[post.user_id] || {};
+
+    return {
+      ...post,
+      avatar_url: post.avatar_url || profile.avatar_url || DEFAULT_AVATAR,
+      username: post.username || profile.username || "rich_user",
+      display_name: post.display_name || profile.display_name || "Rich User"
+    };
+  });
 
   renderPosts();
+
   setStatus(`${FEED.posts.length} feed posts loaded.`);
 }
 
@@ -221,14 +265,16 @@ function renderPosts() {
   }
 
   if (els.empty) els.empty.style.display = "none";
+
   els.list.innerHTML = FEED.posts.map(postCard).join("");
 }
 
 async function createPost(event) {
   event.preventDefault();
 
-  if (!FEED.user) {
+  if (!FEED.user?.id) {
     setStatus("Sign in first.");
+    window.location.href = RB_ROUTES.auth || "/auth";
     return;
   }
 
@@ -245,10 +291,10 @@ async function createPost(event) {
 
   const payload = {
     user_id: FEED.user.id,
-    username: username(),
-    display_name: displayName(),
+    username: currentUsername(),
+    display_name: currentName(),
     title: title || null,
-    body,
+    body: body || null,
     media_url: mediaUrl || null,
     media_type: safeText(els.mediaType?.value, mediaUrl ? "image" : ""),
     section: safeText(els.section?.value, "feed"),
@@ -260,11 +306,13 @@ async function createPost(event) {
     metadata: {
       source: "feed.js",
       app: "Rich Bizness Mobile",
-      profile_avatar: avatarUrl()
+      profile_avatar: currentAvatar()
     }
   };
 
-  const { error } = await supabase.from(RB_TABLES.feedPosts).insert(payload);
+  const { error } = await supabase
+    .from(RB_TABLES.feedPosts)
+    .insert(payload);
 
   if (error) {
     setStatus(error.message);
@@ -278,7 +326,10 @@ async function createPost(event) {
 }
 
 async function likePost(postId) {
-  if (!FEED.user) return setStatus("Sign in to like.");
+  if (!FEED.user?.id) {
+    setStatus("Sign in to like.");
+    return;
+  }
 
   const { data: existing } = await supabase
     .from(RB_TABLES.feedPostLikes)
@@ -288,12 +339,17 @@ async function likePost(postId) {
     .maybeSingle();
 
   if (existing?.id) {
-    await supabase.from(RB_TABLES.feedPostLikes).delete().eq("id", existing.id);
+    await supabase
+      .from(RB_TABLES.feedPostLikes)
+      .delete()
+      .eq("id", existing.id);
   } else {
-    await supabase.from(RB_TABLES.feedPostLikes).insert({
-      post_id: postId,
-      user_id: FEED.user.id
-    });
+    await supabase
+      .from(RB_TABLES.feedPostLikes)
+      .insert({
+        post_id: postId,
+        user_id: FEED.user.id
+      });
   }
 
   await syncLikeCount(postId);
@@ -307,16 +363,27 @@ async function syncLikeCount(postId) {
 
   await supabase
     .from(RB_TABLES.feedPosts)
-    .update({ like_count: count || 0, updated_at: new Date().toISOString() })
+    .update({
+      like_count: count || 0,
+      updated_at: new Date().toISOString()
+    })
     .eq("id", postId);
 }
 
 async function addView(postId) {
-  await supabase.from(RB_TABLES.feedPostViews).insert({
-    post_id: postId,
-    user_id: FEED.user?.id || null,
-    session_id: localStorage.getItem("rb_session_id") || crypto.randomUUID()
-  });
+  const sessionId =
+    localStorage.getItem("rb_session_id") ||
+    crypto.randomUUID();
+
+  localStorage.setItem("rb_session_id", sessionId);
+
+  await supabase
+    .from(RB_TABLES.feedPostViews)
+    .insert({
+      post_id: postId,
+      user_id: FEED.user?.id || null,
+      session_id: sessionId
+    });
 
   const { count } = await supabase
     .from(RB_TABLES.feedPostViews)
@@ -325,29 +392,37 @@ async function addView(postId) {
 
   await supabase
     .from(RB_TABLES.feedPosts)
-    .update({ view_count: count || 0, updated_at: new Date().toISOString() })
+    .update({
+      view_count: count || 0,
+      updated_at: new Date().toISOString()
+    })
     .eq("id", postId);
 }
 
 async function addComment(postId, input) {
-  if (!FEED.user) return setStatus("Sign in to comment.");
+  if (!FEED.user?.id) {
+    setStatus("Sign in to comment.");
+    return;
+  }
 
-  const body = safeText(input.value);
+  const body = safeText(input?.value);
   if (!body) return;
 
   input.disabled = true;
 
-  const { error } = await supabase.from(RB_TABLES.feedComments).insert({
-    post_id: postId,
-    user_id: FEED.user.id,
-    username: username(),
-    display_name: displayName(),
-    body,
-    metadata: {
-      source: "feed.js",
-      avatar_url: avatarUrl()
-    }
-  });
+  const { error } = await supabase
+    .from(RB_TABLES.feedComments)
+    .insert({
+      post_id: postId,
+      user_id: FEED.user.id,
+      username: currentUsername(),
+      display_name: currentName(),
+      body,
+      metadata: {
+        source: "feed.js",
+        avatar_url: currentAvatar()
+      }
+    });
 
   if (error) {
     setStatus(error.message);
@@ -368,12 +443,18 @@ async function syncCommentCount(postId) {
 
   await supabase
     .from(RB_TABLES.feedPosts)
-    .update({ comment_count: count || 0, updated_at: new Date().toISOString() })
+    .update({
+      comment_count: count || 0,
+      updated_at: new Date().toISOString()
+    })
     .eq("id", postId);
 }
 
 async function loadComments(postId) {
-  const holder = document.querySelector(`[data-comments="${CSS.escape(postId)}"]`);
+  const holder = document.querySelector(
+    `[data-comments="${CSS.escape(postId)}"]`
+  );
+
   if (!holder) return;
 
   const { data, error } = await supabase
@@ -386,18 +467,21 @@ async function loadComments(postId) {
   if (error) return;
 
   holder.innerHTML = (data || [])
-    .map(
-      (comment) => `
+    .map((comment) => {
+      return `
         <div class="feed-comment">
           <strong>${escapeHtml(comment.display_name || comment.username || "Rich User")}</strong>
           <span>${escapeHtml(comment.body)}</span>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 }
 
 function bindClicks() {
+  if (FEED.actionsBound) return;
+  FEED.actionsBound = true;
+
   document.addEventListener("click", async (event) => {
     const btn = event.target.closest("[data-action]");
     if (!btn) return;
@@ -418,15 +502,19 @@ function bindClicks() {
     if (!form) return;
 
     event.preventDefault();
+
     const postId = form.dataset.commentForm;
     const input = form.querySelector("input");
+
     await addComment(postId, input);
     await loadPosts();
   });
 }
 
 function bindRealtime() {
-  if (FEED.channel) supabase.removeChannel(FEED.channel);
+  if (FEED.channel) {
+    supabase.removeChannel(FEED.channel);
+  }
 
   FEED.channel = supabase
     .channel("rich-bizness-feed-sync")
@@ -445,12 +533,27 @@ function bindRealtime() {
       { event: "*", schema: "public", table: RB_TABLES.feedPostLikes },
       loadPosts
     )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: RB_TABLES.profiles },
+      async () => {
+        await initFeedAuth();
+        await loadPosts();
+      }
+    )
     .subscribe();
 }
 
 function bindUI() {
-  if (els.form) els.form.addEventListener("submit", createPost);
-  if (els.refresh) els.refresh.addEventListener("click", loadPosts);
+  els.form?.addEventListener("submit", createPost);
+  els.refresh?.addEventListener("click", loadPosts);
+
+  onProfileState((profileState) => {
+    if (!profileState.ready || !profileState.profile) return;
+
+    FEED.profile = profileState.profile;
+    paintComposer();
+  });
 }
 
 async function init() {
@@ -460,9 +563,18 @@ async function init() {
 
   bindUI();
   bindClicks();
-  await initAuth();
+
+  await initFeedAuth();
   await loadPosts();
+
   bindRealtime();
+
+  document.body.classList.add("rb-feed-ready");
+
+  console.log("RB FEED PAGE READY");
 }
 
-init();
+init().catch((error) => {
+  console.error("[RB FEED INIT FAILED]", error);
+  setStatus(error?.message || "Feed failed to load.");
+});
