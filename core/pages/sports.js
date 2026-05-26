@@ -3,22 +3,24 @@
    /core/pages/sports.js
 
    SPORTS PAGE CONTROLLER
-   Posts + Picks + Uploads + Broadcasts + Profiles + Teams
+   Profile Keys Locked
 ========================= */
 
 import {
   initApp,
+  getCurrentUserState,
   markPageReady,
   markPageError
 } from "/core/app.js";
 
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
+import { RB_TABLES } from "/core/shared/rb-config.js";
+import { getSupabase } from "/core/shared/rb-supabase.js";
 
 import {
-  getSupabase
-} from "/core/shared/rb-supabase.js";
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
+} from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -26,12 +28,12 @@ const $$ = (selector) => document.querySelectorAll(selector);
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
 
 const TABLES = {
-  sportsPosts: RB_TABLES?.sportsPosts || RB_TABLES?.sports_posts || "sports_posts",
-  sportsPicks: RB_TABLES?.sportsPicks || RB_TABLES?.sports_picks || "sports_picks",
-  sportsUploads: RB_TABLES?.sportsUploads || RB_TABLES?.sports_uploads || "sports_uploads",
-  sportsBroadcasts: RB_TABLES?.sportsBroadcasts || RB_TABLES?.sports_broadcasts || "sports_broadcasts",
-  sportsProfiles: RB_TABLES?.sportsProfiles || RB_TABLES?.sports_profiles || "sports_profiles",
-  sportsTeams: RB_TABLES?.sportsTeams || RB_TABLES?.sports_teams || "sports_teams"
+  sportsPosts: RB_TABLES.sportsPosts || "sports_posts",
+  sportsPicks: RB_TABLES.sportsPicks || "sports_picks",
+  sportsUploads: RB_TABLES.sportsUploads || "sports_uploads",
+  sportsBroadcasts: RB_TABLES.sportsBroadcasts || "sports_broadcasts",
+  sportsProfiles: RB_TABLES.sportsProfiles || "sports_profiles",
+  sportsTeams: RB_TABLES.sportsTeams || "sports_teams"
 };
 
 const els = {
@@ -50,6 +52,28 @@ const els = {
 
 let supabase = null;
 let channels = [];
+let currentUser = null;
+let currentProfile = null;
+let profileIdentity = null;
+
+function syncProfileKeys() {
+  const state = getCurrentUserState?.() || {};
+
+  currentUser = state.user || null;
+  currentProfile = state.profile || null;
+  profileIdentity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbRoute = "sports";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = profileIdentity?.id || "";
+  document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
+
+  bindProfileShell();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+}
 
 function safe(value, fallback = "") {
   return value || fallback;
@@ -110,10 +134,13 @@ function cardTemplate({
   body = "",
   image = FALLBACK_COVER,
   meta = "",
-  badges = []
+  badges = [],
+  creatorId = ""
 }) {
   const card = document.createElement("article");
   card.className = "rb-content-card rb-sports-card";
+  card.dataset.creatorId = creatorId || "";
+  card.dataset.profileLocked = creatorId ? "true" : "false";
 
   card.innerHTML = `
     <img class="rb-card-cover" src="${image || FALLBACK_COVER}" alt="${title}" loading="lazy" />
@@ -143,6 +170,7 @@ function renderPost(item) {
     body: safe(item.body, "No caption yet."),
     image: mediaImage(item),
     meta: `${creatorLine(item)} • ${niceDate(item.created_at)}`,
+    creatorId: item.user_id,
     badges: [
       item.team_name,
       `${item.like_count || 0} likes`,
@@ -159,6 +187,7 @@ function renderPick(item) {
     body: safe(item.prediction, "Prediction locked in."),
     image: FALLBACK_COVER,
     meta: `${creatorLine(item)} • ${niceDate(item.created_at)}`,
+    creatorId: item.user_id,
     badges: [
       item.team_name,
       item.opponent ? `vs ${item.opponent}` : "",
@@ -175,6 +204,7 @@ function renderUpload(item) {
     body: safe(item.caption, "Sports clip uploaded to Rich Bizness."),
     image: mediaImage(item),
     meta: `${creatorLine(item)} • ${niceDate(item.created_at)}`,
+    creatorId: item.user_id,
     badges: [
       item.sport_name,
       item.team_name,
@@ -192,6 +222,7 @@ function renderBroadcast(item) {
     body: safe(item.description, "Live sports broadcast."),
     image: mediaImage(item),
     meta: `${creatorLine(item)} • ${niceDate(item.scheduled_for || item.created_at)}`,
+    creatorId: item.user_id,
     badges: [
       item.sport,
       item.league,
@@ -209,6 +240,7 @@ function renderProfile(item) {
     body: safe(item.bio, "Rich Bizness sports fan."),
     image: FALLBACK_COVER,
     meta: `${item.favorite_team || "No team yet"} • ${item.favorite_sport || "Sports"}`,
+    creatorId: item.user_id,
     badges: [
       item.fan_tag,
       `${item.points || 0} pts`,
@@ -225,6 +257,7 @@ function renderTeam(item) {
     body: safe(item.city, "Rich Bizness sports team."),
     image: mediaImage(item),
     meta: `${item.wins || 0}W • ${item.losses || 0}L`,
+    creatorId: "",
     badges: [
       item.slug,
       item.city,
@@ -360,12 +393,18 @@ async function loadSportsPage() {
   ]);
 }
 
+function clearRealtime() {
+  channels.forEach((channel) => {
+    supabase?.removeChannel(channel);
+  });
+
+  channels = [];
+}
+
 function bindRealtime() {
   const reload = () => loadSportsPage().catch(console.error);
 
-  channels.forEach((channel) => {
-    supabase.removeChannel(channel);
-  });
+  clearRealtime();
 
   channels = [
     TABLES.sportsPosts,
@@ -376,7 +415,7 @@ function bindRealtime() {
     TABLES.sportsTeams
   ].map((table) =>
     supabase
-      .channel(`rb-${table}`)
+      .channel(`rb-sports-${table}`)
       .on(
         "postgres_changes",
         {
@@ -400,19 +439,25 @@ async function bootSportsPage() {
 
     supabase = getSupabase();
 
+    syncProfileKeys();
     bindTabs();
 
     await loadSportsPage();
 
     bindRealtime();
 
+    window.addEventListener("beforeunload", clearRealtime);
+
     document.body.classList.add("rb-sports-ready");
 
     markPageReady("sports");
 
-    console.log("RB SPORTS READY");
+    console.log("RB SPORTS READY", {
+      profileLocked: !!profileIdentity?.id,
+      route: "sports"
+    });
   } catch (error) {
-    console.error(error);
+    console.error("[sports.js]", error);
 
     setEmpty(els.postsList, "Sports posts failed to load.");
     setEmpty(els.picksList, "Sports picks failed to load.");
