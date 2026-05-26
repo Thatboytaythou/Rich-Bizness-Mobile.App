@@ -1,6 +1,10 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/gallery.js
+
+   Gallery Page
+   Profile Keys Locked
+   Realtime Enabled
 ========================= */
 
 import {
@@ -9,8 +13,24 @@ import {
   markPageError
 } from "/core/app.js";
 
-import { RB_TABLES } from "/core/shared/rb-config.js";
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  RB_TABLES,
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase,
+  getUser,
+  getProfile
+} from "/core/shared/rb-supabase.js";
+
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  profileAvatar,
+  profileName,
+  buildProfileUrl
+} from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -25,11 +45,15 @@ const els = {
 
   uploadsList: $("gallery-uploads-list"),
   postsList: $("gallery-posts-list"),
-  featuredList: $("gallery-featured-list")
+  featuredList: $("gallery-featured-list"),
+
+  uploadBtn: $("gallery-upload-btn"),
+  profileBtn: $("gallery-profile-btn")
 };
 
 let supabase = null;
 let channels = [];
+let identity = null;
 
 function safe(value, fallback = "") {
   return value || fallback;
@@ -93,12 +117,28 @@ function bindTabs() {
   });
 }
 
+function bindGalleryActions() {
+  if (els.uploadBtn) {
+    els.uploadBtn.addEventListener("click", () => {
+      window.location.href = `${RB_ROUTES.upload}?section=gallery`;
+    });
+  }
+
+  if (els.profileBtn) {
+    els.profileBtn.addEventListener("click", () => {
+      window.location.href = buildProfileUrl(getProfile());
+    });
+  }
+}
+
 function renderGalleryTile(item) {
   const kind = mediaKind(item);
   const src = mediaUrl(item);
+  const creatorName = creatorLine(item);
 
   const tile = document.createElement("article");
   tile.className = "rb-gallery-tile";
+  tile.dataset.ownerId = item.user_id || "";
 
   tile.innerHTML = `
     <div class="rb-gallery-media">
@@ -115,7 +155,7 @@ function renderGalleryTile(item) {
       <p>${safe(item.description || item.body, "Visual drop from Rich Bizness.")}</p>
 
       <div class="rb-card-meta">
-        <span>${creatorLine(item)}</span>
+        <span>${creatorName}</span>
         <span>${niceDate(item.created_at)}</span>
       </div>
     </div>
@@ -133,6 +173,7 @@ function renderPostCard(item) {
 
   const card = document.createElement("article");
   card.className = "rb-content-card rb-gallery-card";
+  card.dataset.ownerId = item.user_id || "";
 
   card.innerHTML = `
     <img class="rb-card-cover" src="${image}" alt="${safe(item.title, "Gallery post")}" loading="lazy" />
@@ -182,10 +223,12 @@ async function loadUploads() {
     return;
   }
 
-  els.uploadsList.innerHTML = "";
-  uploads.forEach((item) => {
-    els.uploadsList.appendChild(renderGalleryTile(item));
-  });
+  if (els.uploadsList) {
+    els.uploadsList.innerHTML = "";
+    uploads.forEach((item) => {
+      els.uploadsList.appendChild(renderGalleryTile(item));
+    });
+  }
 
   const featured = uploads
     .filter((item) => item?.metadata?.is_featured || item?.metadata?.featured)
@@ -193,10 +236,12 @@ async function loadUploads() {
 
   const finalFeatured = featured.length ? featured : uploads.slice(0, 12);
 
-  els.featuredList.innerHTML = "";
-  finalFeatured.forEach((item) => {
-    els.featuredList.appendChild(renderGalleryTile(item));
-  });
+  if (els.featuredList) {
+    els.featuredList.innerHTML = "";
+    finalFeatured.forEach((item) => {
+      els.featuredList.appendChild(renderGalleryTile(item));
+    });
+  }
 }
 
 async function loadPosts() {
@@ -218,10 +263,12 @@ async function loadPosts() {
     return;
   }
 
-  els.postsList.innerHTML = "";
-  posts.forEach((item) => {
-    els.postsList.appendChild(renderPostCard(item));
-  });
+  if (els.postsList) {
+    els.postsList.innerHTML = "";
+    posts.forEach((item) => {
+      els.postsList.appendChild(renderPostCard(item));
+    });
+  }
 }
 
 async function loadGalleryPage() {
@@ -263,6 +310,33 @@ function bindRealtime() {
   );
 }
 
+function lockProfileKeys() {
+  const user = getUser();
+  const profile = getProfile();
+
+  identity = getProfileIdentity(profile);
+
+  document.body.dataset.rbUserId = user?.id || "";
+  document.body.dataset.rbProfileId = identity.id || "";
+  document.body.dataset.rbRoute = "gallery";
+  document.body.dataset.rbProfileLocked = identity.id ? "true" : "false";
+
+  bindProfileShell();
+
+  $$("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(profile);
+  });
+
+  $$("[data-rb-current-avatar]").forEach((el) => {
+    if (el.tagName === "IMG") {
+      el.src = profileAvatar(profile);
+      el.alt = profileName(profile);
+    } else {
+      el.style.backgroundImage = `url("${profileAvatar(profile)}")`;
+    }
+  });
+}
+
 async function bootGalleryPage() {
   try {
     await initApp({
@@ -273,7 +347,9 @@ async function bootGalleryPage() {
 
     supabase = getSupabase();
 
+    lockProfileKeys();
     bindTabs();
+    bindGalleryActions();
 
     await loadGalleryPage();
     bindRealtime();
@@ -284,7 +360,10 @@ async function bootGalleryPage() {
 
     markPageReady("gallery");
 
-    console.log("RB GALLERY READY");
+    console.log("RB GALLERY READY", {
+      profileLocked: !!identity?.id,
+      route: "gallery"
+    });
   } catch (error) {
     console.error("[gallery.js]", error);
 
