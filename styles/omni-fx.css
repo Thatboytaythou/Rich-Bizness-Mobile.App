@@ -1,63 +1,223 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/omni-fx.css
+
+   CLEAN GALAXY FX LAYER
+   - removes dark overlap
+   - fixes portal haze stacking
+   - smooth mobile performance
 ========================= */
 
 .rb-fx-smoke {
   position: fixed;
   inset: -20%;
+
   z-index: 0;
+
   pointer-events: none;
 
   background:
-    radial-gradient(circle at 20% 35%, rgba(0,255,157,.22), transparent 34%),
-    radial-gradient(circle at 78% 28%, rgba(250,204,21,.14), transparent 32%),
-    radial-gradient(circle at 50% 78%, rgba(16,185,129,.18), transparent 42%);
+    radial-gradient(
+      circle at 20% 35%,
+      rgba(0,255,157,.16),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 78% 28%,
+      rgba(250,204,21,.10),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 50% 78%,
+      rgba(16,185,129,.14),
+      transparent 42%
+    );
 
-  filter: blur(58px);
-  opacity: .72;
+  filter: blur(54px);
 
-  animation: rbSmokeDrift 18s ease-in-out infinite alternate;
+  opacity: .58;
+
+  mix-blend-mode: screen;
+
+  animation:
+    rbSmokeDrift 18s ease-in-out infinite alternate;
+
+  will-change: transform;
 }
+
+/* =========================
+   FX LAYERS
+========================= */
 
 .rb-bg-grid,
 .rb-bg-vignette,
 .rb-bg-noise {
   position: fixed;
   inset: 0;
-  z-index: 2;
+
   pointer-events: none;
 }
 
+/* =========================
+   GRID
+========================= */
+
 .rb-bg-grid {
-  opacity: .12;
+  z-index: 1;
+
+  opacity: .06;
+
   background-image:
-    linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+    linear-gradient(
+      rgba(255,255,255,.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.05) 1px,
+      transparent 1px
+    );
+
   background-size: 58px 58px;
-  mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
-  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      black 0%,
+      transparent 74%
+    );
+
+  -webkit-mask-image:
+    radial-gradient(
+      circle at center,
+      black 0%,
+      transparent 74%
+    );
 }
+
+/* =========================
+   VIGNETTE
+========================= */
 
 .rb-bg-vignette {
+  z-index: 1;
+
   background:
-    radial-gradient(circle at center, transparent 0%, rgba(0,0,0,.18) 48%, rgba(0,0,0,.72) 100%);
+    radial-gradient(
+      circle at center,
+      transparent 18%,
+      rgba(0,0,0,.10) 58%,
+      rgba(0,0,0,.42) 100%
+    );
 }
 
+/* =========================
+   NOISE
+========================= */
+
 .rb-bg-noise {
-  opacity: .05;
+  z-index: 1;
+
+  opacity: .025;
+
   background-image:
-    repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,.7) 0 1px, transparent 1px 4px);
-  mix-blend-mode: screen;
+    repeating-radial-gradient(
+      circle at 20% 30%,
+      rgba(255,255,255,.45) 0 1px,
+      transparent 1px 4px
+    );
+
+  mix-blend-mode: soft-light;
 }
+
+/* =========================
+   INDEX PAGE FIXES
+========================= */
+
+.rb-index-page .rb-fx-smoke,
+.rb-index-page .rb-bg-grid,
+.rb-index-page .rb-bg-vignette,
+.rb-index-page .rb-bg-noise {
+  isolation: isolate;
+}
+
+.rb-index-page .rb-bg-vignette {
+  opacity: .82;
+}
+
+.rb-index-page .rb-bg-grid {
+  opacity: .05;
+}
+
+.rb-index-page .rb-bg-noise {
+  opacity: .018;
+}
+
+/* =========================
+   LIVE ENERGY
+========================= */
+
+.rb-orbit-live-energy .rb-fx-smoke {
+  opacity: .72;
+
+  filter: blur(60px);
+
+  background:
+    radial-gradient(
+      circle at 20% 35%,
+      rgba(0,255,157,.24),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 78% 28%,
+      rgba(250,204,21,.16),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 50% 78%,
+      rgba(16,185,129,.22),
+      transparent 42%
+    );
+}
+
+.rb-orbit-presence-energy .rb-bg-grid {
+  opacity: .08;
+}
+
+/* =========================
+   ANIMATION
+========================= */
 
 @keyframes rbSmokeDrift {
   0% {
-    transform: translate3d(-2%, -1%, 0) scale(1);
+    transform:
+      translate3d(-2%, -1%, 0)
+      scale(1);
   }
 
   100% {
-    transform: translate3d(2%, 2%, 0) scale(1.08);
+    transform:
+      translate3d(2%, 2%, 0)
+      scale(1.08);
+  }
+}
+
+/* =========================
+   PERFORMANCE
+========================= */
+
+@media (max-width: 720px) {
+  .rb-fx-smoke {
+    filter: blur(44px);
+    opacity: .48;
+  }
+
+  .rb-bg-grid {
+    opacity: .04;
+  }
+
+  .rb-bg-noise {
+    opacity: .014;
   }
 }
 
