@@ -1,6 +1,9 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-supabase.js
+
+   SUPABASE ENGINE
+   Auth + Profile State + Storage + Realtime
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -40,6 +43,13 @@ let currentProfile = null;
 let authBooted = false;
 let authBooting = null;
 
+const PROFILE_IDENTITY_TABLES = [
+  RB_TABLES.metaAvatars,
+  RB_TABLES.gamerProfiles,
+  RB_TABLES.sportsProfiles,
+  RB_TABLES.storeSellerProfiles
+];
+
 export function getSupabase() {
   return supabase;
 }
@@ -67,6 +77,20 @@ export function getCurrentUserState() {
 
 export function isAuthed() {
   return !!currentUser;
+}
+
+export function getProfileKey() {
+  return currentProfile?.id || currentUser?.id || null;
+}
+
+export function getProfileIdentity() {
+  return {
+    user_id: currentProfile?.id || currentUser?.id || null,
+    username: currentProfile?.username || null,
+    display_name: currentProfile?.display_name || null,
+    avatar_url: currentProfile?.avatar_url || null,
+    banner_url: currentProfile?.banner_url || null
+  };
 }
 
 export async function bootAuth() {
@@ -148,11 +172,7 @@ export async function loadProfile(userId) {
   return currentProfile;
 }
 
-export async function signUp({
-  email,
-  password,
-  metadata = {}
-}) {
+export async function signUp({ email, password, metadata = {} }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -176,10 +196,7 @@ export async function signUp({
   return data;
 }
 
-export async function signIn({
-  email,
-  password
-}) {
+export async function signIn({ email, password }) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
@@ -281,7 +298,9 @@ export async function rbSelect({
   let query = supabase.from(table).select(select);
 
   Object.entries(match).forEach(([key, value]) => {
-    query = query.eq(key, value);
+    if (value !== undefined && value !== null) {
+      query = query.eq(key, value);
+    }
   });
 
   if (orderBy) query = query.order(orderBy, { ascending });
@@ -296,10 +315,7 @@ export async function rbSelect({
   return data;
 }
 
-export async function rbInsert({
-  table,
-  values
-}) {
+export async function rbInsert({ table, values }) {
   const { data, error } = await supabase
     .from(table)
     .insert(values)
@@ -318,10 +334,27 @@ export async function rbUpdate({
   let query = supabase.from(table).update(values);
 
   Object.entries(match).forEach(([key, value]) => {
-    query = query.eq(key, value);
+    if (value !== undefined && value !== null) {
+      query = query.eq(key, value);
+    }
   });
 
   const { data, error } = await query.select();
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function rbUpsert({
+  table,
+  values,
+  onConflict = "id"
+}) {
+  const { data, error } = await supabase
+    .from(table)
+    .upsert(values, { onConflict })
+    .select();
 
   if (error) throw error;
 
@@ -335,7 +368,9 @@ export async function rbDelete({
   let query = supabase.from(table).delete();
 
   Object.entries(match).forEach(([key, value]) => {
-    query = query.eq(key, value);
+    if (value !== undefined && value !== null) {
+      query = query.eq(key, value);
+    }
   });
 
   const { data, error } = await query.select();
@@ -343,6 +378,34 @@ export async function rbDelete({
   if (error) throw error;
 
   return data;
+}
+
+export async function rbRequireUser() {
+  await bootAuth();
+
+  if (!currentUser?.id) {
+    throw new Error("You must be signed in.");
+  }
+
+  return currentUser;
+}
+
+export async function rbRequireProfile() {
+  await bootAuth();
+
+  if (!currentUser?.id) {
+    throw new Error("You must be signed in.");
+  }
+
+  if (!currentProfile?.id) {
+    await loadProfile(currentUser.id);
+  }
+
+  if (!currentProfile?.id) {
+    throw new Error("Profile not found.");
+  }
+
+  return currentProfile;
 }
 
 console.log("RB SUPABASE ENGINE READY");
