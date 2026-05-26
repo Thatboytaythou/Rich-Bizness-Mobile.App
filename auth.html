@@ -2,6 +2,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
@@ -10,13 +11,13 @@
   <title>Rich Bizness • Auth</title>
 
   <meta name="theme-color" content="#050805" />
+
   <meta
     name="description"
     content="Rich Bizness Mobile identity login and signup."
   />
 
   <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
@@ -41,25 +42,44 @@
     </section>
 
     <section id="rb-auth-panel" class="rb-auth-panel is-signin">
-      <div class="rb-auth-tabs">
-        <button type="button" data-auth-mode="signin" class="is-active">
+      <div class="rb-auth-tabs" role="tablist" aria-label="Auth mode">
+        <button
+          class="is-active"
+          type="button"
+          data-auth-mode="signin"
+          role="tab"
+          aria-selected="true"
+          aria-controls="rb-signin-form"
+        >
           TAP IN 💰
         </button>
 
-        <button type="button" data-auth-mode="signup">
+        <button
+          type="button"
+          data-auth-mode="signup"
+          role="tab"
+          aria-selected="false"
+          aria-controls="rb-signup-form"
+        >
           CREATE ID ✨
         </button>
       </div>
 
-      <form id="rb-signin-form" class="rb-auth-form" autocomplete="on">
+      <form
+        id="rb-signin-form"
+        class="rb-auth-form"
+        autocomplete="on"
+      >
         <h2>Welcome Back</h2>
 
         <label>
           Email
+
           <input
             name="email"
             type="email"
             autocomplete="email"
+            inputmode="email"
             placeholder="you@richbizness.com"
             required
           />
@@ -67,6 +87,7 @@
 
         <label>
           Password
+
           <input
             name="password"
             type="password"
@@ -81,11 +102,16 @@
         </button>
       </form>
 
-      <form id="rb-signup-form" class="rb-auth-form" autocomplete="on">
+      <form
+        id="rb-signup-form"
+        class="rb-auth-form"
+        autocomplete="on"
+      >
         <h2>Create Your Identity</h2>
 
         <label>
           Display Name
+
           <input
             name="display_name"
             type="text"
@@ -96,20 +122,25 @@
 
         <label>
           Username
+
           <input
             name="username"
             type="text"
             autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
             placeholder="thatboytaythou"
           />
         </label>
 
         <label>
           Email
+
           <input
             name="email"
             type="email"
             autocomplete="email"
+            inputmode="email"
             placeholder="you@richbizness.com"
             required
           />
@@ -117,6 +148,7 @@
 
         <label>
           Password
+
           <input
             name="password"
             type="password"
@@ -131,7 +163,11 @@
         </button>
       </form>
 
-      <p id="rb-auth-message" class="rb-auth-message" aria-live="polite"></p>
+      <p
+        id="rb-auth-message"
+        class="rb-auth-message"
+        aria-live="polite"
+      ></p>
     </section>
 
     <a href="/" class="rb-auth-home">
@@ -139,9 +175,6 @@
     </a>
   </main>
 
-  <script type="module" src="/core/shared/rb-config.js"></script>
-  <script type="module" src="/core/shared/rb-supabase.js"></script>
-  <script type="module" src="/core/shared/rb-auth.js"></script>
   <script type="module" src="/core/pages/auth.js"></script>
 </body>
 </html>
