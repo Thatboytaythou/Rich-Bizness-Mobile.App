@@ -1,3 +1,11 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/pages/live.js
+
+   LIVE PAGE CONTROLLER
+   Creator studio: create → start → stream → chat → reactions
+========================= */
+
 import {
   Room,
   RoomEvent,
@@ -18,6 +26,16 @@ import {
   RB_TABLES,
   RB_ROUTES
 } from "/core/shared/rb-config.js";
+
+import {
+  initLiveRail,
+  upsertLiveRailCard
+} from "/core/features/live/live-rail.js";
+
+import {
+  initLiveModeration,
+  clearLiveModerationRealtime
+} from "/core/features/live/live-moderation.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -121,6 +139,7 @@ function username() {
 function watchUrl(stream = LIVE.stream) {
   const base = RB_ROUTES.watch || "/watch";
   if (!stream) return base;
+
   return `${base}?stream=${encodeURIComponent(stream.slug || stream.id)}`;
 }
 
@@ -155,10 +174,7 @@ function renderStream() {
   const isLive = s.status === "live";
 
   safeSet(els.stageTitle, s.title || "Family Bizness");
-  safeSet(
-    els.liveBadge,
-    isLive ? "LIVE" : String(s.status || "DRAFT").toUpperCase()
-  );
+  safeSet(els.liveBadge, isLive ? "LIVE" : String(s.status || "DRAFT").toUpperCase());
 
   if (els.liveBadge) {
     els.liveBadge.className = isLive ? "live-badge on" : "live-badge off";
@@ -269,42 +285,21 @@ async function createStream() {
       }
     });
 
-    await LIVE.supabase.from(RB_TABLES.liveStreamCards).insert({
-      stream_id: data.id,
-      creator_id: LIVE.user.id,
-      title: data.title,
-      subtitle: data.description,
-      card_type: "live",
-      thumbnail_url: data.thumbnail_url,
-      cover_url: data.cover_url,
-      target_url: watchUrl(data),
-      is_active: true,
-      metadata: {
-        section: "watch",
-        source: "live.js"
-      }
+    await upsertLiveRailCard(data);
+
+    await notifySelf({
+      type: "live_created",
+      title: "Live studio created",
+      body: `${data.title} is ready to start.`,
+      emoji: "📺"
     });
 
-    if (RB_TABLES.richNotifications || RB_TABLES.notifications) {
-      await LIVE.supabase
-        .from(RB_TABLES.richNotifications || RB_TABLES.notifications)
-        .insert({
-          user_id: LIVE.user.id,
-          actor_id: LIVE.user.id,
-          type: "live_created",
-          title: "Live studio created",
-          body: `${data.title} is ready to start.`,
-          target_table: RB_TABLES.liveStreams,
-          target_type: "live",
-          target_id: data.id,
-          target_url: watchUrl(data),
-          emoji: "📺",
-          metadata: {
-            stream_slug: data.slug,
-            source: "live.js"
-          }
-        });
-    }
+    await initLiveModeration({
+      stream: data,
+      user: LIVE.user,
+      profile: LIVE.profile,
+      realtime: true
+    });
 
     renderStream();
     bindRealtime(data.id);
@@ -315,6 +310,28 @@ async function createStream() {
   } finally {
     if (els.createStreamBtn) els.createStreamBtn.disabled = false;
   }
+}
+
+async function notifySelf({ type, title, body, emoji }) {
+  const table = RB_TABLES.richNotifications || RB_TABLES.notifications;
+  if (!table || !LIVE.stream?.id || !LIVE.user?.id) return;
+
+  await LIVE.supabase.from(table).insert({
+    user_id: LIVE.user.id,
+    actor_id: LIVE.user.id,
+    type,
+    title,
+    body,
+    target_table: RB_TABLES.liveStreams,
+    target_type: "live",
+    target_id: LIVE.stream.id,
+    target_url: watchUrl(),
+    emoji,
+    metadata: {
+      stream_slug: LIVE.stream.slug,
+      source: "live.js"
+    }
+  });
 }
 
 async function getLivekitToken() {
@@ -409,6 +426,8 @@ async function startLive() {
     LIVE.stream = data;
     renderStream();
 
+    await upsertLiveRailCard(data);
+
     const tokenData = await getLivekitToken();
     const token = tokenData.token || tokenData.accessToken;
     const url = tokenData.url || tokenData.livekitUrl || tokenData.wsUrl;
@@ -449,26 +468,12 @@ async function startLive() {
 
     await syncParticipants();
 
-    if (RB_TABLES.richNotifications || RB_TABLES.notifications) {
-      await LIVE.supabase
-        .from(RB_TABLES.richNotifications || RB_TABLES.notifications)
-        .insert({
-          user_id: LIVE.user.id,
-          actor_id: LIVE.user.id,
-          type: "live_started",
-          title: "WE LIT 🔥",
-          body: `${LIVE.stream.title} is live now.`,
-          target_table: RB_TABLES.liveStreams,
-          target_type: "live",
-          target_id: LIVE.stream.id,
-          target_url: watchUrl(),
-          emoji: "🔥",
-          metadata: {
-            stream_slug: LIVE.stream.slug,
-            source: "live.js"
-          }
-        });
-    }
+    await notifySelf({
+      type: "live_started",
+      title: "WE LIT 🔥",
+      body: `${LIVE.stream.title} is live now.`,
+      emoji: "🔥"
+    });
 
     setStatus("WE LIT 🔥 Live is active and ready for Watch.");
   } catch (error) {
@@ -499,6 +504,9 @@ async function endLive() {
     if (error) throw error;
 
     LIVE.stream = data;
+
+    await upsertLiveRailCard(data);
+
     renderStream();
     setStatus("Live ended.");
   } catch (error) {
@@ -705,9 +713,13 @@ function bindRealtime(streamId) {
         table: RB_TABLES.liveStreams,
         filter: `id=eq.${streamId}`
       },
-      (payload) => {
+      async (payload) => {
         LIVE.stream = payload.new;
         renderStream();
+
+        if (payload.new?.id) {
+          await upsertLiveRailCard(payload.new);
+        }
       }
     )
     .subscribe();
@@ -781,8 +793,17 @@ async function loadLatestDraftOrLive() {
     LIVE.stream = data;
     renderStream();
     bindRealtime(data.id);
-    await loadChat(data.id);
-    await loadTips(data.id);
+
+    await Promise.all([
+      loadChat(data.id),
+      loadTips(data.id),
+      initLiveModeration({
+        stream: data,
+        user: LIVE.user,
+        profile: LIVE.profile,
+        realtime: true
+      })
+    ]);
   } else {
     renderStream();
   }
@@ -800,6 +821,7 @@ function bindEvents() {
 
   window.addEventListener("beforeunload", () => {
     clearRealtime();
+    clearLiveModerationRealtime();
     disconnectRoom();
   });
 }
@@ -821,10 +843,16 @@ async function bootLivePage() {
       return;
     }
 
+    await initLiveRail({
+      limit: 20,
+      realtime: true,
+      loadCards: true
+    });
+
     await loadLatestDraftOrLive();
 
     markPageReady("live");
-    console.log("RB LIVE READY");
+    console.log("RB LIVE PAGE READY");
   } catch (error) {
     console.error("[live.js]", error);
     setStatus(error?.message || "Live failed to load.");
