@@ -1,4 +1,11 @@
-/* /core/pages/gaming.js */
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/pages/gaming.js
+
+   Gaming Page
+   Profile Keys Locked
+   Realtime Enabled
+========================= */
 
 import {
   initApp,
@@ -7,7 +14,20 @@ import {
   markPageError
 } from "/core/app.js";
 
+import {
+  RB_TABLES,
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
 import { getSupabase } from "/core/shared/rb-supabase.js";
+
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl,
+  profileAvatar,
+  profileName
+} from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -38,6 +58,8 @@ let authState = null;
 let currentUser = null;
 let currentProfile = null;
 let gamerProfile = null;
+let identity = null;
+let channel = null;
 
 const fallbackCover = "/images/brand/hero-banner.png";
 
@@ -53,18 +75,45 @@ function safeImage(url) {
   return url || fallbackCover;
 }
 
-function identity() {
+function cardEmpty(target, text) {
+  if (target) {
+    target.innerHTML = `<article class="rb-empty-card">${text}</article>`;
+  }
+}
+
+function lockProfileKeys() {
+  identity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbRoute = "gaming";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = identity.id || "";
+  document.body.dataset.rbProfileLocked = identity.id ? "true" : "false";
+
+  bindProfileShell();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    if (el.tagName === "IMG") {
+      el.src = profileAvatar(currentProfile);
+      el.alt = profileName(currentProfile);
+    } else {
+      el.style.backgroundImage = `url("${profileAvatar(currentProfile)}")`;
+    }
+  });
+}
+
+function userIdentity() {
   return {
     username: currentProfile?.username || null,
     display_name:
       currentProfile?.display_name ||
+      currentProfile?.full_name ||
       currentUser?.email?.split("@")[0] ||
       "Rich Gamer"
   };
-}
-
-function cardEmpty(target, text) {
-  if (target) target.innerHTML = `<article class="rb-empty-card">${text}</article>`;
 }
 
 function bindTabs() {
@@ -73,6 +122,7 @@ function bindTabs() {
       const key = btn.dataset.tab;
 
       els.tabs.forEach((item) => item.classList.remove("is-active"));
+
       els.panels.forEach((panel) => {
         panel.classList.toggle("is-active", panel.dataset.panel === key);
       });
@@ -83,49 +133,53 @@ function bindTabs() {
 }
 
 async function loadGamerProfile() {
-  if (!currentUser) {
+  if (!currentUser?.id) {
     setText(els.gamerName, "Guest Player");
     setText(els.gamerMeta, "Sign in to sync your gamer profile.");
     return;
   }
 
   const { data, error } = await supabase
-    .from("gamer_profiles")
+    .from(RB_TABLES.gamerProfiles)
     .select("*")
     .eq("user_id", currentUser.id)
     .maybeSingle();
 
   if (error) throw error;
 
-  gamerProfile = data;
+  gamerProfile = data || null;
 
-  if (!data) {
-    setText(els.gamerName, currentProfile?.display_name || "Rich Gamer");
+  if (!gamerProfile) {
+    setText(els.gamerName, identity.displayName || "Rich Gamer");
     setText(els.gamerMeta, "No gamer profile yet.");
     return;
   }
 
-  setText(els.gamerName, data.display_name || data.gamer_tag || "Rich Gamer");
   setText(
-    els.gamerMeta,
-    `${data.gamer_tag || "No tag"} • ${data.platform_primary || "web"} • ${data.rank_title || "Rookie"} • ${data.xp || 0} XP`
+    els.gamerName,
+    gamerProfile.display_name || gamerProfile.gamer_tag || identity.displayName
   );
 
-  if (els.gamerTagInput) els.gamerTagInput.value = data.gamer_tag || "";
-  if (els.platformInput) els.platformInput.value = data.platform_primary || "web";
+  setText(
+    els.gamerMeta,
+    `${gamerProfile.gamer_tag || "No tag"} • ${gamerProfile.platform_primary || "web"} • ${gamerProfile.rank_title || "Rookie"} • ${gamerProfile.xp || 0} XP`
+  );
+
+  if (els.gamerTagInput) els.gamerTagInput.value = gamerProfile.gamer_tag || "";
+  if (els.platformInput) els.platformInput.value = gamerProfile.platform_primary || "web";
 }
 
 async function saveGamerProfile(event) {
   event.preventDefault();
 
-  if (!currentUser) {
-    window.location.href = "/auth.html";
+  if (!currentUser?.id) {
+    window.location.href = RB_ROUTES.auth;
     return;
   }
 
-  const tag = els.gamerTagInput.value.trim();
-  const platform = els.platformInput.value || "web";
-  const info = identity();
+  const tag = els.gamerTagInput?.value?.trim() || "";
+  const platform = els.platformInput?.value || "web";
+  const info = userIdentity();
 
   const payload = {
     user_id: currentUser.id,
@@ -136,13 +190,14 @@ async function saveGamerProfile(event) {
     avatar_url: currentProfile?.avatar_url || "/images/brand/project-avatar.png.jpeg",
     banner_url: currentProfile?.banner_url || "/images/brand/Avatar-hero-Banner.png.jpeg",
     metadata: {
-      source: "Rich Bizness Gaming"
+      source: "Rich Bizness Gaming",
+      profile_locked: true
     },
     updated_at: new Date().toISOString()
   };
 
   const { error } = await supabase
-    .from("gamer_profiles")
+    .from(RB_TABLES.gamerProfiles)
     .upsert(payload, { onConflict: "user_id" });
 
   if (error) throw error;
@@ -154,7 +209,7 @@ function renderGames(rows = []) {
   if (!rows.length) return cardEmpty(els.gamesList, "No games loaded yet.");
 
   els.gamesList.innerHTML = rows.map((game) => `
-    <article class="rb-game-card">
+    <article class="rb-game-card" data-game-id="${game.id || ""}">
       <img src="${safeImage(game.cover_url || game.thumbnail_url)}" alt="" />
       <div>
         <p class="rb-kicker">${game.game_type || "arcade"} • ${game.platform_type || "web"}</p>
@@ -175,7 +230,7 @@ function renderClips(rows = []) {
   if (!rows.length) return cardEmpty(els.clipsList, "No game clips yet.");
 
   els.clipsList.innerHTML = rows.map((clip) => `
-    <article class="rb-game-card">
+    <article class="rb-game-card" data-owner-id="${clip.user_id || ""}">
       ${
         clip.thumbnail_url
           ? `<img src="${clip.thumbnail_url}" alt="" />`
@@ -199,7 +254,7 @@ function renderScores(rows = []) {
   if (!rows.length) return cardEmpty(els.scoresList, "No scores submitted yet.");
 
   els.scoresList.innerHTML = rows.map((score, index) => `
-    <article class="rb-list-row">
+    <article class="rb-list-row" data-owner-id="${score.user_id || ""}">
       <strong>#${index + 1}</strong>
       <div>
         <h3>${score.display_name || score.username || "Rich Gamer"}</h3>
@@ -251,7 +306,7 @@ function renderChallenges(rows = []) {
 
 async function loadGames() {
   const { data, error } = await supabase
-    .from("games")
+    .from(RB_TABLES.games)
     .select("*")
     .eq("is_active", true)
     .order("is_featured", { ascending: false })
@@ -266,7 +321,7 @@ async function loadGames() {
 
 async function loadClips() {
   const { data, error } = await supabase
-    .from("game_clips")
+    .from(RB_TABLES.gameClips)
     .select("*")
     .order("created_at", { ascending: false })
     .limit(24);
@@ -279,7 +334,7 @@ async function loadClips() {
 
 async function loadScores() {
   const { data, error } = await supabase
-    .from("game_scores")
+    .from(RB_TABLES.gameScores)
     .select("*")
     .order("score", { ascending: false })
     .order("created_at", { ascending: false })
@@ -293,7 +348,7 @@ async function loadScores() {
 
 async function loadTournaments() {
   const { data, error } = await supabase
-    .from("game_tournaments")
+    .from(RB_TABLES.gameTournaments)
     .select("*")
     .order("created_at", { ascending: false })
     .limit(24);
@@ -306,7 +361,7 @@ async function loadTournaments() {
 
 async function loadChallenges() {
   const { data, error } = await supabase
-    .from("game_challenges")
+    .from(RB_TABLES.gameChallenges)
     .select("*")
     .order("created_at", { ascending: false })
     .limit(24);
@@ -316,14 +371,35 @@ async function loadChallenges() {
   renderChallenges(data || []);
 }
 
+async function loadGamingPage() {
+  await Promise.all([
+    loadGamerProfile(),
+    loadGames(),
+    loadClips(),
+    loadScores(),
+    loadTournaments(),
+    loadChallenges()
+  ]);
+}
+
+function clearRealtime() {
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+}
+
 function subscribeGaming() {
-  supabase
+  clearRealtime();
+
+  channel = supabase
     .channel("rb-gaming-page")
-    .on("postgres_changes", { event: "*", schema: "public", table: "games" }, loadGames)
-    .on("postgres_changes", { event: "*", schema: "public", table: "game_clips" }, loadClips)
-    .on("postgres_changes", { event: "*", schema: "public", table: "game_scores" }, loadScores)
-    .on("postgres_changes", { event: "*", schema: "public", table: "game_tournaments" }, loadTournaments)
-    .on("postgres_changes", { event: "*", schema: "public", table: "game_challenges" }, loadChallenges)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.games }, loadGames)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.gameClips }, loadClips)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.gameScores }, loadScores)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.gameTournaments }, loadTournaments)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.gameChallenges }, loadChallenges)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.gamerProfiles }, loadGamerProfile)
     .subscribe();
 }
 
@@ -338,28 +414,31 @@ async function bootGamingPage() {
     supabase = getSupabase();
 
     const state = getCurrentUserState?.() || authState || {};
+
     currentUser = state.user || authState?.user || null;
     currentProfile = state.profile || authState?.profile || null;
 
+    lockProfileKeys();
     bindTabs();
 
     els.gamerForm?.addEventListener("submit", saveGamerProfile);
 
-    await Promise.all([
-      loadGamerProfile(),
-      loadGames(),
-      loadClips(),
-      loadScores(),
-      loadTournaments(),
-      loadChallenges()
-    ]);
+    await loadGamingPage();
 
     subscribeGaming();
+
+    window.addEventListener("beforeunload", clearRealtime);
+
+    document.body.classList.add("rb-gaming-ready");
+
     markPageReady("gaming");
 
-    console.log("RB GAMING READY");
+    console.log("RB GAMING READY", {
+      profileLocked: !!identity?.id,
+      route: "gaming"
+    });
   } catch (error) {
-    console.error(error);
+    console.error("[gaming.js]", error);
     markPageError(error);
   }
 }
