@@ -4,19 +4,39 @@ import RB_CONFIG from "/core/shared/rb-config.js";
    RICH BIZNESS MOBILE
    /core/engine/universe-preview.js
 
-   LOCKED PORTAL HUB UPGRADE
-   - Three.js portal
-   - Real branded orbit cards
-   - 3D words under phones
-   - Dynamic orbit reactions
-   - Floating universe particles
-   - Swipe / drag orbit
-   - Tap card routing
-   - Galaxy energy
+   LOCKED PORTAL HUB ENGINE
+   Three.js Galaxy + Orbit Cards
 ========================= */
 
 const container = document.getElementById("canvas-container");
 const labelEl = document.getElementById("module-label");
+
+const fallbackMotion = {
+  mobileBreakpoint: 720,
+  orbit: {
+    speed: 0.0022,
+    desktopRadiusX: 270,
+    desktopRadiusY: 120,
+    mobileRadiusX: 190,
+    mobileRadiusY: 90
+  },
+  portal: {
+    scalePulse: 0.045
+  }
+};
+
+const motion = {
+  ...fallbackMotion,
+  ...(RB_CONFIG.motion || {}),
+  orbit: {
+    ...fallbackMotion.orbit,
+    ...(RB_CONFIG.motion?.orbit || {})
+  },
+  portal: {
+    ...fallbackMotion.portal,
+    ...(RB_CONFIG.motion?.portal || {})
+  }
+};
 
 const modules = [
   { key: "feed", title: "Global Feed", tag: "FEED", image: "/images/brand/hero-banner.png" },
@@ -29,7 +49,7 @@ const modules = [
   { key: "sports", title: "Sports Arena", tag: "SPORTS", image: "/images/brand/sports-logo.png.jpeg" },
   { key: "gallery", title: "Visual Drops", tag: "GALLERY", image: "/images/brand/father-son-elite.png.jpeg" },
   { key: "store", title: "Creator Market", tag: "STORE", image: "/images/brand/gta-style-elite.png.jpeg" },
-  { key: "meta", title: "Meta World", tag: "META", image: "/images/brand/meta-verse-elite.png.jpeg" },
+  { key: "meta", title: "Meta World", tag: "META", image: "/images/brand/meta-verse-elite.png.jpeg" }
 ];
 
 let scene;
@@ -43,6 +63,7 @@ let floatingParticles;
 let raycaster;
 let pointer;
 let hoveredCard = null;
+let animationFrame = null;
 
 let orbitOffset = 0;
 let targetOffset = 0;
@@ -56,14 +77,17 @@ const activityState = {
   liveCount: 0,
   onlineCount: 0,
   orbitBoost: 1,
-  portalBoost: 1,
+  portalBoost: 1
 };
 
 const cards = [];
-const loader = new THREE.TextureLoader();
+const textureLoader = window.THREE ? new THREE.TextureLoader() : null;
 
 function initUniverse() {
-  if (!container || !window.THREE) return;
+  if (!container || !window.THREE || !textureLoader) return;
+
+  if (container.dataset.rbUniverseMounted === "true") return;
+  container.dataset.rbUniverseMounted = "true";
 
   scene = new THREE.Scene();
 
@@ -79,12 +103,13 @@ function initUniverse() {
   renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
-    powerPreference: "high-performance",
+    powerPreference: "high-performance"
   });
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.sortObjects = true;
+  renderer.setClearColor(0x000000, 0);
 
   container.innerHTML = "";
   container.appendChild(renderer.domElement);
@@ -103,25 +128,30 @@ function initUniverse() {
   bindActivityReactions();
   resizeUniverse();
   animateUniverse();
+
+  document.body.classList.add("rb-universe-ready");
 }
 
 function buildLights() {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.64));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-  const goldLight = new THREE.PointLight(0xfbbf24, 3.4, 150);
+  const goldLight = new THREE.PointLight(0xfbbf24, 3.1, 150);
   goldLight.position.set(18, 18, 32);
   scene.add(goldLight);
 
-  const greenLight = new THREE.PointLight(0x10b981, 3.1, 150);
+  const greenLight = new THREE.PointLight(0x10b981, 2.9, 150);
   greenLight.position.set(-20, -4, 22);
   scene.add(greenLight);
 }
 
 function buildStars() {
+  const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+  const count = isMobile ? 1500 : 2600;
+
   const geo = new THREE.BufferGeometry();
   const positions = [];
 
-  for (let i = 0; i < 2600; i++) {
+  for (let i = 0; i < count; i += 1) {
     positions.push(
       THREE.MathUtils.randFloatSpread(180),
       THREE.MathUtils.randFloatSpread(130),
@@ -135,10 +165,10 @@ function buildStars() {
     geo,
     new THREE.PointsMaterial({
       color: 0xfbbf24,
-      size: 0.045,
+      size: isMobile ? 0.04 : 0.045,
       transparent: true,
-      opacity: 0.38,
-      depthWrite: false,
+      opacity: 0.36,
+      depthWrite: false
     })
   );
 
@@ -147,10 +177,13 @@ function buildStars() {
 }
 
 function buildGalaxy() {
+  const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+  const count = isMobile ? 2200 : 3600;
+
   const galaxyGeo = new THREE.BufferGeometry();
   const galaxy = [];
 
-  for (let i = 0; i < 3600; i++) {
+  for (let i = 0; i < count; i += 1) {
     const radius = Math.random() * 56;
     const angle = radius * 0.34 + Math.random() * Math.PI * 2;
 
@@ -167,10 +200,10 @@ function buildGalaxy() {
     galaxyGeo,
     new THREE.PointsMaterial({
       color: 0x10b981,
-      size: 0.065,
+      size: isMobile ? 0.058 : 0.065,
       transparent: true,
-      opacity: 0.34,
-      depthWrite: false,
+      opacity: 0.4,
+      depthWrite: false
     })
   );
 
@@ -178,11 +211,14 @@ function buildGalaxy() {
 }
 
 function buildFloatingParticles() {
+  const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+  const count = isMobile ? 520 : 900;
+
   const geo = new THREE.BufferGeometry();
   const positions = [];
   const colors = [];
 
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < count; i += 1) {
     positions.push(
       THREE.MathUtils.randFloatSpread(90),
       THREE.MathUtils.randFloatSpread(70),
@@ -202,11 +238,11 @@ function buildFloatingParticles() {
   floatingParticles = new THREE.Points(
     geo,
     new THREE.PointsMaterial({
-      size: 0.09,
+      size: isMobile ? 0.075 : 0.09,
       transparent: true,
-      opacity: 0.48,
+      opacity: 0.44,
       vertexColors: true,
-      depthWrite: false,
+      depthWrite: false
     })
   );
 
@@ -218,23 +254,23 @@ function buildPortal() {
   portal = new THREE.Group();
 
   const glow = new THREE.Mesh(
-    new THREE.SphereGeometry(7.65, 96, 96),
+    new THREE.SphereGeometry(7.65, 72, 72),
     new THREE.MeshBasicMaterial({
       color: 0x10b981,
       transparent: true,
-      opacity: 0.032,
-      depthWrite: false,
+      opacity: 0.026,
+      depthWrite: false
     })
   );
 
   const core = new THREE.Mesh(
-    new THREE.SphereGeometry(5.9, 96, 96),
+    new THREE.SphereGeometry(5.9, 72, 72),
     new THREE.MeshPhongMaterial({
       color: 0x10b981,
       emissive: 0x064e3b,
       shininess: 52,
       transparent: true,
-      opacity: 0.96,
+      opacity: 0.82
     })
   );
 
@@ -258,6 +294,7 @@ function buildCards() {
     card.userData.isHot = false;
     card.userData.activityCount = 0;
     card.userData.presenceBoost = 0;
+
     cards.push(card);
     orbitGroup.add(card);
   });
@@ -273,11 +310,11 @@ function createPhoneCard(mod) {
       specular: 0xfbbf24,
       shininess: 78,
       transparent: true,
-      opacity: 0.94,
+      opacity: 0.92
     })
   );
 
-  const screenTexture = loader.load(
+  const screenTexture = textureLoader.load(
     mod.image,
     (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
@@ -285,7 +322,7 @@ function createPhoneCard(mod) {
       texture.needsUpdate = true;
     },
     undefined,
-    () => console.warn("Missing module image:", mod.image)
+    () => console.warn("[RB UNIVERSE IMAGE MISSING]", mod.image)
   );
 
   const screen = new THREE.Mesh(
@@ -294,7 +331,7 @@ function createPhoneCard(mod) {
       map: screenTexture,
       transparent: true,
       opacity: 0.96,
-      depthWrite: true,
+      depthWrite: true
     })
   );
 
@@ -305,8 +342,8 @@ function createPhoneCard(mod) {
     new THREE.MeshBasicMaterial({
       color: 0x03140b,
       transparent: true,
-      opacity: 0.13,
-      depthWrite: false,
+      opacity: 0.1,
+      depthWrite: false
     })
   );
 
@@ -317,8 +354,8 @@ function createPhoneCard(mod) {
     new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.065,
-      depthWrite: false,
+      opacity: 0.055,
+      depthWrite: false
     })
   );
 
@@ -330,9 +367,9 @@ function createPhoneCard(mod) {
     new THREE.MeshBasicMaterial({
       color: 0xfbbf24,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.18,
       wireframe: true,
-      depthWrite: false,
+      depthWrite: false
     })
   );
 
@@ -344,7 +381,7 @@ function createPhoneCard(mod) {
       color: 0x10b981,
       transparent: true,
       opacity: 0,
-      depthWrite: false,
+      depthWrite: false
     })
   );
 
@@ -379,11 +416,11 @@ function createTextLabel(tag, title) {
   ctx.shadowColor = "rgba(16, 185, 129, 0.95)";
   ctx.shadowBlur = 28;
 
-  ctx.fillStyle = "rgba(5, 8, 5, 0.70)";
+  ctx.fillStyle = "rgba(5, 8, 5, 0.58)";
   roundRect(ctx, 64, 28, 896, 190, 46);
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(251, 191, 36, 0.45)";
+  ctx.strokeStyle = "rgba(251, 191, 36, 0.42)";
   ctx.lineWidth = 4;
   roundRect(ctx, 64, 28, 896, 190, 46);
   ctx.stroke();
@@ -393,14 +430,12 @@ function createTextLabel(tag, title) {
   ctx.font = "900 52px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.letterSpacing = "10px";
   ctx.fillText(tag, 512, 82);
 
   ctx.shadowColor = "rgba(251, 191, 36, 0.75)";
   ctx.shadowBlur = 14;
   ctx.fillStyle = "#fff7ed";
   ctx.font = "900 64px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.letterSpacing = "0px";
   ctx.fillText(title, 512, 152);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -411,8 +446,8 @@ function createTextLabel(tag, title) {
     new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
-      opacity: 0.94,
-      depthWrite: false,
+      opacity: 0.9,
+      depthWrite: false
     })
   );
 
@@ -436,13 +471,12 @@ function roundRect(ctx, x, y, w, h, r) {
 function bindActivityReactions() {
   window.addEventListener("rb:activity-update", (event) => {
     const live = event.detail?.live;
-
     if (!live) return;
 
     activityState.liveActive = Boolean(live.active);
     activityState.liveCount = live.count || 0;
-    activityState.orbitBoost = live.active ? 1.22 : 1;
-    activityState.portalBoost = live.active ? 1.16 : 1;
+    activityState.orbitBoost = live.active ? 1.18 : 1;
+    activityState.portalBoost = live.active ? 1.12 : 1;
 
     cards.forEach((card) => {
       const mod = card.userData.module;
@@ -470,17 +504,17 @@ function bindActivityReactions() {
 }
 
 function updateCards() {
-  const isMobile = window.innerWidth <= RB_CONFIG.motion.mobileBreakpoint;
+  const isMobile = window.innerWidth <= motion.mobileBreakpoint;
 
   const radiusX = isMobile
-    ? RB_CONFIG.motion.orbit.mobileRadiusX / 10
-    : RB_CONFIG.motion.orbit.desktopRadiusX / 10;
+    ? motion.orbit.mobileRadiusX / 10
+    : motion.orbit.desktopRadiusX / 10;
 
   const radiusZ = isMobile
-    ? RB_CONFIG.motion.orbit.mobileRadiusY / 10
-    : RB_CONFIG.motion.orbit.desktopRadiusY / 10;
+    ? motion.orbit.mobileRadiusY / 10
+    : motion.orbit.desktopRadiusY / 10;
 
-  const baseY = isMobile ? -1.15 : -0.55;
+  const baseY = isMobile ? -1.05 : -0.55;
 
   orbitOffset += (targetOffset - orbitOffset) * 0.055;
 
@@ -492,11 +526,11 @@ function updateCards() {
 
     const depth = (z + radiusZ) / (radiusZ * 2);
     const scale = 0.42 + depth * 0.42;
-    const opacity = 0.62 + depth * 0.38;
+    const opacity = 0.58 + depth * 0.4;
 
-    const hotBoost = card.userData.isHot ? 1.12 : 1;
-    const presenceBoost = card.userData.presenceBoost ? 1.035 : 1;
-    const hoverBoost = card === hoveredCard ? 1.12 : 1;
+    const hotBoost = card.userData.isHot ? 1.1 : 1;
+    const presenceBoost = card.userData.presenceBoost ? 1.03 : 1;
+    const hoverBoost = card === hoveredCard ? 1.1 : 1;
 
     card.position.set(x, baseY + depth * 1.05, z + 1.2);
     card.rotation.y = -angle + Math.PI / 2;
@@ -505,29 +539,25 @@ function updateCards() {
     card.children.forEach((child, childIndex) => {
       if (!child.material) return;
 
-      if (childIndex === 0) child.material.opacity = 0.82 + opacity * 0.14;
+      if (childIndex === 0) child.material.opacity = 0.78 + opacity * 0.14;
       if (childIndex === 1) child.material.opacity = opacity;
-      if (childIndex === 2) child.material.opacity = 0.12 + depth * 0.07;
-      if (childIndex === 3) child.material.opacity = 0.05 + depth * 0.06;
-      if (childIndex === 4) child.material.opacity = 0.13 + depth * 0.14;
+      if (childIndex === 2) child.material.opacity = 0.1 + depth * 0.06;
+      if (childIndex === 3) child.material.opacity = 0.04 + depth * 0.05;
+      if (childIndex === 4) child.material.opacity = 0.1 + depth * 0.12;
 
       if (childIndex === 5) {
         child.material.opacity = card.userData.isHot
-          ? 0.08 + Math.sin(performance.now() * 0.004) * 0.035
+          ? 0.07 + Math.sin(performance.now() * 0.004) * 0.03
           : 0;
       }
 
       if (child.userData?.isLabel) {
-        child.material.opacity = 0.18 + depth * 0.82;
-        child.scale.set(
-          5.2 + depth * 1.3,
-          1.25 + depth * 0.35,
-          1
-        );
+        child.material.opacity = 0.14 + depth * 0.78;
+        child.scale.set(5.2 + depth * 1.3, 1.25 + depth * 0.35, 1);
       }
 
       if (card.userData.isHot && child.material) {
-        child.material.opacity = Math.min(1, child.material.opacity + 0.12);
+        child.material.opacity = Math.min(1, child.material.opacity + 0.1);
       }
     });
 
@@ -542,6 +572,10 @@ function bindPointer() {
   window.addEventListener("pointercancel", onPointerUp, { passive: true });
   window.addEventListener("resize", resizeUniverse, { passive: true });
   window.addEventListener("orientationchange", resizeUniverse, { passive: true });
+
+  window.addEventListener("beforeunload", () => {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+  });
 }
 
 function onPointerDown(event) {
@@ -578,7 +612,7 @@ function onPointerUp(event) {
   if (!dragMoved && hit) {
     window.dispatchEvent(
       new CustomEvent("rb:module-select", {
-        detail: hit.userData.module,
+        detail: hit.userData.module
       })
     );
   }
@@ -624,33 +658,36 @@ function resizeUniverse() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function animateUniverse() {
-  requestAnimationFrame(animateUniverse);
+  animationFrame = requestAnimationFrame(animateUniverse);
 
-  const t = performance.now() * 0.001;
+  const time = performance.now();
+  const t = time * 0.001;
 
-  const baseSpeed = RB_CONFIG.motion.orbit.speed || 0.0022;
+  const baseSpeed = motion.orbit.speed || 0.0022;
   targetOffset += baseSpeed * activityState.orbitBoost;
 
-  portal.rotation.y += 0.002 * activityState.portalBoost;
-  portal.rotation.x = Math.sin(t * 0.45) * 0.06;
+  if (portal) {
+    portal.rotation.y += 0.002 * activityState.portalBoost;
+    portal.rotation.x = Math.sin(t * 0.45) * 0.06;
 
-  portal.scale.setScalar(
-    1 +
-      Math.sin(t * 1.8) *
-        RB_CONFIG.motion.portal.scalePulse *
-        activityState.portalBoost
-  );
+    portal.scale.setScalar(
+      1 +
+        Math.sin(t * 1.8) *
+          motion.portal.scalePulse *
+          activityState.portalBoost
+    );
+  }
 
   if (galaxyCloud) {
     galaxyCloud.rotation.y += 0.0007 * activityState.orbitBoost;
 
     if (galaxyCloud.material) {
-      galaxyCloud.material.opacity = activityState.liveActive ? 0.46 : 0.34;
+      galaxyCloud.material.opacity = activityState.liveActive ? 0.5 : 0.4;
     }
   }
 
@@ -658,11 +695,16 @@ function animateUniverse() {
     starField.rotation.y += 0.00025 * activityState.orbitBoost;
 
     if (starField.material) {
-      starField.material.opacity = activityState.onlineCount > 0 ? 0.46 : 0.38;
+      starField.material.opacity = activityState.onlineCount > 0 ? 0.46 : 0.36;
     }
   }
 
+  if (floatingParticles) {
+    floatingParticles.rotation.y -= 0.00038;
+  }
+
   updateCards();
+
   renderer.render(scene, camera);
 }
 
