@@ -1,7 +1,9 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/watch.js
-   Viewer side: Live → Watch sync
+
+   VIEWER SIDE
+   Live → Watch sync
 ========================= */
 
 import {
@@ -78,10 +80,20 @@ const WATCH = {
   joinedAt: null,
   anonymousId: localStorage.getItem("rb_watch_anon_id") || crypto.randomUUID(),
   unlocked: false,
-  connected: false
+  connected: false,
+  booted: false
 };
 
 localStorage.setItem("rb_watch_anon_id", WATCH.anonymousId);
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function text(el, value) {
   if (el) el.textContent = value ?? "";
@@ -108,8 +120,10 @@ function streamKey() {
 }
 
 function watchUrl(stream = WATCH.stream) {
-  if (!stream) return RB_ROUTES.watch || "/watch";
-  return `${RB_ROUTES.watch || "/watch"}?stream=${encodeURIComponent(stream.slug || stream.id)}`;
+  const base = RB_ROUTES.watch || "/watch";
+  if (!stream) return base;
+
+  return `${base}?stream=${encodeURIComponent(stream.slug || stream.id)}`;
 }
 
 function displayName() {
@@ -123,7 +137,19 @@ function displayName() {
 }
 
 function username() {
-  return WATCH.profile?.username || WATCH.user?.email || "rich_viewer";
+  return (
+    WATCH.profile?.username ||
+    WATCH.user?.email?.split("@")[0] ||
+    "rich_viewer"
+  );
+}
+
+function needsPayment(stream = WATCH.stream) {
+  if (!stream) return false;
+  if (stream.access_type === "free") return false;
+  if (Number(stream.price_cents || 0) <= 0 && stream.access_type !== "vip") return false;
+
+  return !WATCH.unlocked;
 }
 
 function renderStream() {
@@ -132,17 +158,38 @@ function renderStream() {
   if (!s) {
     text(els.title, "No live stream selected");
     text(els.description, "Choose a live room to watch.");
+    text(els.creator, "Rich Bizness Creator");
     text(els.badge, "OFF AIR");
     text(els.access, "FREE");
+
+    text(els.statViewers, "0");
+    text(els.statPeak, "0");
+    text(els.statChat, "0");
+    text(els.statReactions, "0");
+    text(els.statRevenue, "$0.00");
+
+    if (els.badge) els.badge.className = "live-badge off";
+    if (els.joinBtn) els.joinBtn.disabled = true;
+    if (els.leaveBtn) els.leaveBtn.disabled = true;
+    if (els.payBtn) els.payBtn.style.display = "none";
+
     setStatus("No stream loaded.");
     return;
   }
 
+  const isLive = s.status === "live";
+
   text(els.title, s.title || "Family Bizness");
   text(els.description, s.description || "Rich Bizness live room.");
   text(els.creator, s.display_name || s.username || "Rich Bizness Creator");
-  text(els.badge, s.status === "live" ? "LIVE" : String(s.status || "DRAFT").toUpperCase());
-  text(els.access, `${String(s.access_type || "free").toUpperCase()}${s.price_cents ? ` · ${money(s.price_cents)}` : ""}`);
+  text(els.badge, isLive ? "LIVE" : String(s.status || "DRAFT").toUpperCase());
+
+  text(
+    els.access,
+    `${String(s.access_type || "free").toUpperCase()}${
+      s.price_cents ? ` · ${money(s.price_cents)}` : ""
+    }`
+  );
 
   text(els.statViewers, s.viewer_count || 0);
   text(els.statPeak, s.peak_viewers || 0);
@@ -151,7 +198,7 @@ function renderStream() {
   text(els.statRevenue, money(s.total_revenue_cents));
 
   if (els.badge) {
-    els.badge.className = s.status === "live" ? "live-badge on" : "live-badge off";
+    els.badge.className = isLive ? "live-badge on" : "live-badge off";
   }
 
   if (els.stage) {
@@ -159,15 +206,9 @@ function renderStream() {
       `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.75)), url("${s.cover_url || s.thumbnail_url || DEFAULT_BANNER}")`;
   }
 
-  if (els.joinBtn) els.joinBtn.disabled = s.status !== "live";
+  if (els.joinBtn) els.joinBtn.disabled = !isLive || WATCH.connected || needsPayment(s);
+  if (els.leaveBtn) els.leaveBtn.disabled = !WATCH.connected;
   if (els.payBtn) els.payBtn.style.display = needsPayment(s) ? "" : "none";
-}
-
-function needsPayment(stream = WATCH.stream) {
-  if (!stream) return false;
-  if (stream.access_type === "free") return false;
-  if (Number(stream.price_cents || 0) <= 0 && stream.access_type !== "vip") return false;
-  return !WATCH.unlocked;
 }
 
 async function initIdentity() {
@@ -244,14 +285,14 @@ async function loadStreamList() {
     els.streamList,
     (data || [])
       .map((s) => `
-        <article class="watch-card" data-stream-card="${s.id}">
-          <div class="watch-card-img" style="background-image:url('${s.thumbnail_url || s.cover_url || DEFAULT_BANNER}')"></div>
+        <article class="watch-card" data-stream-card="${escapeHtml(s.id)}">
+          <div class="watch-card-img" style="background-image:url('${escapeHtml(s.thumbnail_url || s.cover_url || DEFAULT_BANNER)}')"></div>
           <div>
-            <b>${s.title || "Family Bizness"}</b>
-            <span>${String(s.status || "draft").toUpperCase()} · ${s.viewer_count || 0} watching</span>
-            <small>${String(s.access_type || "free").toUpperCase()} ${s.price_cents ? "· " + money(s.price_cents) : ""}</small>
+            <b>${escapeHtml(s.title || "Family Bizness")}</b>
+            <span>${escapeHtml(String(s.status || "draft").toUpperCase())} · ${Number(s.viewer_count || 0)} watching</span>
+            <small>${escapeHtml(String(s.access_type || "free").toUpperCase())}${s.price_cents ? " · " + money(s.price_cents) : ""}</small>
           </div>
-          <a href="${watchUrl(s)}">Watch</a>
+          <a href="${escapeHtml(watchUrl(s))}">Watch</a>
         </article>
       `)
       .join("")
@@ -268,7 +309,7 @@ async function checkAccess() {
     return true;
   }
 
-  if (!WATCH.user) {
+  if (!WATCH.user?.id) {
     WATCH.unlocked = false;
     return false;
   }
@@ -386,7 +427,9 @@ async function getLivekitToken() {
 
   const res = await fetch("/api/livekit-token", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       room,
       roomName: room,
@@ -404,7 +447,10 @@ async function getLivekitToken() {
     })
   });
 
-  if (!res.ok) throw new Error("LiveKit token request failed.");
+  if (!res.ok) {
+    throw new Error("LiveKit token request failed.");
+  }
+
   return await res.json();
 }
 
@@ -416,6 +462,7 @@ async function joinWatch() {
 
   if (needsPayment()) {
     setStatus("Unlock required before watching.");
+    renderStream();
     return;
   }
 
@@ -428,7 +475,9 @@ async function joinWatch() {
     const token = tokenData.token || tokenData.accessToken;
     const url = tokenData.url || tokenData.livekitUrl || tokenData.wsUrl;
 
-    if (!token || !url) throw new Error("Missing LiveKit URL or token.");
+    if (!token || !url) {
+      throw new Error("Missing LiveKit URL or token.");
+    }
 
     const room = new Room({
       adaptiveStream: true,
@@ -439,8 +488,10 @@ async function joinWatch() {
 
     room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
     room.on(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
+
     room.on(RoomEvent.Disconnected, () => {
       WATCH.connected = false;
+      renderStream();
       setStatus("Disconnected from live.");
     });
 
@@ -449,14 +500,16 @@ async function joinWatch() {
     WATCH.connected = true;
 
     if (els.empty) els.empty.style.display = "none";
-    if (els.leaveBtn) els.leaveBtn.disabled = false;
-    if (els.joinBtn) els.joinBtn.disabled = true;
+    renderStream();
 
     setStatus("You are watching live.");
   } catch (error) {
     await closeViewSession();
-    setStatus(error.message || "Could not join live.");
-    if (els.joinBtn) els.joinBtn.disabled = false;
+
+    WATCH.connected = false;
+
+    setStatus(error?.message || "Could not join live.");
+    renderStream();
   }
 }
 
@@ -470,35 +523,38 @@ async function leaveWatch() {
 
   if (els.videoGrid) html(els.videoGrid, "");
   if (els.empty) els.empty.style.display = "";
-  if (els.leaveBtn) els.leaveBtn.disabled = true;
-  if (els.joinBtn) els.joinBtn.disabled = false;
 
   await closeViewSession();
+
+  renderStream();
   setStatus("Left live room.");
 }
 
 function handleTrackSubscribed(track, publication, participant) {
   if (!els.videoGrid) return;
 
-  if (track.kind === Track.Kind.Video || track.kind === Track.Kind.Audio) {
-    const media = track.attach();
-    media.dataset.participant = participant.identity;
-    media.className = track.kind === Track.Kind.Video ? "watch-video" : "watch-audio";
+  if (track.kind !== Track.Kind.Video && track.kind !== Track.Kind.Audio) return;
 
-    if (track.kind === Track.Kind.Video) {
-      const wrap = document.createElement("div");
-      wrap.className = "watch-video-tile";
-      wrap.dataset.participant = participant.identity;
-      wrap.appendChild(media);
+  const media = track.attach();
 
-      const label = document.createElement("span");
-      label.textContent = participant.name || participant.identity || "Host";
-      wrap.appendChild(label);
+  media.dataset.participant = participant.identity;
+  media.className = track.kind === Track.Kind.Video ? "watch-video" : "watch-audio";
 
-      els.videoGrid.appendChild(wrap);
-    } else {
-      document.body.appendChild(media);
-    }
+  if (track.kind === Track.Kind.Video) {
+    const wrap = document.createElement("div");
+    wrap.className = "watch-video-tile";
+    wrap.dataset.participant = participant.identity;
+
+    const label = document.createElement("span");
+    label.textContent = participant.name || participant.identity || "Host";
+
+    wrap.appendChild(media);
+    wrap.appendChild(label);
+
+    els.videoGrid.appendChild(wrap);
+  } else {
+    media.autoplay = true;
+    document.body.appendChild(media);
   }
 }
 
@@ -508,6 +564,15 @@ function handleTrackUnsubscribed(track) {
     if (tile) tile.remove();
     else el.remove();
   });
+}
+
+function chatTemplate(m) {
+  return `
+    <div class="chat-line ${m.is_pinned ? "pinned" : ""}">
+      <b>${escapeHtml(m.display_name || m.username || "Viewer")}</b>
+      <span>${escapeHtml(m.message || m.body || "")}</span>
+    </div>
+  `;
 }
 
 async function loadChat() {
@@ -527,15 +592,6 @@ async function loadChat() {
   els.chatList.scrollTop = els.chatList.scrollHeight;
 }
 
-function chatTemplate(m) {
-  return `
-    <div class="chat-line ${m.is_pinned ? "pinned" : ""}">
-      <b>${m.display_name || m.username || "Viewer"}</b>
-      <span>${m.message || m.body || ""}</span>
-    </div>
-  `;
-}
-
 async function sendChat(event) {
   event?.preventDefault?.();
 
@@ -549,18 +605,20 @@ async function sendChat(event) {
     return;
   }
 
-  const { error } = await WATCH.supabase.from(RB_TABLES.liveChatMessages).insert({
-    stream_id: WATCH.stream.id,
-    user_id: WATCH.user?.id || null,
-    username: WATCH.user ? username() : "guest",
-    display_name: WATCH.user ? displayName() : "Guest Viewer",
-    message,
-    body: message,
-    metadata: {
-      source: "watch.js",
-      anonymous_id: WATCH.user ? null : WATCH.anonymousId
-    }
-  });
+  const { error } = await WATCH.supabase
+    .from(RB_TABLES.liveChatMessages)
+    .insert({
+      stream_id: WATCH.stream.id,
+      user_id: WATCH.user?.id || null,
+      username: WATCH.user ? username() : "guest",
+      display_name: WATCH.user ? displayName() : "Guest Viewer",
+      message,
+      body: message,
+      metadata: {
+        source: "watch.js",
+        anonymous_id: WATCH.user ? null : WATCH.anonymousId
+      }
+    });
 
   if (error) {
     setStatus(error.message);
@@ -579,18 +637,20 @@ async function sendChat(event) {
 }
 
 async function sendReaction(reaction = "🔥") {
-  if (!WATCH.stream) return;
+  if (!WATCH.stream || !RB_TABLES.liveReactions) return;
 
-  const { error } = await WATCH.supabase.from(RB_TABLES.liveReactions).insert({
-    stream_id: WATCH.stream.id,
-    user_id: WATCH.user?.id || null,
-    reaction,
-    metadata: {
-      source: "watch.js",
-      display_name: displayName(),
-      anonymous_id: WATCH.user ? null : WATCH.anonymousId
-    }
-  });
+  const { error } = await WATCH.supabase
+    .from(RB_TABLES.liveReactions)
+    .insert({
+      stream_id: WATCH.stream.id,
+      user_id: WATCH.user?.id || null,
+      reaction,
+      metadata: {
+        source: "watch.js",
+        display_name: displayName(),
+        anonymous_id: WATCH.user ? null : WATCH.anonymousId
+      }
+    });
 
   if (error) {
     setStatus(error.message);
@@ -612,6 +672,7 @@ function burstReaction(reaction) {
   if (!els.reactionLayer) return;
 
   const node = document.createElement("span");
+
   node.className = "reaction-burst";
   node.textContent = reaction;
   node.style.left = `${20 + Math.random() * 60}%`;
@@ -623,7 +684,7 @@ function burstReaction(reaction) {
 }
 
 async function loadTips() {
-  if (!WATCH.stream || !els.tipList) return;
+  if (!WATCH.stream || !els.tipList || !RB_TABLES.liveTips) return;
 
   const { data } = await WATCH.supabase
     .from(RB_TABLES.liveTips)
@@ -637,8 +698,8 @@ async function loadTips() {
     (data || [])
       .map((t) => `
         <div class="tip-line">
-          <b>${t.display_name || t.username || "Supporter"}</b>
-          <span>${money(t.amount_cents)} ${t.message ? "· " + t.message : ""}</span>
+          <b>${escapeHtml(t.display_name || t.username || "Supporter")}</b>
+          <span>${money(t.amount_cents)}${t.message ? " · " + escapeHtml(t.message) : ""}</span>
         </div>
       `)
       .join("")
@@ -646,28 +707,34 @@ async function loadTips() {
 }
 
 async function sendTip() {
-  if (!WATCH.stream) return;
+  if (!WATCH.stream || !RB_TABLES.liveTips) return;
 
-  const amount = Math.max(100, Math.round(Number(els.tipAmount?.value || 1) * 100));
+  const amount = Math.max(
+    100,
+    Math.round(Number(els.tipAmount?.value || 1) * 100)
+  );
+
   const message = els.tipMessage?.value?.trim() || null;
 
-  const { error } = await WATCH.supabase.from(RB_TABLES.liveTips).insert({
-    stream_id: WATCH.stream.id,
-    from_user_id: WATCH.user?.id || null,
-    to_user_id: WATCH.stream.creator_id,
-    username: WATCH.user ? username() : "guest",
-    display_name: WATCH.user ? displayName() : "Guest Supporter",
-    amount_cents: amount,
-    platform_fee_cents: 0,
-    creator_amount_cents: amount,
-    currency: "usd",
-    status: "pending",
-    message,
-    metadata: {
-      source: "watch.js",
-      payment_required: true
-    }
-  });
+  const { error } = await WATCH.supabase
+    .from(RB_TABLES.liveTips)
+    .insert({
+      stream_id: WATCH.stream.id,
+      from_user_id: WATCH.user?.id || null,
+      to_user_id: WATCH.stream.creator_id,
+      username: WATCH.user ? username() : "guest",
+      display_name: WATCH.user ? displayName() : "Guest Supporter",
+      amount_cents: amount,
+      platform_fee_cents: 0,
+      creator_amount_cents: amount,
+      currency: "usd",
+      status: "pending",
+      message,
+      metadata: {
+        source: "watch.js",
+        payment_required: true
+      }
+    });
 
   if (error) {
     setStatus(error.message);
@@ -675,14 +742,16 @@ async function sendTip() {
   }
 
   setStatus("Tip recorded as pending. Stripe checkout can connect here.");
+
   if (els.tipMessage) els.tipMessage.value = "";
 }
 
 async function unlockPaidStream() {
   if (!WATCH.stream) return;
 
-  if (!WATCH.user) {
-    window.location.href = `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(watchUrl(WATCH.stream))}`;
+  if (!WATCH.user?.id) {
+    window.location.href =
+      `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(watchUrl(WATCH.stream))}`;
     return;
   }
 
@@ -691,7 +760,9 @@ async function unlockPaidStream() {
   try {
     const res = await fetch("/api/create-checkout-session", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         type: "live_stream",
         stream_id: WATCH.stream.id,
@@ -713,14 +784,27 @@ async function unlockPaidStream() {
 
     throw new Error(data?.error || "Checkout URL missing.");
   } catch (error) {
-    setStatus(error.message || "Checkout failed.");
+    setStatus(error?.message || "Checkout failed.");
   }
 }
 
 async function copyLink() {
   const url = `${window.location.origin}${watchUrl(WATCH.stream)}`;
-  await navigator.clipboard.writeText(url);
-  setStatus("Watch link copied.");
+
+  try {
+    await navigator.clipboard.writeText(url);
+    setStatus("Watch link copied.");
+  } catch {
+    setStatus(url);
+  }
+}
+
+function clearRealtime() {
+  WATCH.channels.forEach((channel) => {
+    WATCH.supabase?.removeChannel(channel);
+  });
+
+  WATCH.channels = [];
 }
 
 function bindRealtime() {
@@ -734,9 +818,18 @@ function bindRealtime() {
     .channel(`watch-stream-${streamId}`)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.liveStreams, filter: `id=eq.${streamId}` },
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.liveStreams,
+        filter: `id=eq.${streamId}`
+      },
       (payload) => {
-        WATCH.stream = { ...WATCH.stream, ...payload.new };
+        WATCH.stream = {
+          ...WATCH.stream,
+          ...payload.new
+        };
+
         renderStream();
       }
     )
@@ -746,39 +839,58 @@ function bindRealtime() {
     .channel(`watch-chat-${streamId}`)
     .on(
       "postgres_changes",
-      { event: "INSERT", schema: "public", table: RB_TABLES.liveChatMessages, filter: `stream_id=eq.${streamId}` },
+      {
+        event: "INSERT",
+        schema: "public",
+        table: RB_TABLES.liveChatMessages,
+        filter: `stream_id=eq.${streamId}`
+      },
       (payload) => {
         if (!els.chatList) return;
+
         els.chatList.insertAdjacentHTML("beforeend", chatTemplate(payload.new));
         els.chatList.scrollTop = els.chatList.scrollHeight;
       }
     )
     .subscribe();
 
-  const reactionChannel = WATCH.supabase
-    .channel(`watch-reactions-${streamId}`)
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: RB_TABLES.liveReactions, filter: `stream_id=eq.${streamId}` },
-      (payload) => burstReaction(payload.new?.reaction || "🔥")
-    )
-    .subscribe();
+  WATCH.channels.push(streamChannel, chatChannel);
 
-  const tipsChannel = WATCH.supabase
-    .channel(`watch-tips-${streamId}`)
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.liveTips, filter: `stream_id=eq.${streamId}` },
-      () => loadTips()
-    )
-    .subscribe();
+  if (RB_TABLES.liveReactions) {
+    const reactionChannel = WATCH.supabase
+      .channel(`watch-reactions-${streamId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: RB_TABLES.liveReactions,
+          filter: `stream_id=eq.${streamId}`
+        },
+        (payload) => burstReaction(payload.new?.reaction || "🔥")
+      )
+      .subscribe();
 
-  WATCH.channels.push(streamChannel, chatChannel, reactionChannel, tipsChannel);
-}
+    WATCH.channels.push(reactionChannel);
+  }
 
-function clearRealtime() {
-  WATCH.channels.forEach((ch) => WATCH.supabase?.removeChannel(ch));
-  WATCH.channels = [];
+  if (RB_TABLES.liveTips) {
+    const tipsChannel = WATCH.supabase
+      .channel(`watch-tips-${streamId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: RB_TABLES.liveTips,
+          filter: `stream_id=eq.${streamId}`
+        },
+        () => loadTips()
+      )
+      .subscribe();
+
+    WATCH.channels.push(tipsChannel);
+  }
 }
 
 function bindEvents() {
@@ -797,6 +909,9 @@ function bindEvents() {
 }
 
 async function bootWatchPage() {
+  if (WATCH.booted) return;
+  WATCH.booted = true;
+
   try {
     bindEvents();
 
@@ -828,6 +943,7 @@ async function bootWatchPage() {
     );
 
     markPageReady("watch");
+
     console.log("RB WATCH READY");
   } catch (error) {
     console.error("[watch.js]", error);
