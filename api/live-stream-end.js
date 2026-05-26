@@ -1,6 +1,10 @@
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
 
 function json(res, status, data) {
   return res.status(status).json(data);
@@ -23,26 +27,34 @@ async function supabaseFetch(path, options = {}) {
     }
   });
 
-  const text = await response.text();
+  const raw = await response.text();
+
   let data = null;
 
   try {
-    data = text ? JSON.parse(text) : null;
+    data = raw ? JSON.parse(raw) : null;
   } catch {
-    data = text;
+    data = raw;
   }
 
   if (!response.ok) {
-    throw new Error(data?.message || data?.error || data?.hint || `Supabase failed ${response.status}`);
+    throw new Error(
+      data?.message ||
+        data?.error ||
+        data?.hint ||
+        `Supabase failed ${response.status}`
+    );
   }
 
   return data;
 }
 
 async function getUserFromAuth(req) {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const authHeader =
+    req.headers.authorization ||
+    req.headers.Authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return null;
   }
 
@@ -85,7 +97,12 @@ function canEndStream({ user, profile, stream }) {
   if (stream.creator_id === user.id) return true;
 
   const role = cleanText(profile?.role).toLowerCase();
-  return role === "admin" || role === "founder" || role === "rich_admin";
+
+  return (
+    role === "admin" ||
+    role === "founder" ||
+    role === "rich_admin"
+  );
 }
 
 export default async function handler(req, res) {
@@ -116,7 +133,12 @@ export default async function handler(req, res) {
     const body = req.body || {};
 
     const streamKey = cleanText(
-      body.stream_id || body.streamId || body.id || body.slug || body.room || body.livekit_room_name
+      body.stream_id ||
+        body.streamId ||
+        body.id ||
+        body.slug ||
+        body.room ||
+        body.livekit_room_name
     );
 
     if (!streamKey) {
@@ -153,46 +175,57 @@ export default async function handler(req, res) {
     }
 
     const now = new Date().toISOString();
+    const reason = cleanText(body.reason, "host_ended");
 
-    const updated = await supabaseFetch(`/live_streams?id=eq.${encodeURIComponent(stream.id)}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        status: "ended",
-        status_label: "Ended",
-        ended_at: now,
-        last_activity_at: now,
-        viewer_count: 0,
-        updated_at: now,
-        metadata: {
-          ...(stream.metadata || {}),
-          ended_by: user?.id || null,
-          ended_by_username: profile?.username || null,
-          ended_source: "live-stream-end",
-          ended_reason: cleanText(body.reason, "host_ended")
-        }
-      })
-    });
+    const updated = await supabaseFetch(
+      `/live_streams?id=eq.${encodeURIComponent(stream.id)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "ended",
+          status_label: "Ended",
+          ended_at: now,
+          last_activity_at: now,
+          viewer_count: 0,
+          updated_at: now,
+          metadata: {
+            ...(stream.metadata || {}),
+            ended_by: user?.id || null,
+            ended_by_username: profile?.username || null,
+            ended_source: "api/live-stream-end.js",
+            ended_reason: reason
+          }
+        })
+      }
+    );
 
-    await supabaseFetch(`/live_stream_members?stream_id=eq.${encodeURIComponent(stream.id)}&status=eq.active`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        status: "left",
-        left_at: now,
-        updated_at: now
-      })
-    });
+    await supabaseFetch(
+      `/live_stream_members?stream_id=eq.${encodeURIComponent(stream.id)}&status=eq.active`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "left",
+          left_at: now,
+          updated_at: now
+        })
+      }
+    );
 
-    await supabaseFetch(`/live_view_sessions?stream_id=eq.${encodeURIComponent(stream.id)}&left_at=is.null`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        left_at: now,
-        metadata: {
-          closed_by_stream_end: true
-        }
-      })
-    });
+    await supabaseFetch(
+      `/live_view_sessions?stream_id=eq.${encodeURIComponent(stream.id)}&left_at=is.null`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          left_at: now,
+          metadata: {
+            closed_by_stream_end: true,
+            closed_at: now
+          }
+        })
+      }
+    );
 
-    await supabaseFetch(`/livekit_room_events`, {
+    await supabaseFetch("/livekit_room_events", {
       method: "POST",
       body: JSON.stringify({
         room_name: stream.livekit_room_name,
@@ -203,8 +236,8 @@ export default async function handler(req, res) {
         user_id: user?.id || null,
         payload: {
           app: "Rich Bizness Mobile",
-          source: "live-stream-end",
-          reason: cleanText(body.reason, "host_ended"),
+          source: "api/live-stream-end.js",
+          reason,
           ended_at: now
         }
       })
