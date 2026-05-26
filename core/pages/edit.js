@@ -1,9 +1,6 @@
 /* =========================================
    RICH BIZNESS LLC
    /core/pages/edit.js
-
-   PROFILE EDIT PAGE CONTROLLER
-   Synced with auth + profile-state + avatar sync
 ========================================= */
 
 import {
@@ -15,7 +12,8 @@ import {
 } from "/core/app.js";
 
 import {
-  RB_ROUTES
+  RB_ROUTES,
+  RB_PROFILE_KEYS
 } from "/core/shared/rb-config.js";
 
 import {
@@ -25,7 +23,8 @@ import {
 
 import {
   updateMyProfile,
-  refreshMyProfile
+  refreshMyProfile,
+  bindProfileShell
 } from "/core/shared/rb-profile.js";
 
 import {
@@ -76,10 +75,7 @@ function fillForm() {
   const profile = currentProfile();
 
   if (els.displayName) {
-    els.displayName.value =
-      profile.display_name ||
-      profile.full_name ||
-      "";
+    els.displayName.value = profile.display_name || profile.full_name || "";
   }
 
   if (els.username) {
@@ -89,6 +85,8 @@ function fillForm() {
   if (els.bio) {
     els.bio.value = profile.bio || "";
   }
+
+  bindProfileShell?.();
 }
 
 function setLoading(isLoading) {
@@ -112,7 +110,9 @@ async function uploadOneProfileFile({ file, type, purpose }) {
     metadata: {
       purpose,
       source: "edit.js",
-      section: "profile"
+      section: "profile",
+      profile_lock: true,
+      profile_key_source: RB_PROFILE_KEYS?.identitySource || "profiles"
     },
     upsert: true
   });
@@ -136,9 +136,7 @@ async function uploadProfileMedia() {
     purpose: "profile_avatar"
   });
 
-  if (avatarUrl) {
-    updates.avatar_url = avatarUrl;
-  }
+  if (avatarUrl) updates.avatar_url = avatarUrl;
 
   const bannerUrl = await uploadOneProfileFile({
     file: els.bannerFile?.files?.[0],
@@ -146,9 +144,7 @@ async function uploadProfileMedia() {
     purpose: "profile_banner"
   });
 
-  if (bannerUrl) {
-    updates.banner_url = bannerUrl;
-  }
+  if (bannerUrl) updates.banner_url = bannerUrl;
 
   return updates;
 }
@@ -178,15 +174,14 @@ async function saveProfile(event) {
 
     const mediaUpdates = await uploadProfileMedia();
 
-    const payload = {
+    await updateMyProfile({
       display_name: displayName,
       full_name: displayName,
       username,
       bio,
       ...mediaUpdates
-    };
+    });
 
-    await updateMyProfile(payload);
     await refreshMyProfile();
     await refreshProfileState();
     await refreshAppIdentity();
@@ -194,6 +189,8 @@ async function saveProfile(event) {
     if (mediaUpdates.avatar_url || mediaUpdates.banner_url) {
       await syncAvatarToUniverse();
     }
+
+    bindProfileShell?.();
 
     toastSuccess("Profile updated successfully.", "Rich Bizness");
 
@@ -229,6 +226,9 @@ async function bootEditPage() {
     fillForm();
     bindEditActions();
 
+    document.body.dataset.rbPage = "edit";
+    document.body.dataset.rbRoute = "edit";
+    document.body.dataset.rbProfileLock = "true";
     document.body.classList.add("rb-edit-ready");
 
     markPageReady("edit");
