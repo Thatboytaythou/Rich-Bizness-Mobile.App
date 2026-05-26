@@ -2,7 +2,7 @@
    RICH BIZNESS MOBILE
    /core/shared/rb-router.js
 
-   ROUTER + PROTECTION CORE
+   ROUTER CORE
    FINAL LOCKED VERSION
 ========================= */
 
@@ -30,8 +30,7 @@ export function openExternal(url = "") {
 }
 
 export function getQueryParam(key) {
-  const params = new URLSearchParams(window.location.search);
-  return params.get(key);
+  return new URLSearchParams(window.location.search).get(key);
 }
 
 export function setQueryParam(key, value) {
@@ -59,7 +58,7 @@ export function getWatchUrl(slug = "") {
 
 export function getProfileUrl(username = "") {
   if (!username) return RB_ROUTES.profile;
-  return `${RB_ROUTES.profile}?user=${encodeURIComponent(username)}`;
+  return `${RB_ROUTES.profile}?u=${encodeURIComponent(username)}`;
 }
 
 export function getEditUrl(userId = "") {
@@ -155,34 +154,28 @@ export function scrollBottomSmooth() {
 export const RB_ROUTE_ACCESS = Object.freeze({
   public: [
     "/",
-
     "/auth",
     "/auth.html",
-
     "/feed",
     "/feed.html",
-
     "/watch",
     "/watch.html",
-
     "/live",
     "/live.html",
-
     "/music",
     "/music.html",
-
+    "/podcast",
+    "/podcast.html",
+    "/radio",
+    "/radio.html",
     "/gaming",
     "/gaming.html",
-
     "/sports",
     "/sports.html",
-
     "/gallery",
     "/gallery.html",
-
     "/store",
     "/store.html",
-
     "/meta",
     "/meta.html"
   ],
@@ -190,39 +183,20 @@ export const RB_ROUTE_ACCESS = Object.freeze({
   protected: [
     "/upload",
     "/upload.html",
-
     "/messages",
     "/messages.html",
-
     "/notifications",
     "/notifications.html",
-
     "/profile",
     "/profile.html",
-
     "/edit",
     "/edit.html",
-
     "/settings",
-    "/settings.html"
-  ],
-
-  creator: [
-    "/live",
-    "/live.html",
-
-    "/upload",
-    "/upload.html"
-  ],
-
-  seller: [
-    "/store",
-    "/store.html"
-  ],
-
-  artist: [
-    "/music",
-    "/music.html"
+    "/settings.html",
+    "/creator",
+    "/creator.html",
+    "/admin",
+    "/admin.html"
   ]
 });
 
@@ -232,18 +206,6 @@ export function isProtectedRoute(path = getCurrentPath()) {
 
 export function isPublicRoute(path = getCurrentPath()) {
   return RB_ROUTE_ACCESS.public.includes(path);
-}
-
-export function isCreatorRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.creator.includes(path);
-}
-
-export function isSellerRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.seller.includes(path);
-}
-
-export function isArtistRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.artist.includes(path);
 }
 
 export function safeRedirect(route, delay = 0) {
