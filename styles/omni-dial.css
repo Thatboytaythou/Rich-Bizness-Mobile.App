@@ -1,25 +1,18 @@
- /* =========================
+/* =========================
    RICH BIZNESS MOBILE
    styles/omni-dial.css
 
    ORBIT UI
-   - module labels
-   - profile chip
-   - side tabs
-   - bottom nav
-   - realtime notifications
-   - cinematic overlays
+   Clean Hub Overlay Layer
 ========================= */
 
-/* =========================
-   MODULE LABEL
-========================= */
+/* MODULE LABEL */
 
 .rb-module-label {
   position: fixed;
   left: 50%;
   bottom: 118px;
-  z-index: 9999;
+  z-index: 20;
 
   display: flex;
   align-items: center;
@@ -33,40 +26,32 @@
   border: 1px solid rgba(250, 204, 21, 0.22);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 65%),
-    linear-gradient(135deg, rgba(5, 8, 5, 0.94), rgba(0, 0, 0, 0.76));
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 65%),
+    linear-gradient(135deg, rgba(5, 8, 5, 0.88), rgba(0, 0, 0, 0.68));
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 
   color: #fefce8;
   font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
+  font-weight: 900;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 
   opacity: 0;
   visibility: hidden;
 
-  transform:
-    translateX(-50%)
-    translateY(12px)
-    scale(0.92);
+  transform: translateX(-50%) translateY(12px) scale(0.92);
 
   transition:
     opacity 0.24s ease,
     transform 0.24s ease,
-    visibility 0.24s ease,
-    border-color 0.24s ease;
+    visibility 0.24s ease;
 
   box-shadow:
-    0 0 20px rgba(250, 204, 21, 0.12),
-    0 0 50px rgba(16, 185, 129, 0.14),
-    inset 0 0 20px rgba(255, 255, 255, 0.025);
-
-  text-shadow:
-    0 0 10px rgba(250, 204, 21, 0.85),
-    0 0 28px rgba(0, 255, 157, 0.3);
+    0 0 22px rgba(250, 204, 21, 0.1),
+    0 0 48px rgba(16, 185, 129, 0.12),
+    inset 0 0 18px rgba(255, 255, 255, 0.025);
 
   pointer-events: none;
 }
@@ -74,78 +59,87 @@
 .rb-module-label.is-visible {
   opacity: 1;
   visibility: visible;
-
-  transform:
-    translateX(-50%)
-    translateY(0)
-    scale(1);
+  transform: translateX(-50%) translateY(0) scale(1);
 }
 
-.rb-module-label::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  border: 1px solid rgba(250, 204, 21, 0.24);
-  pointer-events: none;
-}
-
-/* =========================
-   PROFILE CHIP
-========================= */
+/* PROFILE CHIP */
 
 .rb-profile-chip {
   position: fixed;
   top: max(18px, env(safe-area-inset-top));
   left: 18px;
-  z-index: 9999;
+  z-index: 20;
 
   display: flex;
   align-items: center;
   gap: 12px;
 
-  padding: 10px 14px 10px 10px;
+  max-width: min(390px, calc(100vw - 92px));
+  min-height: 68px;
+
+  padding: 10px 18px 10px 10px;
 
   border-radius: 999px;
   border: 1px solid rgba(250, 204, 21, 0.24);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 70%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.94), rgba(0, 0, 0, 0.78));
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 70%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.9), rgba(0, 0, 0, 0.72));
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 
   color: #fefce8;
   cursor: pointer;
 
-  opacity: 1;
-  visibility: visible;
   pointer-events: auto;
 
-  transform: translateY(0) scale(1);
+  box-shadow:
+    0 0 28px rgba(0, 0, 0, 0.34),
+    0 0 18px rgba(16, 185, 129, 0.12);
 
   transition:
-    transform 0.28s ease,
-    border-color 0.28s ease,
-    box-shadow 0.28s ease;
-
-  box-shadow:
-    0 0 30px rgba(0, 0, 0, 0.34),
-    0 0 18px rgba(16, 185, 129, 0.12);
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
 }
 
 .rb-profile-chip:hover,
 .rb-profile-chip.rb-online-active {
-  border-color: rgba(16, 185, 129, 0.52);
+  border-color: rgba(16, 185, 129, 0.5);
 
   box-shadow:
     0 0 18px rgba(16, 185, 129, 0.22),
-    0 0 42px rgba(250, 204, 21, 0.14);
+    0 0 40px rgba(250, 204, 21, 0.12);
 
-  transform:
-    translateY(-2px)
-    scale(1.03);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.rb-profile-chip img {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 2px solid rgba(250, 204, 21, 0.42);
+
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.22);
+}
+
+.rb-profile-chip span {
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #fefce8;
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .rb-profile-chip::after {
@@ -165,12 +159,11 @@
 
   border-radius: 999px;
 
-  background:
-    linear-gradient(145deg, #10b981, #fbbf24);
+  background: linear-gradient(145deg, #10b981, #fbbf24);
 
   color: #020403;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 1000;
 
   box-shadow:
     0 0 12px rgba(16, 185, 129, 0.65),
@@ -181,36 +174,13 @@
   display: flex;
 }
 
-.rb-profile-chip img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-
-  border: 2px solid rgba(250, 204, 21, 0.45);
-
-  box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.24);
-}
-
-.rb-profile-chip span {
-  color: #fefce8;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-/* =========================
-   RIGHT TAB BAR
-========================= */
+/* RIGHT SIDE TABS */
 
 .rb-side-tabs {
   position: fixed;
   right: 18px;
   top: 50%;
-  z-index: 9999;
+  z-index: 20;
 
   display: flex;
   flex-direction: column;
@@ -218,8 +188,6 @@
 
   transform: translateY(-50%);
 
-  opacity: 1;
-  visibility: visible;
   pointer-events: auto;
 }
 
@@ -233,32 +201,26 @@
   border: 1px solid rgba(250, 204, 21, 0.18);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 70%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.92), rgba(0, 0, 0, 0.78));
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 70%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.88), rgba(0, 0, 0, 0.72));
 
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 
   color: #fefce8;
   font-size: 20px;
 
   cursor: pointer;
 
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-
-  transform: translateX(0) scale(1);
-
-  transition:
-    transform 0.24s ease,
-    border-color 0.24s ease,
-    box-shadow 0.24s ease,
-    background 0.24s ease;
-
   box-shadow:
     0 0 16px rgba(0, 0, 0, 0.34),
     0 0 22px rgba(16, 185, 129, 0.08);
+
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
 }
 
 .rb-side-tabs button:hover,
@@ -266,23 +228,19 @@
   border-color: rgba(16, 185, 129, 0.5);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.16), transparent 70%),
-    linear-gradient(145deg, rgba(10, 20, 12, 0.98), rgba(0, 0, 0, 0.84));
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 70%),
+    linear-gradient(145deg, rgba(10, 20, 12, 0.94), rgba(0, 0, 0, 0.78));
 
   box-shadow:
     0 0 18px rgba(16, 185, 129, 0.24),
-    0 0 34px rgba(250, 204, 21, 0.14);
+    0 0 34px rgba(250, 204, 21, 0.12);
 
-  transform:
-    translateX(-4px)
-    scale(1.05);
+  transform: translateX(-4px) scale(1.04);
 }
 
 .rb-side-tabs button.is-active {
   transform: scale(0.92);
-
-  box-shadow:
-    0 0 26px rgba(16, 185, 129, 0.32);
+  box-shadow: 0 0 26px rgba(16, 185, 129, 0.3);
 }
 
 .rb-side-tabs button::after {
@@ -291,11 +249,12 @@
   inset: 0;
   border-radius: inherit;
 
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 70%);
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 70%);
 
   pointer-events: none;
 }
+
+/* LIVE COUNTS */
 
 .rb-side-tabs button.rb-live-active::before,
 .rb-bottom-nav button.rb-live-active::before {
@@ -315,27 +274,24 @@
 
   border-radius: 999px;
 
-  background:
-    linear-gradient(145deg, #10b981, #fbbf24);
+  background: linear-gradient(145deg, #10b981, #fbbf24);
 
   color: #020403;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 1000;
 
   box-shadow:
     0 0 12px rgba(16, 185, 129, 0.6),
     0 0 24px rgba(250, 204, 21, 0.32);
 }
 
-/* =========================
-   BOTTOM NAV
-========================= */
+/* BOTTOM NAV */
 
 .rb-bottom-nav {
   position: fixed;
   left: 50%;
   bottom: max(14px, env(safe-area-inset-bottom));
-  z-index: 9999;
+  z-index: 20;
 
   width: min(680px, calc(100vw - 24px));
 
@@ -346,21 +302,21 @@
   padding: 10px;
 
   border-radius: 28px;
-  border: 1px solid rgba(250, 204, 21, 0.22);
+  border: 1px solid rgba(250, 204, 21, 0.2);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.11), transparent 70%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.94), rgba(0, 0, 0, 0.82));
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 70%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.9), rgba(0, 0, 0, 0.78));
 
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
   transform: translateX(-50%);
 
   box-shadow:
-    0 0 35px rgba(0, 0, 0, 0.45),
-    0 0 24px rgba(16, 185, 129, 0.12),
-    inset 0 0 24px rgba(255, 255, 255, 0.025);
+    0 0 34px rgba(0, 0, 0, 0.44),
+    0 0 22px rgba(16, 185, 129, 0.1),
+    inset 0 0 22px rgba(255, 255, 255, 0.022);
 
   pointer-events: auto;
 }
@@ -398,35 +354,36 @@
 .rb-bottom-nav button.is-active,
 .rb-bottom-nav button.rb-live-active {
   color: #fefce8;
-  border-color: rgba(16, 185, 129, 0.44);
+
+  border-color: rgba(16, 185, 129, 0.42);
 
   background:
-    radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 72%),
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.16), transparent 72%),
     rgba(255, 255, 255, 0.04);
 
   box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.2),
+    0 0 18px rgba(16, 185, 129, 0.18),
     inset 0 0 18px rgba(255, 255, 255, 0.025);
 
-  transform:
-    translateY(-3px)
-    scale(1.03);
+  transform: translateY(-3px) scale(1.03);
 }
 
 .rb-nav-icon {
   display: block;
+
   font-size: 21px;
   line-height: 1;
+
   filter:
-    drop-shadow(0 0 8px rgba(16, 185, 129, 0.35))
-    drop-shadow(0 0 8px rgba(250, 204, 21, 0.18));
+    drop-shadow(0 0 8px rgba(16, 185, 129, 0.32))
+    drop-shadow(0 0 8px rgba(250, 204, 21, 0.16));
 }
 
 .rb-bottom-nav button span:last-child {
   display: block;
 
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 1000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -448,15 +405,13 @@
   }
 }
 
-/* =========================
-   REALTIME NOTIFICATIONS
-========================= */
+/* REALTIME NOTIFICATIONS */
 
 #rb-notify-root {
   position: fixed;
   top: calc(env(safe-area-inset-top) + 148px);
   right: 18px;
-  z-index: 99999;
+  z-index: 30;
 
   display: flex;
   flex-direction: column;
@@ -482,16 +437,13 @@
   border: 1px solid rgba(250, 204, 21, 0.16);
 
   background:
-    radial-gradient(circle at top, rgba(255,255,255,0.10), transparent 70%),
-    linear-gradient(145deg, rgba(5,8,5,0.96), rgba(0,0,0,0.82));
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 70%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.92), rgba(0, 0, 0, 0.78));
 
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
-  transform:
-    translateX(120%)
-    scale(0.92);
-
+  transform: translateX(120%) scale(0.92);
   opacity: 0;
 
   transition:
@@ -499,16 +451,13 @@
     transform 0.4s ease;
 
   box-shadow:
-    0 0 30px rgba(16,185,129,0.14),
-    0 0 80px rgba(0,0,0,0.44);
+    0 0 30px rgba(16, 185, 129, 0.12),
+    0 0 76px rgba(0, 0, 0, 0.42);
 }
 
 .rb-notify-toast.is-visible {
   opacity: 1;
-
-  transform:
-    translateX(0)
-    scale(1);
+  transform: translateX(0) scale(1);
 }
 
 .rb-notify-icon {
@@ -526,10 +475,9 @@
 
   font-size: 22px;
 
-  background:
-    linear-gradient(145deg, rgba(16,185,129,0.18), rgba(250,204,21,0.10));
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.18), rgba(250, 204, 21, 0.1));
 
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .rb-notify-copy {
@@ -545,13 +493,12 @@
   color: #ffffff;
 
   font-size: 12px;
-  font-weight: 800;
-
-  letter-spacing: 0.18em;
+  font-weight: 900;
+  letter-spacing: 0.16em;
 }
 
 .rb-notify-copy span {
-  color: rgba(255,255,255,0.72);
+  color: rgba(255, 255, 255, 0.72);
 
   font-size: 12px;
   line-height: 1.4;
@@ -568,26 +515,25 @@
 
   border-radius: 50%;
 
-  background:
-    radial-gradient(circle, rgba(16,185,129,0.22), transparent 72%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent 72%);
 
   pointer-events: none;
 }
 
-/* =========================
-   PAGE FX
-========================= */
+/* PAGE TRANSITION */
 
 .rb-page-transition::after {
   content: "";
+
   position: fixed;
   inset: 0;
-  z-index: 99999;
+  z-index: 999;
 
   background:
-    radial-gradient(circle at center, rgba(16, 185, 129, 0.18), rgba(0, 0, 0, 0.92));
+    radial-gradient(circle at center, rgba(16, 185, 129, 0.16), rgba(0, 0, 0, 0.9));
 
   animation: rbFadeOut 0.24s ease forwards;
+
   pointer-events: none;
 }
 
@@ -601,17 +547,17 @@
   }
 }
 
-/* =========================
-   MOBILE
-========================= */
+/* MOBILE */
 
 @media (max-width: 720px) {
   .rb-profile-chip {
     top: calc(env(safe-area-inset-top) + 12px);
     left: 12px;
 
-    max-width: 190px;
-    padding-right: 12px;
+    max-width: 250px;
+    min-height: 62px;
+
+    padding: 9px 14px 9px 9px;
   }
 
   .rb-profile-chip img {
@@ -693,16 +639,7 @@
 @media (max-width: 430px) {
   .rb-profile-chip {
     left: 10px;
-    padding: 8px 11px 8px 8px;
-  }
-
-  .rb-profile-chip img {
-    width: 38px;
-    height: 38px;
-  }
-
-  .rb-profile-chip span {
-    display: none;
+    max-width: 235px;
   }
 
   .rb-side-tabs {
@@ -713,12 +650,15 @@
   .rb-side-tabs button {
     width: 44px;
     height: 44px;
+
     border-radius: 14px;
+
     font-size: 16px;
   }
 
   .rb-bottom-nav {
     width: calc(100vw - 12px);
+
     padding: 7px;
     border-radius: 22px;
   }
