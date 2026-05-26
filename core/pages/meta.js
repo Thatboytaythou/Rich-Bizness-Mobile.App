@@ -1,6 +1,11 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/meta.js
+
+   Meta Page
+   Profile Keys Locked
+   Avatar Sync Locked
+   Realtime Enabled
 ========================= */
 
 import {
@@ -16,6 +21,14 @@ import {
   RB_TABLES,
   RB_ROUTES
 } from "/core/shared/rb-config.js";
+
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl,
+  profileAvatar,
+  profileName
+} from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -55,6 +68,7 @@ let supabase = null;
 let currentUser = null;
 let currentProfile = null;
 let currentAvatar = null;
+let profileIdentity = null;
 let worlds = [];
 let rooms = [];
 let channel = null;
@@ -76,48 +90,49 @@ function formatNumber(value) {
 }
 
 function setEmpty(target, message) {
-  if (!target) return;
-  target.innerHTML = `<div class="rb-empty">${message}</div>`;
-}
-
-function getDisplayName(profile) {
-  return (
-    profile?.display_name ||
-    profile?.username ||
-    profile?.full_name ||
-    currentUser?.email?.split("@")[0] ||
-    "Rich Bizness Member"
-  );
+  if (target) target.innerHTML = `<div class="rb-empty">${message}</div>`;
 }
 
 function syncIdentityFromApp() {
-  const state = getCurrentUserState();
-
-  currentUser = state?.user || null;
-  currentProfile = state?.profile || null;
+  const state = getCurrentUserState?.() || {};
+  currentUser = state.user || null;
+  currentProfile = state.profile || null;
+  profileIdentity = getProfileIdentity(currentProfile);
 }
 
-function paintGuest() {
-  if (els.metaUserAvatar) els.metaUserAvatar.src = DEFAULT_AVATAR;
-  if (els.heroAvatar) els.heroAvatar.src = DEFAULT_AVATAR;
-  if (els.metaUserName) els.metaUserName.textContent = "Guest";
-  if (els.heroName) els.heroName.textContent = "Guest Traveler";
-  if (els.heroRank) els.heroRank.textContent = "Traveler • Level 1";
+function lockProfileKeys() {
+  syncIdentityFromApp();
+
+  document.body.dataset.rbRoute = "meta";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = profileIdentity?.id || "";
+  document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
+
+  bindProfileShell();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
 }
 
 function paintProfile() {
-  if (!currentUser) {
-    paintGuest();
+  if (!currentUser?.id) {
+    if (els.metaUserAvatar) els.metaUserAvatar.src = DEFAULT_AVATAR;
+    if (els.heroAvatar) els.heroAvatar.src = DEFAULT_AVATAR;
+    if (els.metaUserName) els.metaUserName.textContent = "Guest";
+    if (els.heroName) els.heroName.textContent = "Guest Traveler";
+    if (els.heroRank) els.heroRank.textContent = "Traveler • Level 1";
     return;
   }
 
-  const avatar = clean(currentProfile?.avatar_url, DEFAULT_AVATAR);
-  const name = getDisplayName(currentProfile);
+  const avatar = profileAvatar(currentProfile) || DEFAULT_AVATAR;
+  const name = profileName(currentProfile);
 
   if (els.metaUserAvatar) els.metaUserAvatar.src = avatar;
   if (els.heroAvatar) els.heroAvatar.src = avatar;
   if (els.metaUserName) els.metaUserName.textContent = name;
   if (els.heroName) els.heroName.textContent = name;
+
   if (els.heroRank) {
     els.heroRank.textContent =
       `${clean(currentProfile?.rank_title, "Member")} • Level ${clean(currentProfile?.rich_level, 1)}`;
@@ -125,7 +140,7 @@ function paintProfile() {
 }
 
 async function loadAvatar() {
-  if (!currentUser?.id) return;
+  if (!currentUser?.id) return null;
 
   const { data, error } = await supabase
     .from(RB_TABLES.metaAvatars)
@@ -141,14 +156,14 @@ async function loadAvatar() {
     if (els.heroAvatar) {
       els.heroAvatar.src = clean(
         currentAvatar.avatar_url,
-        currentProfile?.avatar_url || DEFAULT_AVATAR
+        profileAvatar(currentProfile) || DEFAULT_AVATAR
       );
     }
 
     if (els.heroName) {
       els.heroName.textContent = clean(
         currentAvatar.display_name,
-        getDisplayName(currentProfile)
+        profileName(currentProfile)
       );
     }
 
@@ -157,6 +172,8 @@ async function loadAvatar() {
         `${clean(currentAvatar.rank, "Traveler")} • Level ${clean(currentAvatar.level, 1)}`;
     }
   }
+
+  return currentAvatar;
 }
 
 async function syncAvatar() {
@@ -167,15 +184,20 @@ async function syncAvatar() {
 
   const payload = {
     user_id: currentUser.id,
-    display_name: getDisplayName(currentProfile),
-    avatar_url: clean(currentProfile?.avatar_url, DEFAULT_AVATAR),
-    aura: "green-gold",
+    display_name: profileName(currentProfile),
+    avatar_url: profileAvatar(currentProfile) || DEFAULT_AVATAR,
+    model_url: currentAvatar?.model_url || null,
+    aura: currentAvatar?.aura || "green-gold",
     rank: clean(currentProfile?.rank_title, "Traveler"),
     level: clean(currentProfile?.rich_level, 1),
+    xp: currentAvatar?.xp || 0,
     is_active: true,
     metadata: {
+      ...(currentAvatar?.metadata || {}),
       source: "Rich Bizness Meta",
-      synced_from: RB_TABLES.profiles
+      synced_from: RB_TABLES.profiles,
+      profile_locked: true,
+      profile_id: currentUser.id
     },
     updated_at: new Date().toISOString()
   };
@@ -204,17 +226,11 @@ async function loadWorlds() {
 
   const { data, error } = await query;
 
-  if (error) {
-    console.error("[meta.js worlds]", error);
-    setEmpty(els.worldGrid, "Worlds could not load.");
-    return;
-  }
+  if (error) throw error;
 
   worlds = data || [];
 
-  if (els.worldCount) {
-    els.worldCount.textContent = formatNumber(worlds.length);
-  }
+  if (els.worldCount) els.worldCount.textContent = formatNumber(worlds.length);
 
   renderWorlds();
 }
@@ -225,42 +241,34 @@ function renderWorlds() {
     return;
   }
 
-  els.worldGrid.innerHTML = worlds
-    .map((world) => {
-      const cover = clean(world.cover_url || world.background_url, DEFAULT_BANNER);
-      const title = clean(world.title, "Untitled World");
-      const type = clean(world.world_type, "portal");
-      const access = clean(world.access_type, "public");
-      const visits = formatNumber(world.visit_count);
-      const likes = formatNumber(world.like_count);
-      const roomsCount = formatNumber(world.room_count);
+  els.worldGrid.innerHTML = worlds.map((world) => {
+    const cover = clean(world.cover_url || world.background_url, DEFAULT_BANNER);
 
-      return `
-        <article class="meta-world-card" data-world-id="${world.id}">
-          <div class="world-cover" style="background-image:url('${cover}')">
-            <span>${type}</span>
-            <strong>${access}</strong>
+    return `
+      <article class="meta-world-card" data-world-id="${world.id}">
+        <div class="world-cover" style="background-image:url('${cover}')">
+          <span>${clean(world.world_type, "portal")}</span>
+          <strong>${clean(world.access_type, "public")}</strong>
+        </div>
+
+        <div class="world-info">
+          <h3>${clean(world.title, "Untitled World")}</h3>
+          <p>${clean(world.description, "Rich Bizness portal world.")}</p>
+
+          <div class="world-stats">
+            <span>👁 ${formatNumber(world.visit_count)}</span>
+            <span>💚 ${formatNumber(world.like_count)}</span>
+            <span>🚪 ${formatNumber(world.room_count)}</span>
           </div>
 
-          <div class="world-info">
-            <h3>${title}</h3>
-            <p>${clean(world.description, "Rich Bizness portal world.")}</p>
-
-            <div class="world-stats">
-              <span>👁 ${visits}</span>
-              <span>💚 ${likes}</span>
-              <span>🚪 ${roomsCount}</span>
-            </div>
-
-            <div class="world-actions">
-              <button class="rb-btn small primary" data-enter-world="${world.id}">Enter</button>
-              <button class="rb-btn small ghost" data-create-room="${world.id}">Room</button>
-            </div>
+          <div class="world-actions">
+            <button class="rb-btn small primary" data-enter-world="${world.id}">Enter</button>
+            <button class="rb-btn small ghost" data-create-room="${world.id}">Room</button>
           </div>
-        </article>
-      `;
-    })
-    .join("");
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 async function loadRooms() {
@@ -270,17 +278,11 @@ async function loadRooms() {
     .order("created_at", { ascending: false })
     .limit(30);
 
-  if (error) {
-    console.error("[meta.js rooms]", error);
-    setEmpty(els.roomGrid, "Rooms could not load.");
-    return;
-  }
+  if (error) throw error;
 
   rooms = data || [];
 
-  if (els.roomCount) {
-    els.roomCount.textContent = formatNumber(rooms.length);
-  }
+  if (els.roomCount) els.roomCount.textContent = formatNumber(rooms.length);
 
   renderRooms();
 }
@@ -291,22 +293,20 @@ function renderRooms() {
     return;
   }
 
-  els.roomGrid.innerHTML = rooms
-    .map((room) => {
-      const cover = clean(room.cover_url, DEFAULT_BANNER);
+  els.roomGrid.innerHTML = rooms.map((room) => {
+    const cover = clean(room.cover_url, DEFAULT_BANNER);
 
-      return `
-        <article class="meta-room-card">
-          <img src="${cover}" alt="" />
-          <div>
-            <h3>${clean(room.title, "Meta Room")}</h3>
-            <p>${clean(room.room_type, "social")} • ${clean(room.status, "open")}</p>
-            <span>${formatNumber(room.active_members)} / ${formatNumber(room.max_members)} inside</span>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
+    return `
+      <article class="meta-room-card">
+        <img src="${cover}" alt="" />
+        <div>
+          <h3>${clean(room.title, "Meta Room")}</h3>
+          <p>${clean(room.room_type, "social")} • ${clean(room.status, "open")}</p>
+          <span>${formatNumber(room.active_members)} / ${formatNumber(room.max_members)} inside</span>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 async function createWorld(event) {
@@ -340,7 +340,11 @@ async function createWorld(event) {
     visual_style: "cinematic-portal",
     metadata: {
       source: "meta.js",
-      app: "Rich Bizness Mobile"
+      app: "Rich Bizness Mobile",
+      profile_locked: true,
+      profile_id: currentUser.id,
+      username: currentProfile?.username || null,
+      display_name: profileName(currentProfile)
     }
   };
 
@@ -363,10 +367,11 @@ async function enterWorld(worldId) {
       world_id: world.id,
       user_id: currentUser.id,
       username: currentProfile?.username || null,
-      display_name: getDisplayName(currentProfile),
+      display_name: profileName(currentProfile),
       metadata: {
         source: "meta.js",
-        action: "enter_world"
+        action: "enter_world",
+        profile_locked: true
       }
     });
   }
@@ -399,7 +404,9 @@ async function createRoom(worldId) {
     cover_url: world.cover_url || world.background_url || DEFAULT_BANNER,
     metadata: {
       source: "meta.js",
-      parent_world: world.title
+      parent_world: world.title,
+      profile_locked: true,
+      profile_id: currentUser.id
     }
   };
 
@@ -416,7 +423,7 @@ function bindEvents() {
   els.createAvatarBtn?.addEventListener("click", syncAvatar);
 
   els.refreshMetaBtn?.addEventListener("click", async () => {
-    syncIdentityFromApp();
+    lockProfileKeys();
     paintProfile();
     await loadAvatar();
     await loadWorlds();
@@ -446,38 +453,28 @@ function bindEvents() {
   });
 }
 
-function bindRealtime() {
+function clearRealtime() {
   if (channel) {
     supabase.removeChannel(channel);
     channel = null;
   }
+}
+
+function bindRealtime() {
+  clearRealtime();
 
   channel = supabase
     .channel("rich-meta-worlds")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.metaWorlds },
-      loadWorlds
-    )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.metaRooms },
-      loadRooms
-    )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.metaVisits },
-      () => {
-        if (!els.visitCount) return;
-        els.visitCount.textContent =
-          String(Number(els.visitCount.textContent || 0) + 1);
-      }
-    )
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.metaWorlds }, loadWorlds)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.metaRooms }, loadRooms)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.metaAvatars }, loadAvatar)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.metaVisits }, () => {
+      if (!els.visitCount) return;
+      els.visitCount.textContent = String(Number(els.visitCount.textContent || 0) + 1);
+    })
     .subscribe();
 
-  window.addEventListener("beforeunload", () => {
-    if (channel) supabase.removeChannel(channel);
-  });
+  window.addEventListener("beforeunload", clearRealtime);
 }
 
 async function bootMetaPage() {
@@ -490,7 +487,7 @@ async function bootMetaPage() {
 
     supabase = getSupabase();
 
-    syncIdentityFromApp();
+    lockProfileKeys();
     paintProfile();
 
     await loadAvatar();
@@ -501,9 +498,13 @@ async function bootMetaPage() {
     bindRealtime();
 
     document.body.classList.add("rb-meta-ready");
+
     markPageReady("meta");
 
-    console.log("RB META READY");
+    console.log("RB META READY", {
+      profileLocked: !!profileIdentity?.id,
+      route: "meta"
+    });
   } catch (error) {
     console.error("[meta.js]", error);
     markPageError(error);
