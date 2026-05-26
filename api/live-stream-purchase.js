@@ -1,19 +1,28 @@
 import Stripe from "stripe";
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+
 const APP_URL =
   process.env.APP_URL ||
   process.env.PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_SITE_URL ||
   "http://localhost:3000";
 
-const PLATFORM_FEE_BPS = Number(process.env.STRIPE_PLATFORM_FEE_BPS || 1000);
+const PLATFORM_FEE_BPS = Number(
+  process.env.STRIPE_PLATFORM_FEE_BPS || 1000
+);
 
-const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+const stripe = STRIPE_SECRET_KEY
+  ? new Stripe(STRIPE_SECRET_KEY)
+  : null;
 
 function json(res, status, data) {
   return res.status(status).json(data);
@@ -31,7 +40,10 @@ function toCents(value, fallback = 0) {
 }
 
 function calcFee(amountCents) {
-  return Math.max(0, Math.round((amountCents * PLATFORM_FEE_BPS) / 10000));
+  return Math.max(
+    0,
+    Math.round((amountCents * PLATFORM_FEE_BPS) / 10000)
+  );
 }
 
 async function supabaseFetch(path, options = {}) {
@@ -46,26 +58,34 @@ async function supabaseFetch(path, options = {}) {
     }
   });
 
-  const text = await response.text();
+  const raw = await response.text();
+
   let data = null;
 
   try {
-    data = text ? JSON.parse(text) : null;
+    data = raw ? JSON.parse(raw) : null;
   } catch {
-    data = text;
+    data = raw;
   }
 
   if (!response.ok) {
-    throw new Error(data?.message || data?.error || data?.hint || `Supabase failed ${response.status}`);
+    throw new Error(
+      data?.message ||
+        data?.error ||
+        data?.hint ||
+        `Supabase failed ${response.status}`
+    );
   }
 
   return data;
 }
 
 async function getUserFromAuth(req) {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const authHeader =
+    req.headers.authorization ||
+    req.headers.Authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return null;
   }
 
@@ -105,17 +125,13 @@ async function getProfile(userId) {
 
 async function existingPaidAccess(streamId, userId) {
   const purchases = await supabaseFetch(
-    `/live_stream_purchases?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(
-      userId
-    )}&status=eq.paid&select=*`
+    `/live_stream_purchases?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&status=eq.paid&select=*&limit=1`
   );
 
   if (purchases?.[0]) return purchases[0];
 
   const vip = await supabaseFetch(
-    `/vip_live_access?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(
-      userId
-    )}&access_status=eq.active&select=*`
+    `/vip_live_access?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&access_status=eq.active&select=*&limit=1`
   );
 
   return vip?.[0] || null;
@@ -162,8 +178,14 @@ export default async function handler(req, res) {
     }
 
     const body = req.body || {};
+
     const streamKey = cleanText(
-      body.stream_id || body.streamId || body.id || body.slug || body.room || body.livekit_room_name
+      body.stream_id ||
+        body.streamId ||
+        body.id ||
+        body.slug ||
+        body.room ||
+        body.livekit_room_name
     );
 
     if (!streamKey) {
@@ -191,7 +213,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (stream.status === "ended" || stream.status === "cancelled") {
+    if (["ended", "cancelled"].includes(stream.status)) {
       return json(res, 409, {
         ok: false,
         error: "This live stream is no longer available"
@@ -209,7 +231,10 @@ export default async function handler(req, res) {
       });
     }
 
-    const alreadyHasAccess = await existingPaidAccess(stream.id, user.id);
+    const alreadyHasAccess = await existingPaidAccess(
+      stream.id,
+      user.id
+    );
 
     if (alreadyHasAccess) {
       return json(res, 200, {
@@ -221,6 +246,7 @@ export default async function handler(req, res) {
     }
 
     const profile = await getProfile(user.id);
+
     const amountCents = toCents(stream.price_cents, 0);
 
     if (amountCents <= 0) {
@@ -231,47 +257,63 @@ export default async function handler(req, res) {
     }
 
     const currency = cleanText(stream.currency, "usd").toLowerCase();
-    const platformFeeCents = calcFee(amountCents);
-    const creatorAmountCents = Math.max(0, amountCents - platformFeeCents);
 
-    const purchaseRows = await supabaseFetch(`/live_stream_purchases`, {
-      method: "POST",
-      body: JSON.stringify({
-        stream_id: stream.id,
-        user_id: user.id,
-        amount_cents: amountCents,
-        platform_fee_cents: platformFeeCents,
-        creator_amount_cents: creatorAmountCents,
-        currency,
-        status: "pending",
-        metadata: {
-          app: "Rich Bizness Mobile",
-          source: "live-stream-purchase",
-          access_type: accessType,
-          buyer_username: profile?.username || null,
-          buyer_display_name: profile?.display_name || null,
-          creator_id: stream.creator_id,
-          stream_slug: stream.slug,
-          livekit_room_name: stream.livekit_room_name
-        }
-      })
-    });
+    const platformFeeCents = calcFee(amountCents);
+    const creatorAmountCents = Math.max(
+      0,
+      amountCents - platformFeeCents
+    );
+
+    const purchaseRows = await supabaseFetch(
+      "/live_stream_purchases",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          stream_id: stream.id,
+          user_id: user.id,
+          amount_cents: amountCents,
+          platform_fee_cents: platformFeeCents,
+          creator_amount_cents: creatorAmountCents,
+          currency,
+          status: "pending",
+          metadata: {
+            app: "Rich Bizness Mobile",
+            source: "api/live-stream-purchase.js",
+            access_type: accessType,
+            buyer_username: profile?.username || null,
+            buyer_display_name:
+              profile?.display_name ||
+              profile?.full_name ||
+              null,
+            creator_id: stream.creator_id,
+            stream_slug: stream.slug,
+            livekit_room_name: stream.livekit_room_name
+          }
+        })
+      }
+    );
 
     const purchase = purchaseRows?.[0];
 
-    const successUrl = `${APP_URL}/watch.html?stream=${encodeURIComponent(
-      stream.slug || stream.id
-    )}&purchase=success&session_id={CHECKOUT_SESSION_ID}`;
+    if (!purchase?.id) {
+      throw new Error("Purchase record was not created.");
+    }
 
-    const cancelUrl = `${APP_URL}/watch.html?stream=${encodeURIComponent(
-      stream.slug || stream.id
-    )}&purchase=cancelled`;
+    const streamRoute = encodeURIComponent(stream.slug || stream.id);
+
+    const successUrl =
+      `${APP_URL}/watch?stream=${streamRoute}` +
+      `&purchase=success&session_id={CHECKOUT_SESSION_ID}`;
+
+    const cancelUrl =
+      `${APP_URL}/watch?stream=${streamRoute}&purchase=cancelled`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer_email: user.email || undefined,
+
       line_items: [
         {
           quantity: 1,
@@ -280,8 +322,13 @@ export default async function handler(req, res) {
             unit_amount: amountCents,
             product_data: {
               name: stream.title || "Rich Bizness Live Access",
-              description: stream.description || "Live stream access",
-              images: stream.thumbnail_url || stream.cover_url ? [stream.thumbnail_url || stream.cover_url] : undefined,
+              description:
+                stream.description ||
+                "Live stream access",
+              images:
+                stream.thumbnail_url || stream.cover_url
+                  ? [stream.thumbnail_url || stream.cover_url]
+                  : undefined,
               metadata: {
                 stream_id: stream.id,
                 creator_id: stream.creator_id,
@@ -291,10 +338,11 @@ export default async function handler(req, res) {
           }
         }
       ],
+
       metadata: {
         app: "rich-bizness-mobile",
         type: "live_stream_purchase",
-        purchase_id: purchase?.id || "",
+        purchase_id: purchase.id,
         stream_id: stream.id,
         user_id: user.id,
         creator_id: stream.creator_id,
@@ -302,11 +350,12 @@ export default async function handler(req, res) {
         platform_fee_cents: String(platformFeeCents),
         creator_amount_cents: String(creatorAmountCents)
       },
+
       payment_intent_data: {
         metadata: {
           app: "rich-bizness-mobile",
           type: "live_stream_purchase",
-          purchase_id: purchase?.id || "",
+          purchase_id: purchase.id,
           stream_id: stream.id,
           user_id: user.id,
           creator_id: stream.creator_id
@@ -314,21 +363,28 @@ export default async function handler(req, res) {
       }
     });
 
-    await supabaseFetch(`/live_stream_purchases?id=eq.${encodeURIComponent(purchase.id)}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        stripe_checkout_session_id: session.id,
-        stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
-        updated_at: new Date().toISOString(),
-        metadata: {
-          ...(purchase.metadata || {}),
-          stripe_checkout_url: session.url,
-          stripe_session_status: session.status
-        }
-      })
-    });
+    await supabaseFetch(
+      `/live_stream_purchases?id=eq.${encodeURIComponent(purchase.id)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          stripe_checkout_session_id: session.id,
+          stripe_customer_id:
+            typeof session.customer === "string"
+              ? session.customer
+              : null,
+          updated_at: new Date().toISOString(),
+          metadata: {
+            ...(purchase.metadata || {}),
+            stripe_checkout_url: session.url,
+            stripe_session_status: session.status,
+            stripe_payment_status: session.payment_status
+          }
+        })
+      }
+    );
 
-    await supabaseFetch(`/stripe_sync_events`, {
+    await supabaseFetch("/stripe_sync_events", {
       method: "POST",
       body: JSON.stringify({
         stripe_event_id: session.id,
@@ -344,7 +400,8 @@ export default async function handler(req, res) {
         payload: {
           stream_id: stream.id,
           purchase_id: purchase.id,
-          checkout_url: session.url
+          checkout_url: session.url,
+          source: "api/live-stream-purchase.js"
         }
       })
     });
@@ -356,12 +413,16 @@ export default async function handler(req, res) {
       purchase_id: purchase.id,
       stream_id: stream.id,
       amount_cents: amountCents,
+      platform_fee_cents: platformFeeCents,
+      creator_amount_cents: creatorAmountCents,
       currency
     });
   } catch (error) {
     return json(res, 500, {
       ok: false,
-      error: error?.message || "Failed to create live stream purchase"
+      error:
+        error?.message ||
+        "Failed to create live stream purchase"
     });
   }
 }
