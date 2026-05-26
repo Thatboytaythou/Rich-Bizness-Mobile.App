@@ -1,16 +1,29 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/pages/music.js
+
+   Music Page
+   Profile Keys Locked
+   Realtime Enabled
 ========================= */
 
 import {
   initApp,
+  getCurrentUserState,
   markPageReady,
   markPageError
 } from "/core/app.js";
 
 import { RB_TABLES } from "/core/shared/rb-config.js";
 import { getSupabase } from "/core/shared/rb-supabase.js";
+
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl,
+  profileAvatar,
+  profileName
+} from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -36,6 +49,28 @@ const els = {
 
 let supabase = null;
 let channels = [];
+let currentUser = null;
+let currentProfile = null;
+let profileIdentity = null;
+
+function syncProfileKeys() {
+  const state = getCurrentUserState?.() || {};
+
+  currentUser = state.user || null;
+  currentProfile = state.profile || null;
+  profileIdentity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbRoute = "music";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = profileIdentity?.id || "";
+  document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
+
+  bindProfileShell();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+}
 
 function safe(value, fallback = "") {
   return value || fallback;
@@ -106,12 +141,12 @@ function renderAudioCard(item, type) {
     creatorLine(item),
     item.genre || item.category || item.mood || "",
     moneyDate(item.created_at)
-  ]
-    .filter(Boolean)
-    .join(" • ");
+  ].filter(Boolean).join(" • ");
 
   const card = document.createElement("article");
   card.className = "rb-music-card";
+  card.dataset.creatorId = item.user_id || "";
+  card.dataset.profileLocked = item.user_id ? "true" : "false";
 
   card.innerHTML = `
     <img
@@ -137,13 +172,7 @@ function renderAudioCard(item, type) {
   `;
 
   card.querySelector("button")?.addEventListener("click", () => {
-    playAudio({
-      type,
-      title,
-      meta,
-      audioUrl,
-      coverUrl
-    });
+    playAudio({ type, title, meta, audioUrl, coverUrl });
   });
 
   return card;
@@ -155,6 +184,8 @@ function renderPlaylistCard(item) {
 
   const card = document.createElement("article");
   card.className = "rb-music-card";
+  card.dataset.creatorId = item.user_id || "";
+  card.dataset.profileLocked = item.user_id ? "true" : "false";
 
   card.innerHTML = `
     <img
@@ -291,40 +322,20 @@ function bindRealtime() {
   clearRealtime();
 
   channels = [
-    supabase
-      .channel("rb-music-tracks")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: RB_TABLES.musicTracks },
-        reload
-      )
+    supabase.channel("rb-music-tracks")
+      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.musicTracks }, reload)
       .subscribe(),
 
-    supabase
-      .channel("rb-podcast-episodes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: RB_TABLES.podcastEpisodes },
-        reload
-      )
+    supabase.channel("rb-podcast-episodes")
+      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.podcastEpisodes }, reload)
       .subscribe(),
 
-    supabase
-      .channel("rb-radio-stations")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: RB_TABLES.radioStations },
-        reload
-      )
+    supabase.channel("rb-radio-stations")
+      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.radioStations }, reload)
       .subscribe(),
 
-    supabase
-      .channel("rb-playlists")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: RB_TABLES.playlists },
-        reload
-      )
+    supabase.channel("rb-playlists")
+      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.playlists }, reload)
       .subscribe()
   ];
 }
@@ -339,6 +350,7 @@ async function bootMusicPage() {
 
     supabase = getSupabase();
 
+    syncProfileKeys();
     bindTabs();
 
     await loadMusicPage();
@@ -351,7 +363,10 @@ async function bootMusicPage() {
 
     markPageReady("music");
 
-    console.log("RB MUSIC READY");
+    console.log("RB MUSIC READY", {
+      profileLocked: !!profileIdentity?.id,
+      route: "music"
+    });
   } catch (error) {
     console.error("[music.js]", error);
 
