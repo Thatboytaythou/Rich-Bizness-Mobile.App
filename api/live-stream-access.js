@@ -1,6 +1,10 @@
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
 
 function json(res, status, data) {
   return res.status(status).json(data);
@@ -22,32 +26,34 @@ async function supabaseFetch(path, options = {}) {
     }
   });
 
-  const text = await response.text();
+  const raw = await response.text();
+
   let data = null;
 
   try {
-    data = text ? JSON.parse(text) : null;
+    data = raw ? JSON.parse(raw) : null;
   } catch {
-    data = text;
+    data = raw;
   }
 
   if (!response.ok) {
-    const message =
+    throw new Error(
       data?.message ||
-      data?.error ||
-      data?.hint ||
-      `Supabase request failed with ${response.status}`;
-
-    throw new Error(message);
+        data?.error ||
+        data?.hint ||
+        `Supabase request failed with ${response.status}`
+    );
   }
 
   return data;
 }
 
 async function getUserFromAuth(req) {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const authHeader =
+    req.headers.authorization ||
+    req.headers.Authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return null;
   }
 
@@ -65,8 +71,8 @@ async function getUserFromAuth(req) {
   return response.json();
 }
 
-async function findStream(streamIdOrSlug) {
-  const value = encodeURIComponent(streamIdOrSlug);
+async function findStream(streamKey) {
+  const value = encodeURIComponent(streamKey);
 
   const rows = await supabaseFetch(
     `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*`
@@ -84,7 +90,6 @@ async function hasBan(streamId, userId) {
 
   const ban = rows?.[0];
   if (!ban) return false;
-
   if (!ban.expires_at) return true;
 
   return new Date(ban.expires_at).getTime() > Date.now();
@@ -109,14 +114,13 @@ async function hasVipAccess(streamId, userId) {
 
   const vip = rows?.[0];
   if (!vip) return false;
-
   if (!vip.expires_at) return true;
 
   return new Date(vip.expires_at).getTime() > Date.now();
 }
 
-async function isMember(streamId, userId) {
-  if (!userId) return false;
+async function getMember(streamId, userId) {
+  if (!userId) return null;
 
   const rows = await supabaseFetch(
     `/live_stream_members?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&status=eq.active&select=id,role&limit=1`
@@ -137,6 +141,7 @@ export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "POST") {
     return json(res, 405, {
       ok: false,
+      allowed: false,
       error: "Method not allowed"
     });
   }
@@ -145,6 +150,7 @@ export default async function handler(req, res) {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       return json(res, 500, {
         ok: false,
+        allowed: false,
         error: "Missing Supabase server environment variables"
       });
     }
@@ -153,7 +159,12 @@ export default async function handler(req, res) {
     const input = req.method === "POST" ? req.body || {} : req.query || {};
 
     const streamKey = cleanText(
-      input.stream_id || input.streamId || input.slug || input.room || input.livekit_room_name
+      input.stream_id ||
+        input.streamId ||
+        input.id ||
+        input.slug ||
+        input.room ||
+        input.livekit_room_name
     );
 
     if (!streamKey) {
@@ -176,7 +187,7 @@ export default async function handler(req, res) {
     }
 
     const userId = user?.id || null;
-    const member = await isMember(stream.id, userId);
+    const member = await getMember(stream.id, userId);
 
     if (await hasBan(stream.id, userId)) {
       return json(res, 403, {
@@ -199,7 +210,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (member?.role === "host" || member?.role === "cohost" || member?.role === "moderator") {
+    if (["host", "cohost", "moderator"].includes(member?.role)) {
       return json(res, 200, {
         ok: true,
         allowed: true,
@@ -264,11 +275,12 @@ export default async function handler(req, res) {
     if (stream.access_type === "subscriber") {
       const paid = await hasPaidAccess(stream.id, userId);
       const vip = await hasVipAccess(stream.id, userId);
+      const allowed = paid || vip;
 
-      return json(res, paid || vip ? 200 : 403, {
+      return json(res, allowed ? 200 : 403, {
         ok: true,
-        allowed: paid || vip,
-        reason: paid || vip ? "subscriber_access" : "subscriber_required",
+        allowed,
+        reason: allowed ? "subscriber_access" : "subscriber_required",
         access_type: stream.access_type,
         stream,
         user_id: userId
