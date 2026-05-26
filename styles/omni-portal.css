@@ -1,20 +1,33 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/omni-portal.css
+
+   CLEAN CINEMATIC PORTAL
+   - reduced dark overlap
+   - cleaner galaxy blending
+   - smoother glow energy
+   - better mobile scaling
 ========================= */
 
 .rb-portal-ui {
   position: fixed;
   left: 50%;
   top: 50%;
-  z-index: 8;
+  z-index: 6;
 
   width: clamp(140px, 22vw, 260px);
   height: clamp(140px, 22vw, 260px);
 
   transform: translate(-50%, -50%);
+
   pointer-events: none;
+
+  will-change: transform;
 }
+
+/* =========================
+   PORTAL CORE
+========================= */
 
 .rb-portal-core {
   position: absolute;
@@ -23,24 +36,39 @@
   border-radius: 50%;
 
   background:
-    radial-gradient(circle at 45% 38%,
-      rgba(255,255,255,.95) 0%,
-      rgba(250,204,21,.70) 12%,
-      rgba(0,255,157,.50) 34%,
-      rgba(6,78,59,.35) 58%,
+    radial-gradient(
+      circle at 45% 38%,
+      rgba(255,255,255,.96) 0%,
+      rgba(250,204,21,.62) 10%,
+      rgba(0,255,157,.38) 32%,
+      rgba(6,78,59,.18) 56%,
       transparent 76%
     );
 
-  box-shadow:
-    0 0 44px rgba(0,255,157,.62),
-    0 0 120px rgba(0,255,157,.34),
-    0 0 220px rgba(250,204,21,.18);
+  mix-blend-mode: screen;
 
-  animation: rbPortalPulse 3.2s ease-in-out infinite;
+  box-shadow:
+    0 0 40px rgba(0,255,157,.42),
+    0 0 90px rgba(0,255,157,.22),
+    0 0 180px rgba(250,204,21,.12);
+
+  filter:
+    saturate(1.08)
+    brightness(1.02);
+
+  animation:
+    rbPortalPulse 4.2s ease-in-out infinite;
+
+  isolation: isolate;
 }
+
+/* =========================
+   OUTER ENERGY RING
+========================= */
 
 .rb-portal-core::before {
   content: "";
+
   position: absolute;
   inset: 10%;
 
@@ -50,45 +78,134 @@
     conic-gradient(
       from 0deg,
       transparent,
-      rgba(250,204,21,.65),
-      rgba(0,255,157,.35),
-      rgba(255,255,255,.70),
+      rgba(250,204,21,.42),
+      rgba(0,255,157,.24),
+      rgba(255,255,255,.44),
       transparent
     );
 
-  mask: radial-gradient(circle, transparent 48%, #000 51%, #000 66%, transparent 69%);
-  -webkit-mask: radial-gradient(circle, transparent 48%, #000 51%, #000 66%, transparent 69%);
+  mask:
+    radial-gradient(
+      circle,
+      transparent 48%,
+      #000 51%,
+      #000 66%,
+      transparent 69%
+    );
 
-  animation: rbPortalSpin 7s linear infinite;
+  -webkit-mask:
+    radial-gradient(
+      circle,
+      transparent 48%,
+      #000 51%,
+      #000 66%,
+      transparent 69%
+    );
+
+  opacity: .88;
+
+  filter: blur(.4px);
+
+  animation:
+    rbPortalSpin 10s linear infinite;
 }
+
+/* =========================
+   INNER ENERGY CORE
+========================= */
 
 .rb-portal-core::after {
   content: "";
+
   position: absolute;
   inset: 28%;
 
   border-radius: 50%;
 
   background:
-    radial-gradient(circle,
-      rgba(255,255,255,.95),
-      rgba(250,204,21,.60) 28%,
-      rgba(0,255,157,.38) 60%,
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.96),
+      rgba(250,204,21,.52) 26%,
+      rgba(0,255,157,.24) 56%,
       transparent 78%
     );
 
-  filter: blur(1px);
-  animation: rbPortalEnergy 2.4s ease-in-out infinite;
+  filter: blur(2px);
+
+  mix-blend-mode: screen;
+
+  animation:
+    rbPortalEnergy 3.2s ease-in-out infinite;
 }
 
+/* =========================
+   AMBIENT OUTER GLOW
+========================= */
+
+.rb-portal-ui::before {
+  content: "";
+
+  position: absolute;
+  inset: -42%;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(0,255,157,.14) 0%,
+      rgba(250,204,21,.06) 24%,
+      transparent 72%
+    );
+
+  filter: blur(34px);
+
+  opacity: .72;
+
+  z-index: -1;
+
+  animation:
+    rbPortalAura 8s ease-in-out infinite;
+}
+
+/* =========================
+   SOFT ENERGY FIELD
+========================= */
+
+.rb-portal-ui::after {
+  content: "";
+
+  position: absolute;
+  inset: -12%;
+
+  border-radius: 50%;
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  box-shadow:
+    inset 0 0 22px rgba(255,255,255,.04),
+    0 0 40px rgba(16,185,129,.08);
+
+  opacity: .82;
+
+  pointer-events: none;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
 @keyframes rbPortalPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(.96);
-    opacity: .88;
+    opacity: .84;
   }
 
   50% {
-    transform: scale(1.08);
+    transform: scale(1.05);
     opacity: 1;
   }
 }
@@ -100,20 +217,80 @@
 }
 
 @keyframes rbPortalEnergy {
-  0%, 100% {
-    transform: scale(.88);
-    opacity: .68;
+  0%,
+  100% {
+    transform: scale(.9);
+    opacity: .62;
   }
 
   50% {
-    transform: scale(1.18);
-    opacity: 1;
+    transform: scale(1.12);
+    opacity: .96;
   }
 }
 
-@media (max-width: 640px) {
+@keyframes rbPortalAura {
+  0%,
+  100% {
+    transform: scale(.94);
+    opacity: .58;
+  }
+
+  50% {
+    transform: scale(1.08);
+    opacity: .9;
+  }
+}
+
+/* =========================
+   LIVE ENERGY MODE
+========================= */
+
+.rb-orbit-live-energy .rb-portal-core {
+  box-shadow:
+    0 0 54px rgba(0,255,157,.62),
+    0 0 140px rgba(0,255,157,.28),
+    0 0 240px rgba(250,204,21,.18);
+}
+
+.rb-orbit-live-energy .rb-portal-ui::before {
+  opacity: .92;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 720px) {
   .rb-portal-ui {
-    width: 132px;
-    height: 132px;
+    width: 142px;
+    height: 142px;
+  }
+
+  .rb-portal-core {
+    box-shadow:
+      0 0 34px rgba(0,255,157,.34),
+      0 0 74px rgba(0,255,157,.16),
+      0 0 120px rgba(250,204,21,.08);
+  }
+
+  .rb-portal-ui::before {
+    filter: blur(24px);
+  }
+}
+
+@media (max-width: 430px) {
+  .rb-portal-ui {
+    width: 126px;
+    height: 126px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-portal-core,
+  .rb-portal-core::before,
+  .rb-portal-core::after,
+  .rb-portal-ui::before {
+    animation: none;
   }
 }
