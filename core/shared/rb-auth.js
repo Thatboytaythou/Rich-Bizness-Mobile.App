@@ -1,4 +1,4 @@
- /* =========================
+/* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-auth.js
 
@@ -6,6 +6,7 @@
    Synced To rb-supabase.js
    Profile Upsert Locked
    Auto Profile Ensure Enabled
+   Profile Keys Locked
 ========================= */
 
 import {
@@ -23,16 +24,14 @@ import {
 
 import {
   RB_ROUTES,
-  RB_TABLES
+  RB_TABLES,
+  RB_PROFILE_KEYS
 } from "/core/shared/rb-config.js";
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR =
-  "/images/brand/Avatar-hero-Banner.png.jpeg";
-
-const DEFAULT_BANNER =
-  "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 export {
   getSupabase,
@@ -113,6 +112,105 @@ async function getExistingProfile(userId) {
   return data || null;
 }
 
+async function ensureProfileExtensionTables(profile) {
+  if (!profile?.id) return;
+
+  const now = new Date().toISOString();
+
+  const baseIdentity = {
+    user_id: profile.id,
+    username: profile.username || null,
+    display_name: profile.display_name || null,
+    metadata: {
+      source: "rb-auth",
+      profile_locked: true
+    },
+    updated_at: now
+  };
+
+  const jobs = [
+    {
+      table: RB_TABLES.userSettings,
+      payload: {
+        user_id: profile.id,
+        updated_at: now
+      }
+    },
+
+    {
+      table: RB_TABLES.userLevels,
+      payload: {
+        user_id: profile.id,
+        updated_at: now
+      }
+    },
+
+    {
+      table: RB_TABLES.profileThemeSettings,
+      payload: {
+        user_id: profile.id,
+        updated_at: now
+      }
+    },
+
+    {
+      table: RB_TABLES.metaAvatars,
+      payload: {
+        ...baseIdentity,
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        display_name: profile.display_name || profile.username || "Rich User",
+        updated_at: now
+      }
+    },
+
+    {
+      table: RB_TABLES.gamerProfiles,
+      payload: {
+        ...baseIdentity,
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        banner_url: profile.banner_url || DEFAULT_BANNER,
+        updated_at: now
+      }
+    },
+
+    {
+      table: RB_TABLES.sportsProfiles,
+      payload: {
+        ...baseIdentity,
+        updated_at: now
+      }
+    },
+
+    {
+      table: RB_TABLES.storeSellerProfiles,
+      payload: {
+        ...baseIdentity,
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        banner_url: profile.banner_url || DEFAULT_BANNER,
+        updated_at: now
+      }
+    },
+
+    {
+      table: RB_TABLES.creatorPageSettings,
+      payload: {
+        user_id: profile.id,
+        updated_at: now
+      }
+    }
+  ];
+
+  await Promise.allSettled(
+    jobs
+      .filter((job) => job.table)
+      .map((job) => {
+        return supabase
+          .from(job.table)
+          .upsert(job.payload, { onConflict: "user_id" });
+      })
+  );
+}
+
 async function upsertProfileFromAuth({
   user,
   email,
@@ -163,7 +261,13 @@ async function upsertProfileFromAuth({
     role: finalRole,
     online_status: "online",
     last_seen_at: now,
-    updated_at: now
+    updated_at: now,
+    metadata: {
+      ...(existingProfile?.metadata || {}),
+      profile_lock: true,
+      profile_source: RB_PROFILE_KEYS?.identitySource || "profiles",
+      secret_routes_enabled: true
+    }
   };
 
   if (!existingProfile?.created_at) {
@@ -181,7 +285,9 @@ async function upsertProfileFromAuth({
     return null;
   }
 
+  await ensureProfileExtensionTables(data);
   await loadProfile(user.id);
+
   return data;
 }
 
@@ -194,18 +300,30 @@ export async function ensureMyProfile() {
   const existingProfile = await getExistingProfile(user.id);
 
   if (existingProfile) {
-    await loadProfile(user.id);
+    const now = new Date().toISOString();
 
-    await supabase
+    const { data } = await supabase
       .from(RB_TABLES.profiles)
       .update({
         online_status: "online",
-        last_seen_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        last_seen_at: now,
+        updated_at: now,
+        metadata: {
+          ...(existingProfile.metadata || {}),
+          profile_lock: true,
+          profile_source: RB_PROFILE_KEYS?.identitySource || "profiles"
+        }
       })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select()
+      .maybeSingle();
 
-    return existingProfile;
+    const profile = data || existingProfile;
+
+    await ensureProfileExtensionTables(profile);
+    await loadProfile(user.id);
+
+    return profile;
   }
 
   return await upsertProfileFromAuth({
@@ -345,6 +463,21 @@ export async function refreshProfile() {
   const user = getUser();
   if (!user?.id) return null;
   return await loadProfile(user.id);
+}
+
+export function canAccessAdminCreatorRoute(routeKey = "") {
+  const profile = getProfile();
+  const allowedRoutes = RB_PROFILE_KEYS?.adminCreatorRoutes || [];
+
+  if (!allowedRoutes.includes(routeKey)) return true;
+
+  return !!(
+    profile?.role === "founder" ||
+    profile?.role === "admin" ||
+    profile?.role === "rich_admin" ||
+    profile?.is_creator ||
+    profile?.is_verified
+  );
 }
 
 window.addEventListener("focus", async () => {
