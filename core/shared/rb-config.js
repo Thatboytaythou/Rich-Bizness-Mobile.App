@@ -19,13 +19,17 @@ const RB_CONFIG = Object.freeze({
     version: "1.0.0",
     environment: "production",
 
-    siteUrl: "https://rich-bizness-mobile-app.vercel.app",
-    appUrl: "https://rich-bizness-mobile-app.vercel.app",
+    siteUrl:
+      "https://rich-bizness-mobile-app.vercel.app",
+
+    appUrl:
+      "https://rich-bizness-mobile-app.vercel.app",
 
     build: {
       platform: "web-mobile",
       engine: "universe-preview",
       renderer: "threejs",
+      mode: "cinematic",
     },
   },
 
@@ -35,7 +39,8 @@ const RB_CONFIG = Object.freeze({
   supabase: {
     projectRef: "xfsrqomsiulswbalgknx",
 
-    url: "https://xfsrqomsiulswbalgknx.supabase.co",
+    url:
+      "https://xfsrqomsiulswbalgknx.supabase.co",
 
     publishableKey:
       "sb_publishable_pW8c7eWAX1GPi5HbncKjpg_CicEceV8",
@@ -45,7 +50,8 @@ const RB_CONFIG = Object.freeze({
      LIVEKIT
   ========================= */
   livekit: {
-    url: "wss://rich-bizness-mobile-app-ww6cieid.livekit.cloud",
+    url:
+      "wss://rich-bizness-mobile-app-ww6cieid.livekit.cloud",
   },
 
   /* =========================
@@ -58,6 +64,14 @@ const RB_CONFIG = Object.freeze({
       icon: "🔥",
       route: "/feed",
       color: "#00ffae",
+    },
+
+    {
+      key: "watch",
+      label: "WATCH",
+      icon: "📺",
+      route: "/watch",
+      color: "#00ffd5",
     },
 
     {
@@ -74,6 +88,22 @@ const RB_CONFIG = Object.freeze({
       icon: "🎵",
       route: "/music",
       color: "#ffe066",
+    },
+
+    {
+      key: "podcast",
+      label: "PODCAST",
+      icon: "🎙️",
+      route: "/podcast",
+      color: "#ffb347",
+    },
+
+    {
+      key: "radio",
+      label: "RADIO",
+      icon: "📻",
+      route: "/radio",
+      color: "#7ad7ff",
     },
 
     {
@@ -101,14 +131,6 @@ const RB_CONFIG = Object.freeze({
     },
 
     {
-      key: "upload",
-      label: "UPLOAD",
-      icon: "⬆️",
-      route: "/upload",
-      color: "#00ffaa",
-    },
-
-    {
       key: "store",
       label: "STORE",
       icon: "🛒",
@@ -122,6 +144,38 @@ const RB_CONFIG = Object.freeze({
       icon: "🌌",
       route: "/meta",
       color: "#9d4dff",
+    },
+
+    {
+      key: "messages",
+      label: "DM",
+      icon: "💬",
+      route: "/messages",
+      color: "#00ffaa",
+    },
+
+    {
+      key: "notifications",
+      label: "ALERTS",
+      icon: "🔔",
+      route: "/notifications",
+      color: "#00ff95",
+    },
+
+    {
+      key: "upload",
+      label: "UPLOAD",
+      icon: "⬆️",
+      route: "/upload",
+      color: "#00ffaa",
+    },
+
+    {
+      key: "profile",
+      label: "PROFILE",
+      icon: "👑",
+      route: "/profile",
+      color: "#ffe066",
     },
   ],
 
@@ -137,11 +191,15 @@ const RB_CONFIG = Object.freeze({
     live: "/live",
 
     music: "/music",
+    podcast: "/podcast",
+    radio: "/radio",
+
     gaming: "/gaming",
     sports: "/sports",
 
     gallery: "/gallery",
     upload: "/upload",
+
     store: "/store",
     meta: "/meta",
 
@@ -152,11 +210,23 @@ const RB_CONFIG = Object.freeze({
     edit: "/edit",
     settings: "/settings",
 
+    creator: "/creator",
+    admin: "/admin",
+
+    search: "/search",
+
     games: {
-      richChess: "/games/rich-chess",
-      moneyRoadRunner: "/games/money-road-runner",
-      smokeCityHustle: "/games/smoke-city-hustle",
-      studioShowdown: "/games/studio-showdown",
+      richChess:
+        "/games/rich-chess",
+
+      moneyRoadRunner:
+        "/games/money-road-runner",
+
+      smokeCityHustle:
+        "/games/smoke-city-hustle",
+
+      studioShowdown:
+        "/games/studio-showdown",
     },
   },
 
@@ -165,175 +235,315 @@ const RB_CONFIG = Object.freeze({
   ========================= */
   tables: {
     /* ADMIN */
-    adminAuditLogs: "admin_audit_logs",
-    adminRoles: "admin_roles",
+    adminAuditLogs:
+      "admin_audit_logs",
+
+    adminRoles:
+      "admin_roles",
 
     /* API / SYSTEM */
     apiJobs: "api_jobs",
-    apiRequestLogs: "api_request_logs",
-    apiWebhookEvents: "api_webhook_events",
 
-    featureFlags: "feature_flags",
-    storageBucketRoutes: "storage_bucket_routes",
-    stripeSyncEvents: "stripe_sync_events",
+    apiRequestLogs:
+      "api_request_logs",
 
-    systemHealthChecks: "system_health_checks",
-    trustEvents: "trust_events",
+    apiWebhookEvents:
+      "api_webhook_events",
+
+    featureFlags:
+      "feature_flags",
+
+    storageBucketRoutes:
+      "storage_bucket_routes",
+
+    stripeSyncEvents:
+      "stripe_sync_events",
+
+    systemHealthChecks:
+      "system_health_checks",
+
+    trustEvents:
+      "trust_events",
 
     /* IDENTITY / PROFILE */
     profiles: "profiles",
-    profileThemeSettings: "profile_theme_settings",
 
-    pushDevices: "push_devices",
-    userSettings: "user_settings",
-    userSessions: "user_sessions",
+    profileThemeSettings:
+      "profile_theme_settings",
+
+    pushDevices:
+      "push_devices",
+
+    userSettings:
+      "user_settings",
+
+    userSessions:
+      "user_sessions",
 
     /* SOCIAL / FEED */
-    feedPosts: "feed_posts",
-    feedComments: "feed_comments",
+    feedPosts:
+      "feed_posts",
 
-    feedPostLikes: "feed_post_likes",
-    feedPostViews: "feed_post_views",
+    feedComments:
+      "feed_comments",
 
-    followers: "followers",
+    feedPostLikes:
+      "feed_post_likes",
+
+    feedPostViews:
+      "feed_post_views",
+
+    followers:
+      "followers",
 
     /* MESSAGES */
-    dmThreads: "dm_threads",
-    dmThreadMembers: "dm_thread_members",
+    dmThreads:
+      "dm_threads",
 
-    dmMessages: "dm_messages",
-    dmMessageAttachments: "dm_message_attachments",
+    dmThreadMembers:
+      "dm_thread_members",
 
-    dmMessageReactions: "dm_message_reactions",
-    dmMessageReads: "dm_message_reads",
+    dmMessages:
+      "dm_messages",
 
-    dmTypingStatus: "dm_typing_status",
+    dmMessageAttachments:
+      "dm_message_attachments",
 
-    dmCallSessions: "dm_call_sessions",
-    dmCallParticipants: "dm_call_participants",
+    dmMessageReactions:
+      "dm_message_reactions",
+
+    dmMessageReads:
+      "dm_message_reads",
+
+    dmTypingStatus:
+      "dm_typing_status",
+
+    dmCallSessions:
+      "dm_call_sessions",
+
+    dmCallParticipants:
+      "dm_call_participants",
 
     /* LIVE */
-    liveStreams: "live_streams",
-    liveStreamMembers: "live_stream_members",
+    liveStreams:
+      "live_streams",
 
-    liveStreamPurchases: "live_stream_purchases",
-    liveStreamBans: "live_stream_bans",
+    liveStreamMembers:
+      "live_stream_members",
 
-    liveStreamCards: "live_stream_cards",
+    liveStreamPurchases:
+      "live_stream_purchases",
 
-    liveChatMessages: "live_chat_messages",
+    liveStreamBans:
+      "live_stream_bans",
 
-    liveReactions: "live_reactions",
-    liveTips: "live_tips",
+    liveStreamCards:
+      "live_stream_cards",
 
-    liveViewSessions: "live_view_sessions",
+    liveChatMessages:
+      "live_chat_messages",
 
-    livekitRoomEvents: "livekit_room_events",
+    liveReactions:
+      "live_reactions",
 
-    liveAlertSubscriptions: "live_alert_subscriptions",
+    liveTips:
+      "live_tips",
 
-    vipLiveAccess: "vip_live_access",
+    liveViewSessions:
+      "live_view_sessions",
+
+    livekitRoomEvents:
+      "livekit_room_events",
+
+    liveAlertSubscriptions:
+      "live_alert_subscriptions",
+
+    vipLiveAccess:
+      "vip_live_access",
 
     /* MUSIC / PODCAST / RADIO */
-    musicTracks: "music_tracks",
-    musicComments: "music_comments",
+    musicTracks:
+      "music_tracks",
 
-    musicLikes: "music_likes",
-    musicPlayEvents: "music_play_events",
+    musicComments:
+      "music_comments",
 
-    playlists: "playlists",
-    playlistTracks: "playlist_tracks",
+    musicLikes:
+      "music_likes",
 
-    podcastShows: "podcast_shows",
-    podcastEpisodes: "podcast_episodes",
+    musicPlayEvents:
+      "music_play_events",
 
-    podcastComments: "podcast_comments",
-    podcastLikes: "podcast_likes",
+    playlists:
+      "playlists",
 
-    radioStations: "radio_stations",
-    radioLikes: "radio_likes",
-    radioSessions: "radio_sessions",
+    playlistTracks:
+      "playlist_tracks",
+
+    podcastShows:
+      "podcast_shows",
+
+    podcastEpisodes:
+      "podcast_episodes",
+
+    podcastComments:
+      "podcast_comments",
+
+    podcastLikes:
+      "podcast_likes",
+
+    radioStations:
+      "radio_stations",
+
+    radioLikes:
+      "radio_likes",
+
+    radioSessions:
+      "radio_sessions",
 
     /* GAMING */
     games: "games",
-    gamerProfiles: "gamer_profiles",
 
-    gameCategories: "game_categories",
-    gameChallenges: "game_challenges",
+    gamerProfiles:
+      "gamer_profiles",
 
-    gameClips: "game_clips",
-    gameComments: "game_comments",
-    gameLikes: "game_likes",
+    gameCategories:
+      "game_categories",
 
-    gamePlatformAccounts: "game_platform_accounts",
+    gameChallenges:
+      "game_challenges",
 
-    gameRewards: "game_rewards",
+    gameClips:
+      "game_clips",
 
-    gameScores: "game_scores",
-    gameSessions: "game_sessions",
+    gameComments:
+      "game_comments",
 
-    gameStreamLinks: "game_stream_links",
+    gameLikes:
+      "game_likes",
 
-    gameTournaments: "game_tournaments",
-    tournamentPlayers: "tournament_players",
+    gamePlatformAccounts:
+      "game_platform_accounts",
 
-    gameAlertSubscriptions: "game_alert_subscriptions",
+    gameRewards:
+      "game_rewards",
+
+    gameScores:
+      "game_scores",
+
+    gameSessions:
+      "game_sessions",
+
+    gameStreamLinks:
+      "game_stream_links",
+
+    gameTournaments:
+      "game_tournaments",
+
+    tournamentPlayers:
+      "tournament_players",
+
+    gameAlertSubscriptions:
+      "game_alert_subscriptions",
 
     /* SPORTS */
-    sportsProfiles: "sports_profiles",
-    sportsPosts: "sports_posts",
+    sportsProfiles:
+      "sports_profiles",
 
-    sportsUploads: "sports_uploads",
+    sportsPosts:
+      "sports_posts",
 
-    sportsPicks: "sports_picks",
-    sportsPickResults: "sports_pick_results",
+    sportsUploads:
+      "sports_uploads",
 
-    sportsBrackets: "sports_brackets",
-    sportsBroadcasts: "sports_broadcasts",
+    sportsPicks:
+      "sports_picks",
 
-    sportsComments: "sports_comments",
-    sportsReactions: "sports_reactions",
+    sportsPickResults:
+      "sports_pick_results",
 
-    sportsLeagues: "sports_leagues",
-    sportsTeams: "sports_teams",
+    sportsBrackets:
+      "sports_brackets",
 
-    sportsAlertSubscriptions: "sports_alert_subscriptions",
+    sportsBroadcasts:
+      "sports_broadcasts",
+
+    sportsComments:
+      "sports_comments",
+
+    sportsReactions:
+      "sports_reactions",
+
+    sportsLeagues:
+      "sports_leagues",
+
+    sportsTeams:
+      "sports_teams",
+
+    sportsAlertSubscriptions:
+      "sports_alert_subscriptions",
 
     /* META */
-    metaAvatars: "meta_avatars",
-    metaWorlds: "meta_worlds",
+    metaAvatars:
+      "meta_avatars",
 
-    metaWorldLikes: "meta_world_likes",
+    metaWorlds:
+      "meta_worlds",
 
-    metaRooms: "meta_rooms",
-    metaRoomMembers: "meta_room_members",
+    metaWorldLikes:
+      "meta_world_likes",
 
-    metaChatMessages: "meta_chat_messages",
+    metaRooms:
+      "meta_rooms",
 
-    metaInventory: "meta_inventory",
-    metaItems: "meta_items",
+    metaRoomMembers:
+      "meta_room_members",
 
-    metaPortals: "meta_portals",
+    metaChatMessages:
+      "meta_chat_messages",
 
-    metaStreamLinks: "meta_stream_links",
-    metaVisits: "meta_visits",
+    metaInventory:
+      "meta_inventory",
+
+    metaItems:
+      "meta_items",
+
+    metaPortals:
+      "meta_portals",
+
+    metaStreamLinks:
+      "meta_stream_links",
+
+    metaVisits:
+      "meta_visits",
 
     /* STORE */
-    products: "products",
+    products:
+      "products",
 
-    productLikes: "product_likes",
-    productViews: "product_views",
+    productLikes:
+      "product_likes",
 
-    storeCartItems: "store_cart_items",
+    productViews:
+      "product_views",
 
-    storeComments: "store_comments",
-    storeNotifications: "store_notifications",
+    storeCartItems:
+      "store_cart_items",
 
-    storeOrders: "store_orders",
+    storeComments:
+      "store_comments",
 
-    storeSellerProfiles: "store_seller_profiles",
+    storeNotifications:
+      "store_notifications",
 
-    userProductUnlocks: "user_product_unlocks",
+    storeOrders:
+      "store_orders",
+
+    storeSellerProfiles:
+      "store_seller_profiles",
+
+    userProductUnlocks:
+      "user_product_unlocks",
 
     /* CREATOR / MONEY */
     creatorAvailableBalances:
@@ -346,14 +556,21 @@ const RB_CONFIG = Object.freeze({
       "creator_page_settings",
 
     /* NOTIFICATIONS */
-    notifications: "rich_notifications",
-    richNotifications: "rich_notifications",
+    notifications:
+      "rich_notifications",
 
-    notificationGroups: "notification_groups",
-    notificationReads: "notification_reads",
+    richNotifications:
+      "rich_notifications",
+
+    notificationGroups:
+      "notification_groups",
+
+    notificationReads:
+      "notification_reads",
 
     /* UPLOADS / MODERATION */
-    uploads: "uploads",
+    uploads:
+      "uploads",
 
     uploadProcessingQueue:
       "upload_processing_queue",
@@ -361,28 +578,40 @@ const RB_CONFIG = Object.freeze({
     contentReviewQueue:
       "content_review_queue",
 
-    moderationReports: "moderation_reports",
+    moderationReports:
+      "moderation_reports",
 
     /* THEMES / VISUALS */
-    backgroundPresets: "background_presets",
-    layoutPresets: "layout_presets",
+    backgroundPresets:
+      "background_presets",
+
+    layoutPresets:
+      "layout_presets",
 
     sectionThemeSettings:
       "section_theme_settings",
 
     /* XP / LEVELS */
-    badges: "badges",
-    userBadges: "user_badges",
+    badges:
+      "badges",
+
+    userBadges:
+      "user_badges",
 
     userCustomScreens:
       "user_custom_screens",
 
-    userLevels: "user_levels",
+    userLevels:
+      "user_levels",
 
-    userXpLedger: "user_xp_ledger",
-    xpEvents: "xp_events",
+    userXpLedger:
+      "user_xp_ledger",
 
-    rankRules: "rank_rules",
+    xpEvents:
+      "xp_events",
+
+    rankRules:
+      "rank_rules",
 
     /* ANALYTICS */
     platformAnalyticsEvents:
@@ -396,37 +625,71 @@ const RB_CONFIG = Object.freeze({
      STORAGE BUCKETS
   ========================= */
   buckets: {
-    avatars: "avatars",
-    profileBanners: "profile-banners",
+    avatars:
+      "avatars",
 
-    metaAvatars: "meta-avatars",
-    metaWorlds: "meta-worlds",
+    profileBanners:
+      "profile-banners",
 
-    generalUploads: "general-uploads",
-    galleryMedia: "gallery-media",
+    metaAvatars:
+      "meta-avatars",
 
-    musicAudio: "music-audio",
-    musicCovers: "music-covers",
+    metaWorlds:
+      "meta-worlds",
 
-    podcastAudio: "podcast-audio",
-    podcastCovers: "podcast-covers",
+    generalUploads:
+      "general-uploads",
 
-    radioCovers: "radio-covers",
+    galleryMedia:
+      "gallery-media",
 
-    liveThumbnails: "live-thumbnails",
-    liveRecordings: "live-recordings",
+    musicAudio:
+      "music-audio",
 
-    gameAssets: "game-assets",
-    gameClips: "game-clips",
-    gameCovers: "game-covers",
+    musicCovers:
+      "music-covers",
 
-    sportsMedia: "sports-media",
-    sportsClips: "sports-clips",
-    sportsCovers: "sports-covers",
+    podcastAudio:
+      "podcast-audio",
 
-    storeProducts: "store-products",
-    storeSellerMedia: "store-seller-media",
-    storeDigital: "store-digital",
+    podcastCovers:
+      "podcast-covers",
+
+    radioCovers:
+      "radio-covers",
+
+    liveThumbnails:
+      "live-thumbnails",
+
+    liveRecordings:
+      "live-recordings",
+
+    gameAssets:
+      "game-assets",
+
+    gameClips:
+      "game-clips",
+
+    gameCovers:
+      "game-covers",
+
+    sportsMedia:
+      "sports-media",
+
+    sportsClips:
+      "sports-clips",
+
+    sportsCovers:
+      "sports-covers",
+
+    storeProducts:
+      "store-products",
+
+    storeSellerMedia:
+      "store-seller-media",
+
+    storeDigital:
+      "store-digital",
   },
 
   /* =========================
@@ -475,9 +738,11 @@ const RB_CONFIG = Object.freeze({
      VISUAL SYSTEM
   ========================= */
   visuals: {
-    theme: "black-green-gold",
+    theme:
+      "black-green-gold",
 
-    mode: "ultra-hd-cinematic",
+    mode:
+      "ultra-hd-cinematic",
 
     homeStyle:
       "rotating-tv-screens-around-portal",
@@ -495,6 +760,11 @@ const RB_CONFIG = Object.freeze({
     motionBlur: true,
 
     holographicGlow: true,
+
+    portalFX: true,
+    glassFX: true,
+
+    galaxyBackground: true,
   },
 
   /* =========================
@@ -518,14 +788,23 @@ const RB_CONFIG = Object.freeze({
 
     portal: {
       floatAmount: 5,
+
       scalePulse: 0.012,
 
       glowStrength: 1.2,
+
+      rotationSpeed: 0.0008,
     },
 
     camera: {
       depth: 900,
       tilt: 0.12,
+    },
+
+    transitions: {
+      routeFade: 260,
+      modalFade: 180,
+      panelSlide: 240,
     },
   },
 });
@@ -536,7 +815,8 @@ const RB_CONFIG = Object.freeze({
 
 export default RB_CONFIG;
 
-export const RB_APP = RB_CONFIG.app;
+export const RB_APP =
+  RB_CONFIG.app;
 
 export const RB_SUPABASE =
   RB_CONFIG.supabase;
@@ -575,5 +855,6 @@ console.log(
     color: #00ffae;
     font-weight: bold;
     font-size: 14px;
+    text-shadow: 0 0 12px #00ffae;
   `
 );
