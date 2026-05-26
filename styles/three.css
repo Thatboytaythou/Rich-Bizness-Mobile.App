@@ -24,6 +24,9 @@
   contain: layout paint size;
   transform: translateZ(0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
+  isolation: isolate;
 }
 
 #canvas-container canvas {
@@ -43,28 +46,60 @@
   -webkit-touch-callout: none;
 
   outline: none;
+  border: 0;
 
   image-rendering: auto;
 
   transform: translateZ(0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
   will-change: transform;
 }
 
+/* =========================
+   HUB LAYER LOCK
+========================= */
+
 .rb-index-page #canvas-container {
   z-index: 1;
+}
+
+.rb-index-page #canvas-container canvas {
+  z-index: 1;
+}
+
+.rb-index-page .rb-fx-smoke,
+.rb-index-page .rb-bg-grid,
+.rb-index-page .rb-bg-vignette,
+.rb-index-page .rb-bg-noise {
+  pointer-events: none;
+  z-index: 0;
+}
+
+.rb-index-page .rb-portal-ui {
+  z-index: 2;
+}
+
+.rb-index-page .rb-brand-header,
+.rb-index-page .rb-profile-chip,
+.rb-index-page .rb-side-tabs,
+.rb-index-page .rb-bottom-nav,
+.rb-index-page .rb-module-label {
+  z-index: 20;
+}
+
+.rb-index-page #rb-notify-root {
+  z-index: 30;
 }
 
 .rb-index-page canvas {
   image-rendering: auto;
 }
 
-.rb-index-page .rb-bg-grid,
-.rb-index-page .rb-bg-vignette,
-.rb-index-page .rb-bg-noise,
-.rb-index-page .rb-fx-smoke {
-  pointer-events: none;
-}
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 720px) {
   #canvas-container,
@@ -73,6 +108,10 @@
     height: 100dvh !important;
   }
 }
+
+/* =========================
+   PERFORMANCE
+========================= */
 
 @media (prefers-reduced-motion: reduce) {
   #canvas-container canvas {
