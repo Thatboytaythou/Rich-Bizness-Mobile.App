@@ -3,6 +3,7 @@
    /core/shared/rb-profile.js
 
    GLOBAL PROFILE + IDENTITY ENGINE
+   Profile Keys For All Systems
 ========================= */
 
 import { RB_TABLES } from "/core/shared/rb-config.js";
@@ -24,28 +25,112 @@ export function getProfileIdentity(profileOverride = null) {
   const user = getUser();
   const profile = profileOverride || getProfile();
 
+  const id = profile?.id || user?.id || null;
+
   return {
-    id: profile?.id || user?.id || null,
+    id,
+    user_id: id,
+    creator_id: id,
+    owner_id: id,
+    seller_id: id,
+
     email: user?.email || "",
+
     username: profile?.username || "",
+    display_name:
+      profile?.display_name ||
+      profile?.full_name ||
+      profile?.username ||
+      user?.email?.split("@")[0] ||
+      "Rich User",
+
     displayName:
       profile?.display_name ||
       profile?.full_name ||
       profile?.username ||
       user?.email?.split("@")[0] ||
       "Rich User",
+
     bio: profile?.bio || "",
+
+    avatar_url: profileAvatar(profile),
     avatarUrl: profileAvatar(profile),
+
+    banner_url: profileBanner(profile),
     bannerUrl: profileBanner(profile),
+
     role: profile?.role || "user",
+    rich_level: profile?.rich_level || 1,
     richLevel: profile?.rich_level || 1,
+
+    rank_title: profile?.rank_title || "Member",
     rankTitle: profile?.rank_title || "Member",
+
+    rich_points: profile?.rich_points || 0,
     richPoints: profile?.rich_points || 0,
+
+    online_status: profile?.online_status || "offline",
     onlineStatus: profile?.online_status || "offline",
+
+    is_creator: !!profile?.is_creator,
     isCreator: !!profile?.is_creator,
+
+    is_artist: !!profile?.is_artist,
     isArtist: !!profile?.is_artist,
+
+    is_seller: !!profile?.is_seller,
     isSeller: !!profile?.is_seller,
+
+    is_verified: !!profile?.is_verified,
     isVerified: !!profile?.is_verified
+  };
+}
+
+export function getProfileKey(profileOverride = null) {
+  return getProfileIdentity(profileOverride).id;
+}
+
+export function buildProfileInsert(values = {}, profileOverride = null) {
+  const identity = getProfileIdentity(profileOverride);
+
+  return {
+    user_id: identity.user_id,
+    username: identity.username,
+    display_name: identity.display_name,
+    ...values
+  };
+}
+
+export function buildCreatorInsert(values = {}, profileOverride = null) {
+  const identity = getProfileIdentity(profileOverride);
+
+  return {
+    creator_id: identity.id,
+    username: identity.username,
+    display_name: identity.display_name,
+    ...values
+  };
+}
+
+export function buildOwnerInsert(values = {}, profileOverride = null) {
+  const identity = getProfileIdentity(profileOverride);
+
+  return {
+    owner_id: identity.id,
+    username: identity.username,
+    display_name: identity.display_name,
+    ...values
+  };
+}
+
+export function buildSellerInsert(values = {}, profileOverride = null) {
+  const identity = getProfileIdentity(profileOverride);
+
+  return {
+    seller_id: identity.id,
+    username: identity.username,
+    display_name: identity.display_name,
+    ...values
   };
 }
 
@@ -114,19 +199,13 @@ export async function updateMyProfile(values = {}) {
 export function profileAvatar(profile = null) {
   const active = profile || getProfile();
 
-  return (
-    active?.avatar_url ||
-    DEFAULT_AVATAR
-  );
+  return active?.avatar_url || DEFAULT_AVATAR;
 }
 
 export function profileBanner(profile = null) {
   const active = profile || getProfile();
 
-  return (
-    active?.banner_url ||
-    DEFAULT_BANNER
-  );
+  return active?.banner_url || DEFAULT_BANNER;
 }
 
 export function profileName(profile = null) {
