@@ -1,6 +1,10 @@
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
 
 function json(res, status, data) {
   return res.status(status).json(data);
@@ -46,32 +50,34 @@ async function supabaseFetch(path, options = {}) {
     }
   });
 
-  const text = await response.text();
+  const raw = await response.text();
+
   let data = null;
 
   try {
-    data = text ? JSON.parse(text) : null;
+    data = raw ? JSON.parse(raw) : null;
   } catch {
-    data = text;
+    data = raw;
   }
 
   if (!response.ok) {
-    const message =
+    throw new Error(
       data?.message ||
-      data?.error ||
-      data?.hint ||
-      `Supabase request failed with ${response.status}`;
-
-    throw new Error(message);
+        data?.error ||
+        data?.hint ||
+        `Supabase request failed with ${response.status}`
+    );
   }
 
   return data;
 }
 
 async function getUserFromAuth(req) {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const authHeader =
+    req.headers.authorization ||
+    req.headers.Authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return null;
   }
 
@@ -98,7 +104,7 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  if (req.method !== "POST" && req.method !== "PATCH") {
+  if (!["POST", "PATCH"].includes(req.method)) {
     return json(res, 405, {
       ok: false,
       error: "Method not allowed"
@@ -132,11 +138,11 @@ export default async function handler(req, res) {
       });
     }
 
-    const existingRows = await supabaseFetch(
+    const rows = await supabaseFetch(
       `/live_streams?id=eq.${encodeURIComponent(streamId)}&select=*`
     );
 
-    const existing = existingRows?.[0];
+    const existing = rows?.[0];
 
     if (!existing) {
       return json(res, 404, {
@@ -152,6 +158,9 @@ export default async function handler(req, res) {
       });
     }
 
+    const status = safeStatus(body.status);
+    const accessType = safeAccessType(body.access_type || body.accessType);
+
     const patch = {
       updated_at: new Date().toISOString(),
       last_activity_at: new Date().toISOString()
@@ -160,8 +169,6 @@ export default async function handler(req, res) {
     const title = cleanText(body.title);
     const description = cleanText(body.description);
     const category = cleanText(body.category);
-    const status = safeStatus(body.status);
-    const accessType = safeAccessType(body.access_type || body.accessType);
     const statusLabel = cleanText(body.status_label || body.statusLabel);
     const displaySlug = cleanText(body.display_slug || body.displaySlug);
     const displayRoomName = cleanText(body.display_room_name || body.displayRoomName);
@@ -170,7 +177,7 @@ export default async function handler(req, res) {
     const recordingUrl = cleanText(body.recording_url || body.recordingUrl);
 
     if (title) patch.title = title;
-    if (description || body.description === "") patch.description = description;
+    if (body.description !== undefined) patch.description = description;
     if (category) patch.category = category;
     if (status) patch.status = status;
     if (accessType) patch.access_type = accessType;
@@ -182,7 +189,10 @@ export default async function handler(req, res) {
     if (recordingUrl) patch.recording_url = recordingUrl;
 
     if (body.price_cents !== undefined || body.priceCents !== undefined) {
-      patch.price_cents = toCents(body.price_cents ?? body.priceCents, existing.price_cents || 0);
+      patch.price_cents = toCents(
+        body.price_cents ?? body.priceCents,
+        existing.price_cents || 0
+      );
     }
 
     if (body.currency) {
