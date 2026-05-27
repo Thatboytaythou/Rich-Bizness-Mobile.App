@@ -1,13 +1,10 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/profile.css
+   LAYER 10 / 22
 
    CINEMATIC PROFILE EXPERIENCE
    Profile + Messages + Notifications + Creator/Admin Panels
-========================================= */
-
-/* =========================================
-   PROFILE PAGE BASE
 ========================================= */
 
 .rb-profile-page,
@@ -18,103 +15,133 @@
 .rb-settings-page,
 .rb-edit-page {
   position: relative;
+
   min-height: 100svh;
   overflow-x: hidden;
+
   color: var(--rb-white, #ffffff);
+
   background:
-    radial-gradient(circle at 18% 8%, rgba(16, 185, 129, 0.16), transparent 34%),
-    radial-gradient(circle at 86% 12%, rgba(250, 204, 21, 0.13), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.1), transparent 44%),
+    radial-gradient(circle at 18% 8%, rgba(16,185,129,.16), transparent 34%),
+    radial-gradient(circle at 86% 12%, rgba(250,204,21,.13), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(16,185,129,.1), transparent 44%),
     var(--rb-black, #020302);
 }
 
-/* =========================================
-   PROFILE HERO
-========================================= */
+/* HERO */
 
 .rb-profile-hero {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
+
   min-height: 420px;
+
+  overflow: hidden;
+  isolation: isolate;
+
   border-radius: 38px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.88));
+  border: 1px solid rgba(250,204,21,.16);
+
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.88));
+
   box-shadow:
-    0 40px 120px rgba(0, 0, 0, 0.52),
-    0 0 60px rgba(16, 185, 129, 0.12),
-    inset 0 0 90px rgba(250, 204, 21, 0.04);
+    0 40px 120px rgba(0,0,0,.52),
+    0 0 60px rgba(16,185,129,.12),
+    inset 0 0 90px rgba(250,204,21,.04);
 }
 
 .rb-profile-banner {
   position: absolute;
   inset: 0;
   z-index: 0;
+
   background-image: url("/images/brand/Avatar-hero-Banner.png.jpeg");
   background-size: cover;
   background-position: center;
+
   transform: scale(1.06);
-  filter: saturate(1.18) contrast(1.08) brightness(0.88);
+
+  filter:
+    saturate(1.18)
+    contrast(1.08)
+    brightness(.88);
 }
 
 .rb-profile-banner::after {
   content: "";
+
   position: absolute;
   inset: 0;
+
   background:
-    radial-gradient(circle at 22% 28%, rgba(16, 185, 129, 0.2), transparent 36%),
-    radial-gradient(circle at 78% 34%, rgba(250, 204, 21, 0.16), transparent 34%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.38) 32%, rgba(0, 0, 0, 0.94) 82%);
+    radial-gradient(circle at 22% 28%, rgba(16,185,129,.2), transparent 36%),
+    radial-gradient(circle at 78% 34%, rgba(250,204,21,.16), transparent 34%),
+    linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.38) 32%, rgba(0,0,0,.94) 82%);
 }
 
 .rb-profile-hero::before {
   content: "";
+
   position: absolute;
   left: 50%;
   bottom: -160px;
+
   width: 720px;
   height: 720px;
+
   transform: translateX(-50%);
+
   border-radius: 50%;
+
   background:
-    radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(250, 204, 21, 0.13) 28%, transparent 68%);
+    radial-gradient(circle, rgba(16,185,129,.28) 0%, rgba(250,204,21,.13) 28%, transparent 68%);
+
   filter: blur(30px);
-  opacity: 0.88;
+
+  opacity: .88;
+
   pointer-events: none;
-  animation: rbProfileAura 9s ease-in-out infinite;
+
+  animation:
+    rbProfileAura 9s ease-in-out infinite;
 }
 
 .rb-profile-hero::after {
   content: "";
+
   position: absolute;
   inset: 0;
   z-index: 2;
+
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.018) 0,
-      rgba(255, 255, 255, 0.018) 1px,
+      rgba(255,255,255,.018) 0,
+      rgba(255,255,255,.018) 1px,
       transparent 1px,
       transparent 9px
     );
+
   mix-blend-mode: soft-light;
-  opacity: 0.4;
+  opacity: .4;
+
   pointer-events: none;
 }
 
 .rb-profile-inner {
   position: relative;
   z-index: 4;
+
   min-height: 420px;
+
   display: flex;
   align-items: flex-end;
   gap: 34px;
+
   padding: clamp(24px, 4vw, 48px);
 }
 
-/* =========================================
-   AVATAR
-========================================= */
+/* AVATAR */
 
 .rb-profile-avatar-wrap {
   position: relative;
@@ -123,25 +150,42 @@
 
 .rb-profile-avatar-wrap::before {
   content: "";
+
   position: absolute;
   inset: -14px;
+
   border-radius: 50%;
+
   background:
-    conic-gradient(from 0deg, rgba(16, 185, 129, 0.88), rgba(250, 204, 21, 0.72), rgba(16, 185, 129, 0.88));
+    conic-gradient(
+      from 0deg,
+      rgba(16,185,129,.88),
+      rgba(250,204,21,.72),
+      rgba(168,85,247,.46),
+      rgba(16,185,129,.88)
+    );
+
   filter: blur(14px);
-  opacity: 0.66;
-  animation: rbProfileSpin 14s linear infinite;
+
+  opacity: .66;
+
+  animation:
+    rbProfileSpin 14s linear infinite;
 }
 
 .rb-profile-avatar-wrap::after {
   content: "";
+
   position: absolute;
   inset: -22px;
+
   border-radius: 50%;
-  border: 1px solid rgba(250, 204, 21, 0.18);
+  border: 1px solid rgba(250,204,21,.18);
+
   box-shadow:
-    0 0 42px rgba(16, 185, 129, 0.18),
-    inset 0 0 28px rgba(250, 204, 21, 0.08);
+    0 0 42px rgba(16,185,129,.18),
+    inset 0 0 28px rgba(250,204,21,.08);
+
   pointer-events: none;
 }
 
@@ -150,19 +194,24 @@
 #creator-user-avatar {
   position: relative;
   z-index: 2;
+
   width: clamp(130px, 20vw, 190px);
   height: clamp(130px, 20vw, 190px);
+
   object-fit: cover;
+
   border-radius: 50%;
-  border: 4px solid rgba(255, 255, 255, 0.2);
+  border: 4px solid rgba(255,255,255,.2);
+
   background:
     #050505
     url("/images/brand/Avatar-hero-Banner.png.jpeg")
     center / cover no-repeat;
+
   box-shadow:
-    0 0 0 10px rgba(16, 185, 129, 0.1),
-    0 30px 70px rgba(0, 0, 0, 0.62),
-    0 0 65px rgba(16, 185, 129, 0.24);
+    0 0 0 10px rgba(16,185,129,.1),
+    0 30px 70px rgba(0,0,0,.62),
+    0 0 65px rgba(16,185,129,.24);
 }
 
 .rb-profile-online {
@@ -170,20 +219,24 @@
   right: 12px;
   bottom: 12px;
   z-index: 4;
+
   width: 26px;
   height: 26px;
+
   border-radius: 50%;
   border: 3px solid #041008;
+
   background: #66ff99;
+
   box-shadow:
-    0 0 22px rgba(102, 255, 153, 0.9),
-    0 0 44px rgba(16, 185, 129, 0.35);
-  animation: rbOnlinePulse 1.8s ease-in-out infinite;
+    0 0 22px rgba(102,255,153,.9),
+    0 0 44px rgba(16,185,129,.35);
+
+  animation:
+    rbOnlinePulse 1.8s ease-in-out infinite;
 }
 
-/* =========================================
-   PROFILE INFO
-========================================= */
+/* COPY */
 
 .rb-profile-copy {
   flex: 1;
@@ -193,40 +246,51 @@
 .rb-profile-kicker,
 .rb-kicker {
   margin: 0 0 10px;
+
   color: #8effcb;
-  font-size: 0.72rem;
+
+  font-size: .72rem;
   font-weight: 1000;
-  letter-spacing: 0.22em;
+  letter-spacing: .22em;
   text-transform: uppercase;
-  text-shadow: 0 0 16px rgba(16, 185, 129, 0.42);
+
+  text-shadow:
+    0 0 16px rgba(16,185,129,.42);
 }
 
 .rb-profile-copy h1,
 .rb-profile-card h1 {
   margin: 0;
+
   color: #ffffff;
+
   font-size: clamp(2.4rem, 6vw, 5rem);
-  line-height: 0.88;
-  letter-spacing: -0.06em;
+  line-height: .88;
+  letter-spacing: -.06em;
+
   text-shadow:
-    0 0 24px rgba(255, 255, 255, 0.1),
-    0 0 50px rgba(16, 185, 129, 0.12);
+    0 0 24px rgba(255,255,255,.1),
+    0 0 50px rgba(16,185,129,.12);
 }
 
 .rb-profile-username,
 .rb-profile-handle {
   margin-top: 12px;
+
   color: #8effcb;
-  font-size: 0.95rem;
+
+  font-size: .95rem;
   font-weight: 900;
-  letter-spacing: 0.16em;
+  letter-spacing: .16em;
   text-transform: uppercase;
 }
 
 .rb-profile-bio {
   margin-top: 18px;
   max-width: 760px;
-  color: rgba(255, 255, 255, 0.85);
+
+  color: rgba(255,255,255,.85);
+
   line-height: 1.75;
   font-size: 1rem;
 }
@@ -235,51 +299,70 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+
   margin-top: 18px;
   padding: 10px 16px;
+
   border-radius: 999px;
-  border: 1px solid rgba(102, 255, 153, 0.18);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(0, 0, 0, 0.34));
+  border: 1px solid rgba(102,255,153,.18);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,.12), rgba(0,0,0,.34));
+
   color: #8effcb;
-  font-size: 0.82rem;
+
+  font-size: .82rem;
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: .12em;
   text-transform: uppercase;
+
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.14);
+
+  box-shadow:
+    0 0 18px rgba(16,185,129,.14);
 }
 
 .rb-profile-status::before {
   content: "";
+
   width: 10px;
   height: 10px;
+
   border-radius: 50%;
+
   background: #66ff99;
-  box-shadow: 0 0 18px rgba(102, 255, 153, 0.9);
+
+  box-shadow:
+    0 0 18px rgba(102,255,153,.9);
 }
 
-/* =========================================
-   PROFILE CARD BLOCKS
-========================================= */
+/* CARD BLOCKS */
 
 .rb-profile-card {
   position: relative;
+
   overflow: hidden;
   isolation: isolate;
+
   padding: clamp(22px, 4vw, 34px);
+
   border-radius: 34px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
+  border: 1px solid rgba(250,204,21,.16);
+
   background:
-    radial-gradient(circle at 20% 12%, rgba(16, 185, 129, 0.16), transparent 34%),
-    radial-gradient(circle at 82% 88%, rgba(250, 204, 21, 0.11), transparent 34%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.88), rgba(0, 0, 0, 0.78));
+    radial-gradient(circle at 20% 12%, rgba(16,185,129,.16), transparent 34%),
+    radial-gradient(circle at 82% 88%, rgba(250,204,21,.11), transparent 34%),
+    linear-gradient(145deg, rgba(5,8,5,.88), rgba(0,0,0,.78));
+
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+
   box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.48),
-    0 0 44px rgba(16, 185, 129, 0.11),
-    inset 0 0 54px rgba(255, 255, 255, 0.018);
+    0 32px 90px rgba(0,0,0,.48),
+    0 0 44px rgba(16,185,129,.11),
+    inset 0 0 54px rgba(255,255,255,.018);
+
   text-align: center;
 }
 
@@ -293,9 +376,7 @@
   margin-right: auto;
 }
 
-/* =========================================
-   META PILLS + ACTIONS
-========================================= */
+/* META + ACTIONS */
 
 .rb-profile-meta,
 .rb-profile-actions,
@@ -319,40 +400,57 @@
 
 .rb-meta-pill {
   padding: 11px 18px;
+
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255,255,255,.1);
+
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+
   color: #ffffff;
-  font-size: 0.8rem;
+
+  font-size: .8rem;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
+
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.07);
+
+  box-shadow:
+    0 0 18px rgba(16,185,129,.07);
 }
 
 .rb-profile-actions .rb-btn,
 .rb-profile-actions button,
 .rb-profile-actions a {
   min-height: 48px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   padding: 0 18px;
+
   border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.22);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(250, 204, 21, 0.08));
+  border: 1px solid rgba(250,204,21,.22);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,.16), rgba(250,204,21,.08));
+
   color: #fefce8;
+
   font-weight: 1000;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
   text-decoration: none;
   text-transform: uppercase;
+
   cursor: pointer;
+
   transition:
-    transform 0.22s ease,
-    box-shadow 0.22s ease,
-    border-color 0.22s ease,
-    background 0.22s ease;
+    transform .22s ease,
+    box-shadow .22s ease,
+    border-color .22s ease,
+    background .22s ease;
 }
 
 .rb-profile-actions .rb-btn:hover,
@@ -360,90 +458,114 @@
 .rb-profile-actions a:hover,
 .rb-profile-actions .is-active {
   transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.52);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.26), rgba(250, 204, 21, 0.16));
+
+  border-color: rgba(16,185,129,.52);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,.26), rgba(250,204,21,.16));
+
   box-shadow:
-    0 0 22px rgba(16, 185, 129, 0.2),
-    0 0 42px rgba(250, 204, 21, 0.1);
+    0 0 22px rgba(16,185,129,.2),
+    0 0 42px rgba(250,204,21,.1);
 }
 
 .rb-profile-socials a,
 #profileWebsite {
+  min-height: 44px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+
   padding: 0 18px;
+
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255,255,255,.1);
+
+  background: rgba(255,255,255,.04);
+
   color: #ffffff;
-  font-size: 0.78rem;
+
+  font-size: .78rem;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
   text-transform: uppercase;
   text-decoration: none;
+
   transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    background 0.22s ease,
-    box-shadow 0.22s ease;
+    transform .22s ease,
+    border-color .22s ease,
+    background .22s ease,
+    box-shadow .22s ease;
 }
 
 .rb-profile-socials a:hover,
 #profileWebsite:hover {
   transform: translateY(-2px);
-  border-color: rgba(102, 255, 153, 0.28);
-  background: rgba(16, 185, 129, 0.1);
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.16);
+
+  border-color: rgba(102,255,153,.28);
+
+  background: rgba(16,185,129,.1);
+
+  box-shadow:
+    0 0 18px rgba(16,185,129,.16);
 }
 
-/* =========================================
-   TABS + PANELS
-========================================= */
+/* TABS */
 
 .rb-profile-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+
   margin: 22px 0;
 }
 
 .rb-profile-tabs button,
 [data-profile-tab] {
   min-height: 44px;
+
   padding: 0 16px;
+
   border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(250,204,21,.16);
+
+  background: rgba(255,255,255,.04);
+
+  color: rgba(255,255,255,.76);
+
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
   text-transform: uppercase;
+
   cursor: pointer;
+
   transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    color 0.22s ease,
-    background 0.22s ease;
+    transform .22s ease,
+    border-color .22s ease,
+    color .22s ease,
+    background .22s ease;
 }
 
 .rb-profile-tabs button:hover,
 [data-profile-tab]:hover,
 [data-profile-tab].is-active {
   color: #ffffff;
-  border-color: rgba(16, 185, 129, 0.46);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(250, 204, 21, 0.08));
+
+  border-color: rgba(16,185,129,.46);
+
+  background:
+    linear-gradient(135deg, rgba(16,185,129,.18), rgba(250,204,21,.08));
+
   transform: translateY(-2px);
 }
 
 [data-profile-panel] {
-  animation: rbProfilePanelIn 0.28s ease both;
+  animation:
+    rbProfilePanelIn .28s ease both;
 }
 
-/* =========================================
-   FEED + MINI PANELS
-========================================= */
+/* FEED + PANELS */
 
 .rb-profile-feed,
 #profileFeed {
@@ -458,13 +580,17 @@
 #profileEmpty,
 .rb-notification-card {
   border-radius: 24px;
-  border: 1px solid rgba(250, 204, 21, 0.14);
-  background: linear-gradient(145deg, rgba(5, 8, 5, 0.84), rgba(0, 0, 0, 0.72));
+  border: 1px solid rgba(250,204,21,.14);
+
+  background:
+    linear-gradient(145deg, rgba(5,8,5,.84), rgba(0,0,0,.72));
+
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+
   box-shadow:
-    0 0 28px rgba(0, 0, 0, 0.28),
-    inset 0 0 20px rgba(255, 255, 255, 0.02);
+    0 0 28px rgba(0,0,0,.28),
+    inset 0 0 20px rgba(255,255,255,.02);
 }
 
 .rb-feed-card {
@@ -479,15 +605,18 @@
 
 .rb-feed-card p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.86);
+
+  color: rgba(255,255,255,.86);
   line-height: 1.5;
 }
 
 .rb-feed-card img,
 .rb-feed-card video {
   width: 100%;
+
   border-radius: 18px;
   object-fit: cover;
+
   background: #000;
 }
 
@@ -500,51 +629,56 @@
 #profileEmpty,
 .rb-notification-card {
   padding: 18px;
-  color: rgba(255, 255, 255, 0.74);
+  color: rgba(255,255,255,.74);
 }
 
 .rb-mini-card h3,
 .rb-notification-card strong {
   display: block;
   margin: 0 0 8px;
+
   color: #facc15;
 }
 
 .rb-notification-card.is-unread {
-  border-color: rgba(102, 255, 153, 0.34);
+  border-color: rgba(102,255,153,.34);
+
   box-shadow:
-    0 0 28px rgba(16, 185, 129, 0.14),
-    inset 0 0 22px rgba(16, 185, 129, 0.05);
+    0 0 28px rgba(16,185,129,.14),
+    inset 0 0 22px rgba(16,185,129,.05);
 }
 
-/* =========================================
-   READY + ERROR STATES
-========================================= */
+/* STATES */
 
 .rb-profile-page:not(.rb-profile-ready) .rb-profile-hero {
-  opacity: 0.94;
+  opacity: .94;
 }
 
 .rb-page-error .rb-profile-status,
 .rb-page-error #profileStatus {
   color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.28);
-  background: rgba(239, 68, 68, 0.12);
+
+  border-color: rgba(239,68,68,.28);
+  background: rgba(239,68,68,.12);
 }
 
-/* =========================================
-   ANIMATIONS
-========================================= */
+/* ANIMATIONS */
 
 @keyframes rbProfileAura {
   0%,
   100% {
-    transform: translateX(-50%) scale(1);
-    opacity: 0.75;
+    transform:
+      translateX(-50%)
+      scale(1);
+
+    opacity: .75;
   }
 
   50% {
-    transform: translateX(-50%) scale(1.1);
+    transform:
+      translateX(-50%)
+      scale(1.1);
+
     opacity: 1;
   }
 }
@@ -562,8 +696,8 @@
 @keyframes rbOnlinePulse {
   0%,
   100% {
-    transform: scale(0.92);
-    opacity: 0.78;
+    transform: scale(.92);
+    opacity: .78;
   }
 
   50% {
@@ -584,9 +718,7 @@
   }
 }
 
-/* =========================================
-   MOBILE RESPONSIVE
-========================================= */
+/* MOBILE */
 
 @media (max-width: 920px) {
   .rb-profile-inner {
@@ -637,7 +769,7 @@
   }
 
   .rb-profile-bio {
-    font-size: 0.94rem;
+    font-size: .94rem;
   }
 
   .rb-profile-actions .rb-btn,
