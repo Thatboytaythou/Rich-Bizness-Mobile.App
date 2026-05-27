@@ -3,7 +3,7 @@
    /core/pages/settings.js
 
    SETTINGS PAGE CONTROLLER
-   Synced with auth + profile-state
+   Profile Lock + Auth + Realtime Settings
 ========================================= */
 
 import {
@@ -15,8 +15,14 @@ import {
 } from "/core/app.js";
 
 import {
-  RB_ROUTES
+  RB_ROUTES,
+  RB_TABLES,
+  RB_PROFILE_KEYS
 } from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   rbSignOut,
@@ -52,31 +58,40 @@ const els = {
   badge: $("settings-badge"),
   editBtn: $("settings-edit-btn"),
   profileBtn: $("settings-profile-btn"),
-  signOutBtn: $("settings-signout-btn")
+  signOutBtn: $("settings-signout-btn"),
+  syncStatus: $("settings-sync-status"),
+  profileLock: $("settings-profile-lock")
 };
 
+let supabase = null;
+let channel = null;
 let actionsBound = false;
 
-/* ======================
-   RENDERING
-====================== */
+function state() {
+  return getCurrentUserState?.() || {};
+}
+
+function currentUser() {
+  return state().user || null;
+}
+
+function currentProfile() {
+  return state().profile || null;
+}
+
+function setText(el, value) {
+  if (el) el.textContent = value ?? "";
+}
 
 function paintSettings() {
-  const state = getCurrentUserState();
-  const user = state?.user || null;
-  const profile = state?.profile || null;
+  const user = currentUser();
+  const profile = currentProfile();
 
-  if (els.email) {
-    els.email.textContent = user?.email || "Guest Mode";
-  }
-
-  if (els.name) {
-    els.name.textContent = profileName(profile);
-  }
-
-  if (els.handle) {
-    els.handle.textContent = profileHandle(profile);
-  }
+  setText(els.email, user?.email || "Guest Mode");
+  setText(els.name, profileName(profile));
+  setText(els.handle, profileHandle(profile));
+  setText(els.badge, profileBadge(profile));
+  setText(els.role, String(profile?.role || "user").toUpperCase());
 
   if (els.avatar) {
     const avatarUrl = profileAvatar(profile);
@@ -89,36 +104,82 @@ function paintSettings() {
     }
   }
 
-  if (els.badge) {
-    els.badge.textContent = profileBadge(profile);
-  }
-
-  if (els.role) {
-    els.role.textContent = String(profile?.role || "user").toUpperCase();
-  }
-
   if (els.status) {
     const role = profile?.role || "user";
 
     if (profile?.is_verified) {
       els.status.textContent = "✅ Verified";
       els.status.style.color = "#66ff99";
-    } else if (profile?.is_creator || profile?.is_artist || profile?.is_seller) {
-      els.status.textContent = "Creator Access";
-      els.status.style.color = "";
     } else if (["admin", "owner", "super_admin", "founder", "rich_admin"].includes(role)) {
       els.status.textContent = "Admin Access";
       els.status.style.color = "#ffd86b";
+    } else if (profile?.is_creator || profile?.is_artist || profile?.is_seller) {
+      els.status.textContent = "Creator Access";
+      els.status.style.color = "";
     } else {
       els.status.textContent = "Standard Member";
       els.status.style.color = "";
     }
   }
+
+  setText(
+    els.syncStatus,
+    profile?.id ? "Settings synced" : "Waiting for profile"
+  );
+
+  setText(
+    els.profileLock,
+    profile?.id
+      ? `Profile locked through ${RB_PROFILE_KEYS?.identitySource || "profiles"}`
+      : "Profile lock required"
+  );
 }
 
-/* ======================
-   ACTIONS
-====================== */
+function clearRealtime() {
+  if (channel && supabase) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+}
+
+function bindRealtime() {
+  const user = currentUser();
+  if (!user?.id || !supabase) return;
+
+  clearRealtime();
+
+  channel = supabase
+    .channel(`rb-settings-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.profiles,
+        filter: `id=eq.${user.id}`
+      },
+      async () => {
+        await refreshProfileState();
+        await refreshAppIdentity();
+        paintSettings();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.userSettings,
+        filter: `user_id=eq.${user.id}`
+      },
+      async () => {
+        await refreshProfileState();
+        await refreshAppIdentity();
+        paintSettings();
+      }
+    )
+    .subscribe();
+}
 
 function bindSettingsActions() {
   if (actionsBound) return;
@@ -142,8 +203,6 @@ function bindSettingsActions() {
       await rbSignOut({
         redirectTo: RB_ROUTES.auth || "/auth"
       });
-
-      toastInfo("Signed out successfully.");
     } catch (error) {
       console.error("[RB SETTINGS SIGNOUT FAILED]", error);
       toastError(error?.message || "Sign out failed.");
@@ -152,11 +211,9 @@ function bindSettingsActions() {
       els.signOutBtn.textContent = "Sign Out";
     }
   });
-}
 
-/* ======================
-   BOOT
-====================== */
+  window.addEventListener("beforeunload", clearRealtime);
+}
 
 async function bootSettingsPage() {
   try {
@@ -166,6 +223,8 @@ async function bootSettingsPage() {
       toast: false
     });
 
+    supabase = getSupabase();
+
     await ensureMyProfile();
     await refreshProfileState();
     await refreshAppIdentity();
@@ -174,10 +233,14 @@ async function bootSettingsPage() {
     bindSettingsActions();
 
     onProfileState((profileState) => {
-      if (!profileState.ready) return;
+      if (!profileState?.ready) return;
       paintSettings();
     });
 
+    bindRealtime();
+
+    document.body.dataset.rbPage = "settings";
+    document.body.dataset.rbProfileLock = "true";
     document.body.classList.add("rb-settings-ready");
 
     markPageReady("settings");
@@ -186,6 +249,7 @@ async function bootSettingsPage() {
   } catch (error) {
     console.error("[RB SETTINGS BOOT FAILED]", error);
     markPageError(error);
+    toastError(error?.message || "Settings failed to load.");
   }
 }
 
