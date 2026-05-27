@@ -1,7 +1,9 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/three-avatar.css
-   LAYER 3 / AVATAR ENGINE
+   LAYER 5 / 22
+
+   REALTIME 3D AVATAR ENGINE
 ========================================= */
 
 /* =========================
@@ -11,22 +13,27 @@
 .rb-avatar-player {
   position: fixed;
   left: 50%;
-  bottom: 142px;
+  bottom: 138px;
 
   z-index: 18;
 
   width: clamp(130px, 18vw, 220px);
   height: clamp(130px, 18vw, 220px);
 
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0);
 
   pointer-events: none;
   user-select: none;
+
+  isolation: isolate;
 
   transition:
     transform .28s ease,
     opacity .28s ease,
     filter .28s ease;
+
+  animation:
+    rbAvatarFloat 6s ease-in-out infinite;
 }
 
 /* =========================
@@ -43,20 +50,23 @@
   overflow: hidden;
 
   background:
-    radial-gradient(circle at 50% 30%, rgba(0,255,157,.22), transparent 58%),
+    radial-gradient(circle at 50% 26%, rgba(255,255,255,.08), transparent 26%),
+    radial-gradient(circle at 50% 44%, rgba(0,255,157,.24), transparent 54%),
     linear-gradient(180deg, #07110c 0%, #020302 100%);
 
   border: 1px solid rgba(255,255,255,.08);
 
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
   box-shadow:
-    0 0 30px rgba(0,255,157,.12),
-    0 0 80px rgba(0,0,0,.55),
-    inset 0 0 30px rgba(255,255,255,.03);
+    0 0 24px rgba(0,255,157,.12),
+    0 0 90px rgba(0,0,0,.62),
+    inset 0 0 34px rgba(255,255,255,.04);
 
   isolation: isolate;
+
+  transform-style: preserve-3d;
 }
 
 /* =========================
@@ -67,7 +77,7 @@
   content: "";
 
   position: absolute;
-  inset: -8px;
+  inset: -10px;
 
   border-radius: 50%;
 
@@ -75,16 +85,42 @@
     conic-gradient(
       from 0deg,
       rgba(0,255,157,.9),
-      rgba(250,204,21,.7),
+      rgba(34,211,238,.72),
+      rgba(250,204,21,.72),
+      rgba(168,85,247,.68),
       rgba(0,255,157,.9)
     );
 
-  opacity: .45;
+  opacity: .52;
 
-  filter: blur(14px);
+  filter:
+    blur(14px)
+    saturate(1.2);
 
   animation:
     rbAvatarSpin 12s linear infinite;
+
+  z-index: 0;
+}
+
+/* =========================
+   SECONDARY RING
+========================= */
+
+.rb-avatar-ring {
+  position: absolute;
+  inset: -18px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  opacity: .42;
+
+  filter: blur(.4px);
+
+  animation:
+    rbAvatarSpinReverse 16s linear infinite;
 
   z-index: 0;
 }
@@ -102,10 +138,12 @@
   border-radius: 50%;
 
   background:
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 32%),
-    radial-gradient(circle at 70% 78%, rgba(250,204,21,.08), transparent 34%);
+    radial-gradient(circle at 28% 20%, rgba(255,255,255,.14), transparent 30%),
+    radial-gradient(circle at 72% 78%, rgba(250,204,21,.10), transparent 32%),
+    radial-gradient(circle at center, transparent 44%, rgba(255,255,255,.03) 100%);
 
-  z-index: 2;
+  z-index: 3;
+
   pointer-events: none;
 }
 
@@ -125,10 +163,42 @@
 
   border-radius: 50%;
 
+  background: transparent;
+
   transform: translateZ(0);
 
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+
+  will-change:
+    transform,
+    opacity;
+}
+
+/* =========================
+   AVATAR SHADOW FLOOR
+========================= */
+
+.rb-avatar-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+
+  width: 64%;
+  height: 18px;
+
+  border-radius: 50%;
+
+  transform: translateX(-50%);
+
+  background:
+    radial-gradient(circle, rgba(0,0,0,.58), transparent 72%);
+
+  filter: blur(10px);
+
+  opacity: .6;
+
+  z-index: -1;
 }
 
 /* =========================
@@ -136,6 +206,8 @@
 ========================= */
 
 .rb-avatar-mini {
+  position: relative;
+
   width: 42px;
   height: 42px;
 
@@ -144,8 +216,10 @@
   display: grid;
   place-items: center;
 
+  overflow: hidden;
+
   background:
-    radial-gradient(circle at 30% 30%, rgba(0,255,157,.18), transparent 60%),
+    radial-gradient(circle at 30% 30%, rgba(0,255,157,.2), transparent 60%),
     linear-gradient(180deg, #07110c, #020302);
 
   border: 1px solid rgba(255,255,255,.08);
@@ -153,11 +227,36 @@
   color: #ffffff;
   font-size: 1rem;
 
-  overflow: hidden;
-
   box-shadow:
-    0 0 18px rgba(0,255,157,.14),
+    0 0 18px rgba(0,255,157,.16),
     inset 0 0 14px rgba(255,255,255,.03);
+}
+
+.rb-avatar-mini::before {
+  content: "";
+
+  position: absolute;
+  inset: -4px;
+
+  border-radius: 50%;
+
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(0,255,157,.6),
+      rgba(250,204,21,.6),
+      rgba(168,85,247,.6),
+      rgba(0,255,157,.6)
+    );
+
+  opacity: .42;
+
+  filter: blur(8px);
+
+  animation:
+    rbAvatarSpin 8s linear infinite;
+
+  z-index: -1;
 }
 
 /* =========================
@@ -166,17 +265,24 @@
 
 .rb-avatar-player.is-talking {
   filter:
-    drop-shadow(0 0 22px rgba(0,255,157,.38));
+    drop-shadow(0 0 22px rgba(0,255,157,.42))
+    brightness(1.08);
 }
 
 .rb-avatar-player.is-live .rb-avatar-3d-container::before {
-  opacity: .82;
+  opacity: .9;
 
-  animation-duration: 4s;
+  animation-duration: 3.5s;
+}
+
+.rb-avatar-player.is-live {
+  filter:
+    drop-shadow(0 0 34px rgba(250,204,21,.24));
 }
 
 .rb-avatar-player.is-hidden {
   opacity: 0;
+
   transform:
     translateX(-50%)
     translateY(30px)
@@ -184,12 +290,74 @@
 }
 
 /* =========================
+   HOVER ENERGY
+========================= */
+
+.rb-avatar-player.is-active {
+  transform:
+    translateX(-50%)
+    scale(1.04);
+
+  filter:
+    drop-shadow(0 0 34px rgba(0,255,157,.34));
+}
+
+/* =========================
+   ENERGY PULSE
+========================= */
+
+.rb-avatar-pulse {
+  position: absolute;
+  inset: -14px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(0,255,157,.16);
+
+  opacity: 0;
+
+  transform: scale(.82);
+
+  pointer-events: none;
+}
+
+.rb-avatar-player.is-speaking .rb-avatar-pulse,
+.rb-avatar-player.is-talking .rb-avatar-pulse {
+  animation:
+    rbAvatarPulse 1.2s ease-out infinite;
+}
+
+/* =========================
    FLOAT MOTION
 ========================= */
 
-.rb-avatar-player {
+.rb-avatar-floating {
   animation:
     rbAvatarFloat 6s ease-in-out infinite;
+}
+
+/* =========================
+   CINEMATIC GLOW
+========================= */
+
+.rb-avatar-cinema-glow {
+  position: absolute;
+  inset: -26%;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle, rgba(0,255,157,.18), transparent 62%);
+
+  filter:
+    blur(28px);
+
+  opacity: .58;
+
+  z-index: -2;
+
+  animation:
+    rbAvatarGlow 8s ease-in-out infinite;
 }
 
 /* =========================
@@ -197,7 +365,8 @@
 ========================= */
 
 @keyframes rbAvatarFloat {
-  0%, 100% {
+  0%,
+  100% {
     transform:
       translateX(-50%)
       translateY(0px);
@@ -220,6 +389,41 @@
   }
 }
 
+@keyframes rbAvatarSpinReverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes rbAvatarPulse {
+  0% {
+    opacity: .72;
+    transform: scale(.82);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes rbAvatarGlow {
+  0%,
+  100% {
+    opacity: .42;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: .82;
+    transform: scale(1.08);
+  }
+}
+
 /* =========================
    MOBILE
 ========================= */
@@ -228,11 +432,43 @@
   .rb-avatar-player {
     width: 118px;
     height: 118px;
-    bottom: 118px;
+
+    bottom: 116px;
   }
 
   .rb-avatar-mini {
     width: 38px;
     height: 38px;
+  }
+
+  .rb-avatar-3d-container::before {
+    inset: -8px;
+  }
+}
+
+/* =========================
+   EXTRA SMALL DEVICES
+========================= */
+
+@media (max-width: 420px) {
+  .rb-avatar-player {
+    width: 104px;
+    height: 104px;
+
+    bottom: 112px;
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-avatar-player,
+  .rb-avatar-3d-container::before,
+  .rb-avatar-ring,
+  .rb-avatar-mini::before,
+  .rb-avatar-cinema-glow {
+    animation: none !important;
   }
 }
