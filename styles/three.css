@@ -1,9 +1,10 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/three.css
+   LAYER 2 / INDEX PORTAL ENGINE
 
    THREE.JS CANVAS LAYER
-   Locked Portal Hub Canvas
+   The canvas IS the portal.
 ========================= */
 
 #canvas-container {
@@ -15,6 +16,7 @@
   height: 100vh;
   height: 100svh;
   height: 100dvh;
+  height: calc(var(--rb-vh, 1vh) * 100);
 
   overflow: hidden;
   pointer-events: auto;
@@ -22,21 +24,59 @@
   background: transparent;
 
   contain: layout paint size;
-  transform: translateZ(0);
+  isolation: isolate;
+
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 
-  isolation: isolate;
+  touch-action: none;
+}
+
+#canvas-container::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 50% 44%, rgba(0,255,157,.16), transparent 32%),
+    radial-gradient(circle at 50% 52%, rgba(250,204,21,.08), transparent 46%),
+    radial-gradient(circle at 18% 24%, rgba(0,255,157,.08), transparent 30%),
+    radial-gradient(circle at 82% 74%, rgba(250,204,21,.06), transparent 34%);
+
+  filter: blur(38px);
+  mix-blend-mode: screen;
+  opacity: .7;
+
+  animation: rbCanvasAuraDrift 12s ease-in-out infinite alternate;
+}
+
+#canvas-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at center, transparent 0%, transparent 44%, rgba(0,0,0,.34) 78%, rgba(0,0,0,.78) 100%),
+    linear-gradient(180deg, rgba(0,0,0,.12), transparent 38%, rgba(0,0,0,.18));
+
+  opacity: .72;
 }
 
 #canvas-container canvas {
   position: absolute;
   inset: 0;
+  z-index: 1;
 
   width: 100vw !important;
   height: 100vh !important;
   height: 100svh !important;
   height: 100dvh !important;
+  height: calc(var(--rb-vh, 1vh) * 100) !important;
 
   display: block;
 
@@ -50,7 +90,7 @@
 
   image-rendering: auto;
 
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 
@@ -58,7 +98,7 @@
 }
 
 /* =========================
-   HUB LAYER LOCK
+   INDEX LAYER LOCK
 ========================= */
 
 .rb-index-page #canvas-container {
@@ -77,24 +117,52 @@
   z-index: 0;
 }
 
-.rb-index-page .rb-portal-ui {
-  z-index: 2;
-}
-
 .rb-index-page .rb-brand-header,
 .rb-index-page .rb-profile-chip,
+.rb-index-page .rb-tab-dropper,
+.rb-index-page .rb-slide-menu,
 .rb-index-page .rb-side-tabs,
 .rb-index-page .rb-bottom-nav,
-.rb-index-page .rb-module-label {
+.rb-index-page .rb-module-label,
+.rb-index-page .rb-avatar-player {
   z-index: 20;
 }
 
 .rb-index-page #rb-notify-root {
-  z-index: 30;
+  z-index: 40;
 }
 
-.rb-index-page canvas {
-  image-rendering: auto;
+/* =========================
+   SECTION BACKDROP MODE
+   For later page transitions
+========================= */
+
+.rb-portal-backdrop #canvas-container {
+  opacity: .22;
+  filter:
+    saturate(1.18)
+    blur(.3px);
+  pointer-events: none;
+}
+
+.rb-portal-backdrop #canvas-container::after {
+  opacity: .88;
+}
+
+/* =========================
+   ANIMATION
+========================= */
+
+@keyframes rbCanvasAuraDrift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+    opacity: .54;
+  }
+
+  100% {
+    transform: translate3d(1.5%, 1.5%, 0) scale(1.08);
+    opacity: .82;
+  }
 }
 
 /* =========================
@@ -106,6 +174,17 @@
   #canvas-container canvas {
     width: 100vw !important;
     height: 100dvh !important;
+    height: calc(var(--rb-vh, 1vh) * 100) !important;
+  }
+
+  #canvas-container::before {
+    inset: -18%;
+    filter: blur(30px);
+    opacity: .58;
+  }
+
+  #canvas-container::after {
+    opacity: .78;
   }
 }
 
@@ -114,6 +193,10 @@
 ========================= */
 
 @media (prefers-reduced-motion: reduce) {
+  #canvas-container::before {
+    animation: none;
+  }
+
   #canvas-container canvas {
     will-change: auto;
   }
