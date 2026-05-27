@@ -1,104 +1,339 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/omni-fx.css
-   LAYER 5 / PORTAL ATMOSPHERE FX
+   LAYER 6 / 22
+
+   PORTAL ATMOSPHERE FX
 ========================= */
 
 .rb-fx-smoke {
   position: fixed;
-  inset: -18%;
+  inset: -22%;
+
   z-index: 0;
+
   pointer-events: none;
 
   background:
-    radial-gradient(circle at 18% 34%, rgba(0,255,157,.14), transparent 34%),
-    radial-gradient(circle at 78% 28%, rgba(250,204,21,.08), transparent 32%),
-    radial-gradient(circle at 50% 78%, rgba(16,185,129,.12), transparent 42%);
+    radial-gradient(circle at 18% 34%, rgba(0,255,157,.18), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(250,204,21,.11), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(16,185,129,.14), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(168,85,247,.08), transparent 48%);
 
-  filter: blur(50px);
-  opacity: .46;
+  filter:
+    blur(54px)
+    saturate(1.18);
+
+  opacity: .52;
+
   mix-blend-mode: screen;
 
-  animation: rbSmokeDrift 18s ease-in-out infinite alternate;
-  will-change: transform;
+  animation:
+    rbSmokeDrift 20s ease-in-out infinite alternate,
+    rbSmokeBreathe 9s ease-in-out infinite;
+
+  will-change:
+    transform,
+    opacity,
+    filter;
 }
+
+/* =========================
+   BACKGROUND FX LAYERS
+========================= */
 
 .rb-bg-grid,
 .rb-bg-vignette,
 .rb-bg-noise {
   position: fixed;
   inset: 0;
+
   z-index: 0;
+
   pointer-events: none;
 }
 
+/* =========================
+   HOLOGRAM GRID
+========================= */
+
 .rb-bg-grid {
-  opacity: .035;
+  opacity: .042;
+
   background-image:
-    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    linear-gradient(rgba(0,255,157,.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250,204,21,.09) 1px, transparent 1px);
+
   background-size: 58px 58px;
-  mask-image: radial-gradient(circle at center, black 0%, transparent 74%);
-  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 74%);
+
+  mask-image:
+    radial-gradient(circle at center, black 0%, transparent 74%);
+
+  -webkit-mask-image:
+    radial-gradient(circle at center, black 0%, transparent 74%);
+
+  transform-origin: center;
+
+  animation:
+    rbGridDrift 24s linear infinite;
 }
+
+/* =========================
+   CINEMATIC VIGNETTE
+========================= */
 
 .rb-bg-vignette {
   background:
-    radial-gradient(circle at center, transparent 22%, rgba(0,0,0,.08) 58%, rgba(0,0,0,.34) 100%);
-  opacity: .72;
+    radial-gradient(
+      circle at center,
+      transparent 18%,
+      rgba(0,0,0,.06) 52%,
+      rgba(0,0,0,.38) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.16),
+      transparent 32%,
+      rgba(0,0,0,.28)
+    );
+
+  opacity: .78;
 }
 
+/* =========================
+   SOFT FILM NOISE
+========================= */
+
 .rb-bg-noise {
-  opacity: .014;
+  opacity: .018;
+
   mix-blend-mode: soft-light;
+
   background-image:
     repeating-radial-gradient(
       circle at 20% 30%,
       rgba(255,255,255,.42) 0 1px,
       transparent 1px 4px
     );
+
+  background-size: 96px 96px;
+
+  animation:
+    rbNoiseShift 1.8s steps(2) infinite;
 }
 
+/* =========================
+   EXTRA SPACE HAZE
+========================= */
+
+.rb-space-haze {
+  position: fixed;
+  inset: -16%;
+
+  z-index: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 50% 45%, rgba(0,255,157,.10), transparent 36%),
+    radial-gradient(circle at 36% 68%, rgba(250,204,21,.07), transparent 34%),
+    radial-gradient(circle at 70% 26%, rgba(34,211,238,.07), transparent 28%);
+
+  filter: blur(46px);
+
+  opacity: .44;
+
+  mix-blend-mode: screen;
+
+  animation:
+    rbHazeFloat 16s ease-in-out infinite alternate;
+}
+
+/* =========================
+   ENERGY STATES
+========================= */
+
 .rb-orbit-live-energy .rb-fx-smoke {
-  opacity: .62;
-  filter: blur(56px);
+  opacity: .72;
+
+  filter:
+    blur(60px)
+    saturate(1.35);
+
+  background:
+    radial-gradient(circle at 18% 34%, rgba(0,255,157,.26), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(250,204,21,.16), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(16,185,129,.22), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(168,85,247,.12), transparent 48%);
+}
+
+.rb-orbit-live-energy .rb-bg-vignette {
+  opacity: .68;
 }
 
 .rb-orbit-presence-energy .rb-bg-grid {
-  opacity: .055;
+  opacity: .064;
 }
+
+.rb-orbit-presence-energy .rb-bg-noise {
+  opacity: .024;
+}
+
+/* =========================
+   PORTAL THEME BODY HOOKS
+========================= */
+
+.rb-theme-blue .rb-fx-smoke {
+  background:
+    radial-gradient(circle at 18% 34%, rgba(34,211,238,.18), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(147,197,253,.12), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(59,130,246,.12), transparent 40%);
+}
+
+.rb-theme-purple .rb-fx-smoke {
+  background:
+    radial-gradient(circle at 18% 34%, rgba(168,85,247,.18), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(244,114,182,.12), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(192,132,252,.12), transparent 40%);
+}
+
+.rb-theme-gold .rb-fx-smoke,
+.rb-theme-black-gold .rb-fx-smoke {
+  background:
+    radial-gradient(circle at 18% 34%, rgba(250,204,21,.16), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(255,226,122,.12), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(0,255,157,.08), transparent 40%);
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
 
 @keyframes rbSmokeDrift {
   0% {
-    transform: translate3d(-2%, -1%, 0) scale(1);
+    transform:
+      translate3d(-2%, -1%, 0)
+      scale(1);
   }
 
   100% {
-    transform: translate3d(2%, 2%, 0) scale(1.08);
+    transform:
+      translate3d(2%, 2%, 0)
+      scale(1.09);
   }
 }
 
+@keyframes rbSmokeBreathe {
+  0%,
+  100% {
+    opacity: .44;
+  }
+
+  50% {
+    opacity: .66;
+  }
+}
+
+@keyframes rbGridDrift {
+  0% {
+    transform:
+      translate3d(0,0,0)
+      scale(1);
+  }
+
+  100% {
+    transform:
+      translate3d(-58px,58px,0)
+      scale(1.02);
+  }
+}
+
+@keyframes rbNoiseShift {
+  0% {
+    transform: translate3d(0,0,0);
+  }
+
+  50% {
+    transform: translate3d(2px,-2px,0);
+  }
+
+  100% {
+    transform: translate3d(-2px,2px,0);
+  }
+}
+
+@keyframes rbHazeFloat {
+  0% {
+    transform:
+      translate3d(-1%, -1%, 0)
+      scale(1);
+  }
+
+  100% {
+    transform:
+      translate3d(1%, 2%, 0)
+      scale(1.08);
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
 @media (max-width: 720px) {
   .rb-fx-smoke {
-    filter: blur(40px);
+    inset: -28%;
+
+    filter:
+      blur(42px)
+      saturate(1.12);
+
+    opacity: .42;
+  }
+
+  .rb-bg-grid {
+    opacity: .032;
+    background-size: 52px 52px;
+  }
+
+  .rb-bg-vignette {
+    opacity: .8;
+  }
+
+  .rb-bg-noise {
+    opacity: .012;
+  }
+
+  .rb-space-haze {
+    filter: blur(34px);
+    opacity: .34;
+  }
+}
+
+/* =========================
+   EXTRA SMALL
+========================= */
+
+@media (max-width: 420px) {
+  .rb-fx-smoke {
+    filter: blur(36px);
     opacity: .38;
   }
 
   .rb-bg-grid {
-    opacity: .028;
-  }
-
-  .rb-bg-vignette {
-    opacity: .76;
-  }
-
-  .rb-bg-noise {
-    opacity: .01;
+    opacity: .026;
   }
 }
 
+/* =========================
+   REDUCED MOTION
+========================= */
+
 @media (prefers-reduced-motion: reduce) {
-  .rb-fx-smoke {
-    animation: none;
+  .rb-fx-smoke,
+  .rb-bg-grid,
+  .rb-bg-noise,
+  .rb-space-haze {
+    animation: none !important;
   }
 }
