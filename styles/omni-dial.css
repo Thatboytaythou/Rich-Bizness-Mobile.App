@@ -1,66 +1,8 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/omni-dial.css
-
-   ORBIT UI
-   Clean Hub Overlay Layer
+   LAYER 7 / HUB UI + DIAL CARDS
 ========================= */
-
-/* MODULE LABEL */
-
-.rb-module-label {
-  position: fixed;
-  left: 50%;
-  bottom: 118px;
-  z-index: 20;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 220px;
-  max-width: calc(100vw - 42px);
-  padding: 14px 22px;
-
-  border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.22);
-
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 65%),
-    linear-gradient(135deg, rgba(5, 8, 5, 0.88), rgba(0, 0, 0, 0.68));
-
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-
-  color: #fefce8;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-
-  opacity: 0;
-  visibility: hidden;
-
-  transform: translateX(-50%) translateY(12px) scale(0.92);
-
-  transition:
-    opacity 0.24s ease,
-    transform 0.24s ease,
-    visibility 0.24s ease;
-
-  box-shadow:
-    0 0 22px rgba(250, 204, 21, 0.1),
-    0 0 48px rgba(16, 185, 129, 0.12),
-    inset 0 0 18px rgba(255, 255, 255, 0.025);
-
-  pointer-events: none;
-}
-
-.rb-module-label.is-visible {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0) scale(1);
-}
 
 /* PROFILE CHIP */
 
@@ -68,129 +10,123 @@
   position: fixed;
   top: max(18px, env(safe-area-inset-top));
   left: 18px;
-  z-index: 20;
+  z-index: 28;
+
+  min-height: 64px;
+  max-width: min(390px, calc(100vw - 92px));
 
   display: flex;
   align-items: center;
   gap: 12px;
 
-  max-width: min(390px, calc(100vw - 92px));
-  min-height: 68px;
-
-  padding: 10px 18px 10px 10px;
+  padding: 9px 18px 9px 9px;
 
   border-radius: 999px;
   border: 1px solid rgba(250, 204, 21, 0.24);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 70%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.9), rgba(0, 0, 0, 0.72));
+    radial-gradient(circle at top, rgba(255,255,255,.1), transparent 70%),
+    linear-gradient(145deg, rgba(5,8,5,.9), rgba(0,0,0,.72));
 
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 
   color: #fefce8;
+  pointer-events: auto;
   cursor: pointer;
 
-  pointer-events: auto;
-
   box-shadow:
-    0 0 28px rgba(0, 0, 0, 0.34),
-    0 0 18px rgba(16, 185, 129, 0.12);
-
-  transition:
-    transform 0.24s ease,
-    border-color 0.24s ease,
-    box-shadow 0.24s ease;
-}
-
-.rb-profile-chip:hover,
-.rb-profile-chip.rb-online-active {
-  border-color: rgba(16, 185, 129, 0.5);
-
-  box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.22),
-    0 0 40px rgba(250, 204, 21, 0.12);
-
-  transform: translateY(-2px) scale(1.02);
+    0 0 28px rgba(0,0,0,.34),
+    0 0 18px rgba(16,185,129,.12);
 }
 
 .rb-profile-chip img {
-  width: 48px;
-  height: 48px;
-
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   object-fit: cover;
-
-  border: 2px solid rgba(250, 204, 21, 0.42);
-
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.22);
+  border: 2px solid rgba(250,204,21,.42);
 }
 
 .rb-profile-chip span {
-  min-width: 0;
-
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-
   color: #fefce8;
-
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.18em;
+  letter-spacing: .16em;
   text-transform: uppercase;
 }
 
-.rb-profile-chip::after {
-  content: attr(data-online);
+/* SLIDE DOWN TAB MENU */
 
-  position: absolute;
-  right: 8px;
-  bottom: -5px;
+.rb-tab-dropper {
+  position: fixed;
+  right: 18px;
+  top: calc(env(safe-area-inset-top) + 88px);
+  z-index: 34;
 
-  min-width: 22px;
-  height: 22px;
-  padding: 0 7px;
+  width: 56px;
+  height: 56px;
 
-  display: none;
-  align-items: center;
-  justify-content: center;
+  border-radius: 20px;
+  border: 1px solid rgba(250,204,21,.24);
 
-  border-radius: 999px;
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,.12), transparent 70%),
+    linear-gradient(145deg, rgba(5,8,5,.92), rgba(0,0,0,.76));
 
-  background: linear-gradient(145deg, #10b981, #fbbf24);
-
-  color: #020403;
-  font-size: 10px;
+  color: #fefce8;
+  font-size: 28px;
   font-weight: 1000;
 
   box-shadow:
-    0 0 12px rgba(16, 185, 129, 0.65),
-    0 0 24px rgba(250, 204, 21, 0.35);
-}
-
-.rb-profile-chip.rb-online-active::after {
-  display: flex;
-}
-
-/* RIGHT SIDE TABS */
-
-.rb-side-tabs {
-  position: fixed;
-  right: 18px;
-  top: 50%;
-  z-index: 20;
-
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  transform: translateY(-50%);
+    0 0 22px rgba(0,255,157,.14),
+    0 0 34px rgba(0,0,0,.42);
 
   pointer-events: auto;
 }
 
+.rb-tab-dropper.is-open {
+  color: #041006;
+  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+}
+
+.rb-slide-menu,
+.rb-side-tabs {
+  position: fixed;
+  right: 18px;
+  top: calc(env(safe-area-inset-top) + 154px);
+  z-index: 33;
+
+  display: grid;
+  gap: 10px;
+
+  max-height: calc(100dvh - 250px);
+  overflow-y: auto;
+  padding-right: 2px;
+
+  transform: translateY(-18px) scale(.94);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity .22s ease,
+    transform .22s ease,
+    visibility .22s ease;
+}
+
+.rb-slide-menu.is-open,
+.rb-side-tabs.is-open {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.rb-slide-menu button,
 .rb-side-tabs button {
   position: relative;
 
@@ -198,11 +134,11 @@
   height: 56px;
 
   border-radius: 18px;
-  border: 1px solid rgba(250, 204, 21, 0.18);
+  border: 1px solid rgba(250,204,21,.18);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 70%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.88), rgba(0, 0, 0, 0.72));
+    radial-gradient(circle at top, rgba(255,255,255,.1), transparent 70%),
+    linear-gradient(145deg, rgba(5,8,5,.88), rgba(0,0,0,.72));
 
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -213,49 +149,13 @@
   cursor: pointer;
 
   box-shadow:
-    0 0 16px rgba(0, 0, 0, 0.34),
-    0 0 22px rgba(16, 185, 129, 0.08);
-
-  transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease,
-    background 0.22s ease;
-}
-
-.rb-side-tabs button:hover,
-.rb-side-tabs button.rb-live-active {
-  border-color: rgba(16, 185, 129, 0.5);
-
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 70%),
-    linear-gradient(145deg, rgba(10, 20, 12, 0.94), rgba(0, 0, 0, 0.78));
-
-  box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.24),
-    0 0 34px rgba(250, 204, 21, 0.12);
-
-  transform: translateX(-4px) scale(1.04);
-}
-
-.rb-side-tabs button.is-active {
-  transform: scale(0.92);
-  box-shadow: 0 0 26px rgba(16, 185, 129, 0.3);
-}
-
-.rb-side-tabs button::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 70%);
-
-  pointer-events: none;
+    0 0 16px rgba(0,0,0,.34),
+    0 0 22px rgba(16,185,129,.08);
 }
 
 /* LIVE COUNTS */
 
+.rb-slide-menu button.rb-live-active::before,
 .rb-side-tabs button.rb-live-active::before,
 .rb-bottom-nav button.rb-live-active::before {
   content: attr(data-count);
@@ -275,14 +175,14 @@
   border-radius: 999px;
 
   background: linear-gradient(145deg, #10b981, #fbbf24);
-
   color: #020403;
+
   font-size: 10px;
   font-weight: 1000;
 
   box-shadow:
-    0 0 12px rgba(16, 185, 129, 0.6),
-    0 0 24px rgba(250, 204, 21, 0.32);
+    0 0 12px rgba(16,185,129,.6),
+    0 0 24px rgba(250,204,21,.32);
 }
 
 /* BOTTOM NAV */
@@ -291,7 +191,7 @@
   position: fixed;
   left: 50%;
   bottom: max(14px, env(safe-area-inset-bottom));
-  z-index: 20;
+  z-index: 28;
 
   width: min(680px, calc(100vw - 24px));
 
@@ -302,11 +202,11 @@
   padding: 10px;
 
   border-radius: 28px;
-  border: 1px solid rgba(250, 204, 21, 0.2);
+  border: 1px solid rgba(250,204,21,.2);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 70%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.9), rgba(0, 0, 0, 0.78));
+    radial-gradient(circle at top, rgba(255,255,255,.09), transparent 70%),
+    linear-gradient(145deg, rgba(5,8,5,.9), rgba(0,0,0,.78));
 
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -314,16 +214,15 @@
   transform: translateX(-50%);
 
   box-shadow:
-    0 0 34px rgba(0, 0, 0, 0.44),
-    0 0 22px rgba(16, 185, 129, 0.1),
-    inset 0 0 22px rgba(255, 255, 255, 0.022);
+    0 0 34px rgba(0,0,0,.44),
+    0 0 22px rgba(16,185,129,.1),
+    inset 0 0 22px rgba(255,255,255,.022);
 
   pointer-events: auto;
 }
 
 .rb-bottom-nav button {
   position: relative;
-
   min-width: 0;
   height: 58px;
 
@@ -336,73 +235,46 @@
   border-radius: 20px;
   border: 1px solid transparent;
 
-  background: rgba(255, 255, 255, 0.025);
-
-  color: rgba(254, 252, 232, 0.78);
+  background: rgba(255,255,255,.025);
+  color: rgba(254,252,232,.78);
 
   cursor: pointer;
-
-  transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    background 0.22s ease,
-    box-shadow 0.22s ease,
-    color 0.22s ease;
 }
 
 .rb-bottom-nav button:hover,
 .rb-bottom-nav button.is-active,
 .rb-bottom-nav button.rb-live-active {
   color: #fefce8;
-
-  border-color: rgba(16, 185, 129, 0.42);
+  border-color: rgba(16,185,129,.42);
 
   background:
-    radial-gradient(circle at top, rgba(16, 185, 129, 0.16), transparent 72%),
-    rgba(255, 255, 255, 0.04);
+    radial-gradient(circle at top, rgba(16,185,129,.16), transparent 72%),
+    rgba(255,255,255,.04);
 
   box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.18),
-    inset 0 0 18px rgba(255, 255, 255, 0.025);
-
-  transform: translateY(-3px) scale(1.03);
+    0 0 18px rgba(16,185,129,.18),
+    inset 0 0 18px rgba(255,255,255,.025);
 }
 
 .rb-nav-icon {
   display: block;
-
   font-size: 21px;
   line-height: 1;
-
   filter:
-    drop-shadow(0 0 8px rgba(16, 185, 129, 0.32))
-    drop-shadow(0 0 8px rgba(250, 204, 21, 0.16));
+    drop-shadow(0 0 8px rgba(16,185,129,.32))
+    drop-shadow(0 0 8px rgba(250,204,21,.16));
 }
 
 .rb-bottom-nav button span:last-child {
   display: block;
-
   font-size: 10px;
   font-weight: 1000;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
 
 .rb-live-nav-dot {
   animation: rbLiveNavPulse 1.35s ease-in-out infinite;
-}
-
-@keyframes rbLiveNavPulse {
-  0%,
-  100% {
-    transform: scale(0.94);
-    opacity: 0.72;
-  }
-
-  50% {
-    transform: scale(1.12);
-    opacity: 1;
-  }
 }
 
 /* REALTIME NOTIFICATIONS */
@@ -411,7 +283,7 @@
   position: fixed;
   top: calc(env(safe-area-inset-top) + 148px);
   right: 18px;
-  z-index: 30;
+  z-index: 40;
 
   display: flex;
   flex-direction: column;
@@ -434,25 +306,25 @@
   padding: 14px;
 
   border-radius: 22px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
+  border: 1px solid rgba(250,204,21,.16);
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 70%),
-    linear-gradient(145deg, rgba(5, 8, 5, 0.92), rgba(0, 0, 0, 0.78));
+    radial-gradient(circle at top, rgba(255,255,255,.09), transparent 70%),
+    linear-gradient(145deg, rgba(5,8,5,.92), rgba(0,0,0,.78));
 
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 
-  transform: translateX(120%) scale(0.92);
+  transform: translateX(120%) scale(.92);
   opacity: 0;
 
   transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
+    opacity .4s ease,
+    transform .4s ease;
 
   box-shadow:
-    0 0 30px rgba(16, 185, 129, 0.12),
-    0 0 76px rgba(0, 0, 0, 0.42);
+    0 0 30px rgba(16,185,129,.12),
+    0 0 76px rgba(0,0,0,.42);
 }
 
 .rb-notify-toast.is-visible {
@@ -460,69 +332,9 @@
   transform: translateX(0) scale(1);
 }
 
-.rb-notify-icon {
-  position: relative;
-  z-index: 2;
-
-  width: 48px;
-  height: 48px;
-
-  border-radius: 16px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 22px;
-
-  background: linear-gradient(145deg, rgba(16, 185, 129, 0.18), rgba(250, 204, 21, 0.1));
-
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.rb-notify-copy {
-  position: relative;
-  z-index: 2;
-
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.rb-notify-copy strong {
-  color: #ffffff;
-
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-}
-
-.rb-notify-copy span {
-  color: rgba(255, 255, 255, 0.72);
-
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.rb-notify-glow {
-  position: absolute;
-
-  width: 180px;
-  height: 180px;
-
-  right: -60px;
-  top: -90px;
-
-  border-radius: 50%;
-
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent 72%);
-
-  pointer-events: none;
-}
-
 /* PAGE TRANSITION */
 
-.rb-page-transition::after {
+.rb-page-transition::before {
   content: "";
 
   position: fixed;
@@ -530,21 +342,29 @@
   z-index: 999;
 
   background:
-    radial-gradient(circle at center, rgba(16, 185, 129, 0.16), rgba(0, 0, 0, 0.9));
+    radial-gradient(circle at center, rgba(16,185,129,.16), rgba(0,0,0,.9));
 
-  animation: rbFadeOut 0.24s ease forwards;
-
+  animation: rbFadeOut .24s ease forwards;
   pointer-events: none;
 }
 
-@keyframes rbFadeOut {
-  from {
-    opacity: 0;
+/* ANIMATIONS */
+
+@keyframes rbLiveNavPulse {
+  0%, 100% {
+    transform: scale(.94);
+    opacity: .72;
   }
 
-  to {
+  50% {
+    transform: scale(1.12);
     opacity: 1;
   }
+}
+
+@keyframes rbFadeOut {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* MOBILE */
@@ -553,11 +373,9 @@
   .rb-profile-chip {
     top: calc(env(safe-area-inset-top) + 12px);
     left: 12px;
-
     max-width: 250px;
-    min-height: 62px;
-
-    padding: 9px 14px 9px 9px;
+    min-height: 60px;
+    padding: 8px 14px 8px 8px;
   }
 
   .rb-profile-chip img {
@@ -567,38 +385,43 @@
 
   .rb-profile-chip span {
     font-size: 11px;
-    letter-spacing: 0.14em;
+    letter-spacing: .14em;
   }
 
+  .rb-tab-dropper {
+    right: 12px;
+    top: calc(env(safe-area-inset-top) + 88px);
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+  }
+
+  .rb-slide-menu,
   .rb-side-tabs {
     right: 12px;
-    gap: 10px;
+    top: calc(env(safe-area-inset-top) + 146px);
+    max-height: calc(100dvh - 240px);
   }
 
+  .rb-slide-menu button,
   .rb-side-tabs button {
     width: 50px;
     height: 50px;
-
     border-radius: 16px;
-
     font-size: 18px;
   }
 
   .rb-module-label {
-    bottom: 106px;
-
+    bottom: calc(94px + env(safe-area-inset-bottom));
     min-width: unset;
-
     padding: 12px 18px;
-
     font-size: 11px;
-    letter-spacing: 0.16em;
+    letter-spacing: .16em;
   }
 
   .rb-bottom-nav {
     width: calc(100vw - 18px);
     bottom: max(10px, env(safe-area-inset-bottom));
-
     padding: 8px;
     border-radius: 24px;
     gap: 5px;
@@ -615,64 +438,12 @@
 
   .rb-bottom-nav button span:last-child {
     font-size: 9px;
-    letter-spacing: 0.05em;
+    letter-spacing: .05em;
   }
 
   #rb-notify-root {
     top: calc(env(safe-area-inset-top) + 132px);
     right: 10px;
     width: calc(100vw - 20px);
-  }
-
-  .rb-notify-toast {
-    padding: 12px;
-    border-radius: 18px;
-  }
-
-  .rb-notify-icon {
-    width: 42px;
-    height: 42px;
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 430px) {
-  .rb-profile-chip {
-    left: 10px;
-    max-width: 235px;
-  }
-
-  .rb-side-tabs {
-    right: 8px;
-    gap: 8px;
-  }
-
-  .rb-side-tabs button {
-    width: 44px;
-    height: 44px;
-
-    border-radius: 14px;
-
-    font-size: 16px;
-  }
-
-  .rb-bottom-nav {
-    width: calc(100vw - 12px);
-
-    padding: 7px;
-    border-radius: 22px;
-  }
-
-  .rb-bottom-nav button {
-    height: 50px;
-    border-radius: 16px;
-  }
-
-  .rb-nav-icon {
-    font-size: 18px;
-  }
-
-  .rb-bottom-nav button span:last-child {
-    font-size: 8px;
   }
 }
