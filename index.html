@@ -8,20 +8,29 @@
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>RB Engine Avatar Test</title>
+  <title>Rich Bizness • Universe</title>
+
+  <meta name="theme-color" content="#050805" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
   <link rel="stylesheet" href="/styles/omni-portal.css" />
   <link rel="stylesheet" href="/styles/omni-dial.css" />
   <link rel="stylesheet" href="/styles/three.css" />
+  <link rel="stylesheet" href="/styles/three-avatar.css" />
   <link rel="stylesheet" href="/styles/avatar.css" />
 </head>
 
 <body class="rb-index-page rb-avatar-engine-test">
 
   <div id="canvas-container" aria-hidden="true"></div>
+
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
 
   <header class="rb-brand-header">
     <h1>RICH <span>BIZNESS</span></h1>
@@ -42,12 +51,19 @@
     <button data-route="avatar" type="button" aria-label="Avatar">🧍🏽‍♂️</button>
     <button data-route="profile" type="button" aria-label="Profile">👤</button>
     <button data-route="meta" type="button" aria-label="Meta">🌎</button>
+    <button data-route="watch" type="button" aria-label="Watch">📺</button>
+    <button data-route="live" type="button" aria-label="Live">📡</button>
     <button data-route="messages" type="button" aria-label="Messages">💬</button>
+    <button data-route="notifications" type="button" aria-label="Notifications">🔔</button>
     <button data-route="settings" type="button" aria-label="Settings">⚙️</button>
+    <button data-route="edit" type="button" aria-label="Edit">✒️</button>
+    <button data-route="secretDoor" type="button" aria-label="Secret Door">🔐</button>
+    <button data-route="secretMeta2" type="button" aria-label="Secret Meta Two">🪐</button>
+    <button data-route="secretMeta3" type="button" aria-label="Secret Meta Three">🌌</button>
   </nav>
 
   <main class="rb-universe-shell">
-    <section class="rb-universe-stage" aria-label="Engine test stage">
+    <section class="rb-universe-stage" aria-label="Rich Bizness engine stage">
       <div id="module-label" class="rb-module-label active">
         ENGINE TEST ONLINE
       </div>
@@ -82,6 +98,10 @@
   </nav>
 
   <script type="module" src="/core/engine/universe-preview.js"></script>
+  <script type="module" src="/core/pages/live-activity.js"></script>
+  <script type="module" src="/core/pages/online-presence.js"></script>
+  <script type="module" src="/core/pages/realtime-notifications.js"></script>
+  <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
   <script type="module" src="/core/pages/index.js"></script>
 
 </body>
