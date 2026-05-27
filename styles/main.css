@@ -2,55 +2,143 @@
    RICH BIZNESS MOBILE
    styles/main.css
    LAYER 2 / 22
-   Shared components only
+   GLOBAL APP GLUE / SHARED COMPONENTS ONLY
 ========================================= */
 
 :root {
   --rb-panel: rgba(5, 12, 7, 0.78);
   --rb-panel-2: rgba(8, 18, 10, 0.92);
+  --rb-panel-deep: rgba(0, 0, 0, 0.72);
+
   --rb-deep: #050b06;
   --rb-green-2: #00ff88;
   --rb-gold-2: #b8860b;
+
   --rb-green-border: rgba(102, 255, 102, 0.38);
+  --rb-gold-border: rgba(250, 204, 21, 0.26);
+
   --rb-nav-h: 86px;
+  --rb-page-pad-x: 16px;
+
+  --rb-fast: 0.18s ease;
+  --rb-med: 0.28s ease;
 }
 
-/* SHARED SHELL */
+/* GLOBAL APP GLUE */
+
+.rb-app {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  isolation: isolate;
+}
 
 .rb-app-shell,
 .rb-home-shell {
   position: relative;
   z-index: 2;
+
   width: min(100%, 1180px);
   min-height: 100dvh;
+
   margin: 0 auto;
-  padding: 22px 16px calc(var(--rb-nav-h) + 24px);
+  padding: 22px var(--rb-page-pad-x) calc(var(--rb-nav-h) + 24px);
+
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+/* SHARED PANELS */
+
+.rb-panel,
+.rb-card,
+.rb-glass-card {
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid var(--rb-border);
+  border-radius: var(--rb-radius);
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 62%),
+    linear-gradient(145deg, var(--rb-panel-2), var(--rb-panel-deep));
+
+  box-shadow:
+    var(--rb-shadow-deep),
+    inset 0 0 22px rgba(255, 255, 255, 0.025);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.rb-card {
+  padding: 16px;
+}
+
+.rb-panel::before,
+.rb-card::before,
+.rb-glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0, 255, 157, 0.08),
+      transparent 38%,
+      rgba(250, 204, 21, 0.06)
+    );
+
+  opacity: 0.75;
+  pointer-events: none;
 }
 
 /* TEXT */
 
 .rb-kicker {
   margin: 0 0 6px;
+
   color: var(--rb-green);
-  letter-spacing: .18em;
-  font-size: .68rem;
+  letter-spacing: 0.18em;
+  font-size: 0.68rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .rb-title-xl {
   margin: 0;
+
   font-size: clamp(2.1rem, 8vw, 5.2rem);
-  line-height: .9;
-  letter-spacing: -.06em;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+
   color: var(--rb-gold);
+
+  text-shadow:
+    0 0 22px rgba(250, 204, 21, 0.25),
+    0 0 46px rgba(0, 255, 157, 0.12);
 }
 
+.rb-title {
+  margin: 0;
+
+  color: var(--rb-white);
+  font-size: clamp(1.35rem, 5vw, 2.4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 1000;
+}
+
+.rb-subtitle,
 .rb-muted {
   color: var(--rb-muted);
+}
+
+.rb-subtitle {
+  font-size: 0.94rem;
+  line-height: 1.45;
 }
 
 /* BUTTONS */
@@ -60,21 +148,58 @@
 .rb-main-launch,
 .rb-pill-btn {
   min-height: 46px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+
   padding: 0 18px;
+
   border-radius: 999px;
-  border: 1px solid rgba(255,215,106,.28);
+  border: 1px solid rgba(255, 215, 106, 0.28);
+
   color: var(--rb-white);
-  background: linear-gradient(135deg, rgba(10,25,14,.9), rgba(0,0,0,.86));
-  box-shadow: 0 0 20px rgba(0,255,136,.14);
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 70%),
+    linear-gradient(135deg, rgba(10, 25, 14, 0.9), rgba(0, 0, 0, 0.86));
+
+  box-shadow:
+    0 0 20px rgba(0, 255, 136, 0.14),
+    inset 0 0 16px rgba(255, 255, 255, 0.025);
+
   cursor: pointer;
   touch-action: manipulation;
+
   font-weight: 1000;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+
+  transition:
+    transform var(--rb-fast),
+    border-color var(--rb-fast),
+    box-shadow var(--rb-fast),
+    filter var(--rb-fast);
+}
+
+.rb-icon-btn:hover,
+.rb-btn:hover,
+.rb-main-launch:hover,
+.rb-pill-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(0, 255, 157, 0.44);
+
+  box-shadow:
+    0 0 24px rgba(0, 255, 157, 0.2),
+    0 0 42px rgba(250, 204, 21, 0.12);
+}
+
+.rb-icon-btn:active,
+.rb-btn:active,
+.rb-main-launch:active,
+.rb-pill-btn:active {
+  transform: scale(0.96);
 }
 
 .rb-main-launch,
@@ -82,13 +207,24 @@
 .rb-pill-btn.primary {
   border: 0;
   color: #001806;
-  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+
+  background:
+    linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+
+  box-shadow:
+    0 0 28px rgba(0, 255, 157, 0.28),
+    0 0 42px rgba(250, 204, 21, 0.18);
 }
 
 .rb-btn.ghost,
 .rb-pill-btn.ghost {
-  background: rgba(0,0,0,.46);
+  background: rgba(0, 0, 0, 0.46);
   color: var(--rb-white);
+}
+
+.rb-icon-btn {
+  width: 46px;
+  padding: 0;
 }
 
 /* ACTION ROW */
@@ -98,6 +234,7 @@
 .rb-action-row {
   position: relative;
   z-index: 3;
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -108,24 +245,39 @@
 
 .rb-profile-pill {
   min-width: 144px;
+
   padding: 8px 10px 8px 8px;
+
   display: flex;
   align-items: center;
   gap: 10px;
+
   border: 1px solid var(--rb-green-border);
   border-radius: 999px;
-  background: rgba(0,0,0,.48);
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 68%),
+    rgba(0, 0, 0, 0.48);
+
   color: var(--rb-white);
-  box-shadow: var(--rb-shadow-green);
+
+  box-shadow:
+    var(--rb-shadow-green),
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
 }
 
 .rb-profile-pill img {
   width: 44px;
   height: 44px;
+
   border-radius: 50%;
   object-fit: cover;
+
   border: 1px solid var(--rb-gold);
   background: #081008;
+
+  box-shadow:
+    0 0 14px rgba(0, 255, 157, 0.22);
 }
 
 .rb-profile-pill strong,
@@ -135,13 +287,109 @@
 }
 
 .rb-profile-pill strong {
-  font-size: .86rem;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 1000;
+  letter-spacing: 0.04em;
 }
 
 .rb-profile-pill small {
+  margin-top: 2px;
+
   color: var(--rb-green);
-  font-size: .68rem;
+  font-size: 0.68rem;
   font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* BADGES */
+
+.rb-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 24px;
+  padding: 0 10px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+
+  background: rgba(0, 0, 0, 0.42);
+
+  color: var(--rb-gold);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* FORMS */
+
+.rb-input,
+.rb-select,
+.rb-textarea {
+  width: 100%;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+
+  background: rgba(0, 0, 0, 0.48);
+  color: var(--rb-white);
+
+  outline: none;
+
+  box-shadow:
+    inset 0 0 18px rgba(255, 255, 255, 0.02);
+
+  transition:
+    border-color var(--rb-fast),
+    box-shadow var(--rb-fast);
+}
+
+.rb-input,
+.rb-select {
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.rb-textarea {
+  min-height: 120px;
+  padding: 14px;
+  resize: vertical;
+}
+
+.rb-input:focus,
+.rb-select:focus,
+.rb-textarea:focus {
+  border-color: rgba(0, 255, 157, 0.42);
+  box-shadow:
+    0 0 20px rgba(0, 255, 157, 0.14),
+    inset 0 0 18px rgba(255, 255, 255, 0.025);
+}
+
+/* UNIVERSAL MEDIA FRAME */
+
+.rb-media-frame {
+  position: relative;
+  overflow: hidden;
+
+  border-radius: var(--rb-radius);
+  border: 1px solid rgba(250, 204, 21, 0.18);
+
+  background: #020302;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.42),
+    0 0 24px rgba(0, 255, 157, 0.12);
+}
+
+.rb-media-frame > img,
+.rb-media-frame > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ANIMATIONS */
@@ -158,12 +406,45 @@
   }
 }
 
+@keyframes rbSoftPulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
 /* MOBILE */
 
 @media (max-width: 760px) {
+  :root {
+    --rb-page-pad-x: 12px;
+  }
+
   .rb-app-shell,
   .rb-home-shell {
     padding: 14px 12px calc(var(--rb-nav-h) + 18px);
+    gap: 14px;
+  }
+
+  .rb-home-actions,
+  .rb-quick-actions,
+  .rb-action-row {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .rb-btn,
+  .rb-main-launch,
+  .rb-pill-btn {
+    min-height: 44px;
+    padding: 0 15px;
+    font-size: 0.76rem;
   }
 
   .rb-profile-pill {
