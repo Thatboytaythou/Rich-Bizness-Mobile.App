@@ -4,8 +4,8 @@ import RB_CONFIG from "/core/shared/rb-config.js";
    RICH BIZNESS MOBILE
    /core/engine/universe-preview.js
 
-   LEVEL 100000X PORTAL HUB ENGINE
-   Living Portal + Galaxy Flow + Orbit Cards + Avatar Spirits
+   PRO MAX UNIVERSE ENGINE
+   Living Portal + Galaxy + Orbit Cards + Real 3D Avatar + Smoke Clouds
 ========================= */
 
 const container = document.getElementById("canvas-container");
@@ -14,14 +14,14 @@ const labelEl = document.getElementById("module-label");
 const fallbackMotion = {
   mobileBreakpoint: 720,
   orbit: {
-    speed: 0.0024,
+    speed: 0.00245,
     desktopRadiusX: 292,
     desktopRadiusY: 136,
     mobileRadiusX: 212,
     mobileRadiusY: 102
   },
   portal: {
-    scalePulse: 0.065
+    scalePulse: 0.07
   }
 };
 
@@ -52,11 +52,6 @@ const modules = [
   { key: "meta", title: "Meta World", tag: "META", image: "/images/brand/meta-verse-elite.png.jpeg" }
 ];
 
-const avatarSpirits = [
-  { name: "Boy Avatar", image: "/images/brand/meta-avatar.png.jpeg", angle: 0 },
-  { name: "Girl Avatar", image: "/images/brand/father-son-elite.png.jpeg", angle: Math.PI }
-];
-
 let scene;
 let camera;
 let renderer;
@@ -73,8 +68,12 @@ let starField;
 let deepStarField;
 let floatingParticles;
 let energyComets;
-let orbitGroup;
+let cloudField;
 let avatarGroup;
+let rbAvatar;
+let rbAvatarParts = {};
+let rbAvatarType = "boy";
+let orbitGroup;
 let raycaster;
 let pointer;
 let hoveredCard = null;
@@ -88,7 +87,7 @@ let lastX = 0;
 let dragMoved = false;
 
 const cards = [];
-const avatars = [];
+const smokeParticles = [];
 const textureLoader = window.THREE ? new THREE.TextureLoader() : null;
 
 const activityState = {
@@ -106,12 +105,13 @@ function initUniverse() {
   container.dataset.rbUniverseMounted = "true";
 
   scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x020503, 0.012);
 
   camera = new THREE.PerspectiveCamera(
     44,
     window.innerWidth / window.innerHeight,
     0.1,
-    1600
+    1800
   );
 
   camera.position.set(0, 4.4, 55);
@@ -136,11 +136,12 @@ function initUniverse() {
   buildLights();
   buildStars();
   buildGalaxy();
+  buildCloudField();
   buildFloatingParticles();
   buildEnergyComets();
   buildPortal();
   buildCards();
-  buildAvatarSpirits();
+  buildRealAvatar();
 
   bindPointer();
   bindActivityReactions();
@@ -159,9 +160,9 @@ function makeGlowTexture() {
   const gradient = ctx.createRadialGradient(128, 128, 4, 128, 128, 128);
 
   gradient.addColorStop(0, "rgba(255,255,255,1)");
-  gradient.addColorStop(0.18, "rgba(250,204,21,.88)");
-  gradient.addColorStop(0.42, "rgba(0,255,157,.62)");
-  gradient.addColorStop(0.72, "rgba(16,185,129,.18)");
+  gradient.addColorStop(0.16, "rgba(250,204,21,.9)");
+  gradient.addColorStop(0.42, "rgba(0,255,157,.64)");
+  gradient.addColorStop(0.74, "rgba(16,185,129,.18)");
   gradient.addColorStop(1, "rgba(0,0,0,0)");
 
   ctx.fillStyle = gradient;
@@ -172,25 +173,58 @@ function makeGlowTexture() {
   return texture;
 }
 
+function makeCloudTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 42; i += 1) {
+    const x = 256 + (Math.random() - 0.5) * 170;
+    const y = 256 + (Math.random() - 0.5) * 120;
+    const r = 36 + Math.random() * 92;
+
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, "rgba(180,255,220,.22)");
+    g.addColorStop(0.45, "rgba(0,255,157,.08)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function buildLights() {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.74));
 
-  const sun = new THREE.PointLight(0xfacc15, 4.8, 190);
-  sun.position.set(18, 18, 36);
-  scene.add(sun);
+  const goldLight = new THREE.PointLight(0xfacc15, 5.2, 210);
+  goldLight.position.set(20, 22, 38);
+  scene.add(goldLight);
 
-  const emerald = new THREE.PointLight(0x00ff9d, 4.2, 190);
-  emerald.position.set(-22, -6, 24);
-  scene.add(emerald);
+  const greenLight = new THREE.PointLight(0x00ff9d, 4.8, 210);
+  greenLight.position.set(-24, -6, 26);
+  scene.add(greenLight);
 
-  const portalLight = new THREE.PointLight(0x00ffcc, 5.5, 110);
+  const portalLight = new THREE.PointLight(0x00ffcc, 6.2, 128);
   portalLight.position.set(0, -1, 8);
   scene.add(portalLight);
+
+  const avatarLight = new THREE.PointLight(0xfacc15, 3.4, 90);
+  avatarLight.position.set(8, 8, 22);
+  scene.add(avatarLight);
 }
 
 function buildStars() {
   const isMobile = window.innerWidth <= motion.mobileBreakpoint;
-  const count = isMobile ? 3200 : 5200;
+  const count = isMobile ? 3600 : 5800;
 
   const geo = new THREE.BufferGeometry();
   const positions = [];
@@ -198,16 +232,13 @@ function buildStars() {
 
   for (let i = 0; i < count; i += 1) {
     positions.push(
-      THREE.MathUtils.randFloatSpread(220),
-      THREE.MathUtils.randFloatSpread(160),
-      THREE.MathUtils.randFloatSpread(190) - 28
+      THREE.MathUtils.randFloatSpread(240),
+      THREE.MathUtils.randFloatSpread(170),
+      THREE.MathUtils.randFloatSpread(210) - 35
     );
 
-    if (Math.random() > 0.78) {
-      colors.push(1, 0.78, 0.18);
-    } else {
-      colors.push(0.08, 0.95, 0.62);
-    }
+    if (Math.random() > 0.78) colors.push(1, 0.78, 0.18);
+    else colors.push(0.08, 0.95, 0.62);
   }
 
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -216,69 +247,66 @@ function buildStars() {
   starField = new THREE.Points(
     geo,
     new THREE.PointsMaterial({
-      size: isMobile ? 0.055 : 0.065,
+      size: isMobile ? 0.055 : 0.068,
       transparent: true,
-      opacity: 0.58,
+      opacity: 0.62,
       vertexColors: true,
       depthWrite: false
     })
   );
 
-  starField.position.z = -30;
+  starField.position.z = -34;
   scene.add(starField);
 
-  const deepGeo = geo.clone();
   deepStarField = new THREE.Points(
-    deepGeo,
+    geo.clone(),
     new THREE.PointsMaterial({
       color: 0x0cffb0,
-      size: isMobile ? 0.022 : 0.026,
+      size: isMobile ? 0.022 : 0.028,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.24,
       depthWrite: false
     })
   );
 
-  deepStarField.position.z = -90;
-  deepStarField.scale.setScalar(1.45);
+  deepStarField.position.z = -100;
+  deepStarField.scale.setScalar(1.5);
   scene.add(deepStarField);
 }
 
 function buildGalaxy() {
   const isMobile = window.innerWidth <= motion.mobileBreakpoint;
-  const count = isMobile ? 5200 : 8200;
+  const count = isMobile ? 5600 : 8800;
 
-  const geo = new THREE.BufferGeometry();
+  const greenGeo = new THREE.BufferGeometry();
   const goldGeo = new THREE.BufferGeometry();
+
   const green = [];
   const gold = [];
 
   for (let i = 0; i < count; i += 1) {
-    const radius = Math.random() * 78;
+    const radius = Math.random() * 84;
     const arm = i % 5;
-    const angle = radius * 0.22 + arm * ((Math.PI * 2) / 5) + Math.random() * 0.55;
+    const angle = radius * 0.24 + arm * ((Math.PI * 2) / 5) + Math.random() * 0.62;
 
     const x = Math.cos(angle) * radius;
-    const y = THREE.MathUtils.randFloatSpread(30) * (1 - radius / 120);
-    const z = Math.sin(angle) * radius - 22;
+    const y = THREE.MathUtils.randFloatSpread(32) * (1 - radius / 128);
+    const z = Math.sin(angle) * radius - 24;
 
-    if (Math.random() > 0.72) {
-      gold.push(x, y, z);
-    } else {
-      green.push(x, y, z);
-    }
+    if (Math.random() > 0.72) gold.push(x, y, z);
+    else green.push(x, y, z);
   }
 
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(green, 3));
+  greenGeo.setAttribute("position", new THREE.Float32BufferAttribute(green, 3));
   goldGeo.setAttribute("position", new THREE.Float32BufferAttribute(gold, 3));
 
   galaxyCloud = new THREE.Points(
-    geo,
+    greenGeo,
     new THREE.PointsMaterial({
       color: 0x00ff9d,
-      size: isMobile ? 0.07 : 0.086,
+      size: isMobile ? 0.074 : 0.092,
       transparent: true,
-      opacity: 0.58,
+      opacity: 0.6,
       depthWrite: false
     })
   );
@@ -287,9 +315,9 @@ function buildGalaxy() {
     goldGeo,
     new THREE.PointsMaterial({
       color: 0xfacc15,
-      size: isMobile ? 0.052 : 0.064,
+      size: isMobile ? 0.056 : 0.07,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.45,
       depthWrite: false
     })
   );
@@ -301,9 +329,41 @@ function buildGalaxy() {
   scene.add(galaxyGold);
 }
 
+function buildCloudField() {
+  cloudField = new THREE.Group();
+  const cloudTexture = makeCloudTexture();
+
+  for (let i = 0; i < 16; i += 1) {
+    const cloud = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: cloudTexture,
+        transparent: true,
+        opacity: 0.055 + Math.random() * 0.055,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+
+    cloud.position.set(
+      THREE.MathUtils.randFloatSpread(52),
+      THREE.MathUtils.randFloat(-10, 16),
+      THREE.MathUtils.randFloat(-32, 4)
+    );
+
+    const s = THREE.MathUtils.randFloat(10, 24);
+    cloud.scale.set(s * 1.8, s, 1);
+    cloud.userData.speed = THREE.MathUtils.randFloat(0.0008, 0.0022);
+    cloud.userData.float = Math.random() * Math.PI * 2;
+
+    cloudField.add(cloud);
+  }
+
+  scene.add(cloudField);
+}
+
 function buildFloatingParticles() {
   const isMobile = window.innerWidth <= motion.mobileBreakpoint;
-  const count = isMobile ? 1400 : 2400;
+  const count = isMobile ? 1600 : 2700;
 
   const geo = new THREE.BufferGeometry();
   const positions = [];
@@ -311,19 +371,16 @@ function buildFloatingParticles() {
 
   for (let i = 0; i < count; i += 1) {
     const angle = Math.random() * Math.PI * 2;
-    const radius = THREE.MathUtils.randFloat(3, 46);
+    const radius = THREE.MathUtils.randFloat(3, 50);
 
     positions.push(
       Math.cos(angle) * radius,
-      THREE.MathUtils.randFloatSpread(52),
+      THREE.MathUtils.randFloatSpread(58),
       Math.sin(angle) * radius - 3
     );
 
-    if (Math.random() > 0.66) {
-      colors.push(1.0, 0.76, 0.16);
-    } else {
-      colors.push(0.0, 1.0, 0.62);
-    }
+    if (Math.random() > 0.66) colors.push(1, 0.76, 0.16);
+    else colors.push(0, 1, 0.62);
   }
 
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -332,9 +389,9 @@ function buildFloatingParticles() {
   floatingParticles = new THREE.Points(
     geo,
     new THREE.PointsMaterial({
-      size: isMobile ? 0.09 : 0.11,
+      size: isMobile ? 0.09 : 0.112,
       transparent: true,
-      opacity: 0.58,
+      opacity: 0.6,
       vertexColors: true,
       depthWrite: false
     })
@@ -346,25 +403,24 @@ function buildFloatingParticles() {
 
 function buildEnergyComets() {
   energyComets = new THREE.Group();
-
   const texture = makeGlowTexture();
 
-  for (let i = 0; i < 32; i += 1) {
+  for (let i = 0; i < 38; i += 1) {
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: texture,
         transparent: true,
-        opacity: 0.34,
+        opacity: 0.28,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
     );
 
-    sprite.userData.speed = THREE.MathUtils.randFloat(0.004, 0.012);
-    sprite.userData.radius = THREE.MathUtils.randFloat(9, 34);
+    sprite.userData.speed = THREE.MathUtils.randFloat(0.004, 0.013);
+    sprite.userData.radius = THREE.MathUtils.randFloat(9, 36);
     sprite.userData.angle = Math.random() * Math.PI * 2;
-    sprite.userData.y = THREE.MathUtils.randFloat(-9, 9);
-    sprite.scale.setScalar(THREE.MathUtils.randFloat(0.55, 1.65));
+    sprite.userData.y = THREE.MathUtils.randFloat(-10, 10);
+    sprite.scale.setScalar(THREE.MathUtils.randFloat(0.55, 1.75));
 
     energyComets.add(sprite);
   }
@@ -381,16 +437,17 @@ function buildPortal() {
     new THREE.SpriteMaterial({
       map: glowTexture,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.76,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     })
   );
-  portalMist.scale.set(26, 26, 1);
+
+  portalMist.scale.set(27, 27, 1);
   portal.add(portalMist);
 
   portalMouth = new THREE.Mesh(
-    new THREE.TorusGeometry(6.45, 0.42, 24, 160),
+    new THREE.TorusGeometry(6.45, 0.42, 24, 180),
     new THREE.MeshBasicMaterial({
       color: 0x00ff9d,
       transparent: true,
@@ -399,12 +456,13 @@ function buildPortal() {
       blending: THREE.AdditiveBlending
     })
   );
+
   portalMouth.rotation.x = Math.PI / 2.7;
   portalMouth.rotation.z = 0.15;
   portal.add(portalMouth);
 
   const mouthGold = new THREE.Mesh(
-    new THREE.TorusGeometry(7.35, 0.12, 18, 160),
+    new THREE.TorusGeometry(7.35, 0.12, 18, 180),
     new THREE.MeshBasicMaterial({
       color: 0xfacc15,
       transparent: true,
@@ -413,6 +471,7 @@ function buildPortal() {
       blending: THREE.AdditiveBlending
     })
   );
+
   mouthGold.rotation.x = Math.PI / 2.45;
   mouthGold.rotation.z = -0.28;
   portalRings.push(mouthGold);
@@ -422,22 +481,19 @@ function buildPortal() {
   const streamPositions = [];
   const streamColors = [];
 
-  for (let i = 0; i < 900; i += 1) {
+  for (let i = 0; i < 1250; i += 1) {
     const a = Math.random() * Math.PI * 2;
-    const r = THREE.MathUtils.randFloat(0.8, 8.4);
+    const r = THREE.MathUtils.randFloat(0.8, 9.2);
     const pull = Math.random();
 
     streamPositions.push(
       Math.cos(a) * r * pull,
-      THREE.MathUtils.randFloatSpread(6.8),
-      Math.sin(a) * r - THREE.MathUtils.randFloat(0, 9)
+      THREE.MathUtils.randFloatSpread(7.4),
+      Math.sin(a) * r - THREE.MathUtils.randFloat(0, 10)
     );
 
-    if (Math.random() > 0.72) {
-      streamColors.push(1, 0.78, 0.12);
-    } else {
-      streamColors.push(0, 1, 0.62);
-    }
+    if (Math.random() > 0.72) streamColors.push(1, 0.78, 0.12);
+    else streamColors.push(0, 1, 0.62);
   }
 
   streamGeo.setAttribute("position", new THREE.Float32BufferAttribute(streamPositions, 3));
@@ -446,9 +502,9 @@ function buildPortal() {
   const streams = new THREE.Points(
     streamGeo,
     new THREE.PointsMaterial({
-      size: 0.11,
+      size: 0.112,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.74,
       vertexColors: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending
@@ -463,11 +519,13 @@ function buildPortal() {
     new THREE.MeshPhongMaterial({
       color: 0x00ff9d,
       emissive: 0x08795a,
-      shininess: 92,
+      emissiveIntensity: 1.15,
+      shininess: 110,
       transparent: true,
       opacity: 0.78
     })
   );
+
   portal.add(portalCore);
 
   portalInner = new THREE.Mesh(
@@ -475,26 +533,27 @@ function buildPortal() {
     new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.13,
+      opacity: 0.14,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     })
   );
+
   portal.add(portalInner);
 
-  for (let i = 0; i < 3; i += 1) {
+  for (let i = 0; i < 4; i += 1) {
     const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(7.8 + i * 1.15, 0.045, 12, 180),
+      new THREE.TorusGeometry(7.8 + i * 1.12, 0.045, 12, 190),
       new THREE.MeshBasicMaterial({
         color: i % 2 ? 0xfacc15 : 0x00ff9d,
         transparent: true,
-        opacity: 0.13 - i * 0.025,
+        opacity: 0.13 - i * 0.022,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
     );
 
-    ring.rotation.x = Math.PI / (2.2 + i * 0.2);
+    ring.rotation.x = Math.PI / (2.18 + i * 0.2);
     ring.rotation.y = i * 0.38;
     ring.rotation.z = i * 0.82;
 
@@ -504,39 +563,198 @@ function buildPortal() {
 
   portal.position.set(0, -1.12, -1.9);
   portal.renderOrder = 1;
-
   scene.add(portal);
 }
 
-function buildAvatarSpirits() {
+function buildRealAvatar() {
   avatarGroup = new THREE.Group();
-  avatarGroup.renderOrder = 80;
+  avatarGroup.position.set(0, -2.75, 8.2);
+  avatarGroup.scale.setScalar(0.24);
+  avatarGroup.renderOrder = 88;
   scene.add(avatarGroup);
 
-  avatarSpirits.forEach((spirit, index) => {
-    const texture = textureLoader.load(spirit.image, (tex) => {
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.needsUpdate = true;
-    });
+  makeRBAvatar("boy");
+}
 
-    const avatar = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true,
-        opacity: 0.82,
-        depthWrite: false
-      })
-    );
+function makePart(name, geo, mat, pos, scale = null) {
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.name = name;
+  mesh.position.set(pos.x, pos.y, pos.z);
+  if (scale) mesh.scale.set(scale.x, scale.y, scale.z);
+  rbAvatar.add(mesh);
+  rbAvatarParts[name] = mesh;
+  return mesh;
+}
 
-    avatar.scale.set(2.2, 2.2, 1);
-    avatar.userData.angle = spirit.angle;
-    avatar.userData.radius = 9.5 + index * 1.4;
-    avatar.userData.float = Math.random() * Math.PI * 2;
-    avatar.userData.name = spirit.name;
+function makeRBAvatar(type = "boy") {
+  if (rbAvatar) avatarGroup.remove(rbAvatar);
 
-    avatars.push(avatar);
-    avatarGroup.add(avatar);
+  rbAvatarType = type;
+  rbAvatarParts = {};
+  rbAvatar = new THREE.Group();
+  avatarGroup.add(rbAvatar);
+
+  const isGirl = type === "girl";
+
+  const skin = new THREE.MeshPhongMaterial({
+    color: isGirl ? 0xd99b7b : 0xe8b88a,
+    shininess: 30
   });
+
+  const outfit = new THREE.MeshPhongMaterial({
+    color: isGirl ? 0x120918 : 0x070a08,
+    emissive: isGirl ? 0x26051f : 0x021407,
+    emissiveIntensity: 0.36,
+    shininess: 38
+  });
+
+  const pants = new THREE.MeshPhongMaterial({ color: 0x070d0b, shininess: 18 });
+  const shoe = new THREE.MeshPhongMaterial({ color: 0x030303, shininess: 54 });
+  const hair = new THREE.MeshPhongMaterial({ color: 0x050302, shininess: 44 });
+  const blue = new THREE.MeshPhongMaterial({ color: 0x1e3a8a, shininess: 56 });
+
+  const gold = new THREE.MeshPhongMaterial({
+    color: 0xfacc15,
+    emissive: 0xc99700,
+    emissiveIntensity: 1.15,
+    shininess: 128
+  });
+
+  const bodyW = isGirl ? 4.1 : 4.85;
+  const bodyH = isGirl ? 7.1 : 7.45;
+  const bodyD = isGirl ? 2.4 : 3;
+
+  makePart("body", new THREE.BoxGeometry(bodyW, bodyH, bodyD), outfit, { x: 0, y: 0.45, z: 0 });
+
+  makePart(
+    "glow",
+    new THREE.BoxGeometry(bodyW + 0.34, bodyH + 0.34, bodyD + 0.24),
+    new THREE.MeshBasicMaterial({
+      color: isGirl ? 0xf472b6 : 0x22c55e,
+      transparent: true,
+      opacity: 0.08,
+      wireframe: true,
+      depthWrite: false
+    }),
+    { x: 0, y: 0.45, z: 0 }
+  );
+
+  makePart("neck", new THREE.CylinderGeometry(0.72, 0.84, 0.8, 28), skin, { x: 0, y: 4.25, z: 0 });
+  makePart("head", new THREE.SphereGeometry(isGirl ? 1.9 : 2.05, 48, 48), skin, { x: 0, y: 5.45, z: 0 });
+
+  if (isGirl) {
+    makePart("hairBack", new THREE.BoxGeometry(3.15, 3.4, 0.85), hair, { x: 0, y: 5.35, z: -0.95 });
+    makePart("hairTop", new THREE.SphereGeometry(2.05, 40, 16), hair, { x: 0, y: 6.3, z: 0 }, { x: 1, y: 0.45, z: 1 });
+    makePart("hairLeft", new THREE.BoxGeometry(0.62, 3.1, 0.55), hair, { x: -1.72, y: 4.82, z: 0.2 });
+    makePart("hairRight", new THREE.BoxGeometry(0.62, 3.1, 0.55), hair, { x: 1.72, y: 4.82, z: 0.2 });
+  } else {
+    makePart("beanie", new THREE.CylinderGeometry(2.05, 2.22, 1.45, 48), blue, { x: 0, y: 6.75, z: 0 });
+    makePart("beanieTop", new THREE.SphereGeometry(2.05, 48, 16), blue, { x: 0, y: 7.43, z: 0 }, { x: 1, y: 0.38, z: 1 });
+  }
+
+  makePart(
+    "shades",
+    new THREE.BoxGeometry(isGirl ? 2.78 : 3.05, 0.45, 0.16),
+    new THREE.MeshPhongMaterial({
+      color: 0x010101,
+      emissive: isGirl ? 0x2b061e : 0x043018,
+      emissiveIntensity: 0.56,
+      shininess: 140
+    }),
+    { x: 0, y: 5.55, z: 1.72 }
+  );
+
+  makePart("mouth", new THREE.BoxGeometry(0.95, 0.12, 0.08), new THREE.MeshBasicMaterial({ color: 0x160706 }), {
+    x: 0.12,
+    y: 4.78,
+    z: 1.88
+  });
+
+  const chain = makePart("chain", new THREE.TorusGeometry(isGirl ? 1.88 : 2.18, 0.22, 26, 72), gold, {
+    x: 0,
+    y: 3.85,
+    z: 0
+  });
+  chain.rotation.x = Math.PI / 2;
+  chain.scale.y = 0.74;
+
+  const pendant = makePart("pendant", new THREE.CylinderGeometry(0.54, 0.54, 0.18, 40), gold, {
+    x: 0,
+    y: 3.12,
+    z: 1.45
+  });
+  pendant.rotation.x = Math.PI / 2;
+
+  makePart("leftLeg", new THREE.BoxGeometry(isGirl ? 1.25 : 1.55, 4.9, 1.55), pants, { x: -1.25, y: -3.4, z: 0 });
+  makePart("rightLeg", new THREE.BoxGeometry(isGirl ? 1.25 : 1.55, 4.9, 1.55), pants, { x: 1.25, y: -3.4, z: 0 });
+
+  makePart("leftShoe", new THREE.BoxGeometry(1.8, 0.6, 2.25), shoe, { x: -1.25, y: -6.1, z: 0.35 });
+  makePart("rightShoe", new THREE.BoxGeometry(1.8, 0.6, 2.25), shoe, { x: 1.25, y: -6.1, z: 0.35 });
+
+  makePart("leftArm", new THREE.BoxGeometry(1.18, 5.2, 1.25), outfit, { x: isGirl ? -2.62 : -3.05, y: 1.85, z: 0 });
+  makePart("rightArm", new THREE.BoxGeometry(1.18, 5.2, 1.25), outfit, { x: isGirl ? 2.62 : 3.05, y: 1.85, z: 0 });
+
+  makePart("leftHand", new THREE.SphereGeometry(0.55, 24, 24), skin, { x: isGirl ? -2.62 : -3.05, y: -1.1, z: 0.1 });
+  makePart("rightHand", new THREE.SphereGeometry(0.55, 24, 24), skin, { x: isGirl ? 2.62 : 3.05, y: -1.1, z: 0.1 });
+
+  const cigar = makePart(
+    "cigar",
+    new THREE.CylinderGeometry(0.1, 0.1, 1.55, 14),
+    new THREE.MeshPhongMaterial({
+      color: 0x4b2e1a,
+      emissive: 0x1a0802,
+      shininess: 15
+    }),
+    { x: 1.78, y: 5.12, z: 1.95 }
+  );
+
+  cigar.rotation.z = Math.PI / 2.8;
+  cigar.rotation.y = 0.32;
+
+  makePart("ember", new THREE.SphereGeometry(0.14, 14, 14), new THREE.MeshBasicMaterial({ color: 0xff3b16 }), {
+    x: 2.36,
+    y: 5.32,
+    z: 2.12
+  });
+
+  rbAvatar.scale.setScalar(isGirl ? 0.96 : 1);
+  smokeBurst(18);
+}
+
+function createAvatarSmoke(boost = 1) {
+  if (!rbAvatarParts.ember || !rbAvatar) return;
+
+  const smoke = new THREE.Mesh(
+    new THREE.SphereGeometry(0.24 + Math.random() * 0.34, 12, 12),
+    new THREE.MeshBasicMaterial({
+      color: Math.random() > 0.28 ? 0xd8ddd8 : 0x84ffae,
+      transparent: true,
+      opacity: 0.38 + Math.random() * 0.25,
+      depthWrite: false
+    })
+  );
+
+  const emberWorld = new THREE.Vector3();
+  rbAvatarParts.ember.getWorldPosition(emberWorld);
+
+  smoke.position.copy(emberWorld);
+  smoke.position.x += Math.random() * 0.2;
+  smoke.position.y += Math.random() * 0.2;
+  smoke.position.z += Math.random() * 0.16;
+
+  smoke.userData = {
+    life: 1,
+    drift: (Math.random() - 0.5) * 0.05 * boost,
+    lift: 0.05 + Math.random() * 0.075 * boost,
+    grow: 0.01 + Math.random() * 0.02
+  };
+
+  scene.add(smoke);
+  smokeParticles.push(smoke);
+}
+
+function smokeBurst(amount = 36) {
+  for (let i = 0; i < amount; i += 1) createAvatarSmoke(2.6);
 }
 
 function buildCards() {
@@ -824,7 +1042,7 @@ function updatePortal(t) {
     portalCore.rotation.y -= 0.0054 * boost;
     portalCore.rotation.z += 0.0028 * boost;
     portalCore.material.opacity = 0.74 + Math.sin(t * 2.8) * 0.055;
-    portalCore.material.emissiveIntensity = 1 + Math.sin(t * 3.1) * 0.2;
+    portalCore.material.emissiveIntensity = 1.15 + Math.sin(t * 3.1) * 0.22;
   }
 
   if (portalInner) {
@@ -835,11 +1053,11 @@ function updatePortal(t) {
   if (portalMist) {
     portalMist.rotation.z += 0.0024 * boost;
     portalMist.scale.set(
-      26 + Math.sin(t * 1.7) * 2.2,
-      26 + Math.cos(t * 1.4) * 2.2,
+      27 + Math.sin(t * 1.7) * 2.5,
+      27 + Math.cos(t * 1.4) * 2.5,
       1
     );
-    portalMist.material.opacity = 0.55 + Math.sin(t * 1.9) * 0.12;
+    portalMist.material.opacity = 0.55 + Math.sin(t * 1.9) * 0.13;
   }
 
   if (portalMouth) {
@@ -850,7 +1068,10 @@ function updatePortal(t) {
   portalRings.forEach((ring, index) => {
     ring.rotation.z += (0.004 + index * 0.0016) * (index % 2 ? -1 : 1) * boost;
     ring.rotation.y += 0.0014 * (index + 1) * boost;
-    ring.material.opacity = Math.max(0.045, 0.24 - index * 0.035 + Math.sin(t * (1.7 + index)) * 0.035);
+    ring.material.opacity = Math.max(
+      0.045,
+      0.24 - index * 0.035 + Math.sin(t * (1.7 + index)) * 0.035
+    );
   });
 
   portalStreams.forEach((stream) => {
@@ -879,23 +1100,86 @@ function updateComets(t) {
   });
 }
 
-function updateAvatarSpirits(t) {
-  if (!avatarGroup) return;
+function updateClouds(t) {
+  if (!cloudField) return;
 
-  avatars.forEach((avatar, index) => {
-    const a = avatar.userData.angle + t * (0.32 + index * 0.04);
-    const r = avatar.userData.radius;
+  cloudField.children.forEach((cloud, index) => {
+    cloud.position.x += cloud.userData.speed * 12;
+    cloud.position.y += Math.sin(t * 0.4 + cloud.userData.float) * 0.004;
+    cloud.rotation.z += 0.0008;
 
-    avatar.position.set(
-      Math.cos(a) * r,
-      -0.35 + Math.sin(t * 1.6 + avatar.userData.float) * 1.1,
-      Math.sin(a) * 3.2 + 5.2
-    );
+    if (cloud.position.x > 42) {
+      cloud.position.x = -42;
+      cloud.position.y = THREE.MathUtils.randFloat(-10, 16);
+    }
 
-    const s = 1.65 + Math.sin(t * 2 + index) * 0.15;
-    avatar.scale.set(s, s, 1);
-    avatar.material.opacity = 0.38 + Math.sin(t * 1.7 + index) * 0.16;
+    cloud.material.opacity = 0.045 + Math.sin(t * 0.6 + index) * 0.018;
   });
+}
+
+function updateRealAvatar(t) {
+  if (!avatarGroup || !rbAvatar) return;
+
+  const step = Math.sin(t * 4.2);
+  const breathe = Math.sin(t * 1.6);
+
+  avatarGroup.position.x = Math.sin(t * 0.45) * 5.2;
+  avatarGroup.position.y = -2.65 + Math.sin(t * 1.25) * 0.18;
+  avatarGroup.position.z = 8.4 + Math.cos(t * 0.4) * 0.7;
+  avatarGroup.rotation.y = Math.sin(t * 0.52) * 0.42;
+
+  rbAvatar.position.y = Math.sin(t * 2.2) * 0.16;
+  rbAvatar.rotation.y += (Math.sin(t * 0.58) * 0.18 - rbAvatar.rotation.y) * 0.04;
+
+  if (rbAvatarParts.head) {
+    rbAvatarParts.head.position.y = 5.45 + Math.sin(t * 2.8) * 0.075;
+    rbAvatarParts.head.rotation.y = Math.sin(t * 1.1) * 0.05;
+  }
+
+  if (rbAvatarParts.leftLeg) rbAvatarParts.leftLeg.rotation.x = step * 0.34;
+  if (rbAvatarParts.rightLeg) rbAvatarParts.rightLeg.rotation.x = -step * 0.34;
+  if (rbAvatarParts.leftArm) rbAvatarParts.leftArm.rotation.x = -step * 0.42;
+  if (rbAvatarParts.rightArm) rbAvatarParts.rightArm.rotation.x = step * 0.42;
+
+  if (rbAvatarParts.leftShoe && rbAvatarParts.leftLeg) {
+    rbAvatarParts.leftShoe.rotation.x = rbAvatarParts.leftLeg.rotation.x * 0.22;
+  }
+
+  if (rbAvatarParts.rightShoe && rbAvatarParts.rightLeg) {
+    rbAvatarParts.rightShoe.rotation.x = rbAvatarParts.rightLeg.rotation.x * 0.22;
+  }
+
+  if (rbAvatarParts.chain) rbAvatarParts.chain.rotation.z = Math.sin(t * 2.2) * 0.035;
+  if (rbAvatarParts.pendant) rbAvatarParts.pendant.rotation.z = Math.sin(t * 2.4) * 0.08;
+  if (rbAvatarParts.ember) rbAvatarParts.ember.scale.setScalar(1 + Math.sin(t * 18) * 0.22);
+
+  if (rbAvatarParts.glow?.material) {
+    rbAvatarParts.glow.material.opacity = 0.06 + Math.abs(breathe) * 0.045;
+  }
+
+  if (Math.random() < 0.23) createAvatarSmoke(1.45);
+
+  for (let i = smokeParticles.length - 1; i >= 0; i -= 1) {
+    const p = smokeParticles[i];
+
+    p.userData.life -= 0.01;
+    p.position.y += p.userData.lift;
+    p.position.x += p.userData.drift + Math.sin(t * 1.6 + i) * 0.01;
+    p.position.z += Math.cos(t * 1.3 + i) * 0.008;
+
+    p.scale.x += p.userData.grow;
+    p.scale.y += p.userData.grow;
+    p.scale.z += p.userData.grow;
+
+    p.material.opacity *= 0.979;
+
+    if (p.userData.life <= 0 || p.material.opacity <= 0.015) {
+      scene.remove(p);
+      p.geometry.dispose();
+      p.material.dispose();
+      smokeParticles.splice(i, 1);
+    }
+  }
 }
 
 function bindPointer() {
@@ -909,6 +1193,10 @@ function bindPointer() {
   window.addEventListener("beforeunload", () => {
     if (animationFrame) cancelAnimationFrame(animationFrame);
   });
+
+  window.RB_SWAP_AVATAR = () => {
+    makeRBAvatar(rbAvatarType === "boy" ? "girl" : "boy");
+  };
 }
 
 function onPointerDown(event) {
@@ -1005,26 +1293,27 @@ function animateUniverse() {
   const time = performance.now();
   const t = time * 0.001;
 
-  targetOffset += (motion.orbit.speed || 0.0024) * activityState.orbitBoost;
+  targetOffset += (motion.orbit.speed || 0.00245) * activityState.orbitBoost;
 
   updatePortal(t);
   updateComets(t);
-  updateAvatarSpirits(t);
+  updateClouds(t);
+  updateRealAvatar(t);
 
   if (galaxyCloud) {
     galaxyCloud.rotation.y += 0.0011 * activityState.orbitBoost;
     galaxyCloud.rotation.z = Math.sin(t * 0.12) * 0.04;
-    galaxyCloud.material.opacity = activityState.liveActive ? 0.68 : 0.58;
+    galaxyCloud.material.opacity = activityState.liveActive ? 0.7 : 0.6;
   }
 
   if (galaxyGold) {
     galaxyGold.rotation.y -= 0.0008 * activityState.orbitBoost;
-    galaxyGold.material.opacity = activityState.onlineCount > 0 ? 0.52 : 0.42;
+    galaxyGold.material.opacity = activityState.onlineCount > 0 ? 0.54 : 0.45;
   }
 
   if (starField) {
     starField.rotation.y += 0.00035 * activityState.orbitBoost;
-    starField.material.opacity = activityState.onlineCount > 0 ? 0.68 : 0.58;
+    starField.material.opacity = activityState.onlineCount > 0 ? 0.7 : 0.62;
   }
 
   if (deepStarField) {
