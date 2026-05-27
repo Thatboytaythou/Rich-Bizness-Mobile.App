@@ -2,11 +2,14 @@
    RICH BIZNESS MOBILE
    styles/mobile.css
    LAYER 3 / 22
+   RESPONSIVE MAP ONLY
 ========================================= */
 
 @media (max-width: 720px) {
   :root {
     --rb-nav-h: 82px;
+    --rb-mobile-gap: 14px;
+    --rb-mobile-pad: 14px;
   }
 
   html,
@@ -18,8 +21,18 @@
   }
 
   body {
+    min-height: 100vh;
     min-height: 100svh;
+    min-height: 100dvh;
     padding: 0;
+  }
+
+  body:not(.rb-index-page) {
+    overflow-y: auto;
+  }
+
+  body.rb-index-page {
+    overflow: hidden;
   }
 
   .rb-home-shell,
@@ -31,10 +44,10 @@
 
     padding:
       calc(12px + env(safe-area-inset-top))
-      14px
+      var(--rb-mobile-pad)
       calc(var(--rb-nav-h) + 118px + env(safe-area-inset-bottom));
 
-    gap: 14px;
+    gap: var(--rb-mobile-gap);
   }
 
   /* HEADER */
@@ -56,10 +69,13 @@
     line-height: 0.9;
   }
 
-  /* PROFILE PILL */
+  .rb-title-xl {
+    font-size: clamp(2.05rem, 10vw, 3.4rem);
+  }
 
-  .rb-profile-pill,
-  .rb-profile-chip {
+  /* PROFILE */
+
+  .rb-profile-pill {
     width: 100%;
     min-width: 0;
 
@@ -67,10 +83,30 @@
     padding: 10px 12px;
   }
 
-  .rb-profile-pill img,
-  .rb-profile-chip img {
+  .rb-profile-pill img {
     width: 44px;
     height: 44px;
+  }
+
+  body:not(.rb-index-page) .rb-profile-chip {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* INDEX BRAND SAFE */
+
+  .rb-index-page .rb-brand-header {
+    top: calc(env(safe-area-inset-top) + 86px);
+    width: min(88vw, 560px);
+  }
+
+  .rb-index-page .rb-brand-header h1 {
+    font-size: clamp(2.15rem, 9.6vw, 3.45rem);
+  }
+
+  .rb-index-page .rb-brand-header p {
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
   }
 
   /* PORTAL STAGE */
@@ -79,11 +115,10 @@
   .rb-portal-stage {
     width: 100%;
     min-height: clamp(430px, 54svh, 540px);
-
     border-radius: 26px;
   }
 
-  /* ORBIT DIAL */
+  /* ORBIT DIAL FALLBACK CLASSES */
 
   .rb-dial-orbit {
     width: min(88vw, 360px);
@@ -100,7 +135,7 @@
     border-radius: 17px;
   }
 
-  /* PORTAL CORE */
+  /* PORTAL CORE FALLBACK CLASSES */
 
   .rb-portal-core {
     width: clamp(230px, 68vw, 285px);
@@ -143,8 +178,28 @@
   }
 
   .rb-bottom-nav button {
+    min-width: 0;
     font-size: 0.62rem;
     letter-spacing: 0.03em;
+  }
+
+  .rb-bottom-nav .rb-nav-icon {
+    font-size: 1.25rem;
+  }
+
+  /* SIDE TABS */
+
+  .rb-slide-tabs {
+    max-height: calc(100dvh - 190px);
+    overflow: hidden auto;
+  }
+
+  /* MEDIA */
+
+  .rb-card,
+  .rb-panel,
+  .rb-glass-card {
+    border-radius: 24px;
   }
 }
 
@@ -155,19 +210,29 @@
 @media (max-width: 430px) {
   :root {
     --rb-nav-h: 80px;
+    --rb-mobile-pad: 12px;
+    --rb-mobile-gap: 12px;
   }
 
   .rb-home-shell,
   .rb-app-shell,
   .rb-section-shell {
-    padding-left: 12px;
-    padding-right: 12px;
-    gap: 12px;
+    padding-left: var(--rb-mobile-pad);
+    padding-right: var(--rb-mobile-pad);
+    gap: var(--rb-mobile-gap);
   }
 
   .rb-brand-lock h1,
   .rb-home-top h1 {
     font-size: clamp(2rem, 10.8vw, 2.85rem);
+  }
+
+  .rb-index-page .rb-brand-header {
+    top: calc(env(safe-area-inset-top) + 84px);
+  }
+
+  .rb-index-page .rb-brand-header h1 {
+    font-size: clamp(2rem, 9vw, 3rem);
   }
 
   .rb-universe-stage,
@@ -234,5 +299,17 @@
   .rb-portal-core {
     width: clamp(200px, 64vw, 250px);
     height: clamp(200px, 64vw, 250px);
+  }
+
+  .rb-index-page .rb-brand-header h1 {
+    font-size: 1.92rem;
+  }
+
+  .rb-index-page .rb-brand-header p {
+    font-size: 0.52rem;
+  }
+
+  .rb-bottom-nav {
+    padding: 7px;
   }
 }
