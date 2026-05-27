@@ -8,37 +8,115 @@
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>RB Base No Image Test</title>
+  <title>RB Portal Structure Test</title>
 
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/omni-portal.css" />
+  <link rel="stylesheet" href="/styles/avatar.css" />
 </head>
 
-<body class="rb-base-test-page">
+<body class="rb-index-page">
 
-  <main class="rb-base-test-shell">
+  <!-- BG -->
+  <div class="rb-bg-layer"></div>
 
-    <section class="rb-base-test-card">
+  <!-- HEADER -->
+  <header class="rb-brand-header">
+    <h1>RICH <span>BIZNESS</span></h1>
+    <p>BASE PORTAL TEST</p>
+  </header>
 
-      <div class="rb-base-test-icon" id="profileBtn">
-        👤
+  <!-- PROFILE -->
+  <button
+    class="rb-profile-chip"
+    id="profileBtn"
+    type="button"
+    aria-label="Profile"
+  >
+    <div class="rb-profile-avatar">
+      👤
+    </div>
+
+    <span id="profileName">
+      Sign In
+    </span>
+  </button>
+
+  <!-- RIGHT TAB BAR -->
+  <nav class="rb-side-tabs">
+
+    <button type="button">🛡️</button>
+    <button type="button">👑</button>
+    <button type="button">📺</button>
+    <button type="button">🔔</button>
+    <button type="button">⚙️</button>
+    <button type="button">✒️</button>
+    <button type="button">💬</button>
+
+  </nav>
+
+  <!-- MAIN -->
+  <main class="rb-universe-shell">
+
+    <section class="rb-universe-stage">
+
+      <!-- PORTAL -->
+      <div class="rb-portal-ui">
+
+        <div class="rb-portal-ring ring-1"></div>
+        <div class="rb-portal-ring ring-2"></div>
+        <div class="rb-portal-ring ring-3"></div>
+
+        <div class="rb-portal-core"></div>
+
       </div>
 
-      <h1>RICH <span>BIZNESS</span></h1>
-
-      <p>BASE STYLE TEST • NO IMAGE</p>
-
-      <button id="signBtn" type="button">
-        Sign In
-      </button>
+      <div class="rb-module-label active">
+        BASE PORTAL ONLINE
+      </div>
 
     </section>
 
   </main>
 
+  <!-- BOTTOM NAV -->
+  <nav class="rb-bottom-nav">
+
+    <button type="button">
+      <span class="rb-nav-icon">🔥</span>
+      <span>Feed</span>
+    </button>
+
+    <button type="button">
+      <span class="rb-nav-icon">📡</span>
+      <span>Live</span>
+    </button>
+
+    <button type="button">
+      <span class="rb-nav-icon">🎵</span>
+      <span>Music</span>
+    </button>
+
+    <button type="button">
+      <span class="rb-nav-icon">🎮</span>
+      <span>Gaming</span>
+    </button>
+
+    <button type="button">
+      <span class="rb-nav-icon">⬆️</span>
+      <span>Upload</span>
+    </button>
+
+  </nav>
+
   <script type="module">
-    const profileBtn = document.getElementById("profileBtn");
-    const signBtn = document.getElementById("signBtn");
+
+    const profileBtn =
+      document.getElementById("profileBtn");
+
+    const profileName =
+      document.getElementById("profileName");
 
     function pulse(el) {
       if (!el) return;
@@ -46,7 +124,7 @@
       el.animate(
         [
           { transform: "scale(1)" },
-          { transform: "scale(.92)" },
+          { transform: "scale(.94)" },
           { transform: "scale(1)" }
         ],
         {
@@ -57,17 +135,16 @@
     }
 
     profileBtn?.addEventListener("click", () => {
-      pulse(profileBtn);
-      console.log("Profile clicked");
-    });
 
-    signBtn?.addEventListener("click", () => {
-      pulse(signBtn);
-      signBtn.textContent =
-        signBtn.textContent === "Sign In"
+      pulse(profileBtn);
+
+      profileName.textContent =
+        profileName.textContent === "Sign In"
           ? "ThatboyTayThou"
           : "Sign In";
+
     });
+
   </script>
 
 </body>
