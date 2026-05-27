@@ -1,7 +1,7 @@
 /* =========================================
-   RICH BIZNESS LLC
-   /styles/mobile.css
-   MOBILE RESPONSIVE - POLISHED
+   RICH BIZNESS MOBILE
+   styles/mobile.css
+   LAYER 3 / 22
 ========================================= */
 
 @media (max-width: 720px) {
@@ -9,7 +9,8 @@
     --rb-nav-h: 82px;
   }
 
-  html, body {
+  html,
+  body {
     width: 100%;
     max-width: 100%;
     min-height: 100%;
@@ -22,54 +23,68 @@
   }
 
   .rb-home-shell,
-  .rb-app-shell {
+  .rb-app-shell,
+  .rb-section-shell {
     width: 100%;
     max-width: 100%;
     min-height: 100svh;
-    padding: 
+
+    padding:
       calc(12px + env(safe-area-inset-top))
       14px
       calc(var(--rb-nav-h) + 118px + env(safe-area-inset-bottom));
+
     gap: 14px;
   }
 
   /* HEADER */
+
   .rb-home-top,
-  .rb-index-top {
+  .rb-index-top,
+  .rb-topbar {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+
     padding: 0;
     margin-bottom: 8px;
   }
 
-  .rb-brand-lock h1 {
+  .rb-brand-lock h1,
+  .rb-home-top h1 {
     font-size: clamp(2.25rem, 11vw, 3.25rem);
     line-height: 0.9;
   }
 
   /* PROFILE PILL */
-  .rb-profile-pill {
+
+  .rb-profile-pill,
+  .rb-profile-chip {
     width: 100%;
     min-width: 0;
+
     justify-content: flex-start;
     padding: 10px 12px;
   }
 
-  .rb-profile-pill img {
+  .rb-profile-pill img,
+  .rb-profile-chip img {
     width: 44px;
     height: 44px;
   }
 
   /* PORTAL STAGE */
+
   .rb-universe-stage,
   .rb-portal-stage {
     width: 100%;
     min-height: clamp(430px, 54svh, 540px);
+
     border-radius: 26px;
   }
 
   /* ORBIT DIAL */
+
   .rb-dial-orbit {
     width: min(88vw, 360px);
     height: min(88vw, 360px);
@@ -78,12 +93,15 @@
   .rb-orbit-card {
     width: 104px;
     height: 126px;
+
     margin-left: -52px;
     margin-top: -63px;
+
     border-radius: 17px;
   }
 
   /* PORTAL CORE */
+
   .rb-portal-core {
     width: clamp(230px, 68vw, 285px);
     height: clamp(230px, 68vw, 285px);
@@ -95,25 +113,32 @@
   }
 
   /* ACTION ROW */
+
   .rb-action-row {
     grid-template-columns: 1fr;
     gap: 12px;
   }
 
-  .rb-main-action {
+  .rb-main-action,
+  .rb-main-launch {
     min-height: 52px;
     min-width: 100%;
+
     padding: 0 18px;
+
     font-size: 0.78rem;
   }
 
   /* BOTTOM NAV */
+
   .rb-bottom-nav {
     left: max(8px, env(safe-area-inset-left));
     right: max(8px, env(safe-area-inset-right));
     bottom: max(8px, env(safe-area-inset-bottom));
+
     height: 82px;
     padding: 9px;
+
     border-radius: 24px;
   }
 
@@ -133,13 +158,15 @@
   }
 
   .rb-home-shell,
-  .rb-app-shell {
+  .rb-app-shell,
+  .rb-section-shell {
     padding-left: 12px;
     padding-right: 12px;
     gap: 12px;
   }
 
-  .rb-brand-lock h1 {
+  .rb-brand-lock h1,
+  .rb-home-top h1 {
     font-size: clamp(2rem, 10.8vw, 2.85rem);
   }
 
@@ -156,6 +183,7 @@
   .rb-orbit-card {
     width: 96px;
     height: 118px;
+
     margin-left: -48px;
     margin-top: -59px;
   }
@@ -165,7 +193,8 @@
     height: clamp(220px, 66vw, 270px);
   }
 
-  .rb-main-action {
+  .rb-main-action,
+  .rb-main-launch {
     min-height: 50px;
     font-size: 0.72rem;
   }
@@ -192,6 +221,7 @@
   .rb-orbit-card {
     width: 90px;
     height: 112px;
+
     margin-left: -45px;
     margin-top: -56px;
   }
