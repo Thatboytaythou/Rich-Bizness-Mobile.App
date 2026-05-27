@@ -1,632 +1,337 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/avatar.css
-
-   PRO MAX AVATAR SYSTEM
-   CINEMATIC • METAVERSE • LIVE READY
-   - full avatar ecosystem
-   - motion states
-   - draggable floating avatar
-   - profile synced
-   - mobile optimized
-   - hologram fx
+   LAYER 4 / PRO MAX AVATAR SYSTEM
 ========================================= */
 
-/* =========================================
-   ROOT
-========================================= */
-
-:root{
+:root {
   --rb-avatar-size: 88px;
   --rb-avatar-ring: rgba(124,255,170,.85);
   --rb-avatar-gold: rgba(255,215,106,.82);
   --rb-avatar-dark: rgba(0,0,0,.78);
-  --rb-avatar-panel:
-    linear-gradient(
-      145deg,
-      rgba(5,8,5,.92),
-      rgba(0,0,0,.84)
-    );
+  --rb-avatar-panel: linear-gradient(145deg, rgba(5,8,5,.92), rgba(0,0,0,.84));
 }
 
-/* =========================================
-   GLOBAL AVATAR WRAPPER
-========================================= */
-
-.rb-avatar-system{
-  position:relative;
-  width:fit-content;
-  isolation:isolate;
+.rb-avatar-system {
+  position: relative;
+  width: fit-content;
+  isolation: isolate;
 }
 
-/* =========================================
-   FLOATING PLAYER
-========================================= */
-
-.rb-avatar-player{
-  position:fixed;
-  left:22px;
-  bottom:112px;
-  z-index:55;
-
-  width:var(--rb-avatar-size);
-  height:var(--rb-avatar-size);
-
-  border-radius:50%;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  cursor:grab;
-
-  touch-action:none;
-  user-select:none;
-  -webkit-user-select:none;
-
-  transition:
-    transform .24s ease,
-    filter .24s ease,
-    box-shadow .24s ease;
-
-  will-change:
-    transform,
-    left,
-    top;
-
-  animation:
-    rbAvatarFloat 5s ease-in-out infinite;
+.rb-avatar-player {
+  position: fixed;
+  left: 22px;
+  bottom: 112px;
+  z-index: 24;
+  width: var(--rb-avatar-size);
+  height: var(--rb-avatar-size);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform, left, top;
+  animation: rbAvatarFloat 5s ease-in-out infinite;
 }
 
-.rb-avatar-player:active{
-  cursor:grabbing;
-  transform:scale(.96);
+.rb-avatar-player:active {
+  cursor: grabbing;
+  transform: scale(.96);
 }
 
-/* =========================================
-   OUTER ENERGY
-========================================= */
-
-.rb-avatar-player::before{
-  content:"";
-
-  position:absolute;
-  inset:-16px;
-
-  border-radius:50%;
-
-  background:
-    conic-gradient(
-      from 0deg,
-      rgba(124,255,170,.85),
-      rgba(255,215,106,.78),
-      rgba(0,255,157,.88),
-      rgba(124,255,170,.85)
-    );
-
-  filter:blur(14px);
-
-  opacity:.62;
-
-  animation:
-    rbAvatarSpin 12s linear infinite;
-
-  z-index:-2;
+.rb-avatar-player::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(124,255,170,.82), rgba(255,215,106,.62), rgba(0,255,157,.82), rgba(124,255,170,.82));
+  filter: blur(13px);
+  opacity: .52;
+  animation: rbAvatarSpin 14s linear infinite;
+  z-index: -2;
+  pointer-events: none;
 }
 
-/* =========================================
-   ENERGY FIELD
-========================================= */
-
-.rb-avatar-player::after{
-  content:"";
-
-  position:absolute;
-  inset:-7px;
-
-  border-radius:50%;
-
-  border:1px solid rgba(255,255,255,.08);
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(255,255,255,.05),
-      transparent 70%
-    );
-
-  box-shadow:
-    0 0 34px rgba(16,185,129,.18),
-    inset 0 0 24px rgba(255,255,255,.04);
-
-  z-index:-1;
+.rb-avatar-player::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.08);
+  background: radial-gradient(circle, rgba(255,255,255,.05), transparent 70%);
+  box-shadow: 0 0 28px rgba(16,185,129,.16), inset 0 0 22px rgba(255,255,255,.035);
+  z-index: -1;
+  pointer-events: none;
 }
 
-/* =========================================
-   MAIN AVATAR CORE
-========================================= */
-
-.rb-avatar-core{
-  position:relative;
-
-  width:100%;
-  height:100%;
-
-  border-radius:50%;
-
-  overflow:hidden;
-
-  background:
-    radial-gradient(
-      circle at 50% 20%,
-      rgba(255,255,255,.14),
-      transparent 55%
-    ),
-    #050805;
-
-  border:2px solid rgba(255,255,255,.16);
-
-  box-shadow:
-    0 0 0 6px rgba(16,185,129,.08),
-    0 18px 42px rgba(0,0,0,.62),
-    0 0 48px rgba(16,185,129,.18);
-
-  backdrop-filter:blur(18px);
+.rb-avatar-core {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 20%, rgba(255,255,255,.14), transparent 55%), #050805;
+  border: 2px solid rgba(255,255,255,.16);
+  box-shadow: 0 0 0 6px rgba(16,185,129,.08), 0 18px 42px rgba(0,0,0,.62), 0 0 48px rgba(16,185,129,.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
-
-/* =========================================
-   IMAGE
-========================================= */
 
 .rb-avatar-core img,
-.rb-avatar-img{
-  width:100%;
-  height:100%;
-
-  object-fit:cover;
-  display:block;
-
-  transform:scale(1.04);
-
-  filter:
-    saturate(1.12)
-    contrast(1.04);
+.rb-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transform: scale(1.04);
+  filter: saturate(1.12) contrast(1.04);
 }
 
-/* =========================================
-   LIVE RING
-========================================= */
-
-.rb-avatar-live-ring{
-  position:absolute;
-  inset:-4px;
-
-  border-radius:50%;
-
-  border:
-    2px solid rgba(124,255,170,.85);
-
-  opacity:0;
-
-  pointer-events:none;
-
-  box-shadow:
-    0 0 24px rgba(124,255,170,.55),
-    0 0 54px rgba(16,185,129,.28);
-
-  animation:
-    rbAvatarPulse 1.5s ease infinite;
+.rb-avatar-live-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(124,255,170,.85);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 24px rgba(124,255,170,.55), 0 0 54px rgba(16,185,129,.28);
+  animation: rbAvatarPulse 1.5s ease infinite;
 }
 
-.rb-avatar-player.is-live .rb-avatar-live-ring{
-  opacity:1;
+.rb-avatar-player.is-live .rb-avatar-live-ring {
+  opacity: 1;
 }
 
-/* =========================================
-   ONLINE DOT
-========================================= */
-
-.rb-avatar-online{
-  position:absolute;
-  right:4px;
-  bottom:4px;
-
-  width:18px;
-  height:18px;
-
-  border-radius:50%;
-
-  background:#7cffaa;
-
-  border:3px solid #020302;
-
-  box-shadow:
-    0 0 14px rgba(124,255,170,.85),
-    0 0 28px rgba(16,185,129,.42);
-
-  z-index:6;
+.rb-avatar-online {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #7cffaa;
+  border: 3px solid #020302;
+  box-shadow: 0 0 14px rgba(124,255,170,.85), 0 0 28px rgba(16,185,129,.42);
+  z-index: 6;
 }
 
-/* =========================================
-   SPEAKING STATE
-========================================= */
-
-.rb-avatar-player.is-speaking{
-  transform:scale(1.06);
+.rb-avatar-player.is-speaking {
+  filter: drop-shadow(0 0 22px rgba(0,255,157,.34));
 }
 
-.rb-avatar-player.is-speaking::before{
-  opacity:.92;
-
-  filter:blur(18px);
-
-  animation-duration:4s;
+.rb-avatar-player.is-speaking::before {
+  opacity: .82;
+  filter: blur(17px);
+  animation-duration: 5s;
 }
 
-/* =========================================
-   TYPING STATE
-========================================= */
-
-.rb-avatar-player.is-typing .rb-avatar-core{
-  box-shadow:
-    0 0 0 6px rgba(250,204,21,.08),
-    0 0 34px rgba(250,204,21,.28),
-    0 0 70px rgba(250,204,21,.14);
+.rb-avatar-player.is-typing .rb-avatar-core {
+  box-shadow: 0 0 0 6px rgba(250,204,21,.08), 0 0 34px rgba(250,204,21,.24), 0 0 70px rgba(250,204,21,.12);
 }
 
-/* =========================================
-   STREAMING STATE
-========================================= */
-
-.rb-avatar-player.is-streaming{
-  animation:
-    rbAvatarLiveHover 3s ease-in-out infinite;
+.rb-avatar-player.is-streaming {
+  animation: rbAvatarLiveHover 3s ease-in-out infinite;
 }
 
-.rb-avatar-player.is-streaming .rb-avatar-core{
-  border-color:rgba(255,80,80,.42);
-
-  box-shadow:
-    0 0 0 6px rgba(255,70,70,.08),
-    0 0 42px rgba(255,70,70,.24),
-    0 0 80px rgba(255,180,120,.12);
+.rb-avatar-player.is-streaming .rb-avatar-core {
+  border-color: rgba(255,80,80,.42);
+  box-shadow: 0 0 0 6px rgba(255,70,70,.08), 0 0 42px rgba(255,70,70,.24), 0 0 80px rgba(255,180,120,.12);
 }
 
-/* =========================================
-   XP LEVEL CHIP
-========================================= */
-
-.rb-avatar-level{
-  position:absolute;
-  top:-10px;
-  right:-10px;
-
-  min-width:32px;
-  height:32px;
-  padding:0 8px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  border-radius:999px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #7cffaa,
-      #ffd76b
-    );
-
-  color:#041006;
-
-  font-size:.72rem;
-  font-weight:1000;
-
-  box-shadow:
-    0 0 20px rgba(124,255,170,.42);
-
-  z-index:10;
+.rb-avatar-level {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7cffaa, #ffd76b);
+  color: #041006;
+  font-size: .72rem;
+  font-weight: 1000;
+  box-shadow: 0 0 20px rgba(124,255,170,.42);
+  z-index: 10;
 }
 
-/* =========================================
-   NAME HUD
-========================================= */
-
-.rb-avatar-hud{
-  position:absolute;
-  left:50%;
-  top:calc(100% + 14px);
-
-  transform:translateX(-50%);
-
-  min-width:120px;
-  max-width:220px;
-
-  padding:10px 14px;
-
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.08);
-
-  background:var(--rb-avatar-panel);
-
-  backdrop-filter:blur(18px);
-
-  text-align:center;
-
-  box-shadow:
-    0 14px 42px rgba(0,0,0,.42);
-
-  pointer-events:none;
+.rb-avatar-hud {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 14px);
+  transform: translateX(-50%);
+  min-width: 120px;
+  max-width: 220px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: var(--rb-avatar-panel);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  text-align: center;
+  box-shadow: 0 14px 42px rgba(0,0,0,.42);
+  pointer-events: none;
 }
 
-.rb-avatar-hud strong{
-  display:block;
-
-  color:#fff;
-
-  font-size:.74rem;
-  font-weight:1000;
-
-  letter-spacing:.12em;
-
-  text-transform:uppercase;
+.rb-avatar-hud strong {
+  display: block;
+  color: #fff;
+  font-size: .74rem;
+  font-weight: 1000;
+  letter-spacing: .12em;
+  text-transform: uppercase;
 }
 
-.rb-avatar-hud span{
-  display:block;
-
-  margin-top:4px;
-
-  color:#7cffaa;
-
-  font-size:.68rem;
-  font-weight:900;
-
-  letter-spacing:.08em;
-
-  text-transform:uppercase;
+.rb-avatar-hud span {
+  display: block;
+  margin-top: 4px;
+  color: #7cffaa;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
-/* =========================================
-   MINI AVATAR
-========================================= */
-
-.rb-avatar-mini{
-  width:48px;
-  height:48px;
-
-  border-radius:50%;
-
-  overflow:hidden;
-
-  background:#020302;
-
-  border:1px solid rgba(255,255,255,.1);
-
-  box-shadow:
-    0 0 14px rgba(16,185,129,.16);
+.rb-avatar-mini {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 30%, rgba(0,255,157,.18), transparent 60%), #020302;
+  border: 1px solid rgba(255,255,255,.1);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(16,185,129,.16);
 }
 
-.rb-avatar-mini img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+.rb-avatar-mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* =========================================
-   LARGE PROFILE AVATAR
-========================================= */
-
-.rb-avatar-mega{
-  position:relative;
-
-  width:min(320px,72vw);
-  aspect-ratio:1;
-
-  border-radius:50%;
-
-  margin:auto;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  isolation:isolate;
+.rb-avatar-mega {
+  position: relative;
+  width: min(320px,72vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
 }
 
-.rb-avatar-mega::before{
-  content:"";
-
-  position:absolute;
-  inset:-30px;
-
-  border-radius:50%;
-
-  background:
-    conic-gradient(
-      from 0deg,
-      rgba(124,255,170,.82),
-      rgba(255,215,106,.62),
-      rgba(0,255,157,.82),
-      rgba(124,255,170,.82)
-    );
-
-  filter:blur(22px);
-
-  opacity:.65;
-
-  animation:
-    rbAvatarSpin 16s linear infinite;
-
-  z-index:-2;
+.rb-avatar-mega::before {
+  content: "";
+  position: absolute;
+  inset: -30px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(124,255,170,.82), rgba(255,215,106,.62), rgba(0,255,157,.82), rgba(124,255,170,.82));
+  filter: blur(22px);
+  opacity: .65;
+  animation: rbAvatarSpin 16s linear infinite;
+  z-index: -2;
 }
 
-.rb-avatar-mega img{
-  width:100%;
-  height:100%;
-
-  object-fit:cover;
-
-  border-radius:50%;
-
-  border:4px solid rgba(255,255,255,.14);
-
-  background:#020302;
-
-  box-shadow:
-    0 0 0 12px rgba(16,185,129,.08),
-    0 30px 90px rgba(0,0,0,.62),
-    0 0 70px rgba(16,185,129,.22);
+.rb-avatar-mega img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 50%;
+  border: 4px solid rgba(255,255,255,.14);
+  background: #020302;
+  box-shadow: 0 0 0 12px rgba(16,185,129,.08), 0 30px 90px rgba(0,0,0,.62), 0 0 70px rgba(16,185,129,.22);
 }
 
-/* =========================================
-   REACTION EMOTES
-========================================= */
-
-.rb-avatar-emote{
-  position:absolute;
-  left:50%;
-  bottom:100%;
-
-  transform:translateX(-50%);
-
-  font-size:1.8rem;
-
-  opacity:0;
-
-  pointer-events:none;
+.rb-avatar-emote {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  font-size: 1.8rem;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.rb-avatar-player.show-emote .rb-avatar-emote{
-  animation:
-    rbAvatarEmote 1.2s ease forwards;
+.rb-avatar-player.show-emote .rb-avatar-emote {
+  animation: rbAvatarEmote 1.2s ease forwards;
 }
 
-/* =========================================
-   ANIMATIONS
-========================================= */
+@keyframes rbAvatarFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
 
-@keyframes rbAvatarFloat{
-  0%,100%{
-    transform:
-      translateY(0px);
+@keyframes rbAvatarLiveHover {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.04); }
+}
+
+@keyframes rbAvatarSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rbAvatarPulse {
+  0%, 100% { transform: scale(.94); opacity: .45; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes rbAvatarEmote {
+  0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(.4); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-80px) scale(1.2); }
+}
+
+@media(max-width:720px) {
+  :root {
+    --rb-avatar-size: 72px;
   }
 
-  50%{
-    transform:
-      translateY(-8px);
+  .rb-avatar-player {
+    left: 14px;
+    bottom: 98px;
+  }
+
+  .rb-avatar-hud {
+    min-width: 96px;
+    padding: 8px 10px;
+  }
+
+  .rb-avatar-hud strong {
+    font-size: .66rem;
+  }
+
+  .rb-avatar-hud span {
+    font-size: .58rem;
+  }
+
+  .rb-avatar-level {
+    min-width: 28px;
+    height: 28px;
+    font-size: .62rem;
+  }
+
+  .rb-avatar-online {
+    width: 16px;
+    height: 16px;
   }
 }
 
-@keyframes rbAvatarLiveHover{
-  0%,100%{
-    transform:
-      translateY(0px)
-      scale(1);
-  }
-
-  50%{
-    transform:
-      translateY(-10px)
-      scale(1.04);
-  }
-}
-
-@keyframes rbAvatarSpin{
-  from{
-    transform:rotate(0deg);
-  }
-
-  to{
-    transform:rotate(360deg);
-  }
-}
-
-@keyframes rbAvatarPulse{
-  0%,100%{
-    transform:scale(.94);
-    opacity:.45;
-  }
-
-  50%{
-    transform:scale(1.08);
-    opacity:1;
-  }
-}
-
-@keyframes rbAvatarEmote{
-  0%{
-    opacity:0;
-    transform:
-      translateX(-50%)
-      translateY(0)
-      scale(.4);
-  }
-
-  20%{
-    opacity:1;
-  }
-
-  100%{
-    opacity:0;
-    transform:
-      translateX(-50%)
-      translateY(-80px)
-      scale(1.2);
-  }
-}
-
-/* =========================================
-   MOBILE
-========================================= */
-
-@media(max-width:720px){
-
-  :root{
-    --rb-avatar-size:72px;
-  }
-
-  .rb-avatar-player{
-    left:14px;
-    bottom:98px;
-  }
-
-  .rb-avatar-hud{
-    min-width:96px;
-    padding:8px 10px;
-  }
-
-  .rb-avatar-hud strong{
-    font-size:.66rem;
-  }
-
-  .rb-avatar-hud span{
-    font-size:.58rem;
-  }
-
-  .rb-avatar-level{
-    min-width:28px;
-    height:28px;
-    font-size:.62rem;
-  }
-
-  .rb-avatar-online{
-    width:16px;
-    height:16px;
-  }
-}
-
-/* =========================================
-   REDUCED MOTION
-========================================= */
-
-@media(prefers-reduced-motion:reduce){
-
+@media(prefers-reduced-motion:reduce) {
   .rb-avatar-player,
   .rb-avatar-player::before,
   .rb-avatar-live-ring,
-  .rb-avatar-mega::before{
-    animation:none;
+  .rb-avatar-mega::before {
+    animation: none;
   }
 }
