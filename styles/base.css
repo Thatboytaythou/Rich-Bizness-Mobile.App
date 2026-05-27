@@ -1,247 +1,314 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/base.css
+   LAYER 1 / 22
 ========================= */
 
-:root{
-  --rb-black:#050805;
+:root {
+  --rb-black: #050805;
+  --rb-black-soft: #07110c;
+  --rb-black-deep: #020302;
 
-  --rb-green:#00ff9d;
-  --rb-green-soft:#0cffb0;
-  --rb-green-deep:#052e22;
+  --rb-green: #00ff9d;
+  --rb-green-soft: #0cffb0;
+  --rb-green-deep: #052e22;
 
-  --rb-gold:#facc15;
-  --rb-gold-soft:#ffe27a;
+  --rb-gold: #facc15;
+  --rb-gold-soft: #ffe27a;
 
-  --rb-white:#f5f7f7;
+  --rb-white: #f5f7f7;
+  --rb-muted: rgba(245, 247, 247, 0.72);
 
-  --rb-glass:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,.08),
-      rgba(255,255,255,.02)
-    );
+  --rb-glass: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
 
-  --rb-border:
-    rgba(255,255,255,.12);
+  --rb-border: rgba(255, 255, 255, 0.12);
 
-  --rb-shadow-green:
-    0 0 40px rgba(0,255,157,.35);
+  --rb-shadow-green: 0 0 40px rgba(0, 255, 157, 0.35);
+  --rb-shadow-gold: 0 0 40px rgba(250, 204, 21, 0.22);
 
-  --rb-shadow-gold:
-    0 0 40px rgba(250,204,21,.22);
-
-  --rb-header-height:120px;
+  --rb-header-height: 120px;
+  --rb-radius: 28px;
+  --rb-radius-lg: 36px;
+  --rb-vh: 1vh;
 }
 
 /* =========================
    RESET
 ========================= */
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-html,
-body{
-  width:100%;
-  min-height:100%;
-  overflow:hidden;
+html {
+  width: 100%;
+  min-height: 100%;
+  background: var(--rb-black);
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: calc(var(--rb-vh) * 100);
 
   background:
-    radial-gradient(circle at top,#102418 0%,#07110c 40%,#020302 100%);
+    radial-gradient(circle at top, #102418 0%, #07110c 40%, #020302 100%);
 
-  color:var(--rb-white);
+  color: var(--rb-white);
 
   font-family:
     Inter,
     SF Pro Display,
     system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
     sans-serif;
 
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
-body{
-  position:relative;
+body.rb-index-page {
+  width: 100vw;
+  height: 100vh;
+  height: calc(var(--rb-vh) * 100);
+  overflow: hidden;
+}
+
+/* =========================
+   MEDIA DEFAULTS
+========================= */
+
+img,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+  display: block;
+}
+
+img,
+video {
+  object-fit: cover;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
 }
 
 /* =========================
    APP ROOT
 ========================= */
 
-.rb-index-page{
-  width:100vw;
-  height:100vh;
-  overflow:hidden;
+.rb-universe-shell {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: calc(var(--rb-vh) * 100);
+  overflow: hidden;
 }
 
-/* =========================
-   MAIN SHELL
-========================= */
-
-.rb-universe-shell{
-  position:relative;
-  width:100%;
-  height:100vh;
-  overflow:hidden;
-}
-
-.rb-universe-stage{
-  position:relative;
-  width:100%;
-  height:100%;
-  overflow:hidden;
+.rb-universe-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* =========================
    BRAND HEADER
 ========================= */
 
-.rb-brand-header{
-  position:fixed;
-  top:0;
-  left:50%;
-  transform:translateX(-50%);
+.rb-brand-header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
 
-  z-index:100;
+  z-index: 100;
 
-  width:100%;
-  max-width:720px;
+  width: 100%;
+  max-width: 720px;
 
   padding:
-    max(env(safe-area-inset-top),24px)
+    max(env(safe-area-inset-top), 24px)
     24px
     0;
 
-  text-align:center;
-
-  pointer-events:none;
+  text-align: center;
+  pointer-events: none;
 }
 
-.rb-brand-header h1{
-  font-size:clamp(2.2rem,6vw,5rem);
-  font-weight:1000;
-  line-height:.9;
-  letter-spacing:-.06em;
+.rb-brand-header h1 {
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  font-weight: 1000;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
 
-  color:#ffffff;
+  color: #ffffff;
 
   text-shadow:
-    0 0 30px rgba(255,255,255,.2),
-    0 0 60px rgba(0,255,157,.2);
+    0 0 30px rgba(255, 255, 255, 0.2),
+    0 0 60px rgba(0, 255, 157, 0.2);
 }
 
-.rb-brand-header h1 span{
-  color:var(--rb-gold);
+.rb-brand-header h1 span {
+  color: var(--rb-gold);
 
   text-shadow:
-    0 0 25px rgba(250,204,21,.55),
-    0 0 60px rgba(250,204,21,.25);
+    0 0 25px rgba(250, 204, 21, 0.55),
+    0 0 60px rgba(250, 204, 21, 0.25);
 }
 
-.rb-brand-header p{
-  margin-top:12px;
+.rb-brand-header p {
+  margin-top: 12px;
 
-  font-size:.82rem;
-  font-weight:700;
-  letter-spacing:.35em;
-  text-transform:uppercase;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
 
-  color:var(--rb-green-soft);
-
-  opacity:.92;
+  color: var(--rb-green-soft);
+  opacity: 0.92;
 }
 
 /* =========================
-   LABEL
+   MODULE LABEL
 ========================= */
 
-.rb-module-label{
-  position:fixed;
-  left:50%;
-  bottom:48px;
-  transform:translateX(-50%);
+.rb-module-label {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%);
 
-  z-index:120;
+  z-index: 120;
 
-  min-width:180px;
+  min-width: 180px;
+  padding: 14px 22px;
 
-  padding:14px 22px;
+  border: 1px solid var(--rb-border);
+  border-radius: 999px;
 
-  border:
-    1px solid rgba(255,255,255,.12);
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(20px);
 
-  border-radius:999px;
+  text-align: center;
 
-  background:
-    rgba(0,0,0,.42);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 
-  backdrop-filter:blur(20px);
+  color: var(--rb-gold);
 
-  text-align:center;
+  opacity: 0;
+  pointer-events: none;
 
-  font-size:.95rem;
-  font-weight:800;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-
-  color:var(--rb-gold);
-
-  opacity:0;
   transition:
-    opacity .25s ease,
-    transform .25s ease;
-
-  pointer-events:none;
+    opacity 0.25s ease,
+    transform 0.25s ease;
 
   box-shadow:
-    0 0 25px rgba(0,255,157,.18),
-    inset 0 0 18px rgba(255,255,255,.04);
+    0 0 25px rgba(0, 255, 157, 0.18),
+    inset 0 0 18px rgba(255, 255, 255, 0.04);
 }
 
-.rb-module-label.active{
-  opacity:1;
-  transform:
-    translateX(-50%)
-    translateY(-6px);
+.rb-module-label.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+/* =========================
+   GLOBAL HELPERS
+========================= */
+
+.rb-hidden {
+  display: none !important;
+}
+
+.rb-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.rb-page-transition {
+  opacity: 0.82;
+  filter: blur(2px);
+  transition:
+    opacity 0.18s ease,
+    filter 0.18s ease;
 }
 
 /* =========================
    MOBILE SAFE
 ========================= */
 
-@media (max-width:900px){
-
-  .rb-brand-header{
+@media (max-width: 900px) {
+  .rb-brand-header {
     padding:
-      max(env(safe-area-inset-top),18px)
+      max(env(safe-area-inset-top), 18px)
       18px
       0;
   }
 
-  .rb-module-label{
-    bottom:30px;
+  .rb-module-label {
+    bottom: 30px;
+    min-width: auto;
+    width: calc(100% - 40px);
 
-    min-width:auto;
-    width:calc(100% - 40px);
-
-    font-size:.8rem;
-    letter-spacing:.12em;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
   }
 }
 
-@media (max-width:640px){
-
-  .rb-brand-header h1{
-    font-size:2.5rem;
+@media (max-width: 640px) {
+  .rb-brand-header h1 {
+    font-size: 2.5rem;
   }
 
-  .rb-brand-header p{
-    font-size:.7rem;
-    letter-spacing:.24em;
+  .rb-brand-header p {
+    font-size: 0.7rem;
+    letter-spacing: 0.24em;
   }
 }
