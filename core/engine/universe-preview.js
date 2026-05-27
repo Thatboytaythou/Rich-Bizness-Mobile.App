@@ -1,41 +1,25 @@
 import RB_CONFIG from "/core/shared/rb-config.js";
 
-import {
-  createGalaxyEngine
-} from "/core/engine/galaxy-engine.js";
-
-import {
-  createPortalEngine
-} from "/core/engine/portal-engine.js";
-
-import {
-  createOrbitCardsEngine
-} from "/core/engine/orbit-cards.js";
-
-import {
-  createAvatarEngine
-} from "/core/engine/avatar-engine.js";
-
-import {
-  createOmniFxEngine
-} from "/core/engine/omni-fx.js";
+import { createGalaxyEngine } from "/core/engine/galaxy-engine.js";
+import { createPortalEngine } from "/core/engine/portal-engine.js";
+import { createOrbitCardsEngine } from "/core/engine/orbit-cards.js";
+import { createAvatarEngine } from "/core/engine/avatar-engine.js";
+import { createOmniFxEngine } from "/core/engine/omni-fx.js";
 
 /* =========================
    RICH BIZNESS MOBILE
    /core/engine/universe-preview.js
 
-   MASTER UNIVERSE BOOT
-   Scene + Camera + Renderer + Main Loop
+   STEP 2 LOCKED
+   MASTER UNIVERSE BOOT ONLY
 ========================= */
 
 const container = document.getElementById("canvas-container");
 const labelEl = document.getElementById("module-label");
-
 const THREERef = window.THREE;
 
 const fallbackMotion = {
   mobileBreakpoint: 720,
-
   orbit: {
     speed: 0.00245,
     desktopRadiusX: 292,
@@ -43,7 +27,6 @@ const fallbackMotion = {
     mobileRadiusX: 212,
     mobileRadiusY: 102
   },
-
   portal: {
     scalePulse: 0.07
   }
@@ -52,12 +35,10 @@ const fallbackMotion = {
 const motion = {
   ...fallbackMotion,
   ...(RB_CONFIG.motion || {}),
-
   orbit: {
     ...fallbackMotion.orbit,
     ...(RB_CONFIG.motion?.orbit || {})
   },
-
   portal: {
     ...fallbackMotion.portal,
     ...(RB_CONFIG.motion?.portal || {})
@@ -65,17 +46,17 @@ const motion = {
 };
 
 const modules = [
-  { key: "feed", title: "Global Feed", tag: "FEED", image: "/images/brand/hero-banner.png" },
-  { key: "live", title: "Go Live", tag: "LIVE", image: "/images/brand/omni-watch.png.jpeg" },
-  { key: "music", title: "Music Universe", tag: "MUSIC", image: "/images/brand/music-log.png.jpeg" },
-  { key: "podcast", title: "Podcast Shows", tag: "PODCAST", image: "/images/brand/Avatar-hero-Banner.png.jpeg" },
-  { key: "radio", title: "Live Radio", tag: "RADIO", image: "/images/brand/background-v2.png.jpeg" },
-  { key: "gaming", title: "Arcade District", tag: "GAMING", image: "/images/brand/gaming-hero.png.jpeg" },
-  { key: "upload", title: "Upload Content", tag: "UPLOAD", image: "/images/brand/3d-logo.png.jpeg" },
-  { key: "sports", title: "Sports Arena", tag: "SPORTS", image: "/images/brand/sports-logo.png.jpeg" },
-  { key: "gallery", title: "Visual Drops", tag: "GALLERY", image: "/images/brand/father-son-elite.png.jpeg" },
-  { key: "store", title: "Creator Market", tag: "STORE", image: "/images/brand/gta-style-elite.png.jpeg" },
-  { key: "meta", title: "Meta World", tag: "META", image: "/images/brand/meta-verse-elite.png.jpeg" }
+  { key: "feed", title: "Global Feed", tag: "FEED", icon: "🔥", image: "/images/brand/hero-banner.png" },
+  { key: "live", title: "Go Live", tag: "LIVE", icon: "📡", image: "/images/brand/omni-watch.png.jpeg" },
+  { key: "music", title: "Music Universe", tag: "MUSIC", icon: "🎵", image: "/images/brand/music-log.png.jpeg" },
+  { key: "podcast", title: "Podcast Shows", tag: "PODCAST", icon: "🎙️", image: "/images/brand/Avatar-hero-Banner.png.jpeg" },
+  { key: "radio", title: "Live Radio", tag: "RADIO", icon: "📻", image: "/images/brand/background-v2.png.jpeg" },
+  { key: "gaming", title: "Arcade District", tag: "GAMING", icon: "🎮", image: "/images/brand/gaming-hero.png.jpeg" },
+  { key: "upload", title: "Upload Content", tag: "UPLOAD", icon: "⬆️", image: "/images/brand/3d-logo.png.jpeg" },
+  { key: "sports", title: "Sports Arena", tag: "SPORTS", icon: "🏆", image: "/images/brand/sports-logo.png.jpeg" },
+  { key: "gallery", title: "Visual Drops", tag: "GALLERY", icon: "🖼️", image: "/images/brand/father-son-elite.png.jpeg" },
+  { key: "store", title: "Creator Market", tag: "STORE", icon: "🛒", image: "/images/brand/gta-style-elite.png.jpeg" },
+  { key: "meta", title: "Meta World", tag: "META", icon: "🌎", image: "/images/brand/meta-verse-elite.png.jpeg" }
 ];
 
 let scene;
@@ -86,11 +67,7 @@ let raycaster;
 let pointer;
 let animationFrame = null;
 
-let galaxyEngine;
-let portalEngine;
-let orbitCardsEngine;
-let avatarEngine;
-let omniFxEngine;
+const engines = [];
 
 const activityState = {
   liveActive: false,
@@ -101,7 +78,7 @@ const activityState = {
   theme: "green"
 };
 
-function createUniverseContext() {
+function makeContext() {
   return {
     THREE: THREERef,
     RB_CONFIG,
@@ -120,10 +97,18 @@ function createUniverseContext() {
   };
 }
 
+function safeCall(engine, method, ...args) {
+  try {
+    engine?.[method]?.(...args);
+  } catch (error) {
+    console.warn(`[RB UNIVERSE ENGINE ERROR] ${method}`, error);
+  }
+}
+
 function initUniverse() {
   if (!container || !THREERef) return;
-
   if (container.dataset.rbUniverseMounted === "true") return;
+
   container.dataset.rbUniverseMounted = "true";
 
   scene = new THREERef.Scene();
@@ -135,7 +120,6 @@ function initUniverse() {
     0.1,
     1800
   );
-
   camera.position.set(0, 4.4, 55);
 
   renderer = new THREERef.WebGLRenderer({
@@ -156,29 +140,26 @@ function initUniverse() {
   raycaster = new THREERef.Raycaster();
   pointer = new THREERef.Vector2();
 
-  const ctx = createUniverseContext();
+  const ctx = makeContext();
 
-  galaxyEngine = createGalaxyEngine(ctx);
-  portalEngine = createPortalEngine(ctx);
-  orbitCardsEngine = createOrbitCardsEngine(ctx);
-  avatarEngine = createAvatarEngine(ctx);
-  omniFxEngine = createOmniFxEngine(ctx);
+  engines.push(
+    createGalaxyEngine(ctx),
+    createPortalEngine(ctx),
+    createOrbitCardsEngine(ctx),
+    createAvatarEngine(ctx),
+    createOmniFxEngine(ctx)
+  );
 
-  galaxyEngine?.mount?.();
-  portalEngine?.mount?.();
-  orbitCardsEngine?.mount?.();
-  avatarEngine?.mount?.();
-  omniFxEngine?.mount?.();
+  engines.forEach((engine) => safeCall(engine, "mount"));
 
-  bindUniverseEvents();
-  bindRealtimeEvents();
+  bindEvents();
   resizeUniverse();
   animateUniverse();
 
   document.body.classList.add("rb-universe-ready");
 }
 
-function bindUniverseEvents() {
+function bindEvents() {
   window.addEventListener("pointerdown", onPointerDown, { passive: true });
   window.addEventListener("pointermove", onPointerMove, { passive: true });
   window.addEventListener("pointerup", onPointerUp, { passive: true });
@@ -186,96 +167,78 @@ function bindUniverseEvents() {
 
   window.addEventListener("resize", resizeUniverse, { passive: true });
   window.addEventListener("orientationchange", resizeUniverse, { passive: true });
-
   window.addEventListener("beforeunload", destroyUniverse);
 
+  window.addEventListener("rb:activity-update", onActivityUpdate);
+  window.addEventListener("rb:presence-update", onPresenceUpdate);
+
   window.RB_SWAP_AVATAR = () => {
-    avatarEngine?.swapAvatar?.();
+    engines.forEach((engine) => safeCall(engine, "swapAvatar"));
   };
 
   window.RB_PORTAL_THEME = (theme = "green") => {
     activityState.theme = theme;
-    portalEngine?.setTheme?.(theme);
-    galaxyEngine?.setTheme?.(theme);
-    omniFxEngine?.setTheme?.(theme);
+    engines.forEach((engine) => safeCall(engine, "setTheme", theme));
   };
 }
 
-function bindRealtimeEvents() {
-  window.addEventListener("rb:activity-update", (event) => {
-    const live = event.detail?.live;
-    if (!live) return;
+function onActivityUpdate(event) {
+  const live = event.detail?.live;
+  if (!live) return;
 
-    activityState.liveActive = Boolean(live.active);
-    activityState.liveCount = live.count || 0;
-    activityState.orbitBoost = live.active ? 1.28 : 1;
-    activityState.portalBoost = live.active ? 1.22 : 1;
+  activityState.liveActive = Boolean(live.active);
+  activityState.liveCount = live.count || 0;
+  activityState.orbitBoost = live.active ? 1.28 : 1;
+  activityState.portalBoost = live.active ? 1.22 : 1;
 
-    document.body.classList.toggle("rb-orbit-live-energy", live.active);
+  document.body.classList.toggle("rb-orbit-live-energy", activityState.liveActive);
 
-    portalEngine?.onActivityUpdate?.(activityState);
-    orbitCardsEngine?.onActivityUpdate?.(activityState);
-    galaxyEngine?.onActivityUpdate?.(activityState);
-    omniFxEngine?.onActivityUpdate?.(activityState);
-  });
+  engines.forEach((engine) => safeCall(engine, "onActivityUpdate", activityState));
+}
 
-  window.addEventListener("rb:presence-update", (event) => {
-    activityState.onlineCount = event.detail?.onlineCount || 0;
+function onPresenceUpdate(event) {
+  activityState.onlineCount = event.detail?.onlineCount || 0;
 
-    document.body.classList.toggle(
-      "rb-orbit-presence-energy",
-      activityState.onlineCount > 0
-    );
+  document.body.classList.toggle(
+    "rb-orbit-presence-energy",
+    activityState.onlineCount > 0
+  );
 
-    portalEngine?.onPresenceUpdate?.(activityState);
-    orbitCardsEngine?.onPresenceUpdate?.(activityState);
-    galaxyEngine?.onPresenceUpdate?.(activityState);
-    omniFxEngine?.onPresenceUpdate?.(activityState);
-  });
+  engines.forEach((engine) => safeCall(engine, "onPresenceUpdate", activityState));
 }
 
 function onPointerDown(event) {
-  orbitCardsEngine?.onPointerDown?.(event);
-  portalEngine?.onPointerDown?.(event);
-  avatarEngine?.onPointerDown?.(event);
+  engines.forEach((engine) => safeCall(engine, "onPointerDown", event));
 }
 
 function onPointerMove(event) {
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  orbitCardsEngine?.onPointerMove?.(event);
-  portalEngine?.onPointerMove?.(event);
-  avatarEngine?.onPointerMove?.(event);
+  engines.forEach((engine) => safeCall(engine, "onPointerMove", event));
 }
 
 function onPointerUp(event) {
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  orbitCardsEngine?.onPointerUp?.(event);
-  portalEngine?.onPointerUp?.(event);
-  avatarEngine?.onPointerUp?.(event);
+  engines.forEach((engine) => safeCall(engine, "onPointerUp", event));
 }
 
 function resizeUniverse() {
   if (!camera || !renderer) return;
 
-  const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+  const mobile = window.innerWidth <= motion.mobileBreakpoint;
 
   camera.aspect = window.innerWidth / window.innerHeight;
-  camera.fov = isMobile ? 49 : 44;
-  camera.position.set(0, isMobile ? 4.2 : 4.4, isMobile ? 56 : 55);
+  camera.fov = mobile ? 49 : 44;
+  camera.position.set(0, mobile ? 4.2 : 4.4, mobile ? 56 : 55);
   camera.updateProjectionMatrix();
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  galaxyEngine?.resize?.();
-  portalEngine?.resize?.();
-  orbitCardsEngine?.resize?.();
-  avatarEngine?.resize?.();
-  omniFxEngine?.resize?.();
+  engines.forEach((engine) => safeCall(engine, "resize"));
 }
 
 function animateUniverse() {
@@ -284,11 +247,7 @@ function animateUniverse() {
   const now = performance.now();
   const t = now * 0.001;
 
-  galaxyEngine?.update?.(t, now);
-  portalEngine?.update?.(t, now);
-  orbitCardsEngine?.update?.(t, now);
-  avatarEngine?.update?.(t, now);
-  omniFxEngine?.update?.(t, now);
+  engines.forEach((engine) => safeCall(engine, "update", t, now));
 
   renderer.render(scene, camera);
 }
@@ -296,12 +255,8 @@ function animateUniverse() {
 function destroyUniverse() {
   if (animationFrame) cancelAnimationFrame(animationFrame);
 
-  galaxyEngine?.destroy?.();
-  portalEngine?.destroy?.();
-  orbitCardsEngine?.destroy?.();
-  avatarEngine?.destroy?.();
-  omniFxEngine?.destroy?.();
-
+  engines.forEach((engine) => safeCall(engine, "destroy"));
+  engines.length = 0;
   animationFrame = null;
 }
 
