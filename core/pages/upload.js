@@ -14,21 +14,10 @@ import {
   refreshAppIdentity
 } from "/core/app.js";
 
-import {
-  getSupabase
-} from "/core/shared/rb-supabase.js";
-
-import {
-  ensureMyProfile
-} from "/core/shared/rb-auth.js";
-
-import {
-  refreshProfileState
-} from "/core/features/profile/profile-state.js";
-
-import {
-  syncAvatarToUniverse
-} from "/core/features/profile/avatar-sync.js";
+import { getSupabase } from "/core/shared/rb-supabase.js";
+import { ensureMyProfile } from "/core/shared/rb-auth.js";
+import { refreshProfileState } from "/core/features/profile/profile-state.js";
+import { syncAvatarToUniverse } from "/core/features/profile/avatar-sync.js";
 
 import {
   RB_TABLES,
@@ -42,15 +31,20 @@ const ROUTES = {
   general: { section: "feed", bucket: RB_BUCKETS.generalUploads, targetTable: RB_TABLES.feedPosts, mediaType: "file" },
   feed: { section: "feed", bucket: RB_BUCKETS.generalUploads, targetTable: RB_TABLES.feedPosts, mediaType: "file" },
   gallery: { section: "gallery", bucket: RB_BUCKETS.galleryMedia, targetTable: RB_TABLES.feedPosts, mediaType: "image" },
+
   music: { section: "music", bucket: RB_BUCKETS.musicAudio, targetTable: RB_TABLES.musicTracks, mediaType: "audio" },
   podcast: { section: "podcast", bucket: RB_BUCKETS.podcastAudio, targetTable: RB_TABLES.podcastEpisodes, mediaType: "audio" },
   radio: { section: "radio", bucket: RB_BUCKETS.radioCovers, targetTable: RB_TABLES.radioStations, mediaType: "image" },
+
   sports: { section: "sports", bucket: RB_BUCKETS.sportsMedia, targetTable: RB_TABLES.sportsUploads, mediaType: "video" },
   gaming: { section: "gaming", bucket: RB_BUCKETS.gameClips, targetTable: RB_TABLES.gameClips, mediaType: "video" },
+
   "store-product": { section: "store", bucket: RB_BUCKETS.storeProducts, targetTable: RB_TABLES.products, mediaType: "image" },
   "store-digital": { section: "store", bucket: RB_BUCKETS.storeDigital, targetTable: RB_TABLES.products, mediaType: "file" },
+
   "live-thumbnail": { section: "live", bucket: RB_BUCKETS.liveThumbnails, targetTable: RB_TABLES.liveStreams, mediaType: "image" },
   "live-recording": { section: "live", bucket: RB_BUCKETS.liveRecordings, targetTable: RB_TABLES.uploads, mediaType: "video" },
+
   "profile-avatar": { section: "profile", bucket: RB_BUCKETS.avatars, targetTable: RB_TABLES.profiles, mediaType: "image" },
   "profile-banner": { section: "profile", bucket: RB_BUCKETS.profileBanners, targetTable: RB_TABLES.profiles, mediaType: "image" },
   "meta-avatar": { section: "meta", bucket: RB_BUCKETS.metaAvatars, targetTable: RB_TABLES.metaAvatars, mediaType: "image" }
@@ -71,7 +65,6 @@ const els = {
 };
 
 let supabase = null;
-let authState = null;
 let isUploading = false;
 
 function setStatus(text) {
@@ -116,16 +109,12 @@ function setLoading(active) {
 }
 
 function publicUrl(bucket, path) {
-  const { data } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(path);
-
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data?.publicUrl || "";
 }
 
 function paintPreview() {
   const file = els.file?.files?.[0];
-
   if (!els.preview) return;
 
   if (!file) {
@@ -177,17 +166,12 @@ function profilePayload(profile, user) {
   };
 }
 
-async function insertUploadRecord({
-  user,
-  config,
-  file,
-  filePath,
-  url,
-  mediaType
-}) {
+async function insertUploadRecord({ user, profile, config, file, filePath, url, mediaType }) {
   const title = safeValue(els.title);
   const description = safeValue(els.description);
   const category = safeValue(els.category, config.section);
+  const routeKey = els.routeKey?.value || "general";
+  const identity = profilePayload(profile, user);
 
   const { data, error } = await supabase
     .from(RB_TABLES.uploads)
@@ -206,9 +190,12 @@ async function insertUploadRecord({
       visibility: "public",
       processing_status: "completed",
       metadata: {
-        route_key: els.routeKey?.value || "general",
+        route_key: routeKey,
         source: "Rich Bizness Mobile",
-        target_table: config.targetTable
+        target_table: config.targetTable,
+        profile_id: user.id,
+        username: identity.username,
+        display_name: identity.display_name
       }
     })
     .select("*")
@@ -218,20 +205,21 @@ async function insertUploadRecord({
   return data;
 }
 
-async function createSectionRecord({
-  user,
-  profile,
-  config,
-  upload,
-  url,
-  mediaType
-}) {
+async function createSectionRecord({ user, profile, config, upload, url, mediaType }) {
   const routeKey = els.routeKey?.value || "general";
   const title = safeValue(els.title, "Untitled Drop");
   const description = safeValue(els.description);
   const category = safeValue(els.category, config.section);
   const tag = safeValue(els.tag);
   const identity = profilePayload(profile, user);
+
+  const baseMetadata = {
+    upload_id: upload.id,
+    route_key: routeKey,
+    profile_id: user.id,
+    category,
+    tag
+  };
 
   if (config.targetTable === RB_TABLES.feedPosts) {
     return supabase.from(RB_TABLES.feedPosts).insert({
@@ -244,23 +232,13 @@ async function createSectionRecord({
       thumbnail_url: mediaType === "image" ? url : null,
       section: config.section,
       visibility: "public",
-      like_count: 0,
-      comment_count: 0,
-      repost_count: 0,
-      view_count: 0,
-      metadata: {
-        upload_id: upload.id,
-        route_key: routeKey,
-        category,
-        tag
-      }
+      metadata: baseMetadata
     });
   }
 
   if (config.targetTable === RB_TABLES.musicTracks) {
     return supabase.from(RB_TABLES.musicTracks).insert({
       user_id: user.id,
-      creator_id: user.id,
       ...identity,
       title,
       description,
@@ -269,17 +247,13 @@ async function createSectionRecord({
       genre: category,
       mood: tag,
       is_published: true,
-      metadata: {
-        upload_id: upload.id,
-        route_key: routeKey
-      }
+      metadata: baseMetadata
     });
   }
 
   if (config.targetTable === RB_TABLES.podcastEpisodes) {
     return supabase.from(RB_TABLES.podcastEpisodes).insert({
       user_id: user.id,
-      creator_id: user.id,
       ...identity,
       title,
       description,
@@ -288,10 +262,7 @@ async function createSectionRecord({
       episode_number: 1,
       season_number: 1,
       is_published: true,
-      metadata: {
-        upload_id: upload.id,
-        route_key: routeKey
-      }
+      metadata: baseMetadata
     });
   }
 
@@ -302,14 +273,11 @@ async function createSectionRecord({
       station_name: title,
       station_tag: tag,
       description,
-      stream_url: url,
+      stream_url: tag || url,
       cover_url: url,
       genre: category,
       is_public: true,
-      metadata: {
-        upload_id: upload.id,
-        route_key: routeKey
-      }
+      metadata: baseMetadata
     });
   }
 
@@ -325,10 +293,7 @@ async function createSectionRecord({
       clip_type: "highlight",
       file_url: url,
       thumbnail_url: null,
-      metadata: {
-        upload_id: upload.id,
-        route_key: routeKey
-      }
+      metadata: baseMetadata
     });
   }
 
@@ -341,10 +306,7 @@ async function createSectionRecord({
       caption: description,
       clip_url: url,
       thumbnail_url: null,
-      metadata: {
-        upload_id: upload.id,
-        route_key: routeKey
-      }
+      metadata: baseMetadata
     });
   }
 
@@ -353,7 +315,6 @@ async function createSectionRecord({
 
     return supabase.from(RB_TABLES.products).insert({
       seller_id: user.id,
-      creator_id: user.id,
       title,
       description,
       category,
@@ -367,17 +328,12 @@ async function createSectionRecord({
       is_digital: isDigital,
       is_public: true,
       status: "active",
-      metadata: {
-        upload_id: upload.id,
-        route_key: routeKey,
-        tag
-      }
+      metadata: baseMetadata
     });
   }
 
   if (config.targetTable === RB_TABLES.profiles) {
-    const column =
-      routeKey === "profile-banner" ? "banner_url" : "avatar_url";
+    const column = routeKey === "profile-banner" ? "banner_url" : "avatar_url";
 
     return supabase
       .from(RB_TABLES.profiles)
@@ -395,12 +351,10 @@ async function createSectionRecord({
         display_name: identity.display_name,
         avatar_url: url,
         aura: "green-gold",
-        rank: "Traveler",
+        rank: profile?.rank_title || "Traveler",
+        level: profile?.rich_level || 1,
         is_active: true,
-        metadata: {
-          upload_id: upload.id,
-          route_key: routeKey
-        },
+        metadata: baseMetadata,
         updated_at: new Date().toISOString()
       },
       { onConflict: "user_id" }
@@ -412,11 +366,9 @@ async function createSectionRecord({
 
 async function handleUpload(event) {
   event.preventDefault();
-
   if (isUploading) return;
 
-  authState = getCurrentUserState();
-
+  const authState = getCurrentUserState();
   const user = authState?.user;
   let profile = authState?.profile;
   const file = els.file?.files?.[0];
@@ -439,8 +391,8 @@ async function handleUpload(event) {
   try {
     isUploading = true;
     setLoading(true);
-    setStatus("SYNCING IDENTITY");
 
+    setStatus("SYNCING IDENTITY");
     profile = await ensureMyProfile();
 
     setStatus("UPLOADING");
@@ -459,6 +411,7 @@ async function handleUpload(event) {
 
     const upload = await insertUploadRecord({
       user,
+      profile,
       config,
       file,
       filePath,
@@ -480,11 +433,7 @@ async function handleUpload(event) {
     await refreshProfileState();
     await refreshAppIdentity();
 
-    if (
-      els.routeKey?.value === "profile-avatar" ||
-      els.routeKey?.value === "profile-banner" ||
-      els.routeKey?.value === "meta-avatar"
-    ) {
+    if (["profile-avatar", "profile-banner", "meta-avatar"].includes(els.routeKey?.value)) {
       await syncAvatarToUniverse();
     }
 
@@ -515,8 +464,6 @@ async function bootUploadPage() {
     await ensureMyProfile();
     await refreshProfileState();
     await refreshAppIdentity();
-
-    authState = getCurrentUserState();
 
     const params = new URLSearchParams(window.location.search);
     const section = params.get("section");
