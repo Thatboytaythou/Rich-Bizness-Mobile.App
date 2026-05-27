@@ -4,8 +4,8 @@ import RB_CONFIG from "/core/shared/rb-config.js";
    RICH BIZNESS MOBILE
    /core/engine/universe-preview.js
 
-   UNIVERSE ENGINE PRO MAX
-   Portal + Galaxy + Cards + Real 3D Avatar
+   PRO MAX UNIVERSE ENGINE
+   Living Portal + Galaxy + Orbit Cards + Real 3D Avatar + Smoke Clouds
 ========================= */
 
 const container = document.getElementById("canvas-container");
@@ -14,14 +14,14 @@ const labelEl = document.getElementById("module-label");
 const fallbackMotion = {
   mobileBreakpoint: 720,
   orbit: {
-    speed: 0.00255,
-    desktopRadiusX: 306,
-    desktopRadiusY: 144,
-    mobileRadiusX: 224,
-    mobileRadiusY: 108
+    speed: 0.00245,
+    desktopRadiusX: 292,
+    desktopRadiusY: 136,
+    mobileRadiusX: 212,
+    mobileRadiusY: 102
   },
   portal: {
-    scalePulse: 0.082
+    scalePulse: 0.07
   }
 };
 
@@ -55,19 +55,13 @@ const modules = [
 let scene;
 let camera;
 let renderer;
-let clock;
-
 let portal;
 let portalCore;
 let portalInner;
 let portalMist;
-let portalLens;
+let portalMouth;
 let portalRings = [];
 let portalStreams = [];
-let portalBeams = [];
-let portalTouchBursts = [];
-let portalColorMode = 0;
-
 let galaxyCloud;
 let galaxyGold;
 let starField;
@@ -75,12 +69,11 @@ let deepStarField;
 let floatingParticles;
 let energyComets;
 let cloudField;
-
-let orbitGroup;
 let avatarGroup;
 let rbAvatar;
 let rbAvatarParts = {};
-
+let rbAvatarType = "boy";
+let orbitGroup;
 let raycaster;
 let pointer;
 let hoveredCard = null;
@@ -93,13 +86,8 @@ let startX = 0;
 let lastX = 0;
 let dragMoved = false;
 
-let avatarMode = "idle";
-let avatarTargetX = 5.5;
-let avatarTargetZ = 8.3;
-let avatarWalkTime = 0;
-
 const cards = [];
-const avatarParticles = [];
+const smokeParticles = [];
 const textureLoader = window.THREE ? new THREE.TextureLoader() : null;
 
 const activityState = {
@@ -107,33 +95,8 @@ const activityState = {
   liveCount: 0,
   onlineCount: 0,
   orbitBoost: 1,
-  portalBoost: 1,
-  touchEnergy: 0
+  portalBoost: 1
 };
-
-const portalPalettes = [
-  {
-    name: "emerald",
-    core: 0x00ff9d,
-    deep: 0x08795a,
-    gold: 0xfacc15,
-    accent: 0x0cffb0
-  },
-  {
-    name: "blue",
-    core: 0x38bdf8,
-    deep: 0x075985,
-    gold: 0x93c5fd,
-    accent: 0x67e8f9
-  },
-  {
-    name: "purple",
-    core: 0xa855f7,
-    deep: 0x581c87,
-    gold: 0xfacc15,
-    accent: 0xc084fc
-  }
-];
 
 function initUniverse() {
   if (!container || !window.THREE || !textureLoader) return;
@@ -141,11 +104,16 @@ function initUniverse() {
 
   container.dataset.rbUniverseMounted = "true";
 
-  clock = new THREE.Clock();
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x020503, 0.011);
+  scene.fog = new THREE.FogExp2(0x020503, 0.012);
 
-  camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 1800);
+  camera = new THREE.PerspectiveCamera(
+    44,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1800
+  );
+
   camera.position.set(0, 4.4, 55);
 
   renderer = new THREE.WebGLRenderer({
@@ -183,10 +151,6 @@ function initUniverse() {
   document.body.classList.add("rb-universe-ready");
 }
 
-function currentPalette() {
-  return portalPalettes[portalColorMode % portalPalettes.length];
-}
-
 function makeGlowTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
@@ -196,9 +160,9 @@ function makeGlowTexture() {
   const gradient = ctx.createRadialGradient(128, 128, 4, 128, 128, 128);
 
   gradient.addColorStop(0, "rgba(255,255,255,1)");
-  gradient.addColorStop(0.14, "rgba(250,204,21,.92)");
-  gradient.addColorStop(0.42, "rgba(0,255,157,.68)");
-  gradient.addColorStop(0.74, "rgba(16,185,129,.2)");
+  gradient.addColorStop(0.16, "rgba(250,204,21,.9)");
+  gradient.addColorStop(0.42, "rgba(0,255,157,.64)");
+  gradient.addColorStop(0.74, "rgba(16,185,129,.18)");
   gradient.addColorStop(1, "rgba(0,0,0,0)");
 
   ctx.fillStyle = gradient;
@@ -217,14 +181,14 @@ function makeCloudTexture() {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, 512, 512);
 
-  for (let i = 0; i < 56; i += 1) {
-    const x = 256 + (Math.random() - 0.5) * 190;
-    const y = 256 + (Math.random() - 0.5) * 130;
-    const r = 34 + Math.random() * 96;
+  for (let i = 0; i < 42; i += 1) {
+    const x = 256 + (Math.random() - 0.5) * 170;
+    const y = 256 + (Math.random() - 0.5) * 120;
+    const r = 36 + Math.random() * 92;
 
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, "rgba(190,255,230,.24)");
-    g.addColorStop(0.42, "rgba(0,255,157,.09)");
+    g.addColorStop(0, "rgba(180,255,220,.22)");
+    g.addColorStop(0.45, "rgba(0,255,157,.08)");
     g.addColorStop(1, "rgba(0,0,0,0)");
 
     ctx.fillStyle = g;
@@ -239,29 +203,28 @@ function makeCloudTexture() {
 }
 
 function buildLights() {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.76));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.74));
 
-  const goldLight = new THREE.PointLight(0xfacc15, 5.4, 220);
-  goldLight.position.set(20, 22, 40);
+  const goldLight = new THREE.PointLight(0xfacc15, 5.2, 210);
+  goldLight.position.set(20, 22, 38);
   scene.add(goldLight);
 
-  const greenLight = new THREE.PointLight(0x00ff9d, 5.1, 220);
-  greenLight.position.set(-24, -6, 28);
+  const greenLight = new THREE.PointLight(0x00ff9d, 4.8, 210);
+  greenLight.position.set(-24, -6, 26);
   scene.add(greenLight);
 
-  const portalLight = new THREE.PointLight(0x00ffcc, 6.7, 140);
+  const portalLight = new THREE.PointLight(0x00ffcc, 6.2, 128);
   portalLight.position.set(0, -1, 8);
-  portalLight.name = "portalLight";
   scene.add(portalLight);
 
-  const avatarLight = new THREE.PointLight(0xfacc15, 3.8, 110);
+  const avatarLight = new THREE.PointLight(0xfacc15, 3.4, 90);
   avatarLight.position.set(8, 8, 22);
   scene.add(avatarLight);
 }
 
 function buildStars() {
   const isMobile = window.innerWidth <= motion.mobileBreakpoint;
-  const count = isMobile ? 4300 : 7200;
+  const count = isMobile ? 3600 : 5800;
 
   const geo = new THREE.BufferGeometry();
   const positions = [];
@@ -269,9 +232,9 @@ function buildStars() {
 
   for (let i = 0; i < count; i += 1) {
     positions.push(
-      THREE.MathUtils.randFloatSpread(250),
-      THREE.MathUtils.randFloatSpread(178),
-      THREE.MathUtils.randFloatSpread(220) - 38
+      THREE.MathUtils.randFloatSpread(240),
+      THREE.MathUtils.randFloatSpread(170),
+      THREE.MathUtils.randFloatSpread(210) - 35
     );
 
     if (Math.random() > 0.78) colors.push(1, 0.78, 0.18);
@@ -284,9 +247,9 @@ function buildStars() {
   starField = new THREE.Points(
     geo,
     new THREE.PointsMaterial({
-      size: isMobile ? 0.056 : 0.07,
+      size: isMobile ? 0.055 : 0.068,
       transparent: true,
-      opacity: 0.66,
+      opacity: 0.62,
       vertexColors: true,
       depthWrite: false
     })
@@ -301,19 +264,19 @@ function buildStars() {
       color: 0x0cffb0,
       size: isMobile ? 0.022 : 0.028,
       transparent: true,
-      opacity: 0.26,
+      opacity: 0.24,
       depthWrite: false
     })
   );
 
-  deepStarField.position.z = -104;
-  deepStarField.scale.setScalar(1.55);
+  deepStarField.position.z = -100;
+  deepStarField.scale.setScalar(1.5);
   scene.add(deepStarField);
 }
 
 function buildGalaxy() {
   const isMobile = window.innerWidth <= motion.mobileBreakpoint;
-  const count = isMobile ? 6400 : 9800;
+  const count = isMobile ? 5600 : 8800;
 
   const greenGeo = new THREE.BufferGeometry();
   const goldGeo = new THREE.BufferGeometry();
@@ -322,13 +285,13 @@ function buildGalaxy() {
   const gold = [];
 
   for (let i = 0; i < count; i += 1) {
-    const radius = Math.random() * 92;
-    const arm = i % 6;
-    const angle = radius * 0.25 + arm * ((Math.PI * 2) / 6) + Math.random() * 0.7;
+    const radius = Math.random() * 84;
+    const arm = i % 5;
+    const angle = radius * 0.24 + arm * ((Math.PI * 2) / 5) + Math.random() * 0.62;
 
     const x = Math.cos(angle) * radius;
-    const y = THREE.MathUtils.randFloatSpread(34) * (1 - radius / 142);
-    const z = Math.sin(angle) * radius - 25;
+    const y = THREE.MathUtils.randFloatSpread(32) * (1 - radius / 128);
+    const z = Math.sin(angle) * radius - 24;
 
     if (Math.random() > 0.72) gold.push(x, y, z);
     else green.push(x, y, z);
@@ -341,9 +304,9 @@ function buildGalaxy() {
     greenGeo,
     new THREE.PointsMaterial({
       color: 0x00ff9d,
-      size: isMobile ? 0.076 : 0.096,
+      size: isMobile ? 0.074 : 0.092,
       transparent: true,
-      opacity: 0.64,
+      opacity: 0.6,
       depthWrite: false
     })
   );
@@ -352,9 +315,9 @@ function buildGalaxy() {
     goldGeo,
     new THREE.PointsMaterial({
       color: 0xfacc15,
-      size: isMobile ? 0.058 : 0.074,
+      size: isMobile ? 0.056 : 0.07,
       transparent: true,
-      opacity: 0.48,
+      opacity: 0.45,
       depthWrite: false
     })
   );
@@ -370,26 +333,26 @@ function buildCloudField() {
   cloudField = new THREE.Group();
   const cloudTexture = makeCloudTexture();
 
-  for (let i = 0; i < 24; i += 1) {
+  for (let i = 0; i < 16; i += 1) {
     const cloud = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: cloudTexture,
         transparent: true,
-        opacity: 0.035 + Math.random() * 0.055,
+        opacity: 0.055 + Math.random() * 0.055,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
     );
 
     cloud.position.set(
-      THREE.MathUtils.randFloatSpread(62),
-      THREE.MathUtils.randFloat(-12, 18),
-      THREE.MathUtils.randFloat(-42, 2)
+      THREE.MathUtils.randFloatSpread(52),
+      THREE.MathUtils.randFloat(-10, 16),
+      THREE.MathUtils.randFloat(-32, 4)
     );
 
-    const s = THREE.MathUtils.randFloat(12, 30);
-    cloud.scale.set(s * 1.9, s, 1);
-    cloud.userData.speed = THREE.MathUtils.randFloat(0.0007, 0.0021);
+    const s = THREE.MathUtils.randFloat(10, 24);
+    cloud.scale.set(s * 1.8, s, 1);
+    cloud.userData.speed = THREE.MathUtils.randFloat(0.0008, 0.0022);
     cloud.userData.float = Math.random() * Math.PI * 2;
 
     cloudField.add(cloud);
@@ -400,7 +363,7 @@ function buildCloudField() {
 
 function buildFloatingParticles() {
   const isMobile = window.innerWidth <= motion.mobileBreakpoint;
-  const count = isMobile ? 1900 : 3200;
+  const count = isMobile ? 1600 : 2700;
 
   const geo = new THREE.BufferGeometry();
   const positions = [];
@@ -408,11 +371,11 @@ function buildFloatingParticles() {
 
   for (let i = 0; i < count; i += 1) {
     const angle = Math.random() * Math.PI * 2;
-    const radius = THREE.MathUtils.randFloat(3, 54);
+    const radius = THREE.MathUtils.randFloat(3, 50);
 
     positions.push(
       Math.cos(angle) * radius,
-      THREE.MathUtils.randFloatSpread(62),
+      THREE.MathUtils.randFloatSpread(58),
       Math.sin(angle) * radius - 3
     );
 
@@ -426,9 +389,9 @@ function buildFloatingParticles() {
   floatingParticles = new THREE.Points(
     geo,
     new THREE.PointsMaterial({
-      size: isMobile ? 0.092 : 0.118,
+      size: isMobile ? 0.09 : 0.112,
       transparent: true,
-      opacity: 0.62,
+      opacity: 0.6,
       vertexColors: true,
       depthWrite: false
     })
@@ -442,7 +405,7 @@ function buildEnergyComets() {
   energyComets = new THREE.Group();
   const texture = makeGlowTexture();
 
-  for (let i = 0; i < 46; i += 1) {
+  for (let i = 0; i < 38; i += 1) {
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: texture,
@@ -453,11 +416,11 @@ function buildEnergyComets() {
       })
     );
 
-    sprite.userData.speed = THREE.MathUtils.randFloat(0.004, 0.014);
-    sprite.userData.radius = THREE.MathUtils.randFloat(9, 39);
+    sprite.userData.speed = THREE.MathUtils.randFloat(0.004, 0.013);
+    sprite.userData.radius = THREE.MathUtils.randFloat(9, 36);
     sprite.userData.angle = Math.random() * Math.PI * 2;
-    sprite.userData.y = THREE.MathUtils.randFloat(-11, 11);
-    sprite.scale.setScalar(THREE.MathUtils.randFloat(0.55, 1.9));
+    sprite.userData.y = THREE.MathUtils.randFloat(-10, 10);
+    sprite.scale.setScalar(THREE.MathUtils.randFloat(0.55, 1.75));
 
     energyComets.add(sprite);
   }
@@ -467,85 +430,69 @@ function buildEnergyComets() {
 
 function buildPortal() {
   portal = new THREE.Group();
+
   const glowTexture = makeGlowTexture();
-  const p = currentPalette();
 
   portalMist = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: glowTexture,
       transparent: true,
-      opacity: 0.78,
+      opacity: 0.76,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     })
   );
 
-  portalMist.scale.set(31, 31, 1);
+  portalMist.scale.set(27, 27, 1);
   portal.add(portalMist);
 
-  portalLens = new THREE.Mesh(
-    new THREE.SphereGeometry(6.45, 96, 96),
-    new THREE.MeshBasicMaterial({
-      color: p.core,
-      transparent: true,
-      opacity: 0.11,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    })
-  );
-  portal.add(portalLens);
-
   portalMouth = new THREE.Mesh(
-    new THREE.TorusGeometry(7.05, 0.48, 26, 220),
+    new THREE.TorusGeometry(6.45, 0.42, 24, 180),
     new THREE.MeshBasicMaterial({
-      color: p.core,
+      color: 0x00ff9d,
       transparent: true,
-      opacity: 0.62,
+      opacity: 0.58,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     })
   );
 
-  portalMouth.rotation.x = Math.PI / 2.65;
+  portalMouth.rotation.x = Math.PI / 2.7;
   portalMouth.rotation.z = 0.15;
   portal.add(portalMouth);
 
-  for (let i = 0; i < 6; i += 1) {
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(7.7 + i * 0.78, 0.04 + i * 0.006, 12, 220),
-      new THREE.MeshBasicMaterial({
-        color: i % 2 ? p.gold : p.core,
-        transparent: true,
-        opacity: 0.2 - i * 0.023,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
-      })
-    );
+  const mouthGold = new THREE.Mesh(
+    new THREE.TorusGeometry(7.35, 0.12, 18, 180),
+    new THREE.MeshBasicMaterial({
+      color: 0xfacc15,
+      transparent: true,
+      opacity: 0.38,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    })
+  );
 
-    ring.rotation.x = Math.PI / (2.12 + i * 0.16);
-    ring.rotation.y = i * 0.4;
-    ring.rotation.z = i * 0.82;
-
-    portalRings.push(ring);
-    portal.add(ring);
-  }
+  mouthGold.rotation.x = Math.PI / 2.45;
+  mouthGold.rotation.z = -0.28;
+  portalRings.push(mouthGold);
+  portal.add(mouthGold);
 
   const streamGeo = new THREE.BufferGeometry();
   const streamPositions = [];
   const streamColors = [];
 
-  for (let i = 0; i < 1850; i += 1) {
+  for (let i = 0; i < 1250; i += 1) {
     const a = Math.random() * Math.PI * 2;
-    const r = THREE.MathUtils.randFloat(0.4, 10.4);
+    const r = THREE.MathUtils.randFloat(0.8, 9.2);
     const pull = Math.random();
 
     streamPositions.push(
       Math.cos(a) * r * pull,
-      THREE.MathUtils.randFloatSpread(8.2),
-      Math.sin(a) * r - THREE.MathUtils.randFloat(0, 12)
+      THREE.MathUtils.randFloatSpread(7.4),
+      Math.sin(a) * r - THREE.MathUtils.randFloat(0, 10)
     );
 
-    if (Math.random() > 0.7) streamColors.push(1, 0.78, 0.12);
+    if (Math.random() > 0.72) streamColors.push(1, 0.78, 0.12);
     else streamColors.push(0, 1, 0.62);
   }
 
@@ -555,9 +502,9 @@ function buildPortal() {
   const streams = new THREE.Points(
     streamGeo,
     new THREE.PointsMaterial({
-      size: 0.12,
+      size: 0.112,
       transparent: true,
-      opacity: 0.78,
+      opacity: 0.74,
       vertexColors: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending
@@ -567,44 +514,26 @@ function buildPortal() {
   portalStreams.push(streams);
   portal.add(streams);
 
-  for (let i = 0; i < 7; i += 1) {
-    const beam = new THREE.Mesh(
-      new THREE.PlaneGeometry(18 + i * 2, 0.13 + i * 0.015),
-      new THREE.MeshBasicMaterial({
-        color: i % 2 ? p.gold : p.accent,
-        transparent: true,
-        opacity: 0.13,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
-      })
-    );
-
-    beam.rotation.z = (Math.PI * 2 * i) / 7;
-    beam.position.z = -0.25 - i * 0.03;
-    portalBeams.push(beam);
-    portal.add(beam);
-  }
-
   portalCore = new THREE.Mesh(
-    new THREE.SphereGeometry(6.2, 112, 112),
+    new THREE.SphereGeometry(5.85, 96, 96),
     new THREE.MeshPhongMaterial({
-      color: p.core,
-      emissive: p.deep,
-      emissiveIntensity: 1.24,
-      shininess: 128,
+      color: 0x00ff9d,
+      emissive: 0x08795a,
+      emissiveIntensity: 1.15,
+      shininess: 110,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.78
     })
   );
 
   portal.add(portalCore);
 
   portalInner = new THREE.Mesh(
-    new THREE.SphereGeometry(3.45, 112, 112),
+    new THREE.SphereGeometry(3.4, 96, 96),
     new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.15,
+      opacity: 0.14,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     })
@@ -612,66 +541,35 @@ function buildPortal() {
 
   portal.add(portalInner);
 
-  portal.position.set(0, -1.08, -1.95);
-  portal.renderOrder = 1;
-  scene.add(portal);
-}
-
-function setPortalPalette(index) {
-  portalColorMode = index % portalPalettes.length;
-  const p = currentPalette();
-
-  if (portalMouth?.material) portalMouth.material.color.setHex(p.core);
-  if (portalCore?.material) {
-    portalCore.material.color.setHex(p.core);
-    portalCore.material.emissive.setHex(p.deep);
-  }
-  if (portalLens?.material) portalLens.material.color.setHex(p.core);
-
-  portalRings.forEach((ring, i) => {
-    ring.material.color.setHex(i % 2 ? p.gold : p.core);
-  });
-
-  portalBeams.forEach((beam, i) => {
-    beam.material.color.setHex(i % 2 ? p.gold : p.accent);
-  });
-
-  const portalLight = scene.getObjectByName("portalLight");
-  if (portalLight) portalLight.color.setHex(p.core);
-}
-
-function addPortalTouchBurst(x = 0, y = 0) {
-  const p = currentPalette();
-  const burst = new THREE.Group();
-
-  for (let i = 0; i < 18; i += 1) {
-    const beam = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.5 + Math.random() * 4.8, 0.055),
+  for (let i = 0; i < 4; i += 1) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(7.8 + i * 1.12, 0.045, 12, 190),
       new THREE.MeshBasicMaterial({
-        color: i % 2 ? p.gold : p.accent,
+        color: i % 2 ? 0xfacc15 : 0x00ff9d,
         transparent: true,
-        opacity: 0.42,
+        opacity: 0.13 - i * 0.022,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
     );
 
-    beam.rotation.z = (Math.PI * 2 * i) / 18;
-    beam.userData.life = 1;
-    beam.userData.speed = 0.035 + Math.random() * 0.04;
-    burst.add(beam);
+    ring.rotation.x = Math.PI / (2.18 + i * 0.2);
+    ring.rotation.y = i * 0.38;
+    ring.rotation.z = i * 0.82;
+
+    portalRings.push(ring);
+    portal.add(ring);
   }
 
-  burst.position.set(x, y, 2.2);
-  burst.userData.life = 1;
-  portal.add(burst);
-  portalTouchBursts.push(burst);
+  portal.position.set(0, -1.12, -1.9);
+  portal.renderOrder = 1;
+  scene.add(portal);
 }
 
 function buildRealAvatar() {
   avatarGroup = new THREE.Group();
-  avatarGroup.position.set(5.5, -2.55, 8.2);
-  avatarGroup.scale.setScalar(0.3);
+  avatarGroup.position.set(0, -2.75, 8.2);
+  avatarGroup.scale.setScalar(0.24);
   avatarGroup.renderOrder = 88;
   scene.add(avatarGroup);
 
@@ -691,35 +589,35 @@ function makePart(name, geo, mat, pos, scale = null) {
 function makeRBAvatar(type = "boy") {
   if (rbAvatar) avatarGroup.remove(rbAvatar);
 
+  rbAvatarType = type;
   rbAvatarParts = {};
   rbAvatar = new THREE.Group();
-  rbAvatar.userData.type = type;
   avatarGroup.add(rbAvatar);
 
   const isGirl = type === "girl";
 
   const skin = new THREE.MeshPhongMaterial({
     color: isGirl ? 0xd99b7b : 0xe8b88a,
-    shininess: 34
+    shininess: 30
   });
 
   const outfit = new THREE.MeshPhongMaterial({
     color: isGirl ? 0x120918 : 0x070a08,
     emissive: isGirl ? 0x26051f : 0x021407,
-    emissiveIntensity: 0.4,
-    shininess: 42
+    emissiveIntensity: 0.36,
+    shininess: 38
   });
 
-  const pants = new THREE.MeshPhongMaterial({ color: 0x070d0b, shininess: 20 });
-  const shoe = new THREE.MeshPhongMaterial({ color: 0x030303, shininess: 60 });
-  const hair = new THREE.MeshPhongMaterial({ color: 0x050302, shininess: 48 });
-  const blue = new THREE.MeshPhongMaterial({ color: 0x1e3a8a, shininess: 60 });
+  const pants = new THREE.MeshPhongMaterial({ color: 0x070d0b, shininess: 18 });
+  const shoe = new THREE.MeshPhongMaterial({ color: 0x030303, shininess: 54 });
+  const hair = new THREE.MeshPhongMaterial({ color: 0x050302, shininess: 44 });
+  const blue = new THREE.MeshPhongMaterial({ color: 0x1e3a8a, shininess: 56 });
 
   const gold = new THREE.MeshPhongMaterial({
     color: 0xfacc15,
     emissive: 0xc99700,
-    emissiveIntensity: 1.18,
-    shininess: 135
+    emissiveIntensity: 1.15,
+    shininess: 128
   });
 
   const bodyW = isGirl ? 4.1 : 4.85;
@@ -760,8 +658,8 @@ function makeRBAvatar(type = "boy") {
     new THREE.MeshPhongMaterial({
       color: 0x010101,
       emissive: isGirl ? 0x2b061e : 0x043018,
-      emissiveIntensity: 0.6,
-      shininess: 145
+      emissiveIntensity: 0.56,
+      shininess: 140
     }),
     { x: 0, y: 5.55, z: 1.72 }
   );
@@ -799,22 +697,64 @@ function makeRBAvatar(type = "boy") {
   makePart("leftHand", new THREE.SphereGeometry(0.55, 24, 24), skin, { x: isGirl ? -2.62 : -3.05, y: -1.1, z: 0.1 });
   makePart("rightHand", new THREE.SphereGeometry(0.55, 24, 24), skin, { x: isGirl ? 2.62 : 3.05, y: -1.1, z: 0.1 });
 
-  const chestGlow = makePart(
-    "chatgptCore",
-    new THREE.SphereGeometry(0.42, 30, 30),
-    new THREE.MeshBasicMaterial({
-      color: 0x00ffcc,
-      transparent: true,
-      opacity: 0.82,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
+  const cigar = makePart(
+    "cigar",
+    new THREE.CylinderGeometry(0.1, 0.1, 1.55, 14),
+    new THREE.MeshPhongMaterial({
+      color: 0x4b2e1a,
+      emissive: 0x1a0802,
+      shininess: 15
     }),
-    { x: 0, y: 1.55, z: 1.62 }
+    { x: 1.78, y: 5.12, z: 1.95 }
   );
 
-  chestGlow.scale.set(1, 1, 0.24);
+  cigar.rotation.z = Math.PI / 2.8;
+  cigar.rotation.y = 0.32;
+
+  makePart("ember", new THREE.SphereGeometry(0.14, 14, 14), new THREE.MeshBasicMaterial({ color: 0xff3b16 }), {
+    x: 2.36,
+    y: 5.32,
+    z: 2.12
+  });
 
   rbAvatar.scale.setScalar(isGirl ? 0.96 : 1);
+  smokeBurst(18);
+}
+
+function createAvatarSmoke(boost = 1) {
+  if (!rbAvatarParts.ember || !rbAvatar) return;
+
+  const smoke = new THREE.Mesh(
+    new THREE.SphereGeometry(0.24 + Math.random() * 0.34, 12, 12),
+    new THREE.MeshBasicMaterial({
+      color: Math.random() > 0.28 ? 0xd8ddd8 : 0x84ffae,
+      transparent: true,
+      opacity: 0.38 + Math.random() * 0.25,
+      depthWrite: false
+    })
+  );
+
+  const emberWorld = new THREE.Vector3();
+  rbAvatarParts.ember.getWorldPosition(emberWorld);
+
+  smoke.position.copy(emberWorld);
+  smoke.position.x += Math.random() * 0.2;
+  smoke.position.y += Math.random() * 0.2;
+  smoke.position.z += Math.random() * 0.16;
+
+  smoke.userData = {
+    life: 1,
+    drift: (Math.random() - 0.5) * 0.05 * boost,
+    lift: 0.05 + Math.random() * 0.075 * boost,
+    grow: 0.01 + Math.random() * 0.02
+  };
+
+  scene.add(smoke);
+  smokeParticles.push(smoke);
+}
+
+function smokeBurst(amount = 36) {
+  for (let i = 0; i < amount; i += 1) createAvatarSmoke(2.6);
 }
 
 function buildCards() {
@@ -838,27 +778,15 @@ function createPhoneCard(mod) {
   const group = new THREE.Group();
 
   const body = new THREE.Mesh(
-    new THREE.BoxGeometry(5.35, 8.7, 0.64),
+    new THREE.BoxGeometry(5.2, 8.4, 0.5),
     new THREE.MeshPhongMaterial({
       color: 0x050805,
-      specular: 0xfacc15,
-      shininess: 118,
+      specular: 0xfbbf24,
+      shininess: 96,
       transparent: true,
-      opacity: 0.96
+      opacity: 0.94
     })
   );
-
-  const bevelGlow = new THREE.Mesh(
-    new THREE.BoxGeometry(5.62, 8.96, 0.08),
-    new THREE.MeshBasicMaterial({
-      color: 0xfacc15,
-      transparent: true,
-      opacity: 0.12,
-      wireframe: true,
-      depthWrite: false
-    })
-  );
-  bevelGlow.position.z = 0.37;
 
   const screenTexture = textureLoader.load(
     mod.image,
@@ -872,42 +800,57 @@ function createPhoneCard(mod) {
   );
 
   const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.78, 7.85),
+    new THREE.PlaneGeometry(4.72, 7.72),
     new THREE.MeshBasicMaterial({
       map: screenTexture,
       transparent: true,
-      opacity: 0.985,
+      opacity: 0.98,
       depthWrite: true
     })
   );
-  screen.position.z = 0.36;
 
-  const glass = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.78, 7.85),
-    new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.045,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    })
-  );
-  glass.position.z = 0.39;
+  screen.position.z = 0.28;
 
-  const shine = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.05, 8.2),
+  const tint = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.72, 7.72),
     new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      color: 0x03140b,
       transparent: true,
-      opacity: 0.075,
+      opacity: 0.08,
       depthWrite: false
     })
   );
-  shine.position.set(1.25, 0, 0.42);
-  shine.rotation.z = -0.16;
+
+  tint.position.z = 0.3;
+
+  const shine = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.2, 7.8),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.07,
+      depthWrite: false
+    })
+  );
+
+  shine.position.set(1.25, 0, 0.32);
+  shine.rotation.z = -0.17;
+
+  const border = new THREE.Mesh(
+    new THREE.BoxGeometry(5.38, 8.58, 0.08),
+    new THREE.MeshBasicMaterial({
+      color: 0xfacc15,
+      transparent: true,
+      opacity: 0.22,
+      wireframe: true,
+      depthWrite: false
+    })
+  );
+
+  border.position.z = 0.34;
 
   const hotAura = new THREE.Mesh(
-    new THREE.PlaneGeometry(6.32, 9.75),
+    new THREE.PlaneGeometry(6.15, 9.45),
     new THREE.MeshBasicMaterial({
       color: 0x00ff9d,
       transparent: true,
@@ -916,16 +859,17 @@ function createPhoneCard(mod) {
       blending: THREE.AdditiveBlending
     })
   );
-  hotAura.position.z = 0.22;
+
+  hotAura.position.z = 0.18;
 
   const textLabel = createTextLabel(mod.tag, mod.title);
-  textLabel.position.set(0, -5.2, 0.52);
+  textLabel.position.set(0, -5.05, 0.42);
 
   group.add(body);
   group.add(screen);
-  group.add(glass);
+  group.add(tint);
   group.add(shine);
-  group.add(bevelGlow);
+  group.add(border);
   group.add(hotAura);
   group.add(textLabel);
 
@@ -941,16 +885,17 @@ function createTextLabel(tag, title) {
   canvas.height = 256;
 
   const ctx = canvas.getContext("2d");
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.shadowColor = "rgba(16,185,129,.95)";
   ctx.shadowBlur = 28;
 
-  ctx.fillStyle = "rgba(5,8,5,.62)";
+  ctx.fillStyle = "rgba(5,8,5,.58)";
   roundRect(ctx, 64, 28, 896, 190, 46);
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(251,191,36,.5)";
+  ctx.strokeStyle = "rgba(251,191,36,.42)";
   ctx.lineWidth = 4;
   roundRect(ctx, 64, 28, 896, 190, 46);
   ctx.stroke();
@@ -962,7 +907,7 @@ function createTextLabel(tag, title) {
   ctx.textBaseline = "middle";
   ctx.fillText(tag, 512, 82);
 
-  ctx.shadowColor = "rgba(251,191,36,.8)";
+  ctx.shadowColor = "rgba(251,191,36,.75)";
   ctx.shadowBlur = 14;
   ctx.fillStyle = "#fff7ed";
   ctx.font = "900 64px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
@@ -976,12 +921,12 @@ function createTextLabel(tag, title) {
     new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.9,
       depthWrite: false
     })
   );
 
-  sprite.scale.set(6.3, 1.58, 1);
+  sprite.scale.set(6.2, 1.55, 1);
   sprite.renderOrder = 60;
   sprite.userData.isLabel = true;
 
@@ -1005,8 +950,8 @@ function bindActivityReactions() {
 
     activityState.liveActive = Boolean(live.active);
     activityState.liveCount = live.count || 0;
-    activityState.orbitBoost = live.active ? 1.32 : 1;
-    activityState.portalBoost = live.active ? 1.26 : 1;
+    activityState.orbitBoost = live.active ? 1.28 : 1;
+    activityState.portalBoost = live.active ? 1.22 : 1;
 
     cards.forEach((card) => {
       if (card.userData.module?.key === "live") {
@@ -1030,14 +975,14 @@ function bindActivityReactions() {
   });
 }
 
-function updateCards(t) {
+function updateCards() {
   const isMobile = window.innerWidth <= motion.mobileBreakpoint;
 
   const radiusX = isMobile ? motion.orbit.mobileRadiusX / 10 : motion.orbit.desktopRadiusX / 10;
   const radiusZ = isMobile ? motion.orbit.mobileRadiusY / 10 : motion.orbit.desktopRadiusY / 10;
   const baseY = isMobile ? -1.02 : -0.52;
 
-  orbitOffset += (targetOffset - orbitOffset) * 0.062;
+  orbitOffset += (targetOffset - orbitOffset) * 0.06;
 
   cards.forEach((card, index) => {
     const angle = orbitOffset + (index / cards.length) * Math.PI * 2;
@@ -1046,14 +991,14 @@ function updateCards(t) {
     const depth = (z + radiusZ) / (radiusZ * 2);
 
     const centerPull = Math.max(0, 1 - Math.abs(x) / radiusX);
-    const scale = 0.4 + depth * 0.47 + centerPull * 0.09;
-    const opacity = 0.5 + depth * 0.5;
+    const scale = 0.4 + depth * 0.46 + centerPull * 0.08;
+    const opacity = 0.52 + depth * 0.48;
 
-    const hotBoost = card.userData.isHot ? 1.13 : 1;
-    const presenceBoost = card.userData.presenceBoost ? 1.045 : 1;
-    const hoverBoost = card === hoveredCard ? 1.12 : 1;
+    const hotBoost = card.userData.isHot ? 1.12 : 1;
+    const presenceBoost = card.userData.presenceBoost ? 1.04 : 1;
+    const hoverBoost = card === hoveredCard ? 1.11 : 1;
 
-    card.position.set(x, baseY + depth * 1.14 + Math.sin(t * 1.2 + index) * 0.04, z + 1.35);
+    card.position.set(x, baseY + depth * 1.12, z + 1.35);
     card.rotation.y = -angle + Math.PI / 2;
     card.rotation.z = Math.sin(angle) * 0.035;
     card.scale.setScalar(scale * hotBoost * presenceBoost * hoverBoost);
@@ -1061,109 +1006,79 @@ function updateCards(t) {
     card.children.forEach((child, childIndex) => {
       if (!child.material) return;
 
-      if (childIndex === 0) child.material.opacity = 0.8 + opacity * 0.16;
+      if (childIndex === 0) child.material.opacity = 0.78 + opacity * 0.16;
       if (childIndex === 1) child.material.opacity = opacity;
-      if (childIndex === 2) child.material.opacity = 0.035 + depth * 0.05;
-      if (childIndex === 3) child.material.opacity = 0.045 + depth * 0.07;
-      if (childIndex === 4) child.material.opacity = 0.1 + depth * 0.14;
+      if (childIndex === 2) child.material.opacity = 0.08 + depth * 0.06;
+      if (childIndex === 3) child.material.opacity = 0.04 + depth * 0.065;
+      if (childIndex === 4) child.material.opacity = 0.12 + depth * 0.13;
 
       if (childIndex === 5) {
         child.material.opacity = card.userData.isHot
-          ? 0.1 + Math.sin(performance.now() * 0.005) * 0.045
-          : centerPull * 0.03;
+          ? 0.09 + Math.sin(performance.now() * 0.005) * 0.04
+          : centerPull * 0.025;
       }
 
       if (child.userData?.isLabel) {
-        child.material.opacity = 0.1 + depth * 0.88;
-        child.scale.set(5.24 + depth * 1.38, 1.26 + depth * 0.4, 1);
+        child.material.opacity = 0.12 + depth * 0.86;
+        child.scale.set(5.2 + depth * 1.35, 1.25 + depth * 0.38, 1);
       }
     });
 
-    card.renderOrder = 20 + Math.round(depth * 130);
+    card.renderOrder = 20 + Math.round(depth * 120);
   });
 }
 
 function updatePortal(t) {
   if (!portal) return;
 
-  const boost = activityState.portalBoost + activityState.touchEnergy * 0.65;
+  const boost = activityState.portalBoost;
   const pulse = 1 + Math.sin(t * 2.1) * motion.portal.scalePulse * boost;
 
-  portal.rotation.y += 0.0034 * boost;
-  portal.rotation.x = Math.sin(t * 0.42) * 0.048;
+  portal.rotation.y += 0.0032 * boost;
+  portal.rotation.x = Math.sin(t * 0.42) * 0.045;
   portal.scale.setScalar(pulse);
 
   if (portalCore) {
-    portalCore.rotation.y -= 0.0058 * boost;
-    portalCore.rotation.z += 0.0032 * boost;
-    portalCore.material.opacity = 0.76 + Math.sin(t * 2.8) * 0.06 + activityState.touchEnergy * 0.04;
-    portalCore.material.emissiveIntensity = 1.18 + Math.sin(t * 3.1) * 0.24 + activityState.touchEnergy * 0.42;
+    portalCore.rotation.y -= 0.0054 * boost;
+    portalCore.rotation.z += 0.0028 * boost;
+    portalCore.material.opacity = 0.74 + Math.sin(t * 2.8) * 0.055;
+    portalCore.material.emissiveIntensity = 1.15 + Math.sin(t * 3.1) * 0.22;
   }
 
   if (portalInner) {
-    portalInner.scale.setScalar(1 + Math.sin(t * 4.4) * 0.2);
-    portalInner.material.opacity = 0.13 + Math.sin(t * 3.6) * 0.065 + activityState.touchEnergy * 0.08;
-  }
-
-  if (portalLens) {
-    portalLens.rotation.y -= 0.004 * boost;
-    portalLens.scale.setScalar(1.02 + Math.sin(t * 1.7) * 0.04);
-    portalLens.material.opacity = 0.1 + activityState.touchEnergy * 0.05;
+    portalInner.scale.setScalar(1 + Math.sin(t * 4.4) * 0.18);
+    portalInner.material.opacity = 0.12 + Math.sin(t * 3.6) * 0.06;
   }
 
   if (portalMist) {
-    portalMist.rotation.z += 0.0027 * boost;
+    portalMist.rotation.z += 0.0024 * boost;
     portalMist.scale.set(
-      31 + Math.sin(t * 1.7) * 3.2 + activityState.touchEnergy * 4,
-      31 + Math.cos(t * 1.4) * 3.2 + activityState.touchEnergy * 4,
+      27 + Math.sin(t * 1.7) * 2.5,
+      27 + Math.cos(t * 1.4) * 2.5,
       1
     );
-    portalMist.material.opacity = 0.55 + Math.sin(t * 1.9) * 0.13 + activityState.touchEnergy * 0.12;
+    portalMist.material.opacity = 0.55 + Math.sin(t * 1.9) * 0.13;
   }
 
   if (portalMouth) {
-    portalMouth.rotation.z += 0.009 * boost;
-    portalMouth.scale.setScalar(1 + Math.sin(t * 3.3) * 0.052 + activityState.touchEnergy * 0.06);
+    portalMouth.rotation.z += 0.008 * boost;
+    portalMouth.scale.setScalar(1 + Math.sin(t * 3.3) * 0.045);
   }
 
   portalRings.forEach((ring, index) => {
-    ring.rotation.z += (0.0045 + index * 0.0018) * (index % 2 ? -1 : 1) * boost;
-    ring.rotation.y += 0.0015 * (index + 1) * boost;
+    ring.rotation.z += (0.004 + index * 0.0016) * (index % 2 ? -1 : 1) * boost;
+    ring.rotation.y += 0.0014 * (index + 1) * boost;
     ring.material.opacity = Math.max(
       0.045,
-      0.25 - index * 0.032 + Math.sin(t * (1.7 + index)) * 0.04 + activityState.touchEnergy * 0.04
+      0.24 - index * 0.035 + Math.sin(t * (1.7 + index)) * 0.035
     );
   });
 
   portalStreams.forEach((stream) => {
-    stream.rotation.z -= 0.0068 * boost;
-    stream.rotation.y += 0.0024 * boost;
-    stream.material.opacity = 0.62 + Math.sin(t * 2.6) * 0.15 + activityState.touchEnergy * 0.1;
+    stream.rotation.z -= 0.006 * boost;
+    stream.rotation.y += 0.002 * boost;
+    stream.material.opacity = 0.6 + Math.sin(t * 2.6) * 0.14;
   });
-
-  portalBeams.forEach((beam, index) => {
-    beam.rotation.z += (0.003 + index * 0.0006) * (index % 2 ? -1 : 1) * boost;
-    beam.material.opacity = 0.09 + Math.sin(t * 2.2 + index) * 0.04 + activityState.touchEnergy * 0.08;
-    beam.scale.x = 1 + Math.sin(t * 2 + index) * 0.08 + activityState.touchEnergy * 0.16;
-  });
-
-  for (let i = portalTouchBursts.length - 1; i >= 0; i -= 1) {
-    const burst = portalTouchBursts[i];
-    burst.userData.life -= 0.026;
-    burst.scale.multiplyScalar(1.035);
-
-    burst.children.forEach((beam) => {
-      beam.rotation.z += beam.userData.speed;
-      beam.material.opacity *= 0.94;
-    });
-
-    if (burst.userData.life <= 0) {
-      portal.remove(burst);
-      portalTouchBursts.splice(i, 1);
-    }
-  }
-
-  activityState.touchEnergy *= 0.94;
 }
 
 function updateComets(t) {
@@ -1172,16 +1087,16 @@ function updateComets(t) {
   energyComets.children.forEach((sprite, index) => {
     sprite.userData.angle += sprite.userData.speed * activityState.portalBoost;
 
-    const r = sprite.userData.radius + Math.sin(t + index) * 1.25;
+    const r = sprite.userData.radius + Math.sin(t + index) * 1.2;
     const a = sprite.userData.angle;
 
     sprite.position.set(
       Math.cos(a) * r,
-      sprite.userData.y + Math.sin(t * 1.4 + index) * 1.45,
+      sprite.userData.y + Math.sin(t * 1.4 + index) * 1.4,
       Math.sin(a) * r - 8
     );
 
-    sprite.material.opacity = 0.15 + Math.sin(t * 2 + index) * 0.08 + activityState.liveCount * 0.002;
+    sprite.material.opacity = 0.16 + Math.sin(t * 2 + index) * 0.08 + activityState.liveCount * 0.002;
   });
 }
 
@@ -1193,12 +1108,12 @@ function updateClouds(t) {
     cloud.position.y += Math.sin(t * 0.4 + cloud.userData.float) * 0.004;
     cloud.rotation.z += 0.0008;
 
-    if (cloud.position.x > 46) {
-      cloud.position.x = -46;
-      cloud.position.y = THREE.MathUtils.randFloat(-12, 18);
+    if (cloud.position.x > 42) {
+      cloud.position.x = -42;
+      cloud.position.y = THREE.MathUtils.randFloat(-10, 16);
     }
 
-    cloud.material.opacity = 0.034 + Math.sin(t * 0.6 + index) * 0.016;
+    cloud.material.opacity = 0.045 + Math.sin(t * 0.6 + index) * 0.018;
   });
 }
 
@@ -1208,13 +1123,10 @@ function updateRealAvatar(t) {
   const step = Math.sin(t * 4.2);
   const breathe = Math.sin(t * 1.6);
 
-  avatarTargetX = Math.sin(t * 0.45) * 5.6;
-  avatarTargetZ = 8.4 + Math.cos(t * 0.4) * 0.8;
-
-  avatarGroup.position.x += (avatarTargetX - avatarGroup.position.x) * 0.02;
-  avatarGroup.position.y = -2.52 + Math.sin(t * 1.25) * 0.2;
-  avatarGroup.position.z += (avatarTargetZ - avatarGroup.position.z) * 0.02;
-  avatarGroup.rotation.y = Math.sin(t * 0.52) * 0.44;
+  avatarGroup.position.x = Math.sin(t * 0.45) * 5.2;
+  avatarGroup.position.y = -2.65 + Math.sin(t * 1.25) * 0.18;
+  avatarGroup.position.z = 8.4 + Math.cos(t * 0.4) * 0.7;
+  avatarGroup.rotation.y = Math.sin(t * 0.52) * 0.42;
 
   rbAvatar.position.y = Math.sin(t * 2.2) * 0.16;
   rbAvatar.rotation.y += (Math.sin(t * 0.58) * 0.18 - rbAvatar.rotation.y) * 0.04;
@@ -1239,17 +1151,35 @@ function updateRealAvatar(t) {
 
   if (rbAvatarParts.chain) rbAvatarParts.chain.rotation.z = Math.sin(t * 2.2) * 0.035;
   if (rbAvatarParts.pendant) rbAvatarParts.pendant.rotation.z = Math.sin(t * 2.4) * 0.08;
+  if (rbAvatarParts.ember) rbAvatarParts.ember.scale.setScalar(1 + Math.sin(t * 18) * 0.22);
 
   if (rbAvatarParts.glow?.material) {
-    rbAvatarParts.glow.material.opacity = 0.055 + Math.abs(breathe) * 0.055;
+    rbAvatarParts.glow.material.opacity = 0.06 + Math.abs(breathe) * 0.045;
   }
 
-  if (rbAvatarParts.chatgptCore) {
-    rbAvatarParts.chatgptCore.scale.setScalar(1 + Math.sin(t * 4.4) * 0.16);
-    rbAvatarParts.chatgptCore.material.opacity = 0.68 + Math.sin(t * 3.8) * 0.16;
-  }
+  if (Math.random() < 0.23) createAvatarSmoke(1.45);
 
-  avatarWalkTime += 0.016;
+  for (let i = smokeParticles.length - 1; i >= 0; i -= 1) {
+    const p = smokeParticles[i];
+
+    p.userData.life -= 0.01;
+    p.position.y += p.userData.lift;
+    p.position.x += p.userData.drift + Math.sin(t * 1.6 + i) * 0.01;
+    p.position.z += Math.cos(t * 1.3 + i) * 0.008;
+
+    p.scale.x += p.userData.grow;
+    p.scale.y += p.userData.grow;
+    p.scale.z += p.userData.grow;
+
+    p.material.opacity *= 0.979;
+
+    if (p.userData.life <= 0 || p.material.opacity <= 0.015) {
+      scene.remove(p);
+      p.geometry.dispose();
+      p.material.dispose();
+      smokeParticles.splice(i, 1);
+    }
+  }
 }
 
 function bindPointer() {
@@ -1265,13 +1195,7 @@ function bindPointer() {
   });
 
   window.RB_SWAP_AVATAR = () => {
-    makeRBAvatar(rbAvatar?.userData?.type === "boy" ? "girl" : "boy");
-  };
-
-  window.RB_PORTAL_COLOR = () => {
-    setPortalPalette(portalColorMode + 1);
-    activityState.touchEnergy = 1;
-    addPortalTouchBurst();
+    makeRBAvatar(rbAvatarType === "boy" ? "girl" : "boy");
   };
 }
 
@@ -1280,17 +1204,6 @@ function onPointerDown(event) {
   startX = event.clientX;
   lastX = event.clientX;
   dragMoved = false;
-
-  const x = (event.clientX / window.innerWidth) * 2 - 1;
-  const y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  const nearCenter = Math.abs(x) < 0.38 && Math.abs(y) < 0.42;
-
-  if (nearCenter) {
-    setPortalPalette(portalColorMode + 1);
-    activityState.touchEnergy = 1;
-    addPortalTouchBurst();
-  }
 }
 
 function onPointerMove(event) {
@@ -1308,7 +1221,6 @@ function onPointerMove(event) {
   }
 
   targetOffset += delta * 0.008;
-  activityState.touchEnergy = Math.min(1, activityState.touchEnergy + Math.abs(delta) * 0.0025);
   lastX = event.clientX;
 }
 
@@ -1378,9 +1290,10 @@ function resizeUniverse() {
 function animateUniverse() {
   animationFrame = requestAnimationFrame(animateUniverse);
 
-  const t = performance.now() * 0.001;
+  const time = performance.now();
+  const t = time * 0.001;
 
-  targetOffset += (motion.orbit.speed || 0.00255) * activityState.orbitBoost;
+  targetOffset += (motion.orbit.speed || 0.00245) * activityState.orbitBoost;
 
   updatePortal(t);
   updateComets(t);
@@ -1388,31 +1301,31 @@ function animateUniverse() {
   updateRealAvatar(t);
 
   if (galaxyCloud) {
-    galaxyCloud.rotation.y += 0.00115 * activityState.orbitBoost;
-    galaxyCloud.rotation.z = Math.sin(t * 0.12) * 0.045;
-    galaxyCloud.material.opacity = activityState.liveActive ? 0.72 : 0.64;
+    galaxyCloud.rotation.y += 0.0011 * activityState.orbitBoost;
+    galaxyCloud.rotation.z = Math.sin(t * 0.12) * 0.04;
+    galaxyCloud.material.opacity = activityState.liveActive ? 0.7 : 0.6;
   }
 
   if (galaxyGold) {
-    galaxyGold.rotation.y -= 0.00085 * activityState.orbitBoost;
-    galaxyGold.material.opacity = activityState.onlineCount > 0 ? 0.56 : 0.48;
+    galaxyGold.rotation.y -= 0.0008 * activityState.orbitBoost;
+    galaxyGold.material.opacity = activityState.onlineCount > 0 ? 0.54 : 0.45;
   }
 
   if (starField) {
-    starField.rotation.y += 0.00038 * activityState.orbitBoost;
-    starField.material.opacity = activityState.onlineCount > 0 ? 0.72 : 0.66;
+    starField.rotation.y += 0.00035 * activityState.orbitBoost;
+    starField.material.opacity = activityState.onlineCount > 0 ? 0.7 : 0.62;
   }
 
   if (deepStarField) {
-    deepStarField.rotation.y -= 0.00017;
+    deepStarField.rotation.y -= 0.00016;
   }
 
   if (floatingParticles) {
-    floatingParticles.rotation.y -= 0.00078;
-    floatingParticles.rotation.z = Math.sin(t * 0.16) * 0.05;
+    floatingParticles.rotation.y -= 0.00072;
+    floatingParticles.rotation.z = Math.sin(t * 0.16) * 0.045;
   }
 
-  updateCards(t);
+  updateCards();
 
   renderer.render(scene, camera);
 }
