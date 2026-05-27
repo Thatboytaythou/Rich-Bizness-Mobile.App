@@ -1,25 +1,26 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/forms.css
+   LAYER 9 / 22
 
    AUTH + FORM SYSTEM
    Base-safe polished form layer
 ========================================= */
 
-/* =========================================
-   AUTH / FORM SHELL
-========================================= */
-
 .rb-auth-shell {
   position: relative;
   z-index: 2;
+
   width: min(100%, 980px);
   min-height: 100svh;
+
   margin: 0 auto;
+
   padding:
     max(28px, env(safe-area-inset-top))
     16px
     max(28px, env(safe-area-inset-bottom));
+
   display: grid;
   align-content: center;
   gap: 22px;
@@ -32,27 +33,30 @@
   gap: 18px;
 }
 
-/* =========================================
-   HERO SECTION
-========================================= */
+/* HERO */
 
 .rb-auth-hero {
   position: relative;
   overflow: hidden;
   isolation: isolate;
+
   padding: clamp(22px, 4vw, 30px);
+
   border-radius: 34px;
   border: 1px solid rgba(250, 204, 21, 0.26);
+
   background:
-    radial-gradient(circle at 18% 18%, rgba(16, 185, 129, 0.16), transparent 34%),
-    radial-gradient(circle at 82% 72%, rgba(250, 204, 21, 0.14), transparent 38%),
-    linear-gradient(135deg, rgba(8, 18, 10, 0.9), rgba(0, 0, 0, 0.86));
+    radial-gradient(circle at 18% 18%, rgba(16,185,129,.16), transparent 34%),
+    radial-gradient(circle at 82% 72%, rgba(250,204,21,.14), transparent 38%),
+    linear-gradient(135deg, rgba(8,18,10,.9), rgba(0,0,0,.86));
+
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+
   box-shadow:
-    0 0 44px rgba(16, 185, 129, 0.18),
-    0 0 80px rgba(0, 0, 0, 0.36),
-    inset 0 0 80px rgba(250, 204, 21, 0.06);
+    0 0 44px rgba(16,185,129,.18),
+    0 0 80px rgba(0,0,0,.36),
+    inset 0 0 80px rgba(250,204,21,.06);
 }
 
 .rb-auth-hero::before {
@@ -60,10 +64,17 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+
   background: url("/images/brand/hero-logo.png.jpeg") center / cover no-repeat;
-  opacity: 0.13;
+
+  opacity: .13;
   transform: scale(1.08);
-  filter: saturate(1.25) contrast(1.12) brightness(0.92);
+
+  filter:
+    saturate(1.25)
+    contrast(1.12)
+    brightness(.92);
+
   pointer-events: none;
 }
 
@@ -72,7 +83,10 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.54));
+
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.54));
+
   pointer-events: none;
 }
 
@@ -83,42 +97,49 @@
 
 .rb-auth-hero h1 {
   margin: 0;
+
   color: var(--rb-gold, #facc15);
+
   font-size: clamp(2.5rem, 10vw, 5.8rem);
-  line-height: 0.88;
-  letter-spacing: -0.07em;
+  line-height: .88;
+  letter-spacing: -.07em;
+
   text-shadow:
-    0 0 26px rgba(250, 204, 21, 0.25),
-    0 0 48px rgba(16, 185, 129, 0.1);
+    0 0 26px rgba(250,204,21,.25),
+    0 0 48px rgba(16,185,129,.1);
 }
 
 .rb-auth-hero p {
   margin: 14px 0 0;
   max-width: 680px;
-  color: var(--rb-muted, rgba(255, 255, 255, 0.72));
+
+  color: var(--rb-muted, rgba(255,255,255,.72));
   line-height: 1.55;
 }
 
-/* =========================================
-   AUTH / FORM PANEL
-========================================= */
+/* PANEL */
 
 .rb-auth-panel {
   position: relative;
   overflow: hidden;
   isolation: isolate;
+
   padding: 16px;
+
   border-radius: 30px;
-  border: 1px solid rgba(102, 255, 102, 0.35);
+  border: 1px solid rgba(102,255,102,.35);
+
   background:
-    radial-gradient(circle at top, rgba(16, 185, 129, 0.1), transparent 36%),
-    linear-gradient(135deg, rgba(8, 18, 10, 0.92), rgba(0, 0, 0, 0.88));
+    radial-gradient(circle at top, rgba(16,185,129,.1), transparent 36%),
+    linear-gradient(135deg, rgba(8,18,10,.92), rgba(0,0,0,.88));
+
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
+
   box-shadow:
-    0 0 42px rgba(16, 185, 129, 0.2),
-    0 0 74px rgba(0, 0, 0, 0.42),
-    inset 0 0 50px rgba(250, 204, 21, 0.08);
+    0 0 42px rgba(16,185,129,.2),
+    0 0 74px rgba(0,0,0,.42),
+    inset 0 0 50px rgba(250,204,21,.08);
 }
 
 .rb-auth-panel::before {
@@ -126,7 +147,10 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 42%);
+
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,.08), transparent 42%);
+
   pointer-events: none;
 }
 
@@ -135,59 +159,67 @@
   z-index: 2;
 }
 
-/* =========================================
-   AUTH TABS
-========================================= */
+/* TABS */
 
 .rb-auth-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+
   margin-bottom: 14px;
 }
 
 .rb-auth-tabs button {
   min-height: 48px;
+
   border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.26);
-  background: linear-gradient(145deg, rgba(0, 0, 0, 0.62), rgba(5, 12, 7, 0.82));
-  color: var(--rb-muted, rgba(255, 255, 255, 0.7));
+  border: 1px solid rgba(250,204,21,.26);
+
+  background:
+    linear-gradient(145deg, rgba(0,0,0,.62), rgba(5,12,7,.82));
+
+  color: var(--rb-muted, rgba(255,255,255,.7));
+
   font-weight: 1000;
-  letter-spacing: 0.06em;
+  letter-spacing: .06em;
+
   cursor: pointer;
   touch-action: manipulation;
+
   transition:
-    transform 0.22s ease,
-    color 0.22s ease,
-    background 0.22s ease,
-    box-shadow 0.22s ease,
-    border-color 0.22s ease;
+    transform .22s ease,
+    color .22s ease,
+    background .22s ease,
+    box-shadow .22s ease,
+    border-color .22s ease;
 }
 
 .rb-auth-tabs button:hover {
-  border-color: rgba(16, 185, 129, 0.48);
+  border-color: rgba(16,185,129,.48);
   color: #fefce8;
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.18);
+  box-shadow: 0 0 18px rgba(16,185,129,.18);
 }
 
 .rb-auth-tabs button:active {
-  transform: scale(0.97);
+  transform: scale(.97);
 }
 
 body[data-auth-mode="signin"] [data-auth-mode="signin"],
 body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-auth-tabs button.is-active {
   color: #001806;
-  background: linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
-  border-color: rgba(250, 204, 21, 0.54);
+
+  background:
+    linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
+
+  border-color: rgba(250,204,21,.54);
+
   box-shadow:
-    0 0 24px rgba(16, 185, 129, 0.35),
-    inset 0 0 18px rgba(255, 255, 255, 0.14);
+    0 0 24px rgba(16,185,129,.35),
+    inset 0 0 18px rgba(255,255,255,.14);
 }
 
-/* =========================================
-   FORMS
-========================================= */
+/* FORMS */
 
 .rb-auth-form,
 .rb-form {
@@ -209,19 +241,24 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-form h2,
 .rb-panel h2 {
   margin: 4px 0 2px;
+
   color: var(--rb-gold, #facc15);
   font-size: 1.5rem;
-  text-shadow: 0 0 20px rgba(250, 204, 21, 0.16);
+
+  text-shadow:
+    0 0 20px rgba(250,204,21,.16);
 }
 
 .rb-auth-form label,
 .rb-form label {
   display: grid;
   gap: 7px;
+
   color: var(--rb-green, #10b981);
-  font-size: 0.8rem;
+
+  font-size: .8rem;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
 
@@ -232,18 +269,27 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-form textarea,
 .rb-form select {
   width: 100%;
+
   border-radius: 18px;
-  border: 1px solid rgba(250, 204, 21, 0.24);
+  border: 1px solid rgba(250,204,21,.24);
+
   outline: none;
-  color: var(--rb-white, #ffffff);
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.78), rgba(5, 12, 7, 0.92));
-  box-shadow: inset 0 0 22px rgba(16, 185, 129, 0.08);
+
+  color: var(--rb-white, #fff);
+
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.78), rgba(5,12,7,.92));
+
+  box-shadow:
+    inset 0 0 22px rgba(16,185,129,.08);
+
   font: inherit;
+
   transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+    transform .2s ease,
+    border-color .2s ease,
+    box-shadow .2s ease,
+    background .2s ease;
 }
 
 .rb-auth-form input,
@@ -265,7 +311,7 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-auth-form textarea::placeholder,
 .rb-form input::placeholder,
 .rb-form textarea::placeholder {
-  color: rgba(255, 255, 255, 0.34);
+  color: rgba(255,255,255,.34);
 }
 
 .rb-auth-form input:focus,
@@ -274,20 +320,26 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-form input:focus,
 .rb-form textarea:focus,
 .rb-form select:focus {
-  border-color: rgba(102, 255, 102, 0.75);
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.82), rgba(5, 16, 8, 0.94));
+  border-color: rgba(102,255,102,.75);
+
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.82), rgba(5,16,8,.94));
+
   box-shadow:
-    0 0 22px rgba(16, 185, 129, 0.25),
-    inset 0 0 22px rgba(16, 185, 129, 0.1);
+    0 0 22px rgba(16,185,129,.25),
+    inset 0 0 22px rgba(16,185,129,.1);
+
   transform: translateY(-1px);
 }
 
 .rb-auth-form input:-webkit-autofill,
 .rb-form input:-webkit-autofill {
-  -webkit-text-fill-color: #ffffff;
+  -webkit-text-fill-color: #fff;
+
   box-shadow:
     0 0 0 1000px #061008 inset,
-    0 0 22px rgba(16, 185, 129, 0.22);
+    0 0 22px rgba(16,185,129,.22);
+
   transition: background-color 9999s ease-in-out 0s;
 }
 
@@ -304,27 +356,30 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+
   margin-top: 6px;
 }
 
 .rb-form-note {
   min-height: 22px;
   margin: 4px 0 0;
-  color: rgba(255, 255, 255, 0.64);
-  font-size: 0.82rem;
+
+  color: rgba(255,255,255,.64);
+
+  font-size: .82rem;
   font-weight: 800;
   line-height: 1.4;
 }
 
-/* =========================================
-   MESSAGES
-========================================= */
+/* MESSAGES */
 
 .rb-auth-message {
   min-height: 22px;
   margin: 14px 4px 0;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.82rem;
+
+  color: rgba(255,255,255,.72);
+
+  font-size: .82rem;
   font-weight: 800;
   line-height: 1.4;
   text-align: center;
@@ -332,36 +387,42 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 
 .rb-auth-message[data-type="success"] {
   color: #34d399;
-  text-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+  text-shadow: 0 0 14px rgba(16,185,129,.3);
 }
 
 .rb-auth-message[data-type="error"] {
   color: #fca5a5;
-  text-shadow: 0 0 14px rgba(239, 68, 68, 0.24);
+  text-shadow: 0 0 14px rgba(239,68,68,.24);
 }
 
-/* =========================================
-   BUTTON OVERRIDES
-========================================= */
+/* BUTTON OVERRIDES */
 
 .rb-main-launch {
   min-height: 56px;
+
   border: 0;
   border-radius: 999px;
+
   color: #001806;
-  background: linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
+
+  background:
+    linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
+
   font-weight: 1000;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
+
   cursor: pointer;
   touch-action: manipulation;
+
   box-shadow:
-    0 0 24px rgba(16, 185, 129, 0.34),
-    0 0 40px rgba(250, 204, 21, 0.16),
-    inset 0 0 18px rgba(255, 255, 255, 0.18);
+    0 0 24px rgba(16,185,129,.34),
+    0 0 40px rgba(250,204,21,.16),
+    inset 0 0 18px rgba(255,255,255,.18);
+
   transition:
-    transform 0.22s ease,
-    filter 0.22s ease,
-    opacity 0.22s ease;
+    transform .22s ease,
+    filter .22s ease,
+    opacity .22s ease;
 }
 
 .rb-main-launch:hover {
@@ -370,78 +431,80 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 }
 
 .rb-main-launch:active {
-  transform: scale(0.98);
+  transform: scale(.98);
 }
 
 .rb-main-launch:disabled {
-  opacity: 0.6;
+  opacity: .6;
   cursor: wait;
   transform: none;
 }
 
-/* =========================================
-   LINKS
-========================================= */
+/* LINKS */
 
 .rb-auth-home {
   justify-self: center;
+
   color: var(--rb-gold, #facc15);
   text-decoration: none;
+
   font-weight: 1000;
-  letter-spacing: 0.06em;
+  letter-spacing: .06em;
+
   cursor: pointer;
   touch-action: manipulation;
+
   transition:
-    transform 0.2s ease,
-    color 0.2s ease,
-    text-shadow 0.2s ease;
+    transform .2s ease,
+    color .2s ease,
+    text-shadow .2s ease;
 }
 
 .rb-auth-home:hover {
   color: #fefce8;
-  text-shadow: 0 0 14px rgba(250, 204, 21, 0.35);
+  text-shadow: 0 0 14px rgba(250,204,21,.35);
   transform: translateY(-1px);
 }
 
-/* =========================================
-   FILE INPUTS
-========================================= */
+/* FILE INPUTS */
 
 .rb-auth-form input[type="file"],
 .rb-form input[type="file"] {
   padding: 13px 14px;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255,255,255,.72);
 }
 
 .rb-auth-form input[type="file"]::file-selector-button,
 .rb-form input[type="file"]::file-selector-button {
   margin-right: 12px;
+
   border: 0;
   border-radius: 999px;
+
   padding: 9px 14px;
+
   color: #041006;
-  background: linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
+
+  background:
+    linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
+
   font-weight: 1000;
   cursor: pointer;
 }
 
-/* =========================================
-   READY / LOADING
-========================================= */
+/* LOADING */
 
 .rb-auth-page:not(.rb-auth-ready) .rb-auth-panel,
 .rb-auth-page:not(.rb-auth-ready) .rb-auth-hero {
-  opacity: 0.92;
+  opacity: .92;
 }
 
 .is-loading {
   pointer-events: none;
-  opacity: 0.76;
+  opacity: .76;
 }
 
-/* =========================================
-   MOBILE
-========================================= */
+/* MOBILE */
 
 @media (max-width: 720px) {
   .rb-auth-shell {
@@ -449,6 +512,7 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
       max(18px, env(safe-area-inset-top))
       12px
       calc(24px + env(safe-area-inset-bottom));
+
     gap: 16px;
   }
 
@@ -468,7 +532,7 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 
   .rb-auth-tabs button {
     min-height: 46px;
-    font-size: 0.82rem;
+    font-size: .82rem;
   }
 
   .rb-auth-form input,
