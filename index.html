@@ -2,18 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
   <title>Rich Bizness • Universe</title>
+  <meta name="theme-color" content="#050805" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
+  <!-- LOCKED INDEX ORDER -->
   <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/omni-fx.css" />
-  <link rel="stylesheet" href="/styles/omni-portal.css" />
-  <link rel="stylesheet" href="/styles/omni-dial.css" />
   <link rel="stylesheet" href="/styles/three.css" />
   <link rel="stylesheet" href="/styles/three-avatar.css" />
   <link rel="stylesheet" href="/styles/avatar.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/omni-portal.css" />
+  <link rel="stylesheet" href="/styles/omni-dial.css" />
 </head>
 
 <body class="rb-index-page rb-avatar-engine-test">
@@ -30,7 +37,7 @@
     <p>ENGINE • AVATAR • ROUTE TEST</p>
   </header>
 
-  <button class="rb-profile-chip" data-route="profile" type="button">
+  <button class="rb-profile-chip" data-route="profile" type="button" aria-label="Open profile">
     <img src="/images/brand/meta-avatar.png.jpeg" alt="Profile" />
     <span>Profile</span>
   </button>
@@ -39,7 +46,7 @@
     ☰
   </button>
 
-  <nav class="rb-side-tabs rb-slide-tabs" id="slideTabs" aria-label="Quick actions">
+  <nav class="rb-side-tabs" id="slideTabs" aria-label="Quick actions">
     <button data-route="avatar" type="button">🧍🏽‍♂️</button>
     <button data-route="profile" type="button">👤</button>
     <button data-route="meta" type="button">🌎</button>
@@ -55,7 +62,7 @@
   </nav>
 
   <main class="rb-universe-shell">
-    <section class="rb-universe-stage">
+    <section class="rb-universe-stage" aria-label="Rich Bizness Universe Engine">
       <div id="module-label" class="rb-module-label active">
         ENGINE TEST ONLINE
       </div>
@@ -63,11 +70,30 @@
   </main>
 
   <nav class="rb-bottom-nav" aria-label="Primary navigation">
-    <button data-route="profile" type="button"><span class="rb-nav-icon">👤</span><span>Profile</span></button>
-    <button data-route="avatar" type="button"><span class="rb-nav-icon">🧍🏽‍♂️</span><span>Avatar</span></button>
-    <button data-route="meta" type="button"><span class="rb-nav-icon">🌎</span><span>Meta</span></button>
-    <button data-route="live" type="button"><span class="rb-nav-icon">📡</span><span>Live</span></button>
-    <button data-route="upload" type="button"><span class="rb-nav-icon">⬆️</span><span>Upload</span></button>
+    <button data-route="profile" type="button">
+      <span class="rb-nav-icon">👤</span>
+      <span>Profile</span>
+    </button>
+
+    <button data-route="avatar" type="button">
+      <span class="rb-nav-icon">🧍🏽‍♂️</span>
+      <span>Avatar</span>
+    </button>
+
+    <button data-route="meta" type="button">
+      <span class="rb-nav-icon">🌎</span>
+      <span>Meta</span>
+    </button>
+
+    <button data-route="live" type="button">
+      <span class="rb-nav-icon rb-live-nav-dot">📡</span>
+      <span>Live</span>
+    </button>
+
+    <button data-route="upload" type="button">
+      <span class="rb-nav-icon">⬆️</span>
+      <span>Upload</span>
+    </button>
   </nav>
 
   <script type="module" src="/core/engine/universe-preview.js"></script>
@@ -82,8 +108,8 @@
     const tabs = document.getElementById("slideTabs");
 
     dropper?.addEventListener("click", () => {
-      tabs?.classList.toggle("is-open");
       dropper.classList.toggle("is-open");
+      tabs?.classList.toggle("is-open");
     });
   </script>
 
