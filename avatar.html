@@ -1,1 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Rich Bizness • Avatar</title>
+
+  <meta
+    name="theme-color"
+    content="#050805"
+  />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile cinematic avatar engine."
+  />
+
+  <!-- CORE STYLES -->
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/three.css" />
+  <link rel="stylesheet" href="/styles/three-avatar.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/omni-dial.css" />
+  <link rel="stylesheet" href="/styles/omni-portal.css" />
+</head>
+
+<body class="rb-avatar-page rb-index-page">
+
+  <!-- BACKGROUND -->
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <!-- THREE CANVAS -->
+  <div
+    id="canvas-container"
+    aria-hidden="true"
+  ></div>
+
+  <!-- PROFILE CHIP -->
+  <button
+    class="rb-profile-chip"
+    id="rb-profile-chip"
+    type="button"
+  >
+
+    <img
+      id="rb-profile-avatar"
+      src="/images/brand/project-avatar.png.jpeg"
+      alt="Profile Avatar"
+    />
+
+    <span id="rb-profile-name">
+      RICH BIZNESS LLC
+    </span>
+
+  </button>
+
+  <!-- SIDE MENU BUTTON -->
+  <button
+    id="rb-tab-dropper"
+    class="rb-tab-dropper"
+    type="button"
+    aria-label="Open navigation"
+  >
+    ☰
+  </button>
+
+  <!-- SIDE MENU -->
+  <aside
+    id="rb-slide-menu"
+    class="rb-slide-menu"
+  >
+
+    <button
+      type="button"
+      data-route="/feed"
+      aria-label="Feed"
+    >
+      📰
+    </button>
+
+    <button
+      type="button"
+      data-route="/live"
+      class="rb-live-active"
+      data-count="9"
+      aria-label="Live"
+    >
+      🔴
+    </button>
+
+    <button
+      type="button"
+      data-route="/music"
+      aria-label="Music"
+    >
+      🎵
+    </button>
+
+    <button
+      type="button"
+      data-route="/gaming"
+      aria-label="Gaming"
+    >
+      🎮
+    </button>
+
+    <button
+      type="button"
+      data-route="/meta"
+      aria-label="Meta"
+    >
+      🌌
+    </button>
+
+    <button
+      type="button"
+      data-route="/gallery"
+      aria-label="Gallery"
+    >
+      🖼️
+    </button>
+
+    <button
+      type="button"
+      data-route="/store"
+      aria-label="Store"
+    >
+      💸
+    </button>
+
+    <button
+      type="button"
+      data-route="/upload"
+      aria-label="Upload"
+    >
+      ⬆️
+    </button>
+
+    <button
+      type="button"
+      data-route="/settings"
+      aria-label="Settings"
+    >
+      ⚙️
+    </button>
+
+  </aside>
+
+  <!-- BRAND HEADER -->
+  <header class="rb-brand-header">
+
+    <h1>
+      RICH <span>BIZNESS</span>
+    </h1>
+
+    <p>
+      AVATAR ENGINE • LIVE UNIVERSE • REALTIME IDENTITY
+    </p>
+
+  </header>
+
+  <!-- MODULE LABEL -->
+  <div
+    id="rb-module-label"
+    class="rb-module-label active"
+  >
+    AVATAR UNIVERSE ONLINE
+  </div>
+
+  <!-- AVATAR PLAYER -->
+  <section
+    id="rb-avatar-player"
+    class="rb-avatar-player is-live"
+  >
+
+    <div class="rb-avatar-3d-container">
+
+      <canvas
+        id="rb-avatar-canvas"
+        aria-label="3D Avatar Canvas"
+      ></canvas>
+
+    </div>
+
+  </section>
+
+  <!-- NOTIFICATIONS -->
+  <div
+    id="rb-notify-root"
+    aria-live="polite"
+  >
+
+    <article class="rb-notify-toast is-visible">
+
+      <div class="rb-avatar-mini">
+        🔥
+      </div>
+
+      <div>
+
+        <strong>
+          AVATAR ONLINE
+        </strong>
+
+        <p>
+          Rich Bizness universe synced successfully.
+        </p>
+
+      </div>
+
+    </article>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav
+    class="rb-bottom-nav"
+    aria-label="Bottom navigation"
+  >
+
+    <button
+      type="button"
+      data-route="/"
+      class="is-active"
+    >
+
+      <span class="rb-nav-icon">
+        🏠
+      </span>
+
+      <span>
+        HOME
+      </span>
+
+    </button>
+
+    <button
+      type="button"
+      data-route="/live"
+      class="rb-live-active"
+      data-count="9"
+    >
+
+      <span class="rb-nav-icon rb-live-nav-dot">
+        🔴
+      </span>
+
+      <span>
+        LIVE
+      </span>
+
+    </button>
+
+    <button
+      type="button"
+      data-route="/music"
+    >
+
+      <span class="rb-nav-icon">
+        🎵
+      </span>
+
+      <span>
+        MUSIC
+      </span>
+
+    </button>
+
+    <button
+      type="button"
+      data-route="/gaming"
+    >
+
+      <span class="rb-nav-icon">
+        🎮
+      </span>
+
+      <span>
+        GAMING
+      </span>
+
+    </button>
+
+    <button
+      type="button"
+      data-route="/profile"
+    >
+
+      <span class="rb-nav-icon">
+        👤
+      </span>
+
+      <span>
+        PROFILE
+      </span>
+
+    </button>
+
+  </nav>
+
+  <!-- THREE -->
+  <script
+    type="module"
+    src="/core/pages/avatar.js"
+  ></script>
+
+</body>
+</html>
