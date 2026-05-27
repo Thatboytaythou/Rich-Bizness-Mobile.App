@@ -1,177 +1,255 @@
-import RB_CONFIG from "/core/shared/rb-config.js";
-
 /* =========================
    RICH BIZNESS MOBILE
    /core/engine/galaxy-engine.js
 
-   ADVANCED BREATHING GALAXY ENGINE
-   Deep Universe + Dynamic Atmosphere
+   ULTRA SPACE GALAXY ENGINE
+   Deep Space + Nebula + Star Depth + Portal Energy Sync
 ========================= */
 
 export function createGalaxyEngine(ctx) {
-  const {
-    THREE,
-    scene,
-    motion,
-    activityState
-  } = ctx;
+  const { THREE, scene, motion, activityState } = ctx;
 
   let starField;
   let deepStars;
+  let microStars;
   let galaxyCloud;
   let galaxyGold;
-  let nebulaLayer;
+  let nebulaBack;
+  let nebulaMid;
   let cosmicDust;
-  let galaxyPulse;
-  let floatingFog;
+  let portalAura;
+  let spaceFog;
   let energyBands;
-
-  let starsGeo;
-  let deepGeo;
-  let cloudGeo;
-  let goldGeo;
-  let dustGeo;
+  let meteorField;
 
   let mounted = false;
 
-  const breathing = {
+  const geos = [];
+
+  const state = {
+    theme: "green-gold",
     pulse: 0,
     intensity: 1,
-    target: 1
+    target: 1,
+    touchEnergy: 0
   };
 
-  const themeMap = {
-    green: {
+  const themes = {
+    "green-gold": {
       galaxy: 0x00ff9d,
       gold: 0xfacc15,
       stars: 0x8fffd2,
-      fog: 0x03110b,
-      nebula: 0x00ff88
+      nebula: 0x00ff88,
+      fog: 0x03110b
     },
-
-    blue: {
-      galaxy: 0x22d3ee,
-      gold: 0xffffff,
+    "blue-electric": {
+      galaxy: 0x38bdf8,
+      gold: 0x93c5fd,
       stars: 0x7dd3fc,
-      fog: 0x020617,
-      nebula: 0x3b82f6
+      nebula: 0x2563eb,
+      fog: 0x020617
     },
-
-    purple: {
+    "purple-pink": {
       galaxy: 0xa855f7,
       gold: 0xf472b6,
       stars: 0xe879f9,
-      fog: 0x0a0214,
-      nebula: 0xc084fc
+      nebula: 0xc084fc,
+      fog: 0x090015
+    },
+    "black-gold": {
+      galaxy: 0x111827,
+      gold: 0xfacc15,
+      stars: 0xfff7cc,
+      nebula: 0x8b5d00,
+      fog: 0x020201
+    },
+    "emerald-black": {
+      galaxy: 0x00ff88,
+      gold: 0x050805,
+      stars: 0xd1fae5,
+      nebula: 0x00ff9d,
+      fog: 0x020805
+    },
+    "royal-gold": {
+      galaxy: 0x1f2937,
+      gold: 0xffd700,
+      stars: 0xfff7cc,
+      nebula: 0xfacc15,
+      fog: 0x080604
     }
   };
 
-  let currentTheme = "green";
+  function currentTheme() {
+    return themes[state.theme] || themes["green-gold"];
+  }
 
   function mount() {
     if (mounted) return;
 
-    buildStars();
     buildDeepStars();
+    buildStarField();
+    buildMicroStars();
     buildGalaxyClouds();
     buildNebula();
     buildCosmicDust();
-    buildFloatingFog();
+    buildPortalAura();
+    buildSpaceFog();
     buildEnergyBands();
+    buildMeteorField();
+    bindThemeEvents();
 
     mounted = true;
   }
 
-  function buildStars() {
+  function makeGlowTexture(size = 512) {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+
+    const c = canvas.getContext("2d");
+    const g = c.createRadialGradient(size / 2, size / 2, 2, size / 2, size / 2, size / 2);
+
+    g.addColorStop(0, "rgba(255,255,255,.75)");
+    g.addColorStop(0.18, "rgba(250,204,21,.34)");
+    g.addColorStop(0.42, "rgba(0,255,157,.22)");
+    g.addColorStop(0.74, "rgba(56,189,248,.08)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+
+    c.fillStyle = g;
+    c.fillRect(0, 0, size, size);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  function makeCloudTexture(size = 768) {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+
+    const c = canvas.getContext("2d");
+
+    for (let i = 0; i < 90; i += 1) {
+      const x = size / 2 + THREE.MathUtils.randFloatSpread(size * 0.58);
+      const y = size / 2 + THREE.MathUtils.randFloatSpread(size * 0.42);
+      const r = THREE.MathUtils.randFloat(36, 150);
+
+      const g = c.createRadialGradient(x, y, 1, x, y, r);
+      g.addColorStop(0, "rgba(255,255,255,.20)");
+      g.addColorStop(0.32, "rgba(0,255,157,.105)");
+      g.addColorStop(0.66, "rgba(250,204,21,.035)");
+      g.addColorStop(1, "rgba(0,0,0,0)");
+
+      c.fillStyle = g;
+      c.beginPath();
+      c.arc(x, y, r, 0, Math.PI * 2);
+      c.fill();
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  function buildDeepStars() {
     const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+    const count = isMobile ? 4200 : 7600;
 
-    const count = isMobile ? 6200 : 9800;
-
-    starsGeo = new THREE.BufferGeometry();
-
+    const geo = new THREE.BufferGeometry();
     const positions = [];
-    const colors = [];
-    const sizes = [];
 
     for (let i = 0; i < count; i += 1) {
       positions.push(
-        THREE.MathUtils.randFloatSpread(320),
-        THREE.MathUtils.randFloatSpread(220),
-        THREE.MathUtils.randFloatSpread(260)
+        THREE.MathUtils.randFloatSpread(720),
+        THREE.MathUtils.randFloatSpread(460),
+        THREE.MathUtils.randFloatSpread(620) - 160
+      );
+    }
+
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geos.push(geo);
+
+    deepStars = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        color: currentTheme().stars,
+        size: isMobile ? 0.026 : 0.038,
+        transparent: true,
+        opacity: 0.32,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+
+    deepStars.position.z = -170;
+    scene.add(deepStars);
+  }
+
+  function buildStarField() {
+    const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+    const count = isMobile ? 7600 : 12800;
+
+    const geo = new THREE.BufferGeometry();
+    const positions = [];
+    const colors = [];
+
+    for (let i = 0; i < count; i += 1) {
+      positions.push(
+        THREE.MathUtils.randFloatSpread(390),
+        THREE.MathUtils.randFloatSpread(260),
+        THREE.MathUtils.randFloatSpread(320) - 60
       );
 
       const tone = Math.random();
-
-      if (tone > 0.82) {
-        colors.push(1, 0.82, 0.2);
-      } else if (tone > 0.5) {
-        colors.push(0, 1, 0.65);
-      } else {
-        colors.push(0.4, 1, 0.9);
-      }
-
-      sizes.push(Math.random() * 1.6);
+      if (tone > 0.82) colors.push(1, 0.82, 0.22);
+      else if (tone > 0.46) colors.push(0.0, 1.0, 0.65);
+      else colors.push(0.5, 0.95, 1);
     }
 
-    starsGeo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3)
-    );
-
-    starsGeo.setAttribute(
-      "color",
-      new THREE.Float32BufferAttribute(colors, 3)
-    );
-
-    starsGeo.setAttribute(
-      "size",
-      new THREE.Float32BufferAttribute(sizes, 1)
-    );
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    geos.push(geo);
 
     starField = new THREE.Points(
-      starsGeo,
+      geo,
       new THREE.PointsMaterial({
-        size: isMobile ? 0.08 : 0.11,
+        size: isMobile ? 0.075 : 0.105,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.78,
         vertexColors: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
     );
 
-    starField.position.z = -45;
-
+    starField.position.z = -48;
     scene.add(starField);
   }
 
-  function buildDeepStars() {
+  function buildMicroStars() {
     const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+    const count = isMobile ? 2600 : 4800;
 
-    const count = isMobile ? 3200 : 5800;
-
-    deepGeo = new THREE.BufferGeometry();
-
+    const geo = new THREE.BufferGeometry();
     const positions = [];
 
     for (let i = 0; i < count; i += 1) {
       positions.push(
-        THREE.MathUtils.randFloatSpread(520),
-        THREE.MathUtils.randFloatSpread(320),
-        THREE.MathUtils.randFloatSpread(420)
+        THREE.MathUtils.randFloatSpread(240),
+        THREE.MathUtils.randFloatSpread(170),
+        THREE.MathUtils.randFloatSpread(150) - 20
       );
     }
 
-    deepGeo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3)
-    );
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geos.push(geo);
 
-    deepStars = new THREE.Points(
-      deepGeo,
+    microStars = new THREE.Points(
+      geo,
       new THREE.PointsMaterial({
-        color: 0x0ffff0,
-        size: isMobile ? 0.03 : 0.045,
+        color: 0xffffff,
+        size: isMobile ? 0.012 : 0.018,
         transparent: true,
         opacity: 0.28,
         depthWrite: false,
@@ -179,63 +257,47 @@ export function createGalaxyEngine(ctx) {
       })
     );
 
-    deepStars.position.z = -120;
-
-    scene.add(deepStars);
+    scene.add(microStars);
   }
 
   function buildGalaxyClouds() {
     const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+    const count = isMobile ? 9200 : 15800;
 
-    const count = isMobile ? 7200 : 12000;
-
-    cloudGeo = new THREE.BufferGeometry();
-    goldGeo = new THREE.BufferGeometry();
-
-    const greenPositions = [];
-    const goldPositions = [];
+    const greenGeo = new THREE.BufferGeometry();
+    const goldGeo = new THREE.BufferGeometry();
+    const green = [];
+    const gold = [];
 
     for (let i = 0; i < count; i += 1) {
-      const radius = Math.random() * 110;
-
-      const arm = i % 6;
-
+      const radius = Math.pow(Math.random(), 0.72) * 145;
+      const arm = i % 7;
       const angle =
-        radius * 0.18 +
-        arm * ((Math.PI * 2) / 6) +
-        Math.random() * 0.8;
+        radius * 0.145 +
+        arm * ((Math.PI * 2) / 7) +
+        THREE.MathUtils.randFloatSpread(0.9);
+
+      const ySoft = 1 - radius / 190;
 
       const x = Math.cos(angle) * radius;
-      const y =
-        THREE.MathUtils.randFloatSpread(45) *
-        (1 - radius / 160);
+      const y = THREE.MathUtils.randFloatSpread(56) * ySoft;
+      const z = Math.sin(angle) * radius - 30;
 
-      const z = Math.sin(angle) * radius;
-
-      if (Math.random() > 0.78) {
-        goldPositions.push(x, y, z);
-      } else {
-        greenPositions.push(x, y, z);
-      }
+      if (Math.random() > 0.76) gold.push(x, y, z);
+      else green.push(x, y, z);
     }
 
-    cloudGeo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(greenPositions, 3)
-    );
-
-    goldGeo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(goldPositions, 3)
-    );
+    greenGeo.setAttribute("position", new THREE.Float32BufferAttribute(green, 3));
+    goldGeo.setAttribute("position", new THREE.Float32BufferAttribute(gold, 3));
+    geos.push(greenGeo, goldGeo);
 
     galaxyCloud = new THREE.Points(
-      cloudGeo,
+      greenGeo,
       new THREE.PointsMaterial({
-        color: 0x00ff9d,
-        size: isMobile ? 0.11 : 0.14,
+        color: currentTheme().galaxy,
+        size: isMobile ? 0.11 : 0.15,
         transparent: true,
-        opacity: 0.58,
+        opacity: 0.62,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
@@ -244,377 +306,401 @@ export function createGalaxyEngine(ctx) {
     galaxyGold = new THREE.Points(
       goldGeo,
       new THREE.PointsMaterial({
-        color: 0xfacc15,
-        size: isMobile ? 0.08 : 0.11,
+        color: currentTheme().gold,
+        size: isMobile ? 0.084 : 0.118,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.46,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
     );
 
-    galaxyCloud.position.z = -12;
-    galaxyGold.position.z = -10;
+    galaxyCloud.position.z = -16;
+    galaxyGold.position.z = -14;
 
     scene.add(galaxyCloud);
     scene.add(galaxyGold);
   }
 
   function buildNebula() {
-    const geo = new THREE.PlaneGeometry(260, 260);
+    const tex = makeCloudTexture();
 
-    const mat = new THREE.MeshBasicMaterial({
-      color: 0x00ff88,
-      transparent: true,
-      opacity: 0.06,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    });
-
-    nebulaLayer = new THREE.Mesh(geo, mat);
-
-    nebulaLayer.position.z = -140;
-
-    scene.add(nebulaLayer);
-
-    const pulseGeo = new THREE.SphereGeometry(42, 64, 64);
-
-    const pulseMat = new THREE.MeshBasicMaterial({
-      color: 0x00ff9d,
-      transparent: true,
-      opacity: 0.05,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    });
-
-    galaxyPulse = new THREE.Mesh(pulseGeo, pulseMat);
-
-    galaxyPulse.position.set(0, 0, -25);
-
-    scene.add(galaxyPulse);
-  }
-
-  function buildCosmicDust() {
-    const isMobile = window.innerWidth <= motion.mobileBreakpoint;
-
-    const count = isMobile ? 2400 : 4200;
-
-    dustGeo = new THREE.BufferGeometry();
-
-    const positions = [];
-
-    for (let i = 0; i < count; i += 1) {
-      positions.push(
-        THREE.MathUtils.randFloatSpread(220),
-        THREE.MathUtils.randFloatSpread(180),
-        THREE.MathUtils.randFloatSpread(140)
-      );
-    }
-
-    dustGeo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3)
-    );
-
-    cosmicDust = new THREE.Points(
-      dustGeo,
-      new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: isMobile ? 0.018 : 0.025,
+    nebulaBack = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: tex,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.22,
         depthWrite: false,
         blending: THREE.AdditiveBlending
       })
     );
 
-    cosmicDust.position.z = -5;
+    nebulaBack.position.set(0, 18, -150);
+    nebulaBack.scale.set(270, 190, 1);
+    scene.add(nebulaBack);
 
+    nebulaMid = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        opacity: 0.16,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+
+    nebulaMid.position.set(0, -4, -62);
+    nebulaMid.scale.set(210, 150, 1);
+    scene.add(nebulaMid);
+  }
+
+  function buildCosmicDust() {
+    const isMobile = window.innerWidth <= motion.mobileBreakpoint;
+    const count = isMobile ? 3200 : 6200;
+
+    const geo = new THREE.BufferGeometry();
+    const positions = [];
+
+    for (let i = 0; i < count; i += 1) {
+      positions.push(
+        THREE.MathUtils.randFloatSpread(260),
+        THREE.MathUtils.randFloatSpread(200),
+        THREE.MathUtils.randFloatSpread(180)
+      );
+    }
+
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geos.push(geo);
+
+    cosmicDust = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: isMobile ? 0.015 : 0.022,
+        transparent: true,
+        opacity: 0.22,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+
+    cosmicDust.position.z = -8;
     scene.add(cosmicDust);
   }
 
-  function buildFloatingFog() {
-    floatingFog = new THREE.Group();
+  function buildPortalAura() {
+    portalAura = new THREE.Mesh(
+      new THREE.SphereGeometry(48, 96, 96),
+      new THREE.MeshBasicMaterial({
+        color: currentTheme().nebula,
+        transparent: true,
+        opacity: 0.045,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
 
-    for (let i = 0; i < 18; i += 1) {
-      const fog = new THREE.Mesh(
-        new THREE.SphereGeometry(
-          THREE.MathUtils.randFloat(4, 12),
-          22,
-          22
-        ),
+    portalAura.position.set(0, -1, -24);
+    scene.add(portalAura);
+  }
 
-        new THREE.MeshBasicMaterial({
-          color: i % 2 ? 0x00ff9d : 0xfacc15,
+  function buildSpaceFog() {
+    spaceFog = new THREE.Group();
+
+    const tex = makeCloudTexture(512);
+
+    for (let i = 0; i < 26; i += 1) {
+      const fog = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: tex,
           transparent: true,
-          opacity: 0.02,
+          opacity: 0.045 + Math.random() * 0.05,
           depthWrite: false,
           blending: THREE.AdditiveBlending
         })
       );
 
       fog.position.set(
-        THREE.MathUtils.randFloatSpread(90),
-        THREE.MathUtils.randFloatSpread(40),
-        THREE.MathUtils.randFloat(-80, -10)
+        THREE.MathUtils.randFloatSpread(130),
+        THREE.MathUtils.randFloatSpread(74),
+        THREE.MathUtils.randFloat(-120, -12)
       );
 
-      fog.userData.speed =
-        THREE.MathUtils.randFloat(0.001, 0.004);
+      const s = THREE.MathUtils.randFloat(18, 46);
+      fog.scale.set(s * 1.7, s, 1);
 
-      fog.userData.offset =
-        Math.random() * Math.PI * 2;
+      fog.userData = {
+        speed: THREE.MathUtils.randFloat(0.001, 0.004),
+        float: Math.random() * Math.PI * 2,
+        drift: THREE.MathUtils.randFloat(-0.008, 0.008)
+      };
 
-      floatingFog.add(fog);
+      spaceFog.add(fog);
     }
 
-    scene.add(floatingFog);
+    scene.add(spaceFog);
   }
 
   function buildEnergyBands() {
     energyBands = new THREE.Group();
 
-    for (let i = 0; i < 4; i += 1) {
+    for (let i = 0; i < 7; i += 1) {
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(
-          24 + i * 8,
-          0.08,
-          12,
-          220
-        ),
-
+        new THREE.TorusGeometry(28 + i * 9, 0.05, 12, 260),
         new THREE.MeshBasicMaterial({
-          color: i % 2 ? 0x00ff9d : 0xfacc15,
+          color: i % 2 ? currentTheme().gold : currentTheme().galaxy,
           transparent: true,
-          opacity: 0.06,
+          opacity: 0.07 - i * 0.005,
           depthWrite: false,
           blending: THREE.AdditiveBlending
         })
       );
 
-      ring.rotation.x = Math.PI / (2 + i * 0.2);
-      ring.rotation.y = i * 0.5;
+      ring.rotation.x = Math.PI / (2.08 + i * 0.16);
+      ring.rotation.y = i * 0.42;
+      ring.rotation.z = i * 0.62;
+      ring.userData.speed = 0.0007 + i * 0.00034;
 
       energyBands.add(ring);
     }
 
-    energyBands.position.z = -20;
-
+    energyBands.position.z = -26;
     scene.add(energyBands);
   }
 
-  function update(t) {
-    breathing.target = activityState.liveActive ? 1.35 : 1;
+  function buildMeteorField() {
+    meteorField = new THREE.Group();
 
-    breathing.intensity +=
-      (breathing.target - breathing.intensity) * 0.03;
+    const tex = makeGlowTexture(256);
 
-    breathing.pulse =
-      Math.sin(t * 1.8) * 0.5 + 0.5;
+    for (let i = 0; i < 22; i += 1) {
+      const meteor = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: tex,
+          transparent: true,
+          opacity: 0.18,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        })
+      );
 
-    const breathe =
-      1 +
-      breathing.pulse *
-        0.045 *
-        breathing.intensity;
+      meteor.position.set(
+        THREE.MathUtils.randFloatSpread(160),
+        THREE.MathUtils.randFloatSpread(95),
+        THREE.MathUtils.randFloat(-110, -20)
+      );
 
-    if (starField) {
-      starField.rotation.y +=
-        0.00045 * breathing.intensity;
+      meteor.scale.set(
+        THREE.MathUtils.randFloat(1.6, 4.8),
+        THREE.MathUtils.randFloat(0.25, 0.7),
+        1
+      );
 
-      starField.rotation.z =
-        Math.sin(t * 0.12) * 0.03;
+      meteor.userData = {
+        speed: THREE.MathUtils.randFloat(0.035, 0.12),
+        resetX: THREE.MathUtils.randFloat(80, 130),
+        resetY: THREE.MathUtils.randFloat(35, 72),
+        glow: Math.random() * Math.PI * 2
+      };
 
-      starField.material.opacity =
-        0.7 +
-        breathing.pulse * 0.12;
+      meteor.rotation.z = -0.55;
+
+      meteorField.add(meteor);
     }
 
+    scene.add(meteorField);
+  }
+
+  function bindThemeEvents() {
+    window.addEventListener("rb:portal-theme-change", (event) => {
+      const name = event.detail?.name;
+      if (name) setTheme(name);
+      state.touchEnergy = 1;
+    });
+  }
+
+  function update(t) {
+    state.target = activityState.liveActive ? 1.42 : 1;
+    state.intensity += (state.target - state.intensity) * 0.035;
+    state.touchEnergy *= 0.935;
+    state.pulse = Math.sin(t * 1.7) * 0.5 + 0.5;
+
+    const breathe = 1 + state.pulse * 0.055 * state.intensity + state.touchEnergy * 0.025;
+
     if (deepStars) {
-      deepStars.rotation.y -= 0.00012;
-      deepStars.rotation.x =
-        Math.sin(t * 0.05) * 0.02;
+      deepStars.rotation.y -= 0.0001;
+      deepStars.rotation.x = Math.sin(t * 0.05) * 0.018;
+      deepStars.material.opacity = 0.24 + state.pulse * 0.08;
+    }
+
+    if (starField) {
+      starField.rotation.y += 0.00042 * state.intensity;
+      starField.rotation.z = Math.sin(t * 0.11) * 0.025;
+      starField.material.opacity = 0.68 + state.pulse * 0.18 + state.touchEnergy * 0.08;
+    }
+
+    if (microStars) {
+      microStars.rotation.y -= 0.00022;
+      microStars.material.opacity = 0.18 + state.pulse * 0.12;
     }
 
     if (galaxyCloud) {
-      galaxyCloud.rotation.y +=
-        0.0012 * breathing.intensity;
-
-      galaxyCloud.rotation.z =
-        Math.sin(t * 0.16) * 0.04;
-
+      galaxyCloud.rotation.y += 0.00105 * state.intensity;
+      galaxyCloud.rotation.z = Math.sin(t * 0.14) * 0.045;
       galaxyCloud.scale.setScalar(breathe);
-
-      galaxyCloud.material.opacity =
-        0.52 +
-        breathing.pulse * 0.16;
+      galaxyCloud.material.opacity = 0.5 + state.pulse * 0.2 + state.touchEnergy * 0.08;
     }
 
     if (galaxyGold) {
-      galaxyGold.rotation.y -=
-        0.00082 * breathing.intensity;
-
-      galaxyGold.scale.setScalar(
-        1 + breathing.pulse * 0.03
-      );
-
-      galaxyGold.material.opacity =
-        0.34 +
-        breathing.pulse * 0.12;
+      galaxyGold.rotation.y -= 0.00078 * state.intensity;
+      galaxyGold.rotation.z = Math.cos(t * 0.12) * 0.028;
+      galaxyGold.scale.setScalar(1 + state.pulse * 0.04 + state.touchEnergy * 0.025);
+      galaxyGold.material.opacity = 0.34 + state.pulse * 0.16 + state.touchEnergy * 0.08;
     }
 
-    if (nebulaLayer) {
-      nebulaLayer.rotation.z += 0.0004;
-
-      nebulaLayer.material.opacity =
-        0.04 +
-        breathing.pulse * 0.03;
+    if (nebulaBack) {
+      nebulaBack.rotation.z += 0.00018;
+      nebulaBack.material.opacity = 0.14 + state.pulse * 0.09 + state.touchEnergy * 0.08;
+      nebulaBack.scale.set(
+        270 + state.pulse * 14,
+        190 + Math.cos(t * 0.8) * 10,
+        1
+      );
     }
 
-    if (galaxyPulse) {
-      galaxyPulse.scale.setScalar(
-        1 +
-          breathing.pulse *
-            0.08 *
-            breathing.intensity
+    if (nebulaMid) {
+      nebulaMid.rotation.z -= 0.00028;
+      nebulaMid.material.opacity = 0.1 + state.pulse * 0.08 + state.touchEnergy * 0.1;
+      nebulaMid.scale.set(
+        210 + Math.sin(t * 0.9) * 12,
+        150 + state.pulse * 9,
+        1
       );
+    }
 
-      galaxyPulse.material.opacity =
-        0.04 +
-        breathing.pulse * 0.04;
+    if (portalAura) {
+      portalAura.rotation.y += 0.0009;
+      portalAura.scale.setScalar(1 + state.pulse * 0.1 + state.touchEnergy * 0.18);
+      portalAura.material.opacity = 0.032 + state.pulse * 0.035 + state.touchEnergy * 0.07;
     }
 
     if (cosmicDust) {
-      cosmicDust.rotation.y += 0.0003;
+      cosmicDust.rotation.y += 0.00028;
       cosmicDust.rotation.x += 0.00008;
+      cosmicDust.material.opacity = 0.16 + state.pulse * 0.08;
     }
 
-    if (floatingFog) {
-      floatingFog.children.forEach((fog, index) => {
-        fog.position.x += fog.userData.speed;
+    if (spaceFog) {
+      spaceFog.children.forEach((fog, index) => {
+        fog.position.x += fog.userData.speed * 5;
+        fog.position.y += Math.sin(t * 0.4 + fog.userData.float + index) * 0.004;
+        fog.position.z += fog.userData.drift;
+        fog.rotation.z += 0.0006;
 
-        fog.position.y =
-          Math.sin(
-            t * 0.4 +
-              fog.userData.offset +
-              index
-          ) * 8;
-
-        fog.rotation.z += 0.0008;
-
-        if (fog.position.x > 60) {
-          fog.position.x = -60;
-        }
+        if (fog.position.x > 80) fog.position.x = -80;
+        if (fog.position.z > -8) fog.position.z = -120;
 
         fog.material.opacity =
-          0.012 +
-          Math.sin(t * 0.5 + index) * 0.01;
+          0.035 +
+          Math.sin(t * 0.55 + index) * 0.018 +
+          state.touchEnergy * 0.018;
       });
     }
 
     if (energyBands) {
       energyBands.children.forEach((ring, index) => {
-        ring.rotation.z +=
-          (0.0012 + index * 0.0008) *
-          (index % 2 ? -1 : 1);
-
-        ring.rotation.y += 0.0008;
+        ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1) * state.intensity;
+        ring.rotation.y += 0.00055;
 
         ring.material.opacity =
-          0.04 +
-          Math.sin(t * 0.8 + index) * 0.02;
+          0.035 +
+          Math.sin(t * 0.85 + index) * 0.02 +
+          state.touchEnergy * 0.025;
+      });
+    }
+
+    if (meteorField) {
+      meteorField.children.forEach((meteor, index) => {
+        meteor.position.x -= meteor.userData.speed * (1 + state.touchEnergy);
+        meteor.position.y -= meteor.userData.speed * 0.42;
+
+        meteor.material.opacity =
+          0.08 +
+          Math.sin(t * 2 + meteor.userData.glow + index) * 0.055 +
+          state.touchEnergy * 0.08;
+
+        if (meteor.position.x < -95 || meteor.position.y < -60) {
+          meteor.position.x = meteor.userData.resetX;
+          meteor.position.y = meteor.userData.resetY;
+          meteor.position.z = THREE.MathUtils.randFloat(-120, -24);
+        }
       });
     }
   }
 
-  function onActivityUpdate(state) {
-    if (!galaxyCloud) return;
-
-    galaxyCloud.material.opacity =
-      state.liveActive ? 0.72 : 0.58;
-
-    galaxyGold.material.opacity =
-      state.liveActive ? 0.58 : 0.4;
+  function onActivityUpdate(stateUpdate) {
+    if (stateUpdate.liveActive) {
+      state.touchEnergy = Math.max(state.touchEnergy, 0.45);
+    }
   }
 
-  function onPresenceUpdate(state) {
-    if (!starField) return;
-
-    starField.material.opacity =
-      state.onlineCount > 0 ? 0.92 : 0.78;
+  function onPresenceUpdate(stateUpdate) {
+    if (stateUpdate.onlineCount > 0) {
+      state.touchEnergy = Math.max(state.touchEnergy, 0.25);
+    }
   }
 
-  function setTheme(theme = "green") {
-    currentTheme = theme;
+  function setTheme(theme = "green-gold") {
+    state.theme = theme;
 
-    const colors =
-      themeMap[theme] || themeMap.green;
+    const colors = currentTheme();
 
-    if (galaxyCloud) {
-      galaxyCloud.material.color.set(colors.galaxy);
+    if (scene.fog) scene.fog.color.set(colors.fog);
+    if (galaxyCloud) galaxyCloud.material.color.set(colors.galaxy);
+    if (galaxyGold) galaxyGold.material.color.set(colors.gold);
+    if (deepStars) deepStars.material.color.set(colors.stars);
+    if (portalAura) portalAura.material.color.set(colors.nebula);
+
+    if (energyBands) {
+      energyBands.children.forEach((ring, index) => {
+        ring.material.color.set(index % 2 ? colors.gold : colors.galaxy);
+      });
     }
 
-    if (galaxyGold) {
-      galaxyGold.material.color.set(colors.gold);
-    }
-
-    if (deepStars) {
-      deepStars.material.color.set(colors.stars);
-    }
-
-    if (nebulaLayer) {
-      nebulaLayer.material.color.set(colors.nebula);
-    }
-
-    if (galaxyPulse) {
-      galaxyPulse.material.color.set(colors.galaxy);
-    }
-
-    scene.fog.color.set(colors.fog);
+    state.touchEnergy = 1;
   }
 
   function resize() {
-    if (!starField) return;
+    const isMobile = window.innerWidth <= motion.mobileBreakpoint;
 
-    const isMobile =
-      window.innerWidth <= motion.mobileBreakpoint;
-
-    starField.material.size =
-      isMobile ? 0.08 : 0.11;
-
-    deepStars.material.size =
-      isMobile ? 0.03 : 0.045;
-
-    galaxyCloud.material.size =
-      isMobile ? 0.11 : 0.14;
-
-    galaxyGold.material.size =
-      isMobile ? 0.08 : 0.11;
-
-    cosmicDust.material.size =
-      isMobile ? 0.018 : 0.025;
+    if (starField) starField.material.size = isMobile ? 0.075 : 0.105;
+    if (deepStars) deepStars.material.size = isMobile ? 0.026 : 0.038;
+    if (microStars) microStars.material.size = isMobile ? 0.012 : 0.018;
+    if (galaxyCloud) galaxyCloud.material.size = isMobile ? 0.11 : 0.15;
+    if (galaxyGold) galaxyGold.material.size = isMobile ? 0.084 : 0.118;
+    if (cosmicDust) cosmicDust.material.size = isMobile ? 0.015 : 0.022;
   }
 
   function destroy() {
     [
       starField,
       deepStars,
+      microStars,
       galaxyCloud,
       galaxyGold,
-      nebulaLayer,
+      nebulaBack,
+      nebulaMid,
       cosmicDust,
-      galaxyPulse,
-      floatingFog,
-      energyBands
+      portalAura,
+      spaceFog,
+      energyBands,
+      meteorField
     ].forEach((obj) => {
       if (obj) scene.remove(obj);
     });
 
-    starsGeo?.dispose?.();
-    deepGeo?.dispose?.();
-    cloudGeo?.dispose?.();
-    goldGeo?.dispose?.();
-    dustGeo?.dispose?.();
+    geos.forEach((geo) => geo.dispose?.());
+    geos.length = 0;
 
     mounted = false;
   }
