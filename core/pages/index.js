@@ -1,3 +1,11 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/pages/index.js
+
+   INDEX CONTROL + AUTH PROFILE CHIP
+   Locked to 1-8 Hub Stack
+========================= */
+
 import RB_CONFIG from "/core/shared/rb-config.js";
 
 import {
@@ -8,14 +16,6 @@ import {
   rbSignOut
 } from "/core/shared/rb-auth.js";
 
-/* =========================
-   RICH BIZNESS MOBILE
-   /core/pages/index.js
-
-   INDEX CONTROL + AUTH PROFILE CHIP
-   Locked to 1-8 Hub Stack
-========================= */
-
 const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 let indexBooted = false;
@@ -24,12 +24,19 @@ const quickRoutes = {
   profile: RB_CONFIG.routes.profile,
   admin: RB_CONFIG.routes.admin || "/admin",
   creator: RB_CONFIG.routes.creator || "/creator",
+
   watch: RB_CONFIG.routes.watch,
   alerts: RB_CONFIG.routes.notifications,
   notifications: RB_CONFIG.routes.notifications,
+
   settings: RB_CONFIG.routes.settings,
   edit: RB_CONFIG.routes.edit,
   messages: RB_CONFIG.routes.messages,
+
+  secretDoor: RB_CONFIG.routes.secretDoor,
+  secretMeta2: RB_CONFIG.routes.secretMeta2,
+  secretMeta3: RB_CONFIG.routes.secretMeta3,
+
   auth: RB_CONFIG.routes.auth || "/auth"
 };
 
@@ -48,7 +55,9 @@ function goToRoute(route) {
 }
 
 function goToSection(sectionKey) {
-  const route = RB_CONFIG.routes?.[sectionKey] || quickRoutes[sectionKey];
+  const route =
+    RB_CONFIG.routes?.[sectionKey] ||
+    quickRoutes[sectionKey];
 
   if (!route) {
     console.warn("[RB INDEX] Missing route:", sectionKey);
@@ -155,7 +164,9 @@ function bindRouteClicks() {
       return;
     }
 
-    const route = quickRoutes[routeKey] || RB_CONFIG.routes?.[routeKey];
+    const route =
+      quickRoutes[routeKey] ||
+      RB_CONFIG.routes?.[routeKey];
 
     if (!route) {
       console.warn("[RB INDEX] Missing quick route:", routeKey);
@@ -183,7 +194,9 @@ function revealHubUI() {
   document.body.classList.add("rb-loaded");
 
   const profileChip = document.querySelector(".rb-profile-chip");
-  if (profileChip) profileChip.classList.add("is-visible");
+  if (profileChip) {
+    profileChip.classList.add("is-visible");
+  }
 
   document.querySelectorAll(".rb-side-tabs button").forEach((tab, index) => {
     window.setTimeout(() => {
@@ -199,12 +212,12 @@ function updateViewportHeight() {
 
 async function bootIndexPage() {
   if (indexBooted) return;
+
   indexBooted = true;
 
   updateViewportHeight();
   bindRouteClicks();
   bindUniverseEvents();
-
   revealHubUI();
 
   await bootIndexAuth();
