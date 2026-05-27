@@ -1,28 +1,238 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/three-avatar.css
-   3D AVATAR CONTAINER
+   LAYER 3 / AVATAR ENGINE
 ========================================= */
 
+/* =========================
+   GLOBAL AVATAR PLAYER
+========================= */
+
+.rb-avatar-player {
+  position: fixed;
+  left: 50%;
+  bottom: 142px;
+
+  z-index: 18;
+
+  width: clamp(130px, 18vw, 220px);
+  height: clamp(130px, 18vw, 220px);
+
+  transform: translateX(-50%);
+
+  pointer-events: none;
+  user-select: none;
+
+  transition:
+    transform .28s ease,
+    opacity .28s ease,
+    filter .28s ease;
+}
+
+/* =========================
+   3D AVATAR CORE
+========================= */
+
 .rb-avatar-3d-container {
-  width: 64px;
-  height: 64px;
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid rgba(123,255,102,0.6);
-  background: #020302;
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.3s ease;
+
+  background:
+    radial-gradient(circle at 50% 30%, rgba(0,255,157,.22), transparent 58%),
+    linear-gradient(180deg, #07110c 0%, #020302 100%);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 0 30px rgba(0,255,157,.12),
+    0 0 80px rgba(0,0,0,.55),
+    inset 0 0 30px rgba(255,255,255,.03);
+
+  isolation: isolate;
 }
 
-.rb-avatar-3d-container:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 25px rgba(123,255,102,0.7);
+/* =========================
+   OUTER ENERGY RING
+========================= */
+
+.rb-avatar-3d-container::before {
+  content: "";
+
+  position: absolute;
+  inset: -8px;
+
+  border-radius: 50%;
+
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(0,255,157,.9),
+      rgba(250,204,21,.7),
+      rgba(0,255,157,.9)
+    );
+
+  opacity: .45;
+
+  filter: blur(14px);
+
+  animation:
+    rbAvatarSpin 12s linear infinite;
+
+  z-index: 0;
 }
+
+/* =========================
+   INNER GLASS
+========================= */
+
+.rb-avatar-3d-container::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 32%),
+    radial-gradient(circle at 70% 78%, rgba(250,204,21,.08), transparent 34%);
+
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* =========================
+   CANVAS
+========================= */
 
 #rb-avatar-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
   width: 100% !important;
   height: 100% !important;
+
   display: block;
+
+  border-radius: 50%;
+
+  transform: translateZ(0);
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* =========================
+   MINI PROFILE VERSION
+========================= */
+
+.rb-avatar-mini {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  background:
+    radial-gradient(circle at 30% 30%, rgba(0,255,157,.18), transparent 60%),
+    linear-gradient(180deg, #07110c, #020302);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  color: #ffffff;
+  font-size: 1rem;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 0 18px rgba(0,255,157,.14),
+    inset 0 0 14px rgba(255,255,255,.03);
+}
+
+/* =========================
+   ACTIVE STATES
+========================= */
+
+.rb-avatar-player.is-talking {
+  filter:
+    drop-shadow(0 0 22px rgba(0,255,157,.38));
+}
+
+.rb-avatar-player.is-live .rb-avatar-3d-container::before {
+  opacity: .82;
+
+  animation-duration: 4s;
+}
+
+.rb-avatar-player.is-hidden {
+  opacity: 0;
+  transform:
+    translateX(-50%)
+    translateY(30px)
+    scale(.9);
+}
+
+/* =========================
+   FLOAT MOTION
+========================= */
+
+.rb-avatar-player {
+  animation:
+    rbAvatarFloat 6s ease-in-out infinite;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+@keyframes rbAvatarFloat {
+  0%, 100% {
+    transform:
+      translateX(-50%)
+      translateY(0px);
+  }
+
+  50% {
+    transform:
+      translateX(-50%)
+      translateY(-8px);
+  }
+}
+
+@keyframes rbAvatarSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 720px) {
+  .rb-avatar-player {
+    width: 118px;
+    height: 118px;
+    bottom: 118px;
+  }
+
+  .rb-avatar-mini {
+    width: 38px;
+    height: 38px;
+  }
 }
