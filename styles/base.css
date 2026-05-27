@@ -21,19 +21,35 @@
 
   --rb-glass: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.02)
+    rgba(255, 255, 255, 0.09),
+    rgba(255, 255, 255, 0.025)
   );
 
   --rb-border: rgba(255, 255, 255, 0.12);
+  --rb-border-gold: rgba(250, 204, 21, 0.24);
+  --rb-border-green: rgba(0, 255, 157, 0.24);
 
   --rb-shadow-green: 0 0 40px rgba(0, 255, 157, 0.35);
   --rb-shadow-gold: 0 0 40px rgba(250, 204, 21, 0.22);
+  --rb-shadow-deep: 0 24px 90px rgba(0, 0, 0, 0.58);
 
   --rb-header-height: 120px;
+  --rb-bottom-nav-height: 92px;
+
   --rb-radius: 28px;
   --rb-radius-lg: 36px;
+  --rb-radius-pill: 999px;
+
   --rb-vh: 1vh;
+  --rb-safe-top: env(safe-area-inset-top);
+  --rb-safe-bottom: env(safe-area-inset-bottom);
+
+  --rb-z-bg: 0;
+  --rb-z-canvas: 1;
+  --rb-z-fx: 2;
+  --rb-z-ui: 20;
+  --rb-z-nav: 30;
+  --rb-z-modal: 100;
 }
 
 /* RESET */
@@ -52,6 +68,7 @@ html {
   background: var(--rb-black);
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -62,7 +79,9 @@ body {
   min-height: calc(var(--rb-vh) * 100);
 
   background:
-    radial-gradient(circle at top, #102418 0%, #07110c 40%, #020302 100%);
+    radial-gradient(circle at 50% 12%, rgba(0, 255, 157, 0.16), transparent 30%),
+    radial-gradient(circle at 78% 18%, rgba(250, 204, 21, 0.09), transparent 24%),
+    radial-gradient(circle at bottom, #102418 0%, #07110c 42%, #020302 100%);
 
   color: var(--rb-white);
 
@@ -91,6 +110,7 @@ body.rb-base-test-page {
   height: calc(var(--rb-vh) * 100);
   overflow: hidden;
   overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 /* MEDIA DEFAULTS */
@@ -109,6 +129,10 @@ video {
   object-fit: cover;
 }
 
+canvas {
+  image-rendering: auto;
+}
+
 button,
 input,
 textarea,
@@ -125,6 +149,7 @@ button {
   border: 0;
   cursor: pointer;
   background: none;
+  color: inherit;
 }
 
 a {
@@ -170,26 +195,19 @@ ol {
     filter 0.18s ease;
 }
 
-/* MOBILE SAFE */
-
-@media (max-width: 720px) {
-  body {
-    min-height: 100dvh;
-  }
-}
-
-/* =========================
-   INDEX ENGINE STRUCTURE
-   Needed by universe-preview.js
-========================= */
+/* INDEX ENGINE STRUCTURE */
 
 .rb-universe-shell {
   position: relative;
+  z-index: 3;
+
   width: 100%;
   height: 100vh;
   height: 100dvh;
   height: calc(var(--rb-vh) * 100);
+
   overflow: hidden;
+  pointer-events: none;
 }
 
 .rb-universe-stage {
@@ -199,84 +217,101 @@ ol {
   overflow: hidden;
 }
 
-/* =========================
-   INDEX BRAND HEADER
-========================= */
+/* BRAND HEADER */
 
 .rb-brand-header {
   position: fixed;
-  top: max(58px, env(safe-area-inset-top));
+  top: max(54px, calc(env(safe-area-inset-top) + 26px));
   left: 50%;
   transform: translateX(-50%);
-  z-index: 24;
+  z-index: var(--rb-z-ui);
 
   width: min(92vw, 720px);
   text-align: center;
   pointer-events: none;
+
+  filter:
+    drop-shadow(0 0 22px rgba(0, 255, 157, 0.18))
+    drop-shadow(0 0 34px rgba(250, 204, 21, 0.12));
 }
 
 .rb-brand-header h1 {
   margin: 0;
-  font-size: clamp(2.35rem, 10vw, 5.4rem);
+
+  font-size: clamp(2.45rem, 9.4vw, 5.6rem);
   font-weight: 1000;
   line-height: 0.82;
-  letter-spacing: -0.075em;
+  letter-spacing: -0.082em;
+
   color: #ffffff;
+
   text-shadow:
-    0 0 30px rgba(255, 255, 255, 0.18),
-    0 0 60px rgba(0, 255, 157, 0.18);
+    0 0 20px rgba(255, 255, 255, 0.18),
+    0 0 48px rgba(0, 255, 157, 0.18);
 }
 
 .rb-brand-header h1 span {
   color: var(--rb-gold);
+
   text-shadow:
-    0 0 25px rgba(250, 204, 21, 0.48),
-    0 0 60px rgba(250, 204, 21, 0.2);
+    0 0 18px rgba(250, 204, 21, 0.58),
+    0 0 56px rgba(250, 204, 21, 0.28);
 }
 
 .rb-brand-header p {
-  margin-top: 10px;
+  margin-top: 12px;
+
   color: var(--rb-green-soft);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.28em;
+
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.36em;
   text-transform: uppercase;
-  opacity: 0.9;
+
+  opacity: 0.96;
 }
 
-/* =========================
-   MODULE LABEL FOR ENGINE
-========================= */
+/* MODULE LABEL */
 
 .rb-module-label {
   position: fixed;
   left: 50%;
   bottom: calc(104px + env(safe-area-inset-bottom));
-  z-index: 26;
+  z-index: var(--rb-z-nav);
 
-  min-width: 180px;
-  max-width: calc(100vw - 40px);
-  padding: 12px 18px;
+  min-width: 190px;
+  max-width: calc(100vw - 42px);
 
-  transform: translateX(-50%) translateY(10px);
+  padding: 13px 22px;
 
-  border: 1px solid rgba(250, 204, 21, 0.18);
-  border-radius: 999px;
+  transform: translateX(-50%) translateY(10px) scale(0.96);
 
-  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  border-radius: var(--rb-radius-pill);
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 68%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.82), rgba(0, 0, 0, 0.62));
+
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 
   color: var(--rb-gold);
+
   text-align: center;
   font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
+  font-weight: 1000;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+
+  box-shadow:
+    0 0 22px rgba(250, 204, 21, 0.1),
+    0 0 46px rgba(0, 255, 157, 0.12),
+    inset 0 0 18px rgba(255, 255, 255, 0.03);
 
   transition:
     opacity 0.22s ease,
@@ -288,20 +323,60 @@ ol {
 .rb-module-label.is-visible {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0) scale(1);
 }
 
-@media (max-width: 640px) {
+/* SAFE MOBILE LOCK */
+
+@media (max-width: 720px) {
+  body {
+    min-height: 100dvh;
+  }
+
   .rb-brand-header {
-    top: max(72px, env(safe-area-inset-top));
+    top: max(64px, calc(env(safe-area-inset-top) + 28px));
   }
 
   .rb-brand-header h1 {
-    font-size: 2.65rem;
+    font-size: clamp(2.35rem, 10.2vw, 3.15rem);
   }
 
   .rb-brand-header p {
     font-size: 0.58rem;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.27em;
+  }
+
+  .rb-module-label {
+    bottom: calc(102px + env(safe-area-inset-bottom));
+    padding: 12px 18px;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+  }
+}
+
+@media (max-width: 390px) {
+  .rb-brand-header h1 {
+    font-size: 2.2rem;
+  }
+
+  .rb-brand-header p {
+    font-size: 0.52rem;
+    letter-spacing: 0.2em;
+  }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
