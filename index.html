@@ -2,15 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Rich Bizness • Universe</title>
-
-  <meta name="theme-color" content="#050805" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
@@ -37,33 +30,32 @@
     <p>ENGINE • AVATAR • ROUTE TEST</p>
   </header>
 
-  <button
-    class="rb-profile-chip"
-    data-route="profile"
-    type="button"
-    aria-label="Open profile"
-  >
-    <div class="rb-avatar-mini">👤</div>
+  <button class="rb-profile-chip" data-route="profile" type="button">
+    <img src="/images/brand/meta-avatar.png.jpeg" alt="Profile" />
     <span>Profile</span>
   </button>
 
-  <nav class="rb-side-tabs" aria-label="Quick actions">
-    <button data-route="avatar" type="button" aria-label="Avatar">🧍🏽‍♂️</button>
-    <button data-route="profile" type="button" aria-label="Profile">👤</button>
-    <button data-route="meta" type="button" aria-label="Meta">🌎</button>
-    <button data-route="watch" type="button" aria-label="Watch">📺</button>
-    <button data-route="live" type="button" aria-label="Live">📡</button>
-    <button data-route="messages" type="button" aria-label="Messages">💬</button>
-    <button data-route="notifications" type="button" aria-label="Notifications">🔔</button>
-    <button data-route="settings" type="button" aria-label="Settings">⚙️</button>
-    <button data-route="edit" type="button" aria-label="Edit">✒️</button>
-    <button data-route="secretDoor" type="button" aria-label="Secret Door">🔐</button>
-    <button data-route="secretMeta2" type="button" aria-label="Secret Meta Two">🪐</button>
-    <button data-route="secretMeta3" type="button" aria-label="Secret Meta Three">🌌</button>
+  <button class="rb-tab-dropper" id="tabDropper" type="button" aria-label="Open quick tabs">
+    ☰
+  </button>
+
+  <nav class="rb-side-tabs rb-slide-tabs" id="slideTabs" aria-label="Quick actions">
+    <button data-route="avatar" type="button">🧍🏽‍♂️</button>
+    <button data-route="profile" type="button">👤</button>
+    <button data-route="meta" type="button">🌎</button>
+    <button data-route="watch" type="button">📺</button>
+    <button data-route="live" type="button">📡</button>
+    <button data-route="messages" type="button">💬</button>
+    <button data-route="notifications" type="button">🔔</button>
+    <button data-route="settings" type="button">⚙️</button>
+    <button data-route="edit" type="button">✒️</button>
+    <button data-route="secretDoor" type="button">🔐</button>
+    <button data-route="secretMeta2" type="button">🪐</button>
+    <button data-route="secretMeta3" type="button">🌌</button>
   </nav>
 
   <main class="rb-universe-shell">
-    <section class="rb-universe-stage" aria-label="Rich Bizness engine stage">
+    <section class="rb-universe-stage">
       <div id="module-label" class="rb-module-label active">
         ENGINE TEST ONLINE
       </div>
@@ -71,30 +63,11 @@
   </main>
 
   <nav class="rb-bottom-nav" aria-label="Primary navigation">
-    <button data-route="profile" type="button">
-      <span class="rb-nav-icon">👤</span>
-      <span>Profile</span>
-    </button>
-
-    <button data-route="avatar" type="button">
-      <span class="rb-nav-icon">🧍🏽‍♂️</span>
-      <span>Avatar</span>
-    </button>
-
-    <button data-route="meta" type="button">
-      <span class="rb-nav-icon">🌎</span>
-      <span>Meta</span>
-    </button>
-
-    <button data-route="live" type="button">
-      <span class="rb-nav-icon">📡</span>
-      <span>Live</span>
-    </button>
-
-    <button data-route="upload" type="button">
-      <span class="rb-nav-icon">⬆️</span>
-      <span>Upload</span>
-    </button>
+    <button data-route="profile" type="button"><span class="rb-nav-icon">👤</span><span>Profile</span></button>
+    <button data-route="avatar" type="button"><span class="rb-nav-icon">🧍🏽‍♂️</span><span>Avatar</span></button>
+    <button data-route="meta" type="button"><span class="rb-nav-icon">🌎</span><span>Meta</span></button>
+    <button data-route="live" type="button"><span class="rb-nav-icon">📡</span><span>Live</span></button>
+    <button data-route="upload" type="button"><span class="rb-nav-icon">⬆️</span><span>Upload</span></button>
   </nav>
 
   <script type="module" src="/core/engine/universe-preview.js"></script>
@@ -103,6 +76,16 @@
   <script type="module" src="/core/pages/realtime-notifications.js"></script>
   <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
   <script type="module" src="/core/pages/index.js"></script>
+
+  <script>
+    const dropper = document.getElementById("tabDropper");
+    const tabs = document.getElementById("slideTabs");
+
+    dropper?.addEventListener("click", () => {
+      tabs?.classList.toggle("is-open");
+      dropper.classList.toggle("is-open");
+    });
+  </script>
 
 </body>
 </html>
