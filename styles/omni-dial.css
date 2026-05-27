@@ -1,19 +1,26 @@
 /* =========================
    RICH BIZNESS MOBILE
    styles/omni-dial.css
-   LAYER 7 / HUB UI + DIAL CARDS
+   LAYER 8 / 22
+
+   HUB UI + DIAL OVERLAY
+   HOLOGRAM GLASS UI
 ========================= */
 
-/* PROFILE CHIP */
+/* =========================
+   PROFILE CHIP
+========================= */
 
 .rb-profile-chip {
   position: fixed;
-  top: max(18px, env(safe-area-inset-top));
+
+  top: max(16px, env(safe-area-inset-top));
   left: 18px;
+
   z-index: 28;
 
   min-height: 64px;
-  max-width: min(390px, calc(100vw - 92px));
+  max-width: min(390px, calc(100vw - 94px));
 
   display: flex;
   align-items: center;
@@ -22,105 +29,212 @@
   padding: 9px 18px 9px 9px;
 
   border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.24);
+
+  border: 1px solid rgba(250,204,21,.22);
 
   background:
-    radial-gradient(circle at top, rgba(255,255,255,.1), transparent 70%),
-    linear-gradient(145deg, rgba(5,8,5,.9), rgba(0,0,0,.72));
+    radial-gradient(circle at top, rgba(255,255,255,.12), transparent 70%),
+    linear-gradient(
+      145deg,
+      rgba(8,12,9,.92),
+      rgba(0,0,0,.76)
+    );
 
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  overflow: hidden;
 
   color: #fefce8;
-  pointer-events: auto;
+
   cursor: pointer;
+  pointer-events: auto;
 
   box-shadow:
-    0 0 28px rgba(0,0,0,.34),
-    0 0 18px rgba(16,185,129,.12);
+    0 0 26px rgba(0,0,0,.42),
+    0 0 22px rgba(16,185,129,.12),
+    inset 0 0 22px rgba(255,255,255,.03);
+
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease;
+}
+
+.rb-profile-chip::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      115deg,
+      transparent 10%,
+      rgba(255,255,255,.12) 48%,
+      transparent 82%
+    );
+
+  transform: translateX(-120%);
+  animation: rbChipSweep 5.4s linear infinite;
+
+  pointer-events: none;
+}
+
+.rb-profile-chip:hover {
+  transform:
+    translateY(-2px)
+    scale(1.02);
+
+  border-color: rgba(0,255,157,.38);
+
+  box-shadow:
+    0 0 32px rgba(0,255,157,.16),
+    0 0 48px rgba(250,204,21,.1);
 }
 
 .rb-profile-chip img {
+  position: relative;
+  z-index: 2;
+
   width: 46px;
   height: 46px;
+
   border-radius: 50%;
   object-fit: cover;
+
   border: 2px solid rgba(250,204,21,.42);
+
+  box-shadow:
+    0 0 14px rgba(0,255,157,.22);
 }
 
 .rb-profile-chip span {
+  position: relative;
+  z-index: 2;
+
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
   color: #fefce8;
+
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 1000;
   letter-spacing: .16em;
   text-transform: uppercase;
+
+  text-shadow:
+    0 0 12px rgba(0,255,157,.22);
 }
 
-/* SLIDE DOWN TAB MENU */
+/* =========================
+   TAB DROPPER
+========================= */
 
 .rb-tab-dropper {
   position: fixed;
+
   right: 18px;
-  top: calc(env(safe-area-inset-top) + 88px);
+  top: calc(env(safe-area-inset-top) + 86px);
+
   z-index: 34;
 
   width: 56px;
   height: 56px;
 
   border-radius: 20px;
+
   border: 1px solid rgba(250,204,21,.24);
 
   background:
     radial-gradient(circle at top, rgba(255,255,255,.12), transparent 70%),
-    linear-gradient(145deg, rgba(5,8,5,.92), rgba(0,0,0,.76));
+    linear-gradient(
+      145deg,
+      rgba(8,12,9,.92),
+      rgba(0,0,0,.76)
+    );
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
   color: #fefce8;
+
   font-size: 28px;
   font-weight: 1000;
 
   box-shadow:
-    0 0 22px rgba(0,255,157,.14),
-    0 0 34px rgba(0,0,0,.42);
+    0 0 24px rgba(0,255,157,.12),
+    0 0 38px rgba(0,0,0,.48);
 
-  pointer-events: auto;
+  transition:
+    transform .22s ease,
+    background .22s ease,
+    color .22s ease;
+}
+
+.rb-tab-dropper:hover {
+  transform:
+    scale(1.05)
+    rotate(4deg);
 }
 
 .rb-tab-dropper.is-open {
   color: #041006;
-  background: linear-gradient(135deg, var(--rb-green), var(--rb-gold));
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--rb-green),
+      var(--rb-gold)
+    );
+
+  box-shadow:
+    0 0 22px rgba(0,255,157,.36),
+    0 0 34px rgba(250,204,21,.22);
 }
+
+/* =========================
+   SIDE TABS
+========================= */
 
 .rb-slide-menu,
 .rb-side-tabs {
   position: fixed;
+
   right: 18px;
   top: calc(env(safe-area-inset-top) + 154px);
+
   z-index: 33;
 
   display: grid;
   gap: 10px;
 
   max-height: calc(100dvh - 250px);
+
   overflow-y: auto;
   padding-right: 2px;
 
-  transform: translateY(-18px) scale(.94);
+  transform:
+    translateY(-18px)
+    scale(.94);
+
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 
   transition:
-    opacity .22s ease,
-    transform .22s ease,
-    visibility .22s ease;
+    opacity .24s ease,
+    transform .24s ease,
+    visibility .24s ease;
 }
 
 .rb-slide-menu.is-open,
 .rb-side-tabs.is-open {
-  transform: translateY(0) scale(1);
+  transform:
+    translateY(0)
+    scale(1);
+
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -133,39 +247,76 @@
   width: 56px;
   height: 56px;
 
+  display: grid;
+  place-items: center;
+
   border-radius: 18px;
+
   border: 1px solid rgba(250,204,21,.18);
 
   background:
     radial-gradient(circle at top, rgba(255,255,255,.1), transparent 70%),
-    linear-gradient(145deg, rgba(5,8,5,.88), rgba(0,0,0,.72));
+    linear-gradient(
+      145deg,
+      rgba(8,12,9,.88),
+      rgba(0,0,0,.72)
+    );
 
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 
   color: #fefce8;
   font-size: 20px;
 
+  overflow: hidden;
+
   cursor: pointer;
 
   box-shadow:
-    0 0 16px rgba(0,0,0,.34),
-    0 0 22px rgba(16,185,129,.08);
+    0 0 18px rgba(0,0,0,.34),
+    0 0 24px rgba(16,185,129,.08);
+
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease;
 }
 
-/* LIVE COUNTS */
+.rb-slide-menu button::before,
+.rb-side-tabs button::before {
+  pointer-events: none;
+}
 
-.rb-slide-menu button.rb-live-active::before,
-.rb-side-tabs button.rb-live-active::before,
-.rb-bottom-nav button.rb-live-active::before {
+.rb-slide-menu button:hover,
+.rb-side-tabs button:hover {
+  transform:
+    translateY(-2px)
+    scale(1.06);
+
+  border-color: rgba(0,255,157,.42);
+
+  box-shadow:
+    0 0 24px rgba(0,255,157,.16),
+    0 0 34px rgba(250,204,21,.12);
+}
+
+/* =========================
+   LIVE COUNTS
+========================= */
+
+.rb-slide-menu button.rb-live-active::after,
+.rb-side-tabs button.rb-live-active::after,
+.rb-bottom-nav button.rb-live-active::after {
   content: attr(data-count);
 
   position: absolute;
+
   top: -6px;
   right: -5px;
 
   min-width: 22px;
   height: 22px;
+
   padding: 0 6px;
 
   display: flex;
@@ -174,55 +325,92 @@
 
   border-radius: 999px;
 
-  background: linear-gradient(145deg, #10b981, #fbbf24);
+  background:
+    linear-gradient(
+      145deg,
+      #10b981,
+      #fbbf24
+    );
+
   color: #020403;
 
   font-size: 10px;
   font-weight: 1000;
 
   box-shadow:
-    0 0 12px rgba(16,185,129,.6),
-    0 0 24px rgba(250,204,21,.32);
+    0 0 14px rgba(16,185,129,.62),
+    0 0 28px rgba(250,204,21,.34);
 }
 
-/* BOTTOM NAV */
+/* =========================
+   BOTTOM NAV
+========================= */
 
 .rb-bottom-nav {
   position: fixed;
+
   left: 50%;
   bottom: max(14px, env(safe-area-inset-bottom));
+
   z-index: 28;
 
-  width: min(680px, calc(100vw - 24px));
+  width: min(700px, calc(100vw - 24px));
 
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+
   gap: 8px;
 
   padding: 10px;
 
-  border-radius: 28px;
-  border: 1px solid rgba(250,204,21,.2);
+  border-radius: 30px;
+
+  border: 1px solid rgba(250,204,21,.18);
 
   background:
     radial-gradient(circle at top, rgba(255,255,255,.09), transparent 70%),
-    linear-gradient(145deg, rgba(5,8,5,.9), rgba(0,0,0,.78));
+    linear-gradient(
+      145deg,
+      rgba(8,12,9,.92),
+      rgba(0,0,0,.78)
+    );
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 
   transform: translateX(-50%);
 
-  box-shadow:
-    0 0 34px rgba(0,0,0,.44),
-    0 0 22px rgba(16,185,129,.1),
-    inset 0 0 22px rgba(255,255,255,.022);
+  overflow: hidden;
 
-  pointer-events: auto;
+  box-shadow:
+    0 0 38px rgba(0,0,0,.5),
+    0 0 24px rgba(16,185,129,.1),
+    inset 0 0 28px rgba(255,255,255,.025);
+}
+
+.rb-bottom-nav::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      115deg,
+      transparent 10%,
+      rgba(255,255,255,.08) 48%,
+      transparent 82%
+    );
+
+  transform: translateX(-120%);
+  animation: rbNavSweep 7s linear infinite;
+
+  pointer-events: none;
 }
 
 .rb-bottom-nav button {
   position: relative;
+
   min-width: 0;
   height: 58px;
 
@@ -230,59 +418,124 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   gap: 3px;
 
   border-radius: 20px;
   border: 1px solid transparent;
 
   background: rgba(255,255,255,.025);
+
   color: rgba(254,252,232,.78);
 
-  cursor: pointer;
+  overflow: hidden;
+
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    background .22s ease,
+    color .22s ease;
+}
+
+.rb-bottom-nav button::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(0,255,157,.14),
+      transparent 72%
+    );
+
+  opacity: 0;
+
+  transition: opacity .22s ease;
 }
 
 .rb-bottom-nav button:hover,
 .rb-bottom-nav button.is-active,
 .rb-bottom-nav button.rb-live-active {
+  transform:
+    translateY(-2px);
+
   color: #fefce8;
+
   border-color: rgba(16,185,129,.42);
 
   background:
-    radial-gradient(circle at top, rgba(16,185,129,.16), transparent 72%),
-    rgba(255,255,255,.04);
+    rgba(255,255,255,.045);
 
   box-shadow:
-    0 0 18px rgba(16,185,129,.18),
+    0 0 20px rgba(16,185,129,.18),
     inset 0 0 18px rgba(255,255,255,.025);
 }
 
+.rb-bottom-nav button:hover::before,
+.rb-bottom-nav button.is-active::before,
+.rb-bottom-nav button.rb-live-active::before {
+  opacity: 1;
+}
+
 .rb-nav-icon {
+  position: relative;
+  z-index: 2;
+
   display: block;
-  font-size: 21px;
+
+  font-size: 22px;
   line-height: 1;
+
   filter:
-    drop-shadow(0 0 8px rgba(16,185,129,.32))
-    drop-shadow(0 0 8px rgba(250,204,21,.16));
+    drop-shadow(0 0 10px rgba(0,255,157,.34))
+    drop-shadow(0 0 10px rgba(250,204,21,.18));
+
+  transition:
+    transform .22s ease,
+    filter .22s ease;
+}
+
+.rb-bottom-nav button:hover .rb-nav-icon,
+.rb-bottom-nav button.is-active .rb-nav-icon {
+  transform:
+    translateY(-1px)
+    scale(1.08);
+
+  filter:
+    drop-shadow(0 0 14px rgba(0,255,157,.5))
+    drop-shadow(0 0 16px rgba(250,204,21,.24));
 }
 
 .rb-bottom-nav button span:last-child {
+  position: relative;
+  z-index: 2;
+
   display: block;
+
   font-size: 10px;
   font-weight: 1000;
+
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 
 .rb-live-nav-dot {
-  animation: rbLiveNavPulse 1.35s ease-in-out infinite;
+  animation:
+    rbLiveNavPulse 1.35s ease-in-out infinite;
 }
 
-/* REALTIME NOTIFICATIONS */
+/* =========================
+   NOTIFICATIONS
+========================= */
 
 #rb-notify-root {
   position: fixed;
+
   top: calc(env(safe-area-inset-top) + 148px);
   right: 18px;
+
   z-index: 40;
 
   display: flex;
@@ -306,16 +559,24 @@
   padding: 14px;
 
   border-radius: 22px;
+
   border: 1px solid rgba(250,204,21,.16);
 
   background:
     radial-gradient(circle at top, rgba(255,255,255,.09), transparent 70%),
-    linear-gradient(145deg, rgba(5,8,5,.92), rgba(0,0,0,.78));
+    linear-gradient(
+      145deg,
+      rgba(8,12,9,.92),
+      rgba(0,0,0,.78)
+    );
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
 
-  transform: translateX(120%) scale(.92);
+  transform:
+    translateX(120%)
+    scale(.92);
+
   opacity: 0;
 
   transition:
@@ -323,35 +584,69 @@
     transform .4s ease;
 
   box-shadow:
-    0 0 30px rgba(16,185,129,.12),
-    0 0 76px rgba(0,0,0,.42);
+    0 0 32px rgba(16,185,129,.12),
+    0 0 80px rgba(0,0,0,.42);
+}
+
+.rb-notify-toast::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      115deg,
+      transparent 10%,
+      rgba(255,255,255,.08) 48%,
+      transparent 82%
+    );
+
+  transform: translateX(-120%);
+  animation: rbToastSweep 5s linear infinite;
+
+  pointer-events: none;
 }
 
 .rb-notify-toast.is-visible {
   opacity: 1;
-  transform: translateX(0) scale(1);
+
+  transform:
+    translateX(0)
+    scale(1);
 }
 
-/* PAGE TRANSITION */
+/* =========================
+   PAGE TRANSITION
+========================= */
 
 .rb-page-transition::before {
   content: "";
 
   position: fixed;
   inset: 0;
+
   z-index: 999;
 
   background:
-    radial-gradient(circle at center, rgba(16,185,129,.16), rgba(0,0,0,.9));
+    radial-gradient(
+      circle at center,
+      rgba(16,185,129,.16),
+      rgba(0,0,0,.92)
+    );
 
-  animation: rbFadeOut .24s ease forwards;
+  animation:
+    rbFadeOut .24s ease forwards;
+
   pointer-events: none;
 }
 
-/* ANIMATIONS */
+/* =========================
+   ANIMATIONS
+========================= */
 
 @keyframes rbLiveNavPulse {
-  0%, 100% {
+  0%,100% {
     transform: scale(.94);
     opacity: .72;
   }
@@ -363,18 +658,57 @@
 }
 
 @keyframes rbFadeOut {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-/* MOBILE */
+@keyframes rbChipSweep {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(140%);
+  }
+}
+
+@keyframes rbNavSweep {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(140%);
+  }
+}
+
+@keyframes rbToastSweep {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(140%);
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 720px) {
   .rb-profile-chip {
     top: calc(env(safe-area-inset-top) + 12px);
     left: 12px;
+
     max-width: 250px;
     min-height: 60px;
+
     padding: 8px 14px 8px 8px;
   }
 
@@ -390,16 +724,19 @@
 
   .rb-tab-dropper {
     right: 12px;
-    top: calc(env(safe-area-inset-top) + 88px);
+
     width: 50px;
     height: 50px;
+
     border-radius: 16px;
   }
 
   .rb-slide-menu,
   .rb-side-tabs {
     right: 12px;
+
     top: calc(env(safe-area-inset-top) + 146px);
+
     max-height: calc(100dvh - 240px);
   }
 
@@ -407,23 +744,30 @@
   .rb-side-tabs button {
     width: 50px;
     height: 50px;
+
     border-radius: 16px;
+
     font-size: 18px;
   }
 
   .rb-module-label {
     bottom: calc(94px + env(safe-area-inset-bottom));
-    min-width: unset;
+
     padding: 12px 18px;
+
     font-size: 11px;
     letter-spacing: .16em;
   }
 
   .rb-bottom-nav {
     width: calc(100vw - 18px);
+
     bottom: max(10px, env(safe-area-inset-bottom));
+
     padding: 8px;
+
     border-radius: 24px;
+
     gap: 5px;
   }
 
@@ -444,6 +788,7 @@
   #rb-notify-root {
     top: calc(env(safe-area-inset-top) + 132px);
     right: 10px;
+
     width: calc(100vw - 20px);
   }
 }
