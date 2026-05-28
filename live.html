@@ -2,77 +2,107 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>Rich Bizness • Live Studio</title>
+  <title>Live Studio • Rich Bizness Mobile</title>
 
   <meta name="theme-color" content="#050805" />
+
   <meta
     name="description"
-    content="Rich Bizness Mobile live studio for creators."
+    content="Rich Bizness Mobile live studio for creators with LiveKit, realtime chat, viewer sessions, reactions, tips, paid access, VIP gates, and watch routing."
   />
 
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
-  <link rel="stylesheet" href="/styles/omni-fx.css" />
   <link rel="stylesheet" href="/styles/live.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-live-page live-body">
+<body class="rb-body rb-live-page live-body">
   <div class="rb-bg-layer" aria-hidden="true"></div>
-  <div class="rb-fx-smoke" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
   <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <main class="live-shell">
-    <section class="live-hero">
-      <p class="eyebrow">RICH BIZNESS LIVE</p>
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/">
+      <span>LIVE STUDIO</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
 
-      <h1>Go Live. Build The Room. Send Watch The Signal.</h1>
+    <nav class="rb-topnav" aria-label="Live navigation">
+      <a href="/watch">Watch</a>
+      <a class="is-active" href="/live">Live</a>
+      <a href="/feed">Feed</a>
+      <a href="/music">Music</a>
+      <a href="/gaming">Gaming</a>
+      <a href="/upload?section=live">Upload</a>
+      <a href="/profile">Profile</a>
+    </nav>
+  </header>
 
-      <p class="hero-copy">
-        LiveKit studio, Supabase realtime chat, viewer sessions, reactions,
-        tips, paid access, VIP gates, and watch-ready routing.
-      </p>
+  <main class="rb-section-shell live-shell">
+    <section class="rb-section-hero live-hero">
+      <div class="rb-section-hero-copy">
+        <p class="rb-kicker eyebrow">RICH BIZNESS LIVE</p>
 
-      <div class="live-actions">
-        <button id="createStreamBtn" class="rb-btn primary" type="button">
-          Create Stream
-        </button>
+        <h1>Go Live. Build The Room. Send Watch The Signal.</h1>
 
-        <button id="startLiveBtn" class="rb-btn gold" type="button" disabled>
-          WE LIT 🔥
-        </button>
+        <p class="rb-subtitle hero-copy">
+          LiveKit studio, Supabase realtime chat, viewer sessions, reactions,
+          tips, paid access, VIP gates, and watch-ready routing.
+        </p>
 
-        <button id="endLiveBtn" class="rb-btn danger" type="button" disabled>
-          End Live
-        </button>
+        <div class="live-actions rb-profile-actions">
+          <button id="createStreamBtn" class="rb-btn primary" type="button">
+            Create Stream
+          </button>
 
-        <a id="watchLink" class="rb-btn ghost" href="/watch">
-          Open Watch
-        </a>
+          <button id="startLiveBtn" class="rb-btn gold" type="button" disabled>
+            WE LIT 🔥
+          </button>
+
+          <button id="endLiveBtn" class="rb-btn danger" type="button" disabled>
+            End Live
+          </button>
+
+          <a id="watchLink" class="rb-btn ghost" href="/watch">
+            Open Watch
+          </a>
+        </div>
+
+        <div id="liveStatus" class="live-status" aria-live="polite">
+          Checking auth...
+        </div>
       </div>
 
-      <div id="liveStatus" class="live-status" aria-live="polite">
-        Checking auth...
-      </div>
+      <a class="rb-btn ghost" href="/">
+        ← Back To Portal
+      </a>
     </section>
 
     <section class="live-grid">
-      <aside class="live-panel setup-panel">
+      <aside class="rb-panel live-panel setup-panel">
         <h2>Studio Setup</h2>
 
-        <label>
+        <label for="streamTitle">
           Title
           <input id="streamTitle" type="text" value="Family Bizness" />
         </label>
 
-        <label>
+        <label for="streamDescription">
           Description
           <textarea
             id="streamDescription"
@@ -81,7 +111,7 @@
           ></textarea>
         </label>
 
-        <label>
+        <label for="streamCategory">
           Category
           <select id="streamCategory">
             <option value="general">General</option>
@@ -95,7 +125,7 @@
           </select>
         </label>
 
-        <label>
+        <label for="streamAccess">
           Access
           <select id="streamAccess">
             <option value="free">Free</option>
@@ -106,51 +136,51 @@
           </select>
         </label>
 
-        <label>
+        <label for="streamPrice">
           Price
           <input id="streamPrice" type="number" min="0" step="1" value="0" />
         </label>
 
-        <label>
+        <label for="streamThumbnail">
           Thumbnail URL
           <input
             id="streamThumbnail"
             type="url"
-            placeholder="/images/brand/live-cover.png"
+            placeholder="/images/brand/omni-watch.png.jpeg"
           />
         </label>
 
-        <label>
+        <label for="streamCover">
           Cover URL
           <input
             id="streamCover"
             type="url"
-            placeholder="/images/brand/live-stage.png"
+            placeholder="/images/brand/hero-banner.png"
           />
         </label>
 
         <div class="toggle-row">
-          <label>
+          <label for="chatEnabled">
             <input id="chatEnabled" type="checkbox" checked />
             Chat
           </label>
 
-          <label>
+          <label for="cohostEnabled">
             <input id="cohostEnabled" type="checkbox" checked />
             Cohost
           </label>
 
-          <label>
+          <label for="vipEnabled">
             <input id="vipEnabled" type="checkbox" checked />
             VIP
           </label>
         </div>
       </aside>
 
-      <section class="live-stage-panel">
+      <section class="live-stage-panel rb-panel">
         <div class="stage-top">
           <div>
-            <p class="eyebrow">LIVEKIT ROOM</p>
+            <p class="rb-kicker eyebrow">LIVEKIT ROOM</p>
             <h2 id="stageTitle">No stream created</h2>
           </div>
 
@@ -186,7 +216,7 @@
         </div>
       </section>
 
-      <aside class="live-panel stats-panel">
+      <aside class="rb-panel live-panel stats-panel">
         <h2>Live Stats</h2>
 
         <div class="stat-list">
@@ -205,7 +235,7 @@
         <ul id="tipList" class="mini-list"></ul>
       </aside>
 
-      <section class="live-panel chat-panel">
+      <section class="rb-panel live-panel chat-panel">
         <div class="panel-head">
           <h2>Live Chat</h2>
 
@@ -232,10 +262,6 @@
     </section>
   </main>
 
-  <script type="module" src="/core/shared/rb-config.js"></script>
-  <script type="module" src="/core/shared/rb-supabase.js"></script>
-  <script type="module" src="/core/shared/rb-auth.js"></script>
-  <script type="module" src="/core/app.js"></script>
   <script type="module" src="/core/pages/live.js"></script>
 </body>
 </html>
