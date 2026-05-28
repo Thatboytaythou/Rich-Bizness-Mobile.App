@@ -1,58 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
-  <title>Rich Bizness — Music</title>
+  <title>Music • Rich Bizness Mobile</title>
 
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile music universe with tracks, podcasts, radio, playlists, creators, plays, likes, and realtime drops."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/main.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/music.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-home rb-music-page">
+<body class="rb-body rb-music-page">
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <div class="rb-bg"></div>
-  <div class="rb-vignette"></div>
-  <div class="rb-grid"></div>
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/">
+      <span>MUSIC UNIVERSE</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
 
-  <main class="rb-music-shell">
+    <nav class="rb-topnav" aria-label="Music navigation">
+      <a href="/feed">Feed</a>
+      <a href="/live">Live</a>
+      <a class="is-active" href="/music">Music</a>
+      <a href="/gaming">Gaming</a>
+      <a href="/upload">Upload</a>
+      <a href="/profile">Profile</a>
+    </nav>
+  </header>
 
-    <header class="rb-music-top">
-      <a href="/" class="rb-auth-home">← Portal</a>
-      <a href="/profile" class="rb-auth-home">Profile</a>
-      <a href="/upload" class="rb-auth-home">Upload</a>
-    </header>
+  <main class="rb-section-shell rb-music-shell">
+    <section class="rb-section-hero rb-music-hero">
+      <div>
+        <p class="rb-kicker">RICH BIZNESS MUSIC</p>
 
-    <section class="rb-music-hero">
-      <p class="rb-kicker">RICH BIZNESS MUSIC</p>
+        <h1>Soundtrack The Empire</h1>
 
-      <h1>Soundtrack The Empire</h1>
+        <p class="rb-subtitle">
+          Tracks, podcasts, radio, playlists, creators, plays, likes, and realtime drops.
+        </p>
 
-      <p>
-        Tracks, podcasts, radio, playlists, creators, plays, likes, and real-time drops.
-      </p>
+        <div class="rb-profile-actions">
+          <a class="rb-main-launch" href="/upload?section=music">
+            Upload Music
+          </a>
+
+          <a class="rb-btn ghost" href="/profile">
+            My Profile
+          </a>
+        </div>
+      </div>
     </section>
 
-    <section class="rb-now-playing">
+    <section class="rb-panel rb-now-playing">
       <div class="rb-now-cover">
         <img
           id="music-now-cover"
-          src="/images/brand/hero-banner.png"
+          src="/images/brand/music-log.png.jpeg"
           alt="Now playing cover"
         />
       </div>
 
       <div class="rb-now-info">
         <p id="music-now-type" class="rb-kicker">READY</p>
+
         <h2 id="music-now-title">Choose something to play</h2>
-        <p id="music-now-meta">Rich Bizness audio system online.</p>
+
+        <p id="music-now-meta">
+          Rich Bizness audio system online.
+        </p>
 
         <audio
           id="music-audio-player"
@@ -62,7 +100,7 @@
       </div>
     </section>
 
-    <section class="rb-music-stats">
+    <section class="rb-stat-grid rb-music-stats">
       <article>
         <strong id="music-track-count">0</strong>
         <span>Tracks</span>
@@ -77,9 +115,14 @@
         <strong id="music-radio-count">0</strong>
         <span>Stations</span>
       </article>
+
+      <article>
+        <strong id="music-playlist-count">0</strong>
+        <span>Playlists</span>
+      </article>
     </section>
 
-    <nav class="rb-music-tabs">
+    <nav class="rb-tabs rb-music-tabs" aria-label="Music tabs">
       <button type="button" class="is-active" data-music-tab="tracks">
         Tracks
       </button>
@@ -97,64 +140,63 @@
       </button>
     </nav>
 
-    <section class="rb-music-panel is-active" data-music-panel="tracks">
-      <div class="rb-section-head">
+    <section class="rb-panel rb-music-panel is-active" data-music-panel="tracks">
+      <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">TRACKS</p>
           <h2>Latest Music Drops</h2>
         </div>
       </div>
 
-      <div id="music-tracks-list" class="rb-music-list">
+      <div id="music-tracks-list" class="rb-music-list rb-list-stack">
         <p class="rb-empty">Loading tracks...</p>
       </div>
     </section>
 
-    <section class="rb-music-panel" data-music-panel="podcasts">
-      <div class="rb-section-head">
+    <section class="rb-panel rb-music-panel" data-music-panel="podcasts">
+      <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">PODCASTS</p>
           <h2>Episodes & Shows</h2>
         </div>
       </div>
 
-      <div id="music-podcasts-list" class="rb-music-list">
+      <div id="music-podcasts-list" class="rb-music-list rb-list-stack">
         <p class="rb-empty">Loading podcast episodes...</p>
       </div>
     </section>
 
-    <section class="rb-music-panel" data-music-panel="radio">
-      <div class="rb-section-head">
+    <section class="rb-panel rb-music-panel" data-music-panel="radio">
+      <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">RADIO</p>
           <h2>Live Stations</h2>
         </div>
       </div>
 
-      <div id="music-radio-list" class="rb-music-list">
+      <div id="music-radio-list" class="rb-music-list rb-list-stack">
         <p class="rb-empty">Loading radio stations...</p>
       </div>
     </section>
 
-    <section class="rb-music-panel" data-music-panel="playlists">
-      <div class="rb-section-head">
+    <section class="rb-panel rb-music-panel" data-music-panel="playlists">
+      <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">PLAYLISTS</p>
           <h2>Rich Playlists</h2>
         </div>
       </div>
 
-      <div id="music-playlists-list" class="rb-music-list">
+      <div id="music-playlists-list" class="rb-music-list rb-list-stack">
         <p class="rb-empty">Loading playlists...</p>
       </div>
     </section>
 
+    <a href="/" class="rb-auth-home">
+      ← Back To Portal
+    </a>
   </main>
 
-  <script
-    type="module"
-    src="/core/pages/music.js"
-  ></script>
-
+  <script type="module" src="/core/pages/music.js"></script>
 </body>
 </html>
