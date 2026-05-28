@@ -1,85 +1,133 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Rich Bizness — Gallery</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
+  <title>Gallery • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+  <meta
+    name="description"
+    content="Rich Bizness Mobile gallery vault for photos, artwork, videos, highlights, and visual drops."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
-  <link rel="stylesheet" href="/styles/gallery.css
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/gallery.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-page rb-gallery-page">
-  <div class="rb-page-bg">
-    <img src="/images/brand/hero-banner.png" alt="" />
-  </div>
+<body class="rb-body rb-gallery-page">
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/index.html">
-      <span>RICH</span>
-      <strong>BIZNESS</strong>
+    <a class="rb-brand" href="/">
+      <span>VISUAL VAULT</span>
+      <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
-    <nav class="rb-topnav">
-      <a href="/feed.html">Feed</a>
-      <a href="/live.html">Live</a>
-      <a href="/music.html">Music</a>
-      <a href="/gaming.html">Gaming</a>
-      <a href="/sports.html">Sports</a>
-      <a class="is-active" href="/gallery.html">Gallery</a>
-      <a href="/profile.html">Profile</a>
+    <nav class="rb-topnav" aria-label="Gallery navigation">
+      <a href="/feed">Feed</a>
+      <a href="/live">Live</a>
+      <a href="/music">Music</a>
+      <a href="/gaming">Gaming</a>
+      <a href="/sports">Sports</a>
+      <a class="is-active" href="/gallery">Gallery</a>
+      <a href="/profile">Profile</a>
     </nav>
   </header>
 
-  <main class="rb-section-shell">
-    <section class="rb-hero-panel rb-gallery-hero">
-      <div>
+  <main class="rb-section-shell rb-gallery-shell">
+    <section class="rb-section-hero rb-gallery-hero">
+      <div class="rb-section-hero-copy">
         <p class="rb-kicker">RICH BIZNESS GALLERY</p>
+
         <h1>Gallery Vault</h1>
-        <p>
+
+        <p class="rb-subtitle">
           Photos, artwork, videos, highlights, and visual drops synced from uploads and gallery feed posts.
         </p>
 
-        <div class="rb-hero-actions">
-          <a class="rb-main-launch" href="/upload.html?section=gallery">UPLOAD ART</a>
-          <a class="rb-ghost-btn" href="/profile.html">MY PROFILE</a>
+        <div class="rb-profile-actions">
+          <a class="rb-main-launch" href="/upload?section=gallery">
+            UPLOAD ART
+          </a>
+
+          <a class="rb-btn ghost" href="/profile">
+            MY PROFILE
+          </a>
         </div>
       </div>
 
-      <div class="rb-stat-grid">
-        <article>
-          <strong id="gallery-upload-count">0</strong>
-          <span>Uploads</span>
-        </article>
-        <article>
-          <strong id="gallery-post-count">0</strong>
-          <span>Posts</span>
-        </article>
-        <article>
-          <strong id="gallery-image-count">0</strong>
-          <span>Images</span>
-        </article>
-        <article>
-          <strong id="gallery-video-count">0</strong>
-          <span>Videos</span>
-        </article>
-      </div>
+      <a class="rb-btn ghost" href="/">
+        ← Back To Portal
+      </a>
     </section>
 
-    <section class="rb-tab-bar">
-      <button class="is-active" type="button" data-gallery-tab="vault">Vault</button>
-      <button type="button" data-gallery-tab="posts">Posts</button>
-      <button type="button" data-gallery-tab="featured">Featured</button>
+    <section class="rb-stat-grid">
+      <article>
+        <strong id="gallery-upload-count">0</strong>
+        <span>Uploads</span>
+      </article>
+
+      <article>
+        <strong id="gallery-post-count">0</strong>
+        <span>Posts</span>
+      </article>
+
+      <article>
+        <strong id="gallery-image-count">0</strong>
+        <span>Images</span>
+      </article>
+
+      <article>
+        <strong id="gallery-video-count">0</strong>
+        <span>Videos</span>
+      </article>
+    </section>
+
+    <section class="rb-tabs rb-tab-bar" aria-label="Gallery tabs">
+      <button class="is-active" type="button" data-gallery-tab="vault">
+        Vault
+      </button>
+
+      <button type="button" data-gallery-tab="posts">
+        Posts
+      </button>
+
+      <button type="button" data-gallery-tab="featured">
+        Featured
+      </button>
     </section>
 
     <section class="rb-panel is-active" data-gallery-panel="vault">
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">VISUAL VAULT</p>
-          <h2>Gallery Uploads</h2>
+          <h2 class="rb-panel-title">Gallery Uploads</h2>
         </div>
+      </div>
+
+      <div
+        id="gallery-uploads-empty"
+        class="rb-empty"
+        style="display:none;"
+      >
+        No gallery uploads yet.
       </div>
 
       <div class="rb-gallery-grid" id="gallery-uploads-list"></div>
@@ -89,8 +137,16 @@
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">GALLERY FEED</p>
-          <h2>Gallery Posts</h2>
+          <h2 class="rb-panel-title">Gallery Posts</h2>
         </div>
+      </div>
+
+      <div
+        id="gallery-posts-empty"
+        class="rb-empty"
+        style="display:none;"
+      >
+        No gallery posts yet.
       </div>
 
       <div class="rb-card-grid" id="gallery-posts-list"></div>
@@ -100,8 +156,16 @@
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">TOP FLOOR</p>
-          <h2>Featured Gallery</h2>
+          <h2 class="rb-panel-title">Featured Gallery</h2>
         </div>
+      </div>
+
+      <div
+        id="gallery-featured-empty"
+        class="rb-empty"
+        style="display:none;"
+      >
+        No featured gallery drops yet.
       </div>
 
       <div class="rb-gallery-grid" id="gallery-featured-list"></div>
