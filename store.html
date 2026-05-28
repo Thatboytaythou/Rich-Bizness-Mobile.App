@@ -1,51 +1,282 @@
-<!-- store.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rich Bizness Store</title>
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Store • Rich Bizness Mobile</title>
+
+  <meta
+    name="theme-color"
+    content="#050805"
+  />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile marketplace for creator merch, VIP access, digital unlocks, collectibles, and exclusive drops."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/store.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body data-section="store">
-  <main class="rb-section rb-store-page">
-    <header class="rb-section-hero">
-      <p class="rb-kicker">RICH BIZNESS MARKETPLACE</p>
-      <h1>Store</h1>
-      <p>Shop drops, digital unlocks, VIP access, creator merch, game items, meta items, and exclusives.</p>
+<body class="rb-body rb-store-page" data-section="store">
 
-      <div class="rb-store-actions">
-        <input id="storeSearch" type="search" placeholder="Search products..." />
-        <select id="storeCategory">
-          <option value="all">All categories</option>
-        </select>
-        <select id="storeType">
-          <option value="all">All types</option>
-          <option value="physical">Physical</option>
-          <option value="digital">Digital</option>
-          <option value="vip">VIP</option>
-          <option value="subscription">Subscription</option>
-          <option value="ticket">Ticket</option>
-          <option value="download">Download</option>
-          <option value="game_item">Game Item</option>
-          <option value="meta_item">Meta Item</option>
-          <option value="music_exclusive">Music Exclusive</option>
-          <option value="podcast_exclusive">Podcast Exclusive</option>
-          <option value="collectible">Collectible</option>
-          <option value="bundle">Bundle</option>
-        </select>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-topbar">
+
+    <a class="rb-brand" href="/">
+      <span>RICH BIZNESS MARKET</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Store navigation">
+      <a href="/feed">Feed</a>
+      <a href="/music">Music</a>
+      <a href="/gaming">Gaming</a>
+      <a href="/sports">Sports</a>
+      <a class="is-active" href="/store">Store</a>
+      <a href="/profile">Profile</a>
+    </nav>
+
+  </header>
+
+  <main class="rb-section-shell rb-store-shell">
+
+    <section class="rb-section-hero rb-store-hero">
+
+      <div class="rb-section-hero-copy">
+
+        <p class="rb-kicker">
+          RICH BIZNESS MARKETPLACE
+        </p>
+
+        <h1>
+          Store
+        </h1>
+
+        <p class="rb-subtitle">
+          Shop creator merch, digital unlocks, VIP access,
+          game items, meta collectibles, bundles, subscriptions,
+          tickets, and exclusive universe drops.
+        </p>
+
+        <div class="rb-form-actions">
+
+          <a
+            class="rb-main-launch"
+            href="/upload?section=store"
+          >
+            SELL PRODUCT
+          </a>
+
+          <a
+            class="rb-btn ghost"
+            href="/creator"
+          >
+            CREATOR HUB
+          </a>
+
+        </div>
+
       </div>
-    </header>
 
-    <section class="rb-store-status" id="storeStatus">Loading store...</section>
+      <div class="rb-stat-grid">
 
-    <section class="rb-store-grid" id="storeGrid"></section>
+        <article>
+          <strong id="store-product-count">
+            0
+          </strong>
+
+          <span>
+            Products
+          </span>
+        </article>
+
+        <article>
+          <strong id="store-digital-count">
+            0
+          </strong>
+
+          <span>
+            Digital
+          </span>
+        </article>
+
+        <article>
+          <strong id="store-creator-count">
+            0
+          </strong>
+
+          <span>
+            Creators
+          </span>
+        </article>
+
+        <article>
+          <strong id="store-order-count">
+            0
+          </strong>
+
+          <span>
+            Orders
+          </span>
+        </article>
+
+      </div>
+
+    </section>
+
+    <section class="rb-panel rb-store-filter-panel">
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">
+            MARKET FILTERS
+          </p>
+
+          <h2>
+            Browse Marketplace
+          </h2>
+        </div>
+
+      </div>
+
+      <div class="rb-form-grid">
+
+        <label for="storeSearch">
+
+          Search
+
+          <input
+            id="storeSearch"
+            type="search"
+            placeholder="Search products..."
+            autocomplete="off"
+          />
+
+        </label>
+
+        <label for="storeCategory">
+
+          Category
+
+          <select id="storeCategory">
+            <option value="all">All Categories</option>
+          </select>
+
+        </label>
+
+        <label for="storeType">
+
+          Product Type
+
+          <select id="storeType">
+            <option value="all">All Types</option>
+
+            <option value="physical">
+              Physical
+            </option>
+
+            <option value="digital">
+              Digital
+            </option>
+
+            <option value="vip">
+              VIP
+            </option>
+
+            <option value="subscription">
+              Subscription
+            </option>
+
+            <option value="ticket">
+              Ticket
+            </option>
+
+            <option value="download">
+              Download
+            </option>
+
+            <option value="game_item">
+              Game Item
+            </option>
+
+            <option value="meta_item">
+              Meta Item
+            </option>
+
+            <option value="music_exclusive">
+              Music Exclusive
+            </option>
+
+            <option value="podcast_exclusive">
+              Podcast Exclusive
+            </option>
+
+            <option value="collectible">
+              Collectible
+            </option>
+
+            <option value="bundle">
+              Bundle
+            </option>
+          </select>
+
+        </label>
+
+      </div>
+
+    </section>
+
+    <section
+      id="storeStatus"
+      class="rb-panel rb-store-status"
+    >
+
+      <div class="rb-panel-copy">
+        Loading store...
+      </div>
+
+    </section>
+
+    <section
+      id="storeGrid"
+      class="rb-card-grid rb-store-grid"
+    >
+
+      <div class="rb-empty">
+        Loading products...
+      </div>
+
+    </section>
+
   </main>
 
-  <script type="module" src="/core/pages/store.js"></script>
+  <footer class="rb-footer">
+    <span>© 2026 Rich Bizness LLC</span>
+  </footer>
+
+  <script
+    type="module"
+    src="/core/pages/store.js"
+  ></script>
+
 </body>
 </html>
