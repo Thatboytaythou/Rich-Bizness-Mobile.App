@@ -1,4 +1,6 @@
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
@@ -9,6 +11,12 @@ function json(res, status, data) {
 function cleanText(value, fallback = "") {
   if (typeof value !== "string") return fallback;
   return value.trim() || fallback;
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value || "")
+  );
 }
 
 async function supabaseFetch(path, options = {}) {
@@ -33,7 +41,12 @@ async function supabaseFetch(path, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.message || data?.error || data?.hint || `Supabase failed ${response.status}`);
+    throw new Error(
+      data?.message ||
+        data?.error ||
+        data?.hint ||
+        `Supabase failed ${response.status}`
+    );
   }
 
   return data;
@@ -42,9 +55,7 @@ async function supabaseFetch(path, options = {}) {
 async function getUserFromAuth(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
+  if (!authHeader?.startsWith("Bearer ")) return null;
 
   const token = authHeader.replace("Bearer ", "").trim();
 
@@ -63,28 +74,38 @@ async function getUserFromAuth(req) {
 async function findStream(streamKey) {
   const value = encodeURIComponent(streamKey);
 
+  if (isUuid(streamKey)) {
+    const rows = await supabaseFetch(
+      `/live_streams?id=eq.${value}&select=*&limit=1`
+    );
+
+    if (rows?.[0]) return rows[0];
+  }
+
   const rows = await supabaseFetch(
-    `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*`
+    `/live_streams?or=(slug.eq.${value},livekit_room_name.eq.${value})&select=*&limit=1`
   );
 
   return rows?.[0] || null;
 }
 
 async function getProfile(userId) {
-  if (!userId) return null;
-
   const rows = await supabaseFetch(
-    `/profiles?id=eq.${encodeURIComponent(userId)}&select=id,username,display_name,avatar_url,role,is_verified&limit=1`
+    `/profiles?id=eq.${encodeURIComponent(
+      userId
+    )}&select=id,username,display_name,avatar_url,role,is_verified&limit=1`
   );
 
   return rows?.[0] || null;
 }
 
 async function isBanned(streamId, userId) {
-  if (!userId) return false;
-
   const rows = await supabaseFetch(
-    `/live_stream_bans?stream_id=eq.${encodeURIComponent(streamId)}&banned_user_id=eq.${encodeURIComponent(userId)}&select=id,expires_at&limit=1`
+    `/live_stream_bans?stream_id=eq.${encodeURIComponent(
+      streamId
+    )}&banned_user_id=eq.${encodeURIComponent(
+      userId
+    )}&select=id,expires_at&limit=1`
   );
 
   const ban = rows?.[0];
@@ -99,9 +120,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
 
   if (req.method !== "POST") {
     return json(res, 405, {
@@ -119,10 +138,23 @@ export default async function handler(req, res) {
     }
 
     const user = await getUserFromAuth(req);
+
+    if (!user?.id) {
+      return json(res, 401, {
+        ok: false,
+        error: "Sign in required to send live chat"
+      });
+    }
+
     const body = req.body || {};
 
     const streamKey = cleanText(
-      body.stream_id || body.streamId || body.slug || body.room || body.livekit_room_name
+      body.stream_id ||
+        body.streamId ||
+        body.slug ||
+        body.room ||
+        body.roomName ||
+        body.livekit_room_name
     );
 
     const message = cleanText(body.message || body.body);
@@ -130,7 +162,7 @@ export default async function handler(req, res) {
     if (!streamKey) {
       return json(res, 400, {
         ok: false,
-        error: "Missing stream_id or slug"
+        error: "Missing stream_id, slug, or room"
       });
     }
 
@@ -150,14 +182,14 @@ export default async function handler(req, res) {
 
     const stream = await findStream(streamKey);
 
-    if (!stream) {
+    if (!stream?.id) {
       return json(res, 404, {
         ok: false,
         error: "Live stream not found"
       });
     }
 
-    if (stream.status === "ended" || stream.status === "cancelled") {
+    if (["ended", "cancelled", "deleted"].includes(stream.status)) {
       return json(res, 403, {
         ok: false,
         error: "Chat is closed for this stream"
@@ -171,55 +203,51 @@ export default async function handler(req, res) {
       });
     }
 
-    const userId = user?.id || null;
-
-    if (await isBanned(stream.id, userId)) {
+    if (await isBanned(stream.id, user.id)) {
       return json(res, 403, {
         ok: false,
         error: "You are banned from this live chat"
       });
     }
 
-    const profile = await getProfile(userId);
+    const profile = await getProfile(user.id);
 
     const username =
       cleanText(body.username) ||
       cleanText(profile?.username) ||
-      cleanText(user?.email?.split("@")?.[0]) ||
-      "guest";
+      cleanText(user.email?.split("@")?.[0]) ||
+      "rich_user";
 
     const displayName =
       cleanText(body.display_name || body.displayName) ||
       cleanText(profile?.display_name) ||
       username;
 
-    const insertPayload = {
-      stream_id: stream.id,
-      user_id: userId,
-      username,
-      display_name: displayName,
-      message,
-      body: message,
-      is_pinned: false,
-      is_deleted: false,
-      metadata: {
-        app: "Rich Bizness Mobile",
-        source: "live-chat-send",
-        avatar_url: profile?.avatar_url || null,
-        is_verified: profile?.is_verified || false,
-        role: profile?.role || "user"
-      }
-    };
-
-    const inserted = await supabaseFetch(`/live_chat_messages`, {
+    const inserted = await supabaseFetch("/live_chat_messages", {
       method: "POST",
-      body: JSON.stringify(insertPayload)
+      body: JSON.stringify({
+        stream_id: stream.id,
+        user_id: user.id,
+        username,
+        display_name: displayName,
+        message,
+        body: message,
+        is_pinned: false,
+        is_deleted: false,
+        metadata: {
+          app: "Rich Bizness Mobile",
+          source: "api/live-chat-send",
+          avatar_url: profile?.avatar_url || null,
+          is_verified: profile?.is_verified || false,
+          role: profile?.role || "user"
+        }
+      })
     });
 
     await supabaseFetch(`/live_streams?id=eq.${encodeURIComponent(stream.id)}`, {
       method: "PATCH",
       body: JSON.stringify({
-        total_chat_messages: (stream.total_chat_messages || 0) + 1,
+        total_chat_messages: Number(stream.total_chat_messages || 0) + 1,
         last_activity_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
