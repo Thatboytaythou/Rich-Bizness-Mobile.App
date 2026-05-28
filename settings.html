@@ -12,8 +12,14 @@
 
   <meta name="theme-color" content="#050805" />
 
+  <meta
+    name="description"
+    content="Rich Bizness Mobile settings for identity, sessions, creator access, and universe controls."
+  />
+
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
@@ -35,11 +41,12 @@
       <small>LLC</small>
     </a>
 
-    <nav class="rb-topnav" aria-label="Main navigation">
+    <nav class="rb-topnav" aria-label="Settings navigation">
       <a href="/profile">Profile</a>
       <a href="/edit">Edit</a>
       <a href="/feed">Feed</a>
       <a href="/upload">Upload</a>
+      <a href="/creator">Creator</a>
     </nav>
 
   </header>
@@ -48,9 +55,13 @@
 
     <section class="rb-auth-hero">
 
-      <p class="rb-kicker">RICH BIZNESS CONTROL</p>
+      <p class="rb-kicker">
+        RICH BIZNESS CONTROL
+      </p>
 
-      <h1>Settings</h1>
+      <h1>
+        Settings
+      </h1>
 
       <p>
         Manage your identity, session, creator access, and universe controls.
@@ -77,37 +88,90 @@
           <span id="settings-status">Standard Member</span>
         </article>
 
+        <article class="rb-mini-card">
+          <strong>Session</strong>
+          <span id="settings-session">Checking...</span>
+        </article>
+
       </div>
 
-      <section class="rb-quick-actions">
+      <section class="rb-panel">
 
-        <button
-          id="settings-profile-btn"
-          class="rb-main-launch"
-          type="button"
-        >
-          PROFILE
-        </button>
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">
+              QUICK CONTROLS
+            </p>
 
-        <button
-          id="settings-edit-btn"
-          class="rb-btn ghost"
-          type="button"
-        >
-          EDIT PROFILE
-        </button>
+            <h2>
+              Account Actions
+            </h2>
+          </div>
+        </div>
+
+        <div class="rb-form-actions">
+
+          <button
+            id="settings-profile-btn"
+            class="rb-main-launch"
+            type="button"
+          >
+            PROFILE
+          </button>
+
+          <button
+            id="settings-edit-btn"
+            class="rb-btn ghost"
+            type="button"
+          >
+            EDIT PROFILE
+          </button>
+
+          <button
+            id="settings-creator-btn"
+            class="rb-btn ghost"
+            type="button"
+          >
+            CREATOR
+          </button>
+
+          <button
+            id="settings-upload-btn"
+            class="rb-btn ghost"
+            type="button"
+          >
+            UPLOAD
+          </button>
+
+        </div>
 
       </section>
 
-      <section class="rb-quick-actions">
+      <section class="rb-panel">
 
-        <button
-          id="settings-signout-btn"
-          class="rb-btn danger"
-          type="button"
-        >
-          I’M OUT ✌🏽
-        </button>
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">
+              SESSION
+            </p>
+
+            <h2>
+              Sign Out
+            </h2>
+          </div>
+        </div>
+
+        <div class="rb-form-actions">
+
+          <button
+            id="settings-signout-btn"
+            class="rb-btn danger"
+            type="button"
+          >
+            I’M OUT ✌🏽
+          </button>
+
+        </div>
 
       </section>
 
