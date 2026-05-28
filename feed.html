@@ -15,21 +15,29 @@
     content="#050805"
   />
 
+  <meta
+    name="description"
+    content="Realtime Rich Bizness social feed for posts, reactions, media, gaming, music, live, sports, and creator activity."
+  />
+
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/cards.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/feed.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
 <body class="rb-body rb-feed-page">
 
-  <div class="rb-bg-layer"></div>
-  <div class="rb-bg-grid"></div>
-  <div class="rb-bg-vignette"></div>
-  <div class="rb-bg-noise"></div>
-  <div class="rb-fx-smoke"></div>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
 
@@ -56,9 +64,13 @@
 
       <div class="rb-section-hero-copy">
 
-        <p class="rb-kicker">RICH BIZNESS LLC</p>
+        <p class="rb-kicker">
+          RICH BIZNESS LLC
+        </p>
 
-        <h1>Feed</h1>
+        <h1>
+          Feed
+        </h1>
 
         <p class="rb-subtitle">
           Post, react, comment, and keep the Rich Bizness universe fully synced in realtime.
@@ -74,17 +86,18 @@
 
     <section class="rb-feed-layout">
 
-      <aside class="rb-card rb-composer-card">
+      <aside class="rb-panel rb-composer-card">
 
         <div class="rb-user-strip">
 
           <img
             id="composerAvatar"
-            src="/images/brand/project-avatar.png.jpeg"
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Composer Avatar"
           />
 
           <div>
+
             <strong id="composerName">
               Rich Bizness User
             </strong>
@@ -92,6 +105,7 @@
             <small id="feedStatus">
               Loading feed...
             </small>
+
           </div>
 
         </div>
@@ -102,6 +116,7 @@
         >
 
           <label for="feedTitle">
+
             Title
 
             <input
@@ -109,9 +124,11 @@
               type="text"
               placeholder="What’s the headline?"
             />
+
           </label>
 
           <label for="feedBody">
+
             Post
 
             <textarea
@@ -119,9 +136,11 @@
               rows="5"
               placeholder="Say what’s happening in Rich Bizness..."
             ></textarea>
+
           </label>
 
           <label for="feedMediaUrl">
+
             Media URL
 
             <input
@@ -129,6 +148,7 @@
               type="url"
               placeholder="Image, video, or audio URL"
             />
+
           </label>
 
           <div class="rb-form-row">
@@ -205,11 +225,13 @@
 
         <div
           id="feedEmpty"
-          class="rb-card rb-empty"
+          class="rb-empty"
           style="display:none;"
         >
 
-          <h2>No Posts Yet</h2>
+          <h2>
+            No Posts Yet
+          </h2>
 
           <p>
             Drop the first Rich Bizness post and start the motion.
@@ -219,8 +241,47 @@
 
         <div
           id="feedList"
-          class="rb-feed-list"
-        ></div>
+          class="rb-feed-list rb-list-stack"
+        >
+
+          <article class="feed-card rb-panel">
+
+            <header class="feed-card-head">
+
+              <div class="feed-user">
+
+                <img
+                  src="/images/brand/Avatar-hero-Banner.png.jpeg"
+                  alt="Feed User"
+                />
+
+                <span>
+
+                  <strong>
+                    Rich Bizness Universe
+                  </strong>
+
+                  <small>
+                    System feed synced successfully
+                  </small>
+
+                </span>
+
+              </div>
+
+            </header>
+
+            <div class="feed-card-body">
+
+              <p class="feed-body">
+                Realtime feed systems are online. Music, gaming, live, sports, gallery, creator uploads, and notifications are now connected into the Rich Bizness universe layer.
+              </p>
+
+            </div>
+
+          </article>
+
+        </div>
 
       </section>
 
