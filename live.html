@@ -2,264 +2,123 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>Live Studio • Rich Bizness Mobile</title>
-
   <meta name="theme-color" content="#050805" />
 
-  <meta
-    name="description"
-    content="Rich Bizness Mobile live studio for creators with LiveKit, realtime chat, viewer sessions, reactions, tips, paid access, VIP gates, and watch routing."
-  />
-
   <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/main.css" />
-  <link rel="stylesheet" href="/styles/mobile.css" />
-  <link rel="stylesheet" href="/styles/sections.css" />
-  <link rel="stylesheet" href="/styles/cards.css" />
-  <link rel="stylesheet" href="/styles/forms.css" />
-  <link rel="stylesheet" href="/styles/live.css" />
-  <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/live.css" />
 </head>
 
-<body class="rb-body rb-live-page live-body">
+<body class="rb-live-page live-body rb-live-hologram-page">
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
   <div class="rb-bg-noise" aria-hidden="true"></div>
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <header class="rb-topbar">
-    <a class="rb-brand" href="/">
-      <span>LIVE STUDIO</span>
-      <strong>RICH BIZNESS</strong>
-      <small>LLC</small>
-    </a>
+  <main class="live-holo-shell">
+    <header class="live-holo-top">
+      <a class="live-brand" href="/">
+        <span>LIVE STUDIO</span>
+        <strong>RICH BIZNESS</strong>
+        <small>LLC</small>
+      </a>
 
-    <nav class="rb-topnav" aria-label="Live navigation">
-      <a href="/watch">Watch</a>
-      <a class="is-active" href="/live">Live</a>
-      <a href="/feed">Feed</a>
-      <a href="/music">Music</a>
-      <a href="/gaming">Gaming</a>
-      <a href="/upload?section=live">Upload</a>
-      <a href="/profile">Profile</a>
-    </nav>
-  </header>
+      <a id="watchLink" class="live-watch-link" href="/watch">WATCH</a>
+    </header>
 
-  <main class="rb-section-shell live-shell">
-    <section class="rb-section-hero live-hero">
-      <div class="rb-section-hero-copy">
-        <p class="rb-kicker eyebrow">RICH BIZNESS LIVE</p>
+    <section class="holo-tv-wrap">
+      <div class="holo-tv">
+        <div class="holo-tv-glass"></div>
 
-        <h1>Go Live. Build The Room. Send Watch The Signal.</h1>
+        <video id="localVideo" autoplay muted playsinline></video>
+        <div id="remoteVideos" class="remote-videos cohost-hologram"></div>
 
-        <p class="rb-subtitle hero-copy">
-          LiveKit studio, Supabase realtime chat, viewer sessions, reactions,
-          tips, paid access, VIP gates, and watch-ready routing.
-        </p>
-
-        <div class="live-actions rb-profile-actions">
-          <button id="createStreamBtn" class="rb-btn primary" type="button">
-            Create Stream
-          </button>
-
-          <button id="startLiveBtn" class="rb-btn gold" type="button" disabled>
-            WE LIT 🔥
-          </button>
-
-          <button id="endLiveBtn" class="rb-btn danger" type="button" disabled>
-            End Live
-          </button>
-
-          <a id="watchLink" class="rb-btn ghost" href="/watch">
-            Open Watch
-          </a>
+        <div id="stageEmpty" class="stage-empty holo-empty">
+          Create a stream, then press WE LIT 🔥.
         </div>
 
-        <div id="liveStatus" class="live-status" aria-live="polite">
-          Checking auth...
+        <div id="reactionLayer" class="reaction-layer"></div>
+
+        <div class="we-lit-float">
+          WE LIT 🔥
+        </div>
+
+        <div class="holo-room-info">
+          <p>LIVEKIT ROOM</p>
+          <h1 id="stageTitle">No stream created</h1>
+          <div id="liveBadge" class="live-badge off">OFF AIR</div>
         </div>
       </div>
-
-      <a class="rb-btn ghost" href="/">
-        ← Back To Portal
-      </a>
     </section>
 
-    <section class="live-grid">
-      <aside class="rb-panel live-panel setup-panel">
-        <h2>Studio Setup</h2>
-
-        <label for="streamTitle">
-          Title
-          <input id="streamTitle" type="text" value="Family Bizness" />
-        </label>
-
-        <label for="streamDescription">
-          Description
-          <textarea
-            id="streamDescription"
-            rows="4"
-            placeholder="Tell viewers what this live is about..."
-          ></textarea>
-        </label>
-
-        <label for="streamCategory">
-          Category
-          <select id="streamCategory">
-            <option value="general">General</option>
-            <option value="music">Music</option>
-            <option value="gaming">Gaming</option>
-            <option value="sports">Sports</option>
-            <option value="store">Store</option>
-            <option value="meta">Meta</option>
-            <option value="gallery">Gallery</option>
-            <option value="podcast">Podcast</option>
-          </select>
-        </label>
-
-        <label for="streamAccess">
-          Access
-          <select id="streamAccess">
-            <option value="free">Free</option>
-            <option value="paid">Paid</option>
-            <option value="vip">VIP</option>
-            <option value="subscriber">Subscriber</option>
-            <option value="private">Private</option>
-          </select>
-        </label>
-
-        <label for="streamPrice">
-          Price
-          <input id="streamPrice" type="number" min="0" step="1" value="0" />
-        </label>
-
-        <label for="streamThumbnail">
-          Thumbnail URL
-          <input
-            id="streamThumbnail"
-            type="url"
-            placeholder="/images/brand/omni-watch.png.jpeg"
-          />
-        </label>
-
-        <label for="streamCover">
-          Cover URL
-          <input
-            id="streamCover"
-            type="url"
-            placeholder="/images/brand/hero-banner.png"
-          />
-        </label>
-
-        <div class="toggle-row">
-          <label for="chatEnabled">
-            <input id="chatEnabled" type="checkbox" checked />
-            Chat
-          </label>
-
-          <label for="cohostEnabled">
-            <input id="cohostEnabled" type="checkbox" checked />
-            Cohost
-          </label>
-
-          <label for="vipEnabled">
-            <input id="vipEnabled" type="checkbox" checked />
-            VIP
-          </label>
-        </div>
-      </aside>
-
-      <section class="live-stage-panel rb-panel">
-        <div class="stage-top">
-          <div>
-            <p class="rb-kicker eyebrow">LIVEKIT ROOM</p>
-            <h2 id="stageTitle">No stream created</h2>
-          </div>
-
-          <div id="liveBadge" class="live-badge off">
-            OFF AIR
-          </div>
-        </div>
-
-        <div id="videoStage" class="video-stage">
-          <video id="localVideo" autoplay muted playsinline></video>
-
-          <div id="remoteVideos" class="remote-videos"></div>
-
-          <div id="stageEmpty" class="stage-empty">
-            Create a stream, then press WE LIT 🔥.
-          </div>
-
-          <div id="reactionLayer" class="reaction-layer"></div>
-        </div>
-
-        <div class="control-row">
-          <button id="toggleMicBtn" class="rb-btn ghost" type="button" disabled>
-            Mic On
-          </button>
-
-          <button id="toggleCamBtn" class="rb-btn ghost" type="button" disabled>
-            Cam On
-          </button>
-
-          <button id="copyWatchBtn" class="rb-btn ghost" type="button" disabled>
-            Copy Watch Link
-          </button>
-        </div>
-      </section>
-
-      <aside class="rb-panel live-panel stats-panel">
-        <h2>Live Stats</h2>
-
-        <div class="stat-list">
-          <div><span>Status</span><strong id="statStatus">off air</strong></div>
-          <div><span>Viewers</span><strong id="statViewers">0</strong></div>
-          <div><span>Peak</span><strong id="statPeak">0</strong></div>
-          <div><span>Chat</span><strong id="statChat">0</strong></div>
-          <div><span>Reactions</span><strong id="statReactions">0</strong></div>
-          <div><span>Revenue</span><strong id="statRevenue">$0.00</strong></div>
-        </div>
-
-        <h3>Participants</h3>
-        <ul id="participantList" class="mini-list"></ul>
-
-        <h3>Recent Tips</h3>
-        <ul id="tipList" class="mini-list"></ul>
-      </aside>
-
-      <section class="rb-panel live-panel chat-panel">
-        <div class="panel-head">
-          <h2>Live Chat</h2>
-
-          <button id="sendReactionBtn" class="rb-btn mini" type="button">
-            🔥
-          </button>
-        </div>
-
-        <ul id="chatList" class="chat-list"></ul>
-
-        <form id="chatForm" class="chat-form">
-          <input
-            id="chatInput"
-            type="text"
-            placeholder="Say something live..."
-            maxlength="300"
-          />
-
-          <button class="rb-btn primary" type="submit">
-            Send
-          </button>
-        </form>
-      </section>
+    <section class="live-control-dock">
+      <button id="createStreamBtn" type="button">Create</button>
+      <button id="startLiveBtn" type="button" disabled>WE LIT 🔥</button>
+      <button id="endLiveBtn" type="button" disabled>End</button>
+      <button id="toggleMicBtn" type="button" disabled>Mic On</button>
+      <button id="toggleCamBtn" type="button" disabled>Cam On</button>
+      <button id="copyWatchBtn" type="button" disabled>Copy</button>
     </section>
+
+    <section class="live-hidden-setup" aria-label="Live setup">
+      <input id="streamTitle" type="text" value="Family Bizness" />
+      <textarea id="streamDescription" rows="3" placeholder="Tell viewers what this live is about..."></textarea>
+
+      <select id="streamCategory">
+        <option value="general">General</option>
+        <option value="music">Music</option>
+        <option value="gaming">Gaming</option>
+        <option value="sports">Sports</option>
+        <option value="store">Store</option>
+        <option value="meta">Meta</option>
+        <option value="gallery">Gallery</option>
+        <option value="podcast">Podcast</option>
+      </select>
+
+      <select id="streamAccess">
+        <option value="free">Free</option>
+        <option value="paid">Paid</option>
+        <option value="vip">VIP</option>
+        <option value="subscriber">Subscriber</option>
+        <option value="private">Private</option>
+      </select>
+
+      <input id="streamPrice" type="number" min="0" step="1" value="0" />
+      <input id="streamThumbnail" type="url" placeholder="/images/brand/omni-watch.png.jpeg" />
+      <input id="streamCover" type="url" placeholder="/images/brand/hero-banner.png" />
+
+      <input id="chatEnabled" type="checkbox" checked />
+      <input id="cohostEnabled" type="checkbox" checked />
+      <input id="vipEnabled" type="checkbox" checked />
+    </section>
+
+    <aside class="live-overlay-stats">
+      <span>Status <strong id="statStatus">off air</strong></span>
+      <span>Viewers <strong id="statViewers">0</strong></span>
+      <span>Peak <strong id="statPeak">0</strong></span>
+      <span>Chat <strong id="statChat">0</strong></span>
+      <span>Reactions <strong id="statReactions">0</strong></span>
+      <span>Revenue <strong id="statRevenue">$0.00</strong></span>
+    </aside>
+
+    <aside class="live-overlay-chat">
+      <p id="liveStatus" class="live-status" aria-live="polite">Checking auth...</p>
+
+      <ul id="participantList" class="mini-list"></ul>
+      <ul id="tipList" class="mini-list"></ul>
+      <ul id="chatList" class="chat-list"></ul>
+
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" type="text" placeholder="Say something live..." maxlength="300" />
+        <button type="submit">Send</button>
+      </form>
+
+      <button id="sendReactionBtn" class="reaction-btn" type="button">🔥</button>
+    </aside>
   </main>
 
   <script type="module" src="/core/pages/live.js"></script>
