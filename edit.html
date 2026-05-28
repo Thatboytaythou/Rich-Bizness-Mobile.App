@@ -2,17 +2,15 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>Edit Profile • Rich Bizness LLC</title>
-
   <meta name="theme-color" content="#050805" />
+  <meta name="description" content="Edit your Rich Bizness Mobile profile identity, avatar, banner, and bio." />
 
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
@@ -28,7 +26,7 @@
 
   <header class="rb-topbar">
     <a class="rb-brand" href="/">
-      <span>WELCOME</span>
+      <span>IDENTITY EDITOR</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
@@ -61,7 +59,7 @@
 
         <label>
           Username
-          <input id="edit-username" name="username" type="text" autocomplete="username" placeholder="yourhandle" />
+          <input id="edit-username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="yourhandle" />
         </label>
 
         <label>
@@ -79,13 +77,17 @@
           <input id="edit-banner-file" name="banner" type="file" accept="image/*" />
         </label>
 
-        <button class="rb-main-launch" type="submit">
-          SAVE PROFILE
-        </button>
+        <p id="edit-profile-message" class="rb-form-note" aria-live="polite"></p>
 
-        <button id="edit-back-btn" class="rb-btn ghost" type="button">
-          ← Back To Profile
-        </button>
+        <div class="rb-form-actions">
+          <button class="rb-main-launch" type="submit">
+            SAVE PROFILE
+          </button>
+
+          <button id="edit-back-btn" class="rb-btn ghost" type="button">
+            ← Back To Profile
+          </button>
+        </div>
       </form>
     </section>
   </main>
