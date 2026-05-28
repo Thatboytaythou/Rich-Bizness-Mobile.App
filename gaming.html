@@ -1,94 +1,181 @@
-<!-- gaming.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rich Bizness — Gaming</title>
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Gaming • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile gaming universe for games, clips, scores, tournaments, challenges, and gamer profiles."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/gaming.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-page rb-gaming-page">
-  <div class="rb-page-bg">
-    <img src="/images/brand/hero-banner.png" alt="" />
-  </div>
+<body class="rb-body rb-gaming-page">
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/index.html">
-      <span>RICH</span>
-      <strong>BIZNESS</strong>
+    <a class="rb-brand" href="/">
+      <span>ARCADE DISTRICT</span>
+      <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
-    <nav class="rb-topnav">
-      <a href="/feed.html">Feed</a>
-      <a href="/music.html">Music</a>
-      <a class="is-active" href="/gaming.html">Gaming</a>
-      <a href="/sports.html">Sports</a>
-      <a href="/gallery.html">Gallery</a>
-      <a href="/upload.html?section=gaming">Upload</a>
-      <a href="/profile.html">Profile</a>
+    <nav class="rb-topnav" aria-label="Gaming navigation">
+      <a href="/feed">Feed</a>
+      <a href="/music">Music</a>
+      <a class="is-active" href="/gaming">Gaming</a>
+      <a href="/sports">Sports</a>
+      <a href="/gallery">Gallery</a>
+      <a href="/upload?section=gaming">Upload</a>
+      <a href="/profile">Profile</a>
     </nav>
   </header>
 
-  <main class="rb-section-shell">
-    <section class="rb-hero-panel">
-      <div>
+  <main class="rb-section-shell rb-gaming-shell">
+    <section class="rb-section-hero rb-gaming-hero">
+      <div class="rb-section-hero-copy">
         <p class="rb-kicker">RICH BIZNESS ARCADE</p>
-        <h1>Gaming Universe</h1>
-        <p>Games, clips, scores, tournaments, challenges, gamer profiles, and live stream links.</p>
-      </div>
 
-      <div class="rb-stat-grid">
-        <article><strong id="game-count">0</strong><span>Games</span></article>
-        <article><strong id="clip-count">0</strong><span>Clips</span></article>
-        <article><strong id="score-count">0</strong><span>Scores</span></article>
-        <article><strong id="tournament-count">0</strong><span>Tournaments</span></article>
+        <h1>Gaming Universe</h1>
+
+        <p class="rb-subtitle">
+          Games, clips, scores, tournaments, challenges, gamer profiles, and live stream links.
+        </p>
+
+        <div class="rb-profile-actions">
+          <a class="rb-main-launch" href="/upload?section=gaming">
+            UPLOAD CLIP
+          </a>
+
+          <a class="rb-btn ghost" href="/">
+            ← Back To Portal
+          </a>
+        </div>
       </div>
+    </section>
+
+    <section class="rb-stat-grid">
+      <article>
+        <strong id="game-count">0</strong>
+        <span>Games</span>
+      </article>
+
+      <article>
+        <strong id="clip-count">0</strong>
+        <span>Clips</span>
+      </article>
+
+      <article>
+        <strong id="score-count">0</strong>
+        <span>Scores</span>
+      </article>
+
+      <article>
+        <strong id="tournament-count">0</strong>
+        <span>Tournaments</span>
+      </article>
     </section>
 
     <section class="rb-panel">
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">PLAYER CARD</p>
-          <h2 id="gamer-name">Guest Player</h2>
-          <p id="gamer-meta">Sign in to sync your gamer profile.</p>
+          <h2 id="gamer-name" class="rb-panel-title">Guest Player</h2>
+          <p id="gamer-meta" class="rb-panel-copy">
+            Sign in to sync your gamer profile.
+          </p>
         </div>
-        <a class="rb-pill-btn" href="/upload.html?section=gaming">Upload Clip</a>
+
+        <a class="rb-pill-btn" href="/upload?section=gaming">
+          Upload Clip
+        </a>
       </div>
 
       <form class="rb-form rb-inline-form" id="gamer-profile-form">
-        <input id="gamerTagInput" type="text" placeholder="Gamer tag" />
-        <select id="platformInput">
-          <option value="web">Web</option>
-          <option value="mobile">Mobile</option>
-          <option value="ps5">PS5</option>
-          <option value="xbox">Xbox</option>
-          <option value="pc">PC</option>
-          <option value="switch">Switch</option>
-          <option value="crossplay">Crossplay</option>
-        </select>
-        <button type="submit">Save Gamer Profile</button>
+        <div class="rb-form-row">
+          <label for="gamerTagInput">
+            Gamer Tag
+            <input id="gamerTagInput" type="text" placeholder="Gamer tag" />
+          </label>
+
+          <label for="platformInput">
+            Platform
+            <select id="platformInput">
+              <option value="web">Web</option>
+              <option value="mobile">Mobile</option>
+              <option value="ps5">PS5</option>
+              <option value="xbox">Xbox</option>
+              <option value="pc">PC</option>
+              <option value="switch">Switch</option>
+              <option value="crossplay">Crossplay</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="rb-form-actions">
+          <button class="rb-main-launch" type="submit">
+            SAVE GAMER PROFILE
+          </button>
+        </div>
       </form>
     </section>
 
-    <section class="rb-tabs">
-      <button class="is-active" data-tab="games">Games</button>
-      <button data-tab="clips">Clips</button>
-      <button data-tab="scores">Scores</button>
-      <button data-tab="tournaments">Tournaments</button>
-      <button data-tab="challenges">Challenges</button>
+    <section class="rb-tabs" aria-label="Gaming tabs">
+      <button class="is-active" type="button" data-tab="games">
+        Games
+      </button>
+
+      <button type="button" data-tab="clips">
+        Clips
+      </button>
+
+      <button type="button" data-tab="scores">
+        Scores
+      </button>
+
+      <button type="button" data-tab="tournaments">
+        Tournaments
+      </button>
+
+      <button type="button" data-tab="challenges">
+        Challenges
+      </button>
     </section>
 
     <section class="rb-panel is-active" data-panel="games">
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">PLAY NOW</p>
-          <h2>Game Library</h2>
+          <h2 class="rb-panel-title">Game Library</h2>
         </div>
       </div>
+
+      <div id="games-empty" class="rb-empty" style="display:none;">
+        No games loaded yet.
+      </div>
+
       <div class="rb-card-grid" id="games-list"></div>
     </section>
 
@@ -96,9 +183,14 @@
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">COMMUNITY CLIPS</p>
-          <h2>Latest Game Clips</h2>
+          <h2 class="rb-panel-title">Latest Game Clips</h2>
         </div>
       </div>
+
+      <div id="clips-empty" class="rb-empty" style="display:none;">
+        No clips yet.
+      </div>
+
       <div class="rb-card-grid" id="clips-list"></div>
     </section>
 
@@ -106,9 +198,14 @@
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">LEADERBOARD</p>
-          <h2>Top Scores</h2>
+          <h2 class="rb-panel-title">Top Scores</h2>
         </div>
       </div>
+
+      <div id="scores-empty" class="rb-empty" style="display:none;">
+        No scores posted yet.
+      </div>
+
       <div class="rb-list-stack" id="scores-list"></div>
     </section>
 
@@ -116,9 +213,14 @@
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">CASH / XP EVENTS</p>
-          <h2>Tournaments</h2>
+          <h2 class="rb-panel-title">Tournaments</h2>
         </div>
       </div>
+
+      <div id="tournaments-empty" class="rb-empty" style="display:none;">
+        No tournaments active yet.
+      </div>
+
       <div class="rb-card-grid" id="tournaments-list"></div>
     </section>
 
@@ -126,9 +228,14 @@
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">HEAD TO HEAD</p>
-          <h2>Challenges</h2>
+          <h2 class="rb-panel-title">Challenges</h2>
         </div>
       </div>
+
+      <div id="challenges-empty" class="rb-empty" style="display:none;">
+        No challenges yet.
+      </div>
+
       <div class="rb-card-grid" id="challenges-list"></div>
     </section>
   </main>
