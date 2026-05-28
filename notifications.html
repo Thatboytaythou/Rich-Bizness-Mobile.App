@@ -15,6 +15,11 @@
     content="#050805"
   />
 
+  <meta
+    name="description"
+    content="Realtime Rich Bizness notifications, alerts, mentions, live updates, tips, followers, and creator activity."
+  />
+
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
@@ -25,11 +30,11 @@
 
 <body class="rb-body rb-notifications-page">
 
-  <div class="rb-bg-layer"></div>
-  <div class="rb-bg-grid"></div>
-  <div class="rb-bg-vignette"></div>
-  <div class="rb-bg-noise"></div>
-  <div class="rb-fx-smoke"></div>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
 
@@ -42,6 +47,7 @@
     <nav class="rb-topnav" aria-label="Notifications navigation">
       <a href="/feed">Feed</a>
       <a href="/messages">Messages</a>
+      <a class="is-active" href="/notifications">Alerts</a>
       <a href="/profile">Profile</a>
       <a href="/settings">Settings</a>
     </nav>
@@ -67,7 +73,7 @@
         Loading notification system...
       </p>
 
-      <div class="rb-form-actions">
+      <div class="rb-profile-actions">
 
         <button
           id="notifications-refresh-btn"
@@ -75,6 +81,14 @@
           type="button"
         >
           REFRESH ALERTS
+        </button>
+
+        <button
+          id="notifications-read-btn"
+          class="rb-btn ghost"
+          type="button"
+        >
+          MARK ALL READ
         </button>
 
       </div>
@@ -91,6 +105,18 @@
 
         <span id="notifications-unread-count">
           0 alerts
+        </span>
+
+      </article>
+
+      <article class="rb-mini-card">
+
+        <strong>
+          Total
+        </strong>
+
+        <span id="notifications-total-count">
+          0 notifications
         </span>
 
       </article>
@@ -121,10 +147,45 @@
 
     </section>
 
-    <section
-      id="notifications-list"
-      class="rb-profile-grid rb-notifications-grid"
-    ></section>
+    <section class="rb-panel">
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">
+            REALTIME ACTIVITY
+          </p>
+
+          <h2>
+            Universe Alerts
+          </h2>
+        </div>
+
+      </div>
+
+      <div
+        id="notifications-empty"
+        class="rb-empty"
+        style="display:none;"
+      >
+
+        <h2>
+          No Notifications Yet
+        </h2>
+
+        <p>
+          Likes, follows, live alerts, purchases, messages, creator activity,
+          and realtime universe events will appear here.
+        </p>
+
+      </div>
+
+      <section
+        id="notifications-list"
+        class="rb-profile-grid rb-notifications-grid"
+      ></section>
+
+    </section>
 
     <a
       href="/"
