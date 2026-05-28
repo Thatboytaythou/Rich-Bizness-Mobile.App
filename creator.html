@@ -12,7 +12,14 @@
 
   <meta name="theme-color" content="#050805" />
 
+  <meta
+    name="description"
+    content="Rich Bizness Mobile creator dashboard, uploads, live, store, and monetization."
+  />
+
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/cards.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
@@ -21,11 +28,11 @@
 </head>
 
 <body class="rb-body rb-creator-page">
-  <div class="rb-bg-layer"></div>
-  <div class="rb-bg-grid"></div>
-  <div class="rb-bg-vignette"></div>
-  <div class="rb-bg-noise"></div>
-  <div class="rb-fx-smoke"></div>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
     <a class="rb-brand" href="/">
@@ -116,9 +123,14 @@
       </article>
     </section>
 
-    <section class="rb-feed-layout">
-      <aside class="rb-card rb-composer-card">
-        <p class="rb-kicker">CREATOR ACTIONS</p>
+    <section class="rb-card-grid">
+      <aside class="rb-panel">
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">CREATOR ACTIONS</p>
+            <h2 class="rb-panel-title">Build Your Empire</h2>
+          </div>
+        </div>
 
         <div class="rb-form-actions">
           <button id="creator-profile-btn" class="rb-btn ghost" type="button">
@@ -139,13 +151,22 @@
         </div>
       </aside>
 
-      <section class="rb-feed-main">
-        <div id="creator-empty" class="rb-card rb-empty" style="display:none;">
-          <h2>No Creator Activity Yet</h2>
-          <p>Upload, post, go live, or list a product to start building your creator empire.</p>
+      <section class="rb-panel">
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">CREATOR ACTIVITY</p>
+            <h2 class="rb-panel-title">Realtime Feed</h2>
+          </div>
         </div>
 
-        <div id="creator-activity-list" class="rb-feed-list"></div>
+        <div id="creator-empty" class="rb-empty" style="display:none;">
+          <h2>No Creator Activity Yet</h2>
+          <p>
+            Upload, post, go live, or list a product to start building your creator empire.
+          </p>
+        </div>
+
+        <div id="creator-activity-list" class="rb-list-stack"></div>
       </section>
     </section>
 
