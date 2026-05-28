@@ -12,20 +12,27 @@
 
   <meta name="theme-color" content="#050805" />
 
+  <meta
+    name="description"
+    content="Rich Bizness Mobile upload router for feed, gallery, music, podcast, sports, gaming, store, live, profile, and meta uploads."
+  />
+
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
-  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/upload.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-upload-page">
-  <div class="rb-bg-layer"></div>
-  <div class="rb-bg-grid"></div>
-  <div class="rb-bg-vignette"></div>
-  <div class="rb-bg-noise"></div>
-  <div class="rb-fx-smoke"></div>
+<body class="rb-body rb-upload-page" data-section="upload">
+
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
     <a class="rb-brand" href="/">
@@ -40,27 +47,35 @@
       <a href="/gaming">Gaming</a>
       <a href="/sports">Sports</a>
       <a href="/gallery">Gallery</a>
+      <a href="/store">Store</a>
       <a class="is-active" href="/upload">Upload</a>
       <a href="/profile">Profile</a>
     </nav>
   </header>
 
   <main class="rb-section-shell rb-upload-shell">
-    <section class="rb-section-hero">
+
+    <section class="rb-section-hero rb-upload-hero">
       <div class="rb-section-hero-copy">
         <p class="rb-kicker">RICH BIZNESS UPLOAD CORE</p>
 
         <h1>Drop Anything</h1>
 
         <p class="rb-subtitle">
-          Upload once. The system routes it to the right bucket, records it in uploads,
-          and creates the matching section record.
+          Upload once. The router sends it to the right bucket, records it in uploads,
+          and creates the matching section record across the Rich Bizness universe.
         </p>
-      </div>
 
-      <a class="rb-back" href="/">
-        ← Back To Portal
-      </a>
+        <div class="rb-form-actions">
+          <a class="rb-btn ghost" href="/">
+            ← Back To Portal
+          </a>
+
+          <a class="rb-btn ghost" href="/profile">
+            Profile
+          </a>
+        </div>
+      </div>
     </section>
 
     <section class="rb-profile-grid">
@@ -73,6 +88,16 @@
         <strong id="upload-route-label">general</strong>
         <span>Route</span>
       </article>
+
+      <article class="rb-mini-card">
+        <strong id="upload-bucket-label">auto</strong>
+        <span>Bucket</span>
+      </article>
+
+      <article class="rb-mini-card">
+        <strong id="upload-table-label">uploads</strong>
+        <span>Table</span>
+      </article>
     </section>
 
     <section class="rb-panel rb-upload-panel">
@@ -83,11 +108,13 @@
         </div>
       </div>
 
-      <form class="rb-form" id="rb-upload-form">
-        <label>
+      <form id="rb-upload-form" class="rb-form" enctype="multipart/form-data">
+
+        <label for="routeKey">
           Upload Route
+
           <select name="route_key" id="routeKey">
-            <option value="general">General Feed</option>
+            <option value="general">General Upload</option>
             <option value="feed">Feed Post</option>
             <option value="gallery">Gallery</option>
             <option value="music">Music Track</option>
@@ -97,6 +124,7 @@
             <option value="gaming">Game Clip</option>
             <option value="store-product">Store Product</option>
             <option value="store-digital">Store Digital</option>
+            <option value="store-seller">Store Seller Media</option>
             <option value="live-thumbnail">Live Thumbnail</option>
             <option value="live-recording">Live Recording</option>
             <option value="profile-avatar">Profile Avatar</option>
@@ -105,18 +133,21 @@
           </select>
         </label>
 
-        <label>
+        <label for="uploadTitle">
           Title
+
           <input
             name="title"
             id="uploadTitle"
             type="text"
             placeholder="Drop title"
+            autocomplete="off"
           />
         </label>
 
-        <label>
+        <label for="uploadDescription">
           Description / Caption
+
           <textarea
             name="description"
             id="uploadDescription"
@@ -126,64 +157,97 @@
         </label>
 
         <div class="rb-form-grid">
-          <label>
+          <label for="uploadCategory">
             Category / Genre / Sport
+
             <input
               name="category"
               id="uploadCategory"
               type="text"
               placeholder="general"
+              autocomplete="off"
             />
           </label>
 
-          <label>
+          <label for="uploadTag">
             Team / Game / Mood
+
             <input
               name="tag"
               id="uploadTag"
               type="text"
               placeholder="optional"
+              autocomplete="off"
             />
           </label>
         </div>
 
-        <label>
+        <label for="uploadVisibility">
+          Visibility
+
+          <select name="visibility" id="uploadVisibility">
+            <option value="public">Public</option>
+            <option value="followers">Followers</option>
+            <option value="private">Private</option>
+          </select>
+        </label>
+
+        <label for="uploadFile">
           File
+
           <input
             name="file"
             id="uploadFile"
             type="file"
+            required
           />
         </label>
 
         <div
-          class="rb-upload-preview"
           id="uploadPreview"
+          class="rb-upload-preview"
+          aria-live="polite"
         >
           <span>No file selected</span>
         </div>
 
         <div class="rb-form-actions">
           <button
+            id="uploadSubmitBtn"
             class="rb-main-launch"
             type="submit"
-            id="uploadSubmitBtn"
           >
             UPLOAD DROP
+          </button>
+
+          <button
+            id="uploadResetBtn"
+            class="rb-btn ghost"
+            type="reset"
+          >
+            RESET
           </button>
         </div>
 
         <p
-          class="rb-form-note"
           id="uploadMessage"
+          class="rb-form-note"
+          aria-live="polite"
         ></p>
+
       </form>
     </section>
+
   </main>
+
+  <footer class="rb-footer">
+    <span>© 2026 Rich Bizness LLC</span>
+  </footer>
 
   <script
     type="module"
     src="/core/pages/upload.js"
   ></script>
+
 </body>
 </html>
