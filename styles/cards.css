@@ -1,13 +1,9 @@
- /* =========================================
+/* =========================================
    RICH BIZNESS LLC
    /styles/cards.css
 
    GLOBAL CARD SYSTEM
    Cinematic Green + Gold Polish
-========================================= */
-
-/* =========================================
-   CARD FOUNDATION
 ========================================= */
 
 .rb-card,
@@ -27,25 +23,19 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-
   border-radius: 32px;
   border: 1px solid rgba(250, 204, 21, 0.12);
-
   background:
     radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 34%),
     radial-gradient(circle at bottom right, rgba(250, 204, 21, 0.1), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.62));
-
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.46),
     0 0 30px rgba(16, 185, 129, 0.1),
     inset 0 0 28px rgba(255, 255, 255, 0.018);
-
   transform: translateZ(0);
-
   transition:
     transform 0.28s cubic-bezier(0.23, 1, 0.32, 1),
     border-color 0.28s ease,
@@ -68,18 +58,30 @@
 .rb-profile-card:hover,
 .rb-creator-card:hover {
   transform: translateY(-6px) scale(1.01);
-
   border-color: rgba(102, 255, 153, 0.32);
-
   box-shadow:
     0 40px 100px rgba(0, 0, 0, 0.56),
     0 0 45px rgba(16, 185, 129, 0.2),
     0 0 75px rgba(250, 204, 21, 0.08);
 }
 
-/* =========================================
-   GLASS OVERLAY
-========================================= */
+.rb-card > *,
+.rb-media-card > *,
+.rb-live-card > *,
+.rb-feed-card > *,
+.rb-music-card > *,
+.rb-podcast-card > *,
+.rb-radio-card > *,
+.rb-game-card > *,
+.rb-sports-card > *,
+.rb-gallery-card > *,
+.rb-store-card > *,
+.rb-meta-card > *,
+.rb-profile-card > *,
+.rb-creator-card > * {
+  position: relative;
+  z-index: 2;
+}
 
 .rb-card::before,
 .rb-media-card::before,
@@ -96,11 +98,9 @@
 .rb-profile-card::before,
 .rb-creator-card::before {
   content: "";
-
   position: absolute;
   inset: 0;
   z-index: 1;
-
   background:
     linear-gradient(
       135deg,
@@ -109,9 +109,7 @@
       transparent 68%,
       rgba(16, 185, 129, 0.11)
     );
-
   opacity: 0.84;
-
   pointer-events: none;
 }
 
@@ -130,13 +128,10 @@
 .rb-profile-card::after,
 .rb-creator-card::after {
   content: "";
-
   position: absolute;
   inset: -1px;
   z-index: 0;
-
   border-radius: inherit;
-
   background:
     linear-gradient(
       135deg,
@@ -144,10 +139,8 @@
       transparent 36%,
       rgba(250, 204, 21, 0.16)
     );
-
   opacity: 0;
   transition: opacity 0.28s ease;
-
   pointer-events: none;
 }
 
@@ -168,9 +161,7 @@
   opacity: 1;
 }
 
-/* =========================================
-   MEDIA / COVER
-========================================= */
+/* MEDIA */
 
 .rb-card-media,
 .rb-media-cover,
@@ -181,9 +172,7 @@
 .rb-card-cover {
   position: relative;
   overflow: hidden;
-
   aspect-ratio: 16 / 10;
-
   background:
     radial-gradient(circle at center, rgba(16, 185, 129, 0.12), transparent 62%),
     #020402;
@@ -205,103 +194,76 @@
 .rb-card-cover video {
   width: 100%;
   height: 100%;
-
   display: block;
-
   object-fit: cover;
-
   filter:
     saturate(1.08)
     contrast(1.06)
     brightness(0.96);
-
   transition:
     transform 0.6s ease,
     filter 0.4s ease;
 }
 
 .rb-card:hover img,
-.rb-media-card:hover img,
-.rb-live-card:hover img,
-.rb-feed-card:hover img,
-.rb-music-card:hover img,
-.rb-podcast-card:hover img,
-.rb-radio-card:hover img,
-.rb-game-card:hover img,
-.rb-sports-card:hover img,
-.rb-gallery-card:hover img,
-.rb-store-card:hover img,
-.rb-meta-card:hover img,
-.rb-profile-card:hover img,
-.rb-creator-card:hover img,
 .rb-card:hover video,
+.rb-media-card:hover img,
 .rb-media-card:hover video,
+.rb-live-card:hover img,
 .rb-live-card:hover video,
+.rb-feed-card:hover img,
 .rb-feed-card:hover video,
+.rb-music-card:hover img,
 .rb-music-card:hover video,
-.rb-podcast-card:hover video,
-.rb-radio-card:hover video,
+.rb-game-card:hover img,
 .rb-game-card:hover video,
+.rb-sports-card:hover img,
 .rb-sports-card:hover video,
+.rb-gallery-card:hover img,
 .rb-gallery-card:hover video,
+.rb-store-card:hover img,
 .rb-store-card:hover video,
-.rb-meta-card:hover video,
-.rb-profile-card:hover video,
-.rb-creator-card:hover video {
+.rb-meta-card:hover img,
+.rb-meta-card:hover video {
   transform: scale(1.06);
-
   filter:
     saturate(1.18)
     contrast(1.12)
     brightness(1.02);
 }
 
-/* =========================================
-   OVERLAY + BODY
-========================================= */
+/* BODY */
 
 .rb-card-overlay {
   position: absolute;
   inset: 0;
   z-index: 3;
-
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-
   padding: 18px;
-
   background:
     linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.88));
 }
 
 .rb-card-body {
-  position: relative;
-  z-index: 2;
-
   display: grid;
   gap: 12px;
-
   padding: 18px;
 }
 
 .rb-card-kicker {
   color: var(--rb-green, #10b981);
-
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-
-  text-shadow:
-    0 0 12px rgba(16, 185, 129, 0.35);
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
 }
 
 .rb-card-title {
   margin: 0;
-
   color: #ffffff;
-
   font-size: clamp(1.05rem, 2vw, 1.45rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
@@ -309,14 +271,11 @@
 
 .rb-card-copy {
   color: var(--rb-muted, rgba(255, 255, 255, 0.68));
-
   line-height: 1.55;
   font-size: 0.92rem;
 }
 
-/* =========================================
-   META + USER ROW
-========================================= */
+/* META */
 
 .rb-card-meta {
   display: flex;
@@ -328,7 +287,6 @@
 
 .rb-card-meta span {
   color: rgba(255, 255, 255, 0.65);
-
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -344,46 +302,33 @@
 .rb-card-user img {
   width: 48px;
   height: 48px;
-
   border-radius: 50%;
-
   object-fit: cover;
-
   border: 1px solid rgba(250, 204, 21, 0.3);
-
   background:
     #081008
     url("/images/brand/Avatar-hero-Banner.png.jpeg")
     center / cover no-repeat;
-
-  box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.18);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.18);
 }
 
 .rb-card-user strong {
   display: block;
-
   color: #ffffff;
-
   font-size: 0.9rem;
 }
 
 .rb-card-user small {
   display: block;
-
   color: rgba(255, 255, 255, 0.58);
-
   font-size: 0.72rem;
   font-weight: 800;
 }
 
-/* =========================================
-   SPECIAL CARD VARIANTS
-========================================= */
+/* VARIANTS */
 
 .rb-live-card {
   border-color: rgba(255, 70, 70, 0.24);
-
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.48),
     0 0 34px rgba(255, 0, 60, 0.13);
@@ -391,7 +336,6 @@
 
 .rb-live-card:hover {
   border-color: rgba(255, 70, 70, 0.42);
-
   box-shadow:
     0 40px 100px rgba(0, 0, 0, 0.58),
     0 0 48px rgba(255, 0, 60, 0.22);
@@ -402,85 +346,59 @@
   top: 14px;
   left: 14px;
   z-index: 4;
-
   min-height: 32px;
-
   display: inline-flex;
   align-items: center;
   gap: 6px;
-
   padding: 0 14px;
-
   border-radius: 999px;
-
-  background:
-    linear-gradient(135deg, #ff3355, #ff0033);
-
+  background: linear-gradient(135deg, #ff3355, #ff0033);
   color: #ffffff;
-
   font-size: 0.68rem;
   font-weight: 1000;
   letter-spacing: 0.12em;
-
-  box-shadow:
-    0 0 18px rgba(255, 0, 60, 0.38);
+  box-shadow: 0 0 18px rgba(255, 0, 60, 0.38);
 }
 
 .rb-live-badge::before {
   content: "";
-
   width: 7px;
   height: 7px;
-
   border-radius: 50%;
-
   background: #ffffff;
-
-  box-shadow:
-    0 0 12px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
 }
 
 .rb-store-price {
   color: var(--rb-gold, #facc15);
-
   font-size: 1.22rem;
   font-weight: 1000;
-
-  text-shadow:
-    0 0 14px rgba(250, 204, 21, 0.24);
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.24);
 }
 
 .rb-music-wave {
   position: relative;
   overflow: hidden;
-
   height: 52px;
-
   border-radius: 16px;
-
   background:
     linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(250, 204, 21, 0.08));
 }
 
 .rb-music-wave::before {
   content: "";
-
   position: absolute;
   inset: 0;
-
   background:
     repeating-linear-gradient(
       90deg,
       rgba(102, 255, 153, 0.25) 0 2px,
       transparent 2px 8px
     );
-
   animation: rbWaveMove 6.5s linear infinite;
 }
 
-/* =========================================
-   CARD ACTIONS
-========================================= */
+/* ACTIONS */
 
 .rb-card-actions {
   display: flex;
@@ -492,28 +410,20 @@
 .rb-card-actions button,
 .rb-card-actions a {
   min-height: 42px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   padding: 0 16px;
-
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-
   background: rgba(255, 255, 255, 0.05);
-
   color: #ffffff;
-
   font-size: 0.74rem;
   font-weight: 1000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
-
   cursor: pointer;
-
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
@@ -524,30 +434,21 @@
 .rb-card-actions button:hover,
 .rb-card-actions a:hover {
   transform: translateY(-1px);
-
   border-color: rgba(102, 255, 153, 0.32);
-
   background: rgba(16, 185, 129, 0.12);
-
-  box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.14);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.14);
 }
 
-/* =========================================
-   SHINE EFFECT
-========================================= */
+/* SHINE */
 
 .rb-card-shine {
   position: absolute;
   top: -120%;
   left: -30%;
   z-index: 2;
-
   width: 55%;
   height: 300%;
-
   transform: rotate(18deg);
-
   background:
     linear-gradient(
       90deg,
@@ -555,13 +456,10 @@
       rgba(255, 255, 255, 0.16),
       transparent
     );
-
   opacity: 0;
-
   transition:
     left 0.7s ease,
     opacity 0.7s ease;
-
   pointer-events: none;
 }
 
@@ -583,33 +481,23 @@
   opacity: 1;
 }
 
-/* =========================================
-   EMPTY / LOADING CARDS
-========================================= */
+/* EMPTY */
 
 .rb-empty,
 .rb-mini-empty,
 .rb-card-empty {
   border-radius: 24px;
   border: 1px solid rgba(250, 204, 21, 0.14);
-
   background:
     linear-gradient(145deg, rgba(5, 8, 5, 0.82), rgba(0, 0, 0, 0.74));
-
   color: rgba(255, 255, 255, 0.7);
-
   padding: 18px;
-
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-
-  box-shadow:
-    inset 0 0 24px rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.02);
 }
 
-/* =========================================
-   ANIMATIONS
-========================================= */
+/* ANIMATIONS */
 
 @keyframes rbWaveMove {
   from {
@@ -621,9 +509,7 @@
   }
 }
 
-/* =========================================
-   MOBILE
-========================================= */
+/* MOBILE */
 
 @media (max-width: 640px) {
   .rb-card,
