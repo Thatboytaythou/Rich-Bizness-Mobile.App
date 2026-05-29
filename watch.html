@@ -27,7 +27,6 @@
 </head>
 
 <body class="rb-body rb-watch-page">
-
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-fx-smoke" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
@@ -35,7 +34,6 @@
   <div class="rb-bg-noise" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
     <a class="rb-brand" href="/">
       <span>WATCH LIVE</span>
       <strong>RICH BIZNESS</strong>
@@ -50,76 +48,36 @@
       <a href="/live">Go Live</a>
       <a href="/profile">Profile</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell watch-shell">
-
     <section class="rb-section-hero watch-hero">
-
       <div class="watch-copy">
+        <p class="rb-kicker">LIVE WATCH ROOM</p>
 
-        <p class="rb-kicker">
-          LIVE WATCH ROOM
-        </p>
+        <h1 id="watchTitle">Loading live stream...</h1>
 
-        <h1 id="watchTitle">
-          Loading live stream...
-        </h1>
-
-        <p
-          id="watchDescription"
-          class="rb-subtitle"
-        >
+        <p id="watchDescription" class="rb-subtitle">
           Connecting Rich Bizness live/watch systems...
         </p>
 
         <div class="watch-meta">
-
-          <span
-            id="watchBadge"
-            class="live-badge off"
-          >
-            OFF AIR
-          </span>
-
-          <span id="watchAccess">
-            FREE
-          </span>
-
-          <span id="watchCreator">
-            Rich Bizness Creator
-          </span>
-
+          <span id="watchBadge" class="live-badge off">OFF AIR</span>
+          <span id="watchAccess">FREE</span>
+          <span id="watchCreator">Rich Bizness Creator</span>
         </div>
 
-        <p
-          id="watchStatus"
-          class="watch-status"
-          aria-live="polite"
-        >
+        <p id="watchStatus" class="watch-status" aria-live="polite">
           Loading...
         </p>
-
       </div>
 
       <div class="watch-actions">
-
-        <button
-          id="joinWatchBtn"
-          class="rb-btn primary"
-          type="button"
-          disabled
-        >
+        <button id="joinWatchBtn" class="rb-btn primary" type="button" disabled>
           Join Live
         </button>
 
-        <button
-          id="leaveWatchBtn"
-          class="rb-btn ghost"
-          type="button"
-          disabled
-        >
+        <button id="leaveWatchBtn" class="rb-btn ghost" type="button" disabled>
           Leave
         </button>
 
@@ -132,140 +90,65 @@
           Unlock
         </button>
 
-        <button
-          id="copyWatchBtn"
-          class="rb-btn ghost"
-          type="button"
-        >
+        <button id="copyWatchBtn" class="rb-btn ghost" type="button">
           Copy Link
         </button>
-
       </div>
-
     </section>
 
     <section class="watch-grid">
-
       <section class="watch-main">
+        <div id="watchStage" class="watch-stage">
+          <div id="reactionLayer" class="reaction-layer"></div>
+          <div id="watchVideoGrid" class="watch-video-grid"></div>
 
-        <div
-          id="watchStage"
-          class="watch-stage"
-        >
-
-          <div
-            id="reactionLayer"
-            class="reaction-layer"
-          ></div>
-
-          <div
-            id="watchVideoGrid"
-            class="watch-video-grid"
-          ></div>
-
-          <div
-            id="watchEmpty"
-            class="watch-empty"
-          >
-
-            <h2>
-              Waiting for the creator...
-            </h2>
-
-            <p>
-              When the stream starts, the live room will appear right here.
-            </p>
-
+          <div id="watchEmpty" class="watch-empty">
+            <h2>Waiting for the creator...</h2>
+            <p>When the stream starts, the live room will appear right here.</p>
           </div>
-
         </div>
 
         <div class="watch-stats">
-
           <article>
-            <span id="watchViewers">
-              0
-            </span>
-
-            <small>
-              Viewers
-            </small>
+            <span id="watchViewers">0</span>
+            <small>Viewers</small>
           </article>
 
           <article>
-            <span id="watchPeak">
-              0
-            </span>
-
-            <small>
-              Peak
-            </small>
+            <span id="watchPeak">0</span>
+            <small>Peak</small>
           </article>
 
           <article>
-            <span id="watchChatCount">
-              0
-            </span>
-
-            <small>
-              Chat
-            </small>
+            <span id="watchChatCount">0</span>
+            <small>Chat</small>
           </article>
 
           <article>
-            <span id="watchReactions">
-              0
-            </span>
-
-            <small>
-              Reactions
-            </small>
+            <span id="watchReactions">0</span>
+            <small>Reactions</small>
           </article>
 
           <article>
-            <span id="watchRevenue">
-              $0.00
-            </span>
-
-            <small>
-              Revenue
-            </small>
+            <span id="watchRevenue">$0.00</span>
+            <small>Revenue</small>
           </article>
-
         </div>
-
       </section>
 
       <aside class="watch-side">
-
         <section class="rb-panel watch-panel">
-
           <div class="rb-panel-head">
+            <h2>Live Chat</h2>
 
-            <h2>
-              Live Chat
-            </h2>
-
-            <button
-              id="sendReactionBtn"
-              class="rb-btn ghost"
-              type="button"
-            >
+            <button id="sendReactionBtn" class="rb-btn ghost" type="button">
               🔥
             </button>
-
           </div>
 
-          <div
-            id="watchChatList"
-            class="chat-list"
-          ></div>
+          <div id="watchChatList" class="chat-list"></div>
 
-          <form
-            id="watchChatForm"
-            class="chat-form"
-          >
-
+          <form id="watchChatForm" class="chat-form">
             <input
               id="watchChatInput"
               type="text"
@@ -274,29 +157,18 @@
               maxlength="300"
             />
 
-            <button
-              type="submit"
-              class="rb-btn primary"
-            >
+            <button type="submit" class="rb-btn primary">
               Send
             </button>
-
           </form>
-
         </section>
 
         <section class="rb-panel watch-panel">
-
           <div class="rb-panel-head">
-
-            <h2>
-              Support Creator
-            </h2>
-
+            <h2>Support Creator</h2>
           </div>
 
           <div class="tip-row">
-
             <input
               id="tipAmount"
               type="number"
@@ -312,93 +184,38 @@
               maxlength="120"
             />
 
-            <button
-              id="sendTipBtn"
-              class="rb-btn gold"
-              type="button"
-            >
+            <button id="sendTipBtn" class="rb-btn gold" type="button">
               Tip
             </button>
-
           </div>
 
-          <div
-            id="watchTipList"
-            class="tip-list"
-          ></div>
-
+          <div id="watchTipList" class="tip-list"></div>
         </section>
-
       </aside>
-
     </section>
 
     <section class="rb-panel watch-discover">
-
       <div class="rb-panel-head">
-
         <div>
-          <p class="rb-kicker">
-            LIVE DISCOVERY
-          </p>
-
-          <h2>
-            More Live Rooms
-          </h2>
+          <p class="rb-kicker">LIVE DISCOVERY</p>
+          <h2>More Live Rooms</h2>
         </div>
 
-        <a
-          href="/live"
-          class="rb-btn ghost"
-        >
+        <a href="/live" class="rb-btn ghost">
           Start Yours
         </a>
-
       </div>
 
-      <div
-        id="watchStreamList"
-        class="watch-stream-list"
-      >
-
-        <div class="rb-empty">
-          Loading live rooms...
-        </div>
-
+      <div id="watchStreamList" class="watch-stream-list">
+        <div class="rb-empty">Loading live rooms...</div>
       </div>
-
     </section>
-
   </main>
 
   <footer class="rb-footer">
     <span>© 2026 Rich Bizness LLC</span>
   </footer>
 
-  <script
-    type="module"
-    src="/core/shared/rb-config.js"
-  ></script>
-
-  <script
-    type="module"
-    src="/core/shared/rb-supabase.js"
-  ></script>
-
-  <script
-    type="module"
-    src="/core/shared/rb-auth.js"
-  ></script>
-
-  <script
-    type="module"
-    src="/core/app.js"
-  ></script>
-
-  <script
-    type="module"
-    src="/core/pages/watch.js"
-  ></script>
-
+  <script type="module" src="/core/pages/watch.js"></script>
 </body>
 </html>
