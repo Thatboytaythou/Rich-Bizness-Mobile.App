@@ -176,10 +176,7 @@ function renderStream() {
   safeSet(els.stageTitle, s.title || "Family Bizness");
   safeSet(els.liveBadge, isLive ? "LIVE" : String(s.status || "DRAFT").toUpperCase());
 
-  if (els.liveBadge) {
-    els.liveBadge.className = isLive ? "live-badge on" : "live-badge off";
-  }
-
+  if (els.liveBadge) els.liveBadge.className = isLive ? "live-badge on" : "live-badge off";
   if (els.watchLink) els.watchLink.href = watchUrl(s);
 
   safeSet(els.statStatus, s.status || "draft");
@@ -210,7 +207,6 @@ async function initIdentity() {
   LIVE.supabase = getSupabase();
 
   const state = getCurrentUserState();
-
   LIVE.user = state?.user || null;
   LIVE.profile = state?.profile || null;
 
@@ -339,9 +335,7 @@ async function getLivekitToken() {
 
   const res = await fetch("/api/livekit-token", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       room,
       roomName: room,
@@ -396,9 +390,7 @@ async function syncParticipants() {
     `);
   });
 
-  els.participantList.innerHTML = rows.length
-    ? rows.join("")
-    : `<li>No participants yet.</li>`;
+  els.participantList.innerHTML = rows.length ? rows.join("") : `<li>No participants yet.</li>`;
 }
 
 async function startLive() {
@@ -577,30 +569,41 @@ async function sendChat(event) {
   const text = els.chatInput.value.trim();
   els.chatInput.value = "";
 
-  const { error } = await LIVE.supabase
-    .from(RB_TABLES.liveChatMessages)
-    .insert({
-      stream_id: LIVE.stream.id,
-      user_id: LIVE.user.id,
-      username: username(),
-      display_name: name(),
-      message: text,
-      body: text,
-      metadata: {
-        source: "live.js",
-        role: "host"
-      }
+  try {
+    const { data: sessionData } = await LIVE.supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      setStatus("Sign in required to send chat.");
+      return;
+    }
+
+    const res = await fetch("/api/live-chat-send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        stream_id: LIVE.stream.id,
+        message: text,
+        username: username(),
+        display_name: name()
+      })
     });
 
-  if (error) return setStatus(error.message);
+    const data = await res.json();
 
-  await LIVE.supabase
-    .from(RB_TABLES.liveStreams)
-    .update({
-      total_chat_messages: Number(LIVE.stream.total_chat_messages || 0) + 1,
-      last_activity_at: new Date().toISOString()
-    })
-    .eq("id", LIVE.stream.id);
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || "Live chat send failed.");
+    }
+
+    await loadChat(LIVE.stream.id);
+    setStatus("Chat sent.");
+  } catch (error) {
+    console.error("[RB LIVE CHAT API FAILED]", error);
+    setStatus(error?.message || "Chat failed.");
+  }
 }
 
 async function sendReaction() {
