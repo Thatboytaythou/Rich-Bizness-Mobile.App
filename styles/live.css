@@ -587,3 +587,81 @@ button:disabled {
     font-size: 0.62rem;
   }
 }
+
+/* =========================================
+   LIVE HOLOGRAM LAYER LOCK
+   Keep TV clean by default
+========================================= */
+
+.live-hidden-setup {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px) scale(0.96);
+}
+
+.live-hidden-setup.is-open,
+.live-hidden-setup:focus-within {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.live-overlay-chat {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px);
+}
+
+.live-overlay-chat.is-open,
+.live-overlay-chat:focus-within {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* status can stay visible without opening full chat */
+#liveStatus.live-status {
+  position: fixed;
+  left: 50%;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  z-index: 42;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 28px);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+}
+
+/* keep the screen clean */
+.holo-tv {
+  isolation: isolate;
+}
+
+.we-lit-float {
+  top: 8%;
+}
+
+.holo-room-info p {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 720px) {
+  #liveStatus.live-status {
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    font-size: 0.72rem;
+    padding: 9px 12px;
+  }
+
+  .we-lit-float {
+    top: 8%;
+  }
+
+  .holo-room-info {
+    bottom: 18px;
+  }
+}
