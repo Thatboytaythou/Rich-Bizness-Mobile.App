@@ -600,40 +600,46 @@ async function sendChat(event) {
   const message = els.chatInput.value.trim();
   if (!message) return;
 
-  if (!WATCH.stream.is_chat_enabled) {
+  if (WATCH.stream.is_chat_enabled === false) {
     setStatus("Chat is disabled for this stream.");
     return;
   }
 
-  const { error } = await WATCH.supabase
-    .from(RB_TABLES.liveChatMessages)
-    .insert({
-      stream_id: WATCH.stream.id,
-      user_id: WATCH.user?.id || null,
-      username: WATCH.user ? username() : "guest",
-      display_name: WATCH.user ? displayName() : "Guest Viewer",
-      message,
-      body: message,
-      metadata: {
-        source: "watch.js",
-        anonymous_id: WATCH.user ? null : WATCH.anonymousId
-      }
+  try {
+    const { data: sessionData } = await WATCH.supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      setStatus("Sign in required to send chat.");
+      return;
+    }
+
+    const res = await fetch("/api/live-chat-send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        stream_id: WATCH.stream.id,
+        message,
+        username: username(),
+        display_name: displayName()
+      })
     });
 
-  if (error) {
-    setStatus(error.message);
-    return;
+    const data = await res.json();
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || "Watch chat send failed.");
+    }
+
+    els.chatInput.value = "";
+    await loadChat();
+  } catch (error) {
+    console.error("[RB WATCH CHAT API FAILED]", error);
+    setStatus(error?.message || "Chat failed.");
   }
-
-  els.chatInput.value = "";
-
-  await WATCH.supabase
-    .from(RB_TABLES.liveStreams)
-    .update({
-      total_chat_messages: Number(WATCH.stream.total_chat_messages || 0) + 1,
-      last_activity_at: new Date().toISOString()
-    })
-    .eq("id", WATCH.stream.id);
 }
 
 async function sendReaction(reaction = "🔥") {
