@@ -13,29 +13,28 @@ import {
   RB_TABLES
 } from "/core/shared/rb-config.js";
 
-const supabase = createClient(
-  RB_SUPABASE.url,
-  RB_SUPABASE.publishableKey,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: "pkce",
-      storageKey: "rich-bizness-mobile-auth"
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 15
-      }
-    },
-    global: {
-      headers: {
-        "x-client-info": "rich-bizness-mobile"
-      }
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_BANNER = "/images/brand/hero-banner.png";
+
+const supabase = createClient(RB_SUPABASE.url, RB_SUPABASE.publishableKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: "pkce",
+    storageKey: "rich-bizness-mobile-auth"
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 15
+    }
+  },
+  global: {
+    headers: {
+      "x-client-info": "rich-bizness-mobile"
     }
   }
-);
+});
 
 let currentSession = null;
 let currentUser = null;
@@ -43,12 +42,51 @@ let currentProfile = null;
 let authBooted = false;
 let authBooting = null;
 
-const PROFILE_IDENTITY_TABLES = [
-  RB_TABLES.metaAvatars,
-  RB_TABLES.gamerProfiles,
-  RB_TABLES.sportsProfiles,
-  RB_TABLES.storeSellerProfiles
-];
+function cleanText(value, fallback = "") {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function usernameFromUser(user) {
+  const raw =
+    user?.user_metadata?.username ||
+    user?.user_metadata?.name ||
+    user?.user_metadata?.display_name ||
+    user?.email?.split("@")?.[0] ||
+    "rich_user";
+
+  return cleanText(raw, "rich_user")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "_")
+    .slice(0, 32);
+}
+
+function displayNameFromUser(user) {
+  return cleanText(
+    user?.user_metadata?.display_name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      usernameFromUser(user),
+    "Rich User"
+  );
+}
+
+function profilePayloadFromUser(user) {
+  return {
+    id: user.id,
+    username: usernameFromUser(user),
+    display_name: displayNameFromUser(user),
+    full_name: cleanText(user?.user_metadata?.full_name, null),
+    avatar_url: cleanText(user?.user_metadata?.avatar_url, DEFAULT_AVATAR),
+    banner_url: cleanText(user?.user_metadata?.banner_url, DEFAULT_BANNER),
+    online_status: "online",
+    last_seen_at: new Date().toISOString(),
+    metadata: {
+      source: "rb-supabase.js",
+      auth_email: user.email || null
+    },
+    updated_at: new Date().toISOString()
+  };
+}
 
 export function getSupabase() {
   return supabase;
@@ -86,11 +124,89 @@ export function getProfileKey() {
 export function getProfileIdentity() {
   return {
     user_id: currentProfile?.id || currentUser?.id || null,
-    username: currentProfile?.username || null,
-    display_name: currentProfile?.display_name || null,
-    avatar_url: currentProfile?.avatar_url || null,
-    banner_url: currentProfile?.banner_url || null
+    username: currentProfile?.username || usernameFromUser(currentUser),
+    display_name: currentProfile?.display_name || displayNameFromUser(currentUser),
+    avatar_url: currentProfile?.avatar_url || DEFAULT_AVATAR,
+    banner_url: currentProfile?.banner_url || DEFAULT_BANNER
   };
+}
+
+export async function ensureProfile(user = currentUser) {
+  if (!user?.id) return null;
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .upsert(profilePayloadFromUser(user), { onConflict: "id" })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  currentProfile = data;
+  await ensureProfileIdentityRows(data);
+
+  return data;
+}
+
+export async function ensureProfileIdentityRows(profile = currentProfile) {
+  if (!profile?.id) return;
+
+  const now = new Date().toISOString();
+
+  const jobs = [
+    {
+      table: RB_TABLES.metaAvatars,
+      payload: {
+        user_id: profile.id,
+        display_name: profile.display_name || profile.username || "Rich User",
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        updated_at: now
+      }
+    },
+    {
+      table: RB_TABLES.gamerProfiles,
+      payload: {
+        user_id: profile.id,
+        username: profile.username || null,
+        display_name: profile.display_name || profile.username || "Rich User",
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        banner_url: profile.banner_url || DEFAULT_BANNER,
+        updated_at: now
+      }
+    },
+    {
+      table: RB_TABLES.sportsProfiles,
+      payload: {
+        user_id: profile.id,
+        username: profile.username || null,
+        display_name: profile.display_name || profile.username || "Rich User",
+        updated_at: now
+      }
+    },
+    {
+      table: RB_TABLES.storeSellerProfiles,
+      payload: {
+        user_id: profile.id,
+        username: profile.username || null,
+        display_name: profile.display_name || profile.username || "Rich User",
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        banner_url: profile.banner_url || DEFAULT_BANNER,
+        updated_at: now
+      }
+    }
+  ];
+
+  for (const job of jobs) {
+    if (!job.table) continue;
+
+    try {
+      await supabase.from(job.table).upsert(job.payload, {
+        onConflict: "user_id"
+      });
+    } catch (error) {
+      console.warn(`[RB IDENTITY SYNC SKIPPED: ${job.table}]`, error?.message || error);
+    }
+  }
 }
 
 export async function bootAuth() {
@@ -114,7 +230,7 @@ export async function bootAuth() {
     currentUser = session?.user || null;
 
     if (currentUser?.id) {
-      await loadProfile(currentUser.id);
+      await ensureProfile(currentUser);
     } else {
       currentProfile = null;
     }
@@ -143,13 +259,12 @@ export async function refreshSession() {
   currentUser = session?.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    await ensureProfile(currentUser);
   } else {
     currentProfile = null;
   }
 
   authBooted = true;
-
   return currentSession;
 }
 
@@ -168,7 +283,16 @@ export async function loadProfile(userId) {
     return null;
   }
 
+  if (!data && currentUser?.id === userId) {
+    return await ensureProfile(currentUser);
+  }
+
   currentProfile = data || null;
+
+  if (currentProfile?.id) {
+    await ensureProfileIdentityRows(currentProfile);
+  }
+
   return currentProfile;
 }
 
@@ -188,11 +312,10 @@ export async function signUp({ email, password, metadata = {} }) {
   currentUser = data.user || data.session?.user || null;
 
   if (currentUser?.id) {
-    currentProfile = null;
+    await ensureProfile(currentUser);
   }
 
   authBooted = true;
-
   return data;
 }
 
@@ -208,15 +331,25 @@ export async function signIn({ email, password }) {
   currentUser = data.user || data.session?.user || null;
 
   if (currentUser?.id) {
-    await loadProfile(currentUser.id);
+    await ensureProfile(currentUser);
   }
 
   authBooted = true;
-
   return data;
 }
 
 export async function signOut() {
+  if (currentUser?.id) {
+    await supabase
+      .from(RB_TABLES.profiles)
+      .update({
+        online_status: "offline",
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", currentUser.id);
+  }
+
   await supabase.auth.signOut();
 
   currentSession = null;
@@ -232,7 +365,7 @@ supabase.auth.onAuthStateChange((_event, session) => {
 
   if (currentUser?.id) {
     setTimeout(() => {
-      loadProfile(currentUser.id).catch((error) => {
+      ensureProfile(currentUser).catch((error) => {
         console.warn("[RB PROFILE STATE WARNING]", error.message);
       });
     }, 0);
@@ -246,43 +379,37 @@ supabase.auth.onAuthStateChange((_event, session) => {
 export function getPublicFileUrl(bucket, path) {
   if (!bucket || !path) return null;
 
-  const { data } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(path);
-
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data?.publicUrl || null;
 }
 
-export async function uploadFile({
-  bucket,
-  path,
-  file,
-  upsert = false
-}) {
+export async function uploadFile({ bucket, path, file, upsert = false }) {
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(path, file, { upsert });
 
   if (error) throw error;
 
-  return data;
+  return {
+    ...data,
+    publicUrl: getPublicFileUrl(bucket, data.path)
+  };
 }
 
-export async function deleteFile({
-  bucket,
-  paths = []
-}) {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .remove(paths);
+export async function deleteFile({ bucket, paths = [] }) {
+  const { data, error } = await supabase.storage.from(bucket).remove(paths);
 
   if (error) throw error;
-
   return data;
 }
 
 export function createRealtimeChannel(channelName, config = {}) {
   return supabase.channel(channelName, config);
+}
+
+export async function removeRealtimeChannel(channel) {
+  if (!channel) return null;
+  return await supabase.removeChannel(channel);
 }
 
 export async function rbSelect({
@@ -298,9 +425,7 @@ export async function rbSelect({
   let query = supabase.from(table).select(select);
 
   Object.entries(match).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      query = query.eq(key, value);
-    }
+    if (value !== undefined && value !== null) query = query.eq(key, value);
   });
 
   if (orderBy) query = query.order(orderBy, { ascending });
@@ -309,74 +434,51 @@ export async function rbSelect({
   if (maybeSingle) query = query.maybeSingle();
 
   const { data, error } = await query;
-
   if (error) throw error;
 
   return data;
 }
 
 export async function rbInsert({ table, values }) {
-  const { data, error } = await supabase
-    .from(table)
-    .insert(values)
-    .select();
+  const { data, error } = await supabase.from(table).insert(values).select();
 
   if (error) throw error;
-
   return data;
 }
 
-export async function rbUpdate({
-  table,
-  match = {},
-  values = {}
-}) {
+export async function rbUpdate({ table, match = {}, values = {} }) {
   let query = supabase.from(table).update(values);
 
   Object.entries(match).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      query = query.eq(key, value);
-    }
+    if (value !== undefined && value !== null) query = query.eq(key, value);
   });
 
   const { data, error } = await query.select();
 
   if (error) throw error;
-
   return data;
 }
 
-export async function rbUpsert({
-  table,
-  values,
-  onConflict = "id"
-}) {
+export async function rbUpsert({ table, values, onConflict = "id" }) {
   const { data, error } = await supabase
     .from(table)
     .upsert(values, { onConflict })
     .select();
 
   if (error) throw error;
-
   return data;
 }
 
-export async function rbDelete({
-  table,
-  match = {}
-}) {
+export async function rbDelete({ table, match = {} }) {
   let query = supabase.from(table).delete();
 
   Object.entries(match).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      query = query.eq(key, value);
-    }
+    if (value !== undefined && value !== null) query = query.eq(key, value);
   });
 
   const { data, error } = await query.select();
 
   if (error) throw error;
-
   return data;
 }
 
@@ -398,7 +500,7 @@ export async function rbRequireProfile() {
   }
 
   if (!currentProfile?.id) {
-    await loadProfile(currentUser.id);
+    await ensureProfile(currentUser);
   }
 
   if (!currentProfile?.id) {
@@ -406,6 +508,27 @@ export async function rbRequireProfile() {
   }
 
   return currentProfile;
+}
+
+export async function rbTouchOnline() {
+  await bootAuth();
+
+  if (!currentUser?.id) return null;
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .update({
+      online_status: "online",
+      last_seen_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", currentUser.id)
+    .select("*")
+    .maybeSingle();
+
+  if (!error && data) currentProfile = data;
+
+  return data || null;
 }
 
 console.log("RB SUPABASE ENGINE READY");
