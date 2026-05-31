@@ -16,6 +16,8 @@ import {
   getProfile,
   bootAuth,
   loadProfile,
+  ensureProfile,
+  ensureProfileIdentityRows,
   signUp,
   signIn,
   signOut,
@@ -25,13 +27,18 @@ import {
 import {
   RB_ROUTES,
   RB_TABLES,
-  RB_PROFILE_KEYS
+  RB_PROFILE_KEYS,
+  RB_AUTH,
+  RB_BRAND_ASSETS
 } from "/core/shared/rb-config.js";
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
-const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_AVATAR =
+  RB_BRAND_ASSETS?.defaultAvatar || "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+const DEFAULT_BANNER =
+  RB_BRAND_ASSETS?.defaultProfileBanner || "/images/brand/hero-banner.png";
 
 export {
   getSupabase,
@@ -40,6 +47,8 @@ export {
   getProfile,
   bootAuth,
   loadProfile,
+  ensureProfile,
+  ensureProfileIdentityRows,
   isAuthed
 };
 
@@ -120,9 +129,9 @@ async function ensureProfileExtensionTables(profile) {
   const baseIdentity = {
     user_id: profile.id,
     username: profile.username || null,
-    display_name: profile.display_name || null,
+    display_name: profile.display_name || profile.username || "Rich User",
     metadata: {
-      source: "rb-auth",
+      source: "rb-auth.js",
       profile_locked: true
     },
     updated_at: now
@@ -136,7 +145,6 @@ async function ensureProfileExtensionTables(profile) {
         updated_at: now
       }
     },
-
     {
       table: RB_TABLES.userLevels,
       payload: {
@@ -144,57 +152,54 @@ async function ensureProfileExtensionTables(profile) {
         updated_at: now
       }
     },
-
     {
       table: RB_TABLES.profileThemeSettings,
       payload: {
         user_id: profile.id,
+        background_url: profile.banner_url || DEFAULT_BANNER,
         updated_at: now
       }
     },
-
     {
       table: RB_TABLES.metaAvatars,
       payload: {
-        ...baseIdentity,
-        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        user_id: profile.id,
         display_name: profile.display_name || profile.username || "Rich User",
-        updated_at: now
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        updated_at: now,
+        metadata: {
+          source: "rb-auth.js",
+          profile_locked: true
+        }
       }
     },
-
     {
       table: RB_TABLES.gamerProfiles,
       payload: {
         ...baseIdentity,
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        banner_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
+        banner_url: profile.banner_url || DEFAULT_BANNER
       }
     },
-
     {
       table: RB_TABLES.sportsProfiles,
       payload: {
-        ...baseIdentity,
-        updated_at: now
+        ...baseIdentity
       }
     },
-
     {
       table: RB_TABLES.storeSellerProfiles,
       payload: {
         ...baseIdentity,
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        banner_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
+        banner_url: profile.banner_url || DEFAULT_BANNER
       }
     },
-
     {
       table: RB_TABLES.creatorPageSettings,
       payload: {
         user_id: profile.id,
+        hero_background_url: profile.banner_url || DEFAULT_BANNER,
         updated_at: now
       }
     }
@@ -203,11 +208,11 @@ async function ensureProfileExtensionTables(profile) {
   await Promise.allSettled(
     jobs
       .filter((job) => job.table)
-      .map((job) => {
-        return supabase
-          .from(job.table)
-          .upsert(job.payload, { onConflict: "user_id" });
-      })
+      .map((job) =>
+        supabase.from(job.table).upsert(job.payload, {
+          onConflict: "user_id"
+        })
+      )
   );
 }
 
@@ -266,6 +271,7 @@ async function upsertProfileFromAuth({
       ...(existingProfile?.metadata || {}),
       profile_lock: true,
       profile_source: RB_PROFILE_KEYS?.identitySource || "profiles",
+      auth_storage_key: RB_AUTH?.sessionStorageKey || "rich-bizness-mobile-auth",
       secret_routes_enabled: true
     }
   };
@@ -277,7 +283,7 @@ async function upsertProfileFromAuth({
   const { data, error } = await supabase
     .from(RB_TABLES.profiles)
     .upsert(payload, { onConflict: "id" })
-    .select()
+    .select("*")
     .maybeSingle();
 
   if (error) {
@@ -315,7 +321,7 @@ export async function ensureMyProfile() {
         }
       })
       .eq("id", user.id)
-      .select()
+      .select("*")
       .maybeSingle();
 
     const profile = data || existingProfile;
@@ -348,7 +354,9 @@ export async function rbSignUp({
     password,
     metadata: {
       username: cleanUsername(username),
-      display_name: displayName
+      display_name: displayName,
+      avatar_url: DEFAULT_AVATAR,
+      banner_url: DEFAULT_BANNER
     }
   });
 
@@ -451,7 +459,7 @@ export async function signInWithProvider(provider = "google") {
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: window.location.origin
+        redirectTo: `${window.location.origin}${RB_ROUTES.auth}`
       }
     });
 
@@ -462,7 +470,28 @@ export async function signInWithProvider(provider = "google") {
 export async function refreshProfile() {
   const user = getUser();
   if (!user?.id) return null;
+
+  await ensureProfileExtensionTables(await loadProfile(user.id));
   return await loadProfile(user.id);
+}
+
+export async function requireAuth({
+  redirectTo = RB_ROUTES.auth
+} = {}) {
+  await bootAuth();
+
+  if (!getUser()?.id) {
+    if (redirectTo) {
+      window.location.href =
+        `${redirectTo}?next=${encodeURIComponent(window.location.pathname)}`;
+    }
+
+    throw new Error("Sign in required.");
+  }
+
+  await ensureMyProfile();
+
+  return getAuthState();
 }
 
 export function canAccessAdminCreatorRoute(routeKey = "") {
@@ -478,6 +507,25 @@ export function canAccessAdminCreatorRoute(routeKey = "") {
     profile?.is_creator ||
     profile?.is_verified
   );
+}
+
+export function protectRoute(routeKey = "") {
+  const controlledRoutes = RB_PROFILE_KEYS?.controlledRoutes || [];
+
+  if (!controlledRoutes.includes(routeKey)) return true;
+
+  if (!isAuthed()) {
+    window.location.href =
+      `${RB_ROUTES.auth}?next=${encodeURIComponent(window.location.pathname)}`;
+    return false;
+  }
+
+  if (!canAccessAdminCreatorRoute(routeKey)) {
+    window.location.href = RB_ROUTES.profile;
+    return false;
+  }
+
+  return true;
 }
 
 window.addEventListener("focus", async () => {
