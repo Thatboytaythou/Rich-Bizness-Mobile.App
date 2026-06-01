@@ -1,11 +1,15 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-upload-router.js
+
+   MASTER UPLOAD ROUTER
+   Buckets + Tables + Columns Locked
 ========================= */
 
 import {
   RB_BUCKETS,
-  RB_TABLES
+  RB_TABLES,
+  RB_UPLOAD_ROUTES as CONFIG_UPLOAD_ROUTES
 } from "/core/shared/rb-config.js";
 
 import {
@@ -16,9 +20,12 @@ import {
 import {
   getSupabase,
   getUser,
+  getProfileIdentity,
   rbInsert,
   rbUpdate
 } from "/core/shared/rb-supabase.js";
+
+const supabase = getSupabase();
 
 export const RB_UPLOAD_ROUTES = Object.freeze({
   profileAvatar: {
@@ -51,6 +58,16 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "upsert-user"
   },
 
+  metaWorld: {
+    bucket: RB_BUCKETS.metaWorlds,
+    folder: "worlds",
+    section: "meta",
+    visibility: "public",
+    table: RB_TABLES.metaWorlds,
+    column: "world_url",
+    mode: "attach"
+  },
+
   feedPost: {
     bucket: RB_BUCKETS.generalUploads,
     folder: "feed",
@@ -81,6 +98,16 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "insert"
   },
 
+  musicCover: {
+    bucket: RB_BUCKETS.musicCovers,
+    folder: "covers",
+    section: "music",
+    visibility: "public",
+    table: RB_TABLES.musicTracks,
+    column: "cover_url",
+    mode: "attach"
+  },
+
   podcastAudio: {
     bucket: RB_BUCKETS.podcastAudio,
     folder: "episodes",
@@ -89,6 +116,16 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     table: RB_TABLES.podcastEpisodes,
     column: "audio_url",
     mode: "insert"
+  },
+
+  podcastCover: {
+    bucket: RB_BUCKETS.podcastCovers,
+    folder: "covers",
+    section: "podcast",
+    visibility: "public",
+    table: RB_TABLES.podcastEpisodes,
+    column: "cover_url",
+    mode: "attach"
   },
 
   radioCover: {
@@ -121,6 +158,16 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "attach"
   },
 
+  gameAsset: {
+    bucket: RB_BUCKETS.gameAssets,
+    folder: "assets",
+    section: "gaming",
+    visibility: "public",
+    table: RB_TABLES.games,
+    column: "play_url",
+    mode: "attach"
+  },
+
   gameClip: {
     bucket: RB_BUCKETS.gameClips,
     folder: "clips",
@@ -128,6 +175,26 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     visibility: "public",
     table: RB_TABLES.gameClips,
     column: "clip_url",
+    mode: "insert"
+  },
+
+  gameCover: {
+    bucket: RB_BUCKETS.gameCovers,
+    folder: "covers",
+    section: "gaming",
+    visibility: "public",
+    table: RB_TABLES.games,
+    column: "cover_url",
+    mode: "attach"
+  },
+
+  sportsMedia: {
+    bucket: RB_BUCKETS.sportsMedia,
+    folder: "media",
+    section: "sports",
+    visibility: "public",
+    table: RB_TABLES.sportsUploads,
+    column: "file_url",
     mode: "insert"
   },
 
@@ -141,6 +208,16 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "insert"
   },
 
+  sportsCover: {
+    bucket: RB_BUCKETS.sportsCovers,
+    folder: "covers",
+    section: "sports",
+    visibility: "public",
+    table: RB_TABLES.sportsPosts,
+    column: "cover_url",
+    mode: "attach"
+  },
+
   storeProduct: {
     bucket: RB_BUCKETS.storeProducts,
     folder: "products",
@@ -151,6 +228,16 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     mode: "insert"
   },
 
+  storeSellerMedia: {
+    bucket: RB_BUCKETS.storeSellerMedia,
+    folder: "seller",
+    section: "store",
+    visibility: "public",
+    table: RB_TABLES.storeSellerProfiles,
+    column: "banner_url",
+    mode: "upsert-user"
+  },
+
   storeDigital: {
     bucket: RB_BUCKETS.storeDigital,
     folder: "digital",
@@ -159,27 +246,76 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     table: RB_TABLES.products,
     column: "digital_file_url",
     mode: "attach"
-  },
-
-  metaWorld: {
-    bucket: RB_BUCKETS.metaWorlds,
-    folder: "worlds",
-    section: "meta",
-    visibility: "public",
-    table: RB_TABLES.metaWorlds,
-    column: "world_url",
-    mode: "attach"
   }
 });
 
+function routeFromConfig(type) {
+  const route = CONFIG_UPLOAD_ROUTES?.[type];
+  if (!route) return null;
+
+  return {
+    bucket: route.bucket,
+    folder: type,
+    section: type,
+    visibility:
+      route.bucket === RB_BUCKETS.storeDigital ||
+      route.bucket === RB_BUCKETS.liveRecordings
+        ? "private"
+        : "public",
+    table: route.table,
+    column: route.column,
+    mode: "attach"
+  };
+}
+
 export function getUploadRoute(type) {
-  const route = RB_UPLOAD_ROUTES[type];
+  const route = RB_UPLOAD_ROUTES[type] || routeFromConfig(type);
 
   if (!route) {
     throw new Error(`Unknown upload route: ${type}`);
   }
 
   return route;
+}
+
+export function listUploadRoutes() {
+  return Object.keys(RB_UPLOAD_ROUTES);
+}
+
+export function listUploadRoutesBySection(section) {
+  return Object.entries(RB_UPLOAD_ROUTES)
+    .filter(([, route]) => route.section === section)
+    .map(([key, route]) => ({
+      key,
+      ...route
+    }));
+}
+
+function uploadedValue(uploaded, route) {
+  if (route.visibility === "public") {
+    return uploaded?.publicUrl || uploaded?.public_url || "";
+  }
+
+  return uploaded?.path || uploaded?.file_path || "";
+}
+
+function cleanMetadata(metadata = {}) {
+  return {
+    source: "rb-upload-router.js",
+    ...metadata
+  };
+}
+
+function identityPayload(extra = {}) {
+  const user = getUser();
+  const identity = getProfileIdentity?.() || {};
+
+  return {
+    user_id: user?.id || identity?.user_id || null,
+    username: identity?.username || null,
+    display_name: identity?.display_name || null,
+    ...extra
+  };
 }
 
 export async function uploadByRoute({
@@ -203,18 +339,10 @@ export async function uploadByRoute({
       table: route.table,
       column: route.column,
       mode: route.mode,
-      ...metadata
+      ...cleanMetadata(metadata)
     },
     upsert
   });
-}
-
-function uploadedValue(uploaded, route) {
-  if (route.visibility === "public") {
-    return uploaded?.publicUrl || uploaded?.public_url || "";
-  }
-
-  return uploaded?.path || uploaded?.file_path || "";
 }
 
 export async function createContentWithUpload({
@@ -257,34 +385,36 @@ export async function createContentWithUpload({
 
     return {
       uploaded,
-      record: data?.[0] || null
+      record: data?.[0] || null,
+      route
     };
   }
 
   if (route.mode === "upsert-user") {
-    const { data, error } = await getSupabase()
+    const { data, error } = await supabase
       .from(route.table)
       .upsert(
         {
-          user_id: user.id,
-          display_name: values.display_name || values.displayName || "",
+          ...identityPayload(),
+          ...values,
           [route.column]: urlValue,
           metadata: {
-            source: "Rich Bizness Mobile",
-            ...metadata
+            ...cleanMetadata(metadata),
+            ...(values.metadata || {})
           },
           updated_at: new Date().toISOString()
         },
         { onConflict: "user_id" }
       )
-      .select()
+      .select("*")
       .maybeSingle();
 
     if (error) throw error;
 
     return {
       uploaded,
-      record: data || null
+      record: data || null,
+      route
     };
   }
 
@@ -295,7 +425,8 @@ export async function createContentWithUpload({
       return {
         uploaded,
         record: null,
-        needsTarget: true
+        needsTarget: true,
+        route
       };
     }
 
@@ -310,24 +441,25 @@ export async function createContentWithUpload({
 
     return {
       uploaded,
-      record: data?.[0] || null
+      record: data?.[0] || null,
+      route
     };
   }
 
   if (route.mode === "upload-only") {
     return {
       uploaded,
-      record: uploaded.upload || null
+      record: uploaded.upload || null,
+      route
     };
   }
 
   const record = {
+    ...identityPayload(),
     ...values,
-    user_id: values.user_id || user.id,
     [route.column]: urlValue,
     metadata: {
-      source: "Rich Bizness Mobile",
-      ...metadata,
+      ...cleanMetadata(metadata),
       ...(values.metadata || {})
     }
   };
@@ -339,21 +471,92 @@ export async function createContentWithUpload({
 
   return {
     uploaded,
-    record: data?.[0] || null
+    record: data?.[0] || null,
+    route
   };
 }
 
-export function listUploadRoutes() {
-  return Object.keys(RB_UPLOAD_ROUTES);
+export async function attachUploadToRecord({
+  type,
+  file,
+  id,
+  values = {},
+  metadata = {},
+  upsert = false
+}) {
+  return await createContentWithUpload({
+    type,
+    file,
+    values: {
+      ...values,
+      id
+    },
+    match: { id },
+    metadata,
+    upsert
+  });
 }
 
-export function listUploadRoutesBySection(section) {
-  return Object.entries(RB_UPLOAD_ROUTES)
-    .filter(([, route]) => route.section === section)
-    .map(([key, route]) => ({
-      key,
-      ...route
-    }));
+export async function profileAvatarUpload(file) {
+  return await createContentWithUpload({
+    type: "profileAvatar",
+    file
+  });
+}
+
+export async function profileBannerUpload(file) {
+  return await createContentWithUpload({
+    type: "profileBanner",
+    file
+  });
+}
+
+export async function feedPostUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "feedPost",
+    file,
+    values
+  });
+}
+
+export async function musicTrackUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "musicTrack",
+    file,
+    values
+  });
+}
+
+export async function podcastAudioUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "podcastAudio",
+    file,
+    values
+  });
+}
+
+export async function gameClipUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "gameClip",
+    file,
+    values
+  });
+}
+
+export async function sportsClipUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "sportsClip",
+    file,
+    values
+  });
+}
+
+export async function storeProductUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "storeProduct",
+    file,
+    values
+  });
 }
 
 console.log("RB UPLOAD ROUTER READY");
