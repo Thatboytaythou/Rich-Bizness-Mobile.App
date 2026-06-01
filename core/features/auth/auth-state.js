@@ -1,4 +1,4 @@
- /* =========================
+/* =========================
    RICH BIZNESS MOBILE
    /core/features/auth/auth-state.js
 
@@ -13,6 +13,8 @@ import {
   getProfile,
   loadProfile
 } from "/core/shared/rb-auth.js";
+
+const DEFAULT_AUTH_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 let authReady = false;
 let refreshRunning = false;
@@ -152,10 +154,7 @@ export function getAuthDisplayName() {
 export function getAuthAvatar() {
   const profile = getProfile();
 
-  return (
-    profile?.avatar_url ||
-    "/images/brand/project-avatar.png.jpeg"
-  );
+  return profile?.avatar_url || DEFAULT_AUTH_AVATAR;
 }
 
 export function getAuthFlags() {
