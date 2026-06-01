@@ -23,6 +23,7 @@ const MODERATION = {
 
   banChannel: null,
   reportChannel: null,
+  reviewChannel: null,
 
   listeners: new Set()
 };
@@ -53,8 +54,22 @@ function isHostOrMod() {
 
   return Boolean(
     MODERATION.stream?.creator_id === MODERATION.user?.id ||
-      ["founder", "rich_admin", "elite_mod", "admin", "moderator"].includes(role)
+      [
+        "founder",
+        "rich_admin",
+        "elite_mod",
+        "admin",
+        "moderator",
+        "support"
+      ].includes(role)
   );
+}
+
+function metadataWithPatch(existing = {}, patch = {}) {
+  return {
+    ...(existing || {}),
+    ...patch
+  };
 }
 
 export function getLiveModerationState() {
@@ -173,23 +188,25 @@ export async function banLiveUser({
     .eq("stream_id", MODERATION.stream.id)
     .eq("user_id", bannedUserId);
 
-  await supabase
-    .from(RB_TABLES.richNotifications)
-    .insert({
-      user_id: bannedUserId,
-      actor_id: MODERATION.user?.id || null,
-      type: "live_banned",
-      title: "Live access removed",
-      body: reason,
-      target_table: RB_TABLES.liveStreams,
-      target_type: "live",
-      target_id: MODERATION.stream.id,
-      emoji: "🛡️",
-      priority: "high",
-      metadata: {
-        source: "live-moderation.js"
-      }
-    });
+  if (RB_TABLES.richNotifications) {
+    await supabase
+      .from(RB_TABLES.richNotifications)
+      .insert({
+        user_id: bannedUserId,
+        actor_id: MODERATION.user?.id || null,
+        type: "live_banned",
+        title: "Live access removed",
+        body: reason,
+        target_table: RB_TABLES.liveStreams,
+        target_type: "live",
+        target_id: MODERATION.stream.id,
+        emoji: "🛡️",
+        priority: "high",
+        metadata: {
+          source: "live-moderation.js"
+        }
+      });
+  }
 
   await loadLiveBans(MODERATION.stream.id);
 
@@ -254,15 +271,21 @@ export async function deleteLiveChatMessage(messageId) {
 
   const supabase = getSupabase();
 
+  const { data: existing } = await supabase
+    .from(RB_TABLES.liveChatMessages)
+    .select("metadata")
+    .eq("id", messageId)
+    .maybeSingle();
+
   const { data, error } = await supabase
     .from(RB_TABLES.liveChatMessages)
     .update({
       is_deleted: true,
-      metadata: {
+      metadata: metadataWithPatch(existing?.metadata, {
         moderated_by: MODERATION.user?.id || null,
         moderated_at: new Date().toISOString(),
         source: "live-moderation.js"
-      }
+      })
     })
     .eq("id", messageId)
     .select("*")
@@ -442,8 +465,13 @@ export function clearLiveModerationRealtime() {
     supabase.removeChannel(MODERATION.reportChannel);
   }
 
+  if (MODERATION.reviewChannel) {
+    supabase.removeChannel(MODERATION.reviewChannel);
+  }
+
   MODERATION.banChannel = null;
   MODERATION.reportChannel = null;
+  MODERATION.reviewChannel = null;
 }
 
 export function bindLiveModerationRealtime(streamId = MODERATION.stream?.id) {
@@ -481,9 +509,24 @@ export function bindLiveModerationRealtime(streamId = MODERATION.stream?.id) {
     )
     .subscribe();
 
+  MODERATION.reviewChannel = supabase
+    .channel(`rb-live-review-${streamId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.contentReviewQueue,
+        filter: `target_id=eq.${streamId}`
+      },
+      () => loadLiveReviewQueue()
+    )
+    .subscribe();
+
   return {
     banChannel: MODERATION.banChannel,
-    reportChannel: MODERATION.reportChannel
+    reportChannel: MODERATION.reportChannel,
+    reviewChannel: MODERATION.reviewChannel
   };
 }
 
