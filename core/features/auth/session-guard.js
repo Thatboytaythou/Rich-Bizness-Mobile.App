@@ -1,4 +1,4 @@
- /* =========================
+/* =========================
    RICH BIZNESS MOBILE
    /core/features/auth/session-guard.js
 
@@ -23,8 +23,16 @@ import {
 } from "/core/features/auth/auth-state.js";
 
 function redirect(route) {
-  if (!route) return;
-  window.location.href = route;
+  if (!route) return false;
+
+  const current = `${window.location.pathname}${window.location.search}`;
+  const target =
+    route === RB_ROUTES.auth
+      ? `${route}?next=${encodeURIComponent(current)}`
+      : route;
+
+  window.location.href = target;
+  return true;
 }
 
 export async function requireSession({
@@ -60,7 +68,10 @@ export async function blockSession({
 export async function requireCreator({
   redirectTo = RB_ROUTES.profile
 } = {}) {
-  const state = await requireSession({ redirectTo: RB_ROUTES.auth });
+  const state = await requireSession({
+    redirectTo: RB_ROUTES.auth
+  });
+
   if (!state) return null;
 
   const flags = getAuthFlags();
@@ -76,7 +87,10 @@ export async function requireCreator({
 export async function requireArtist({
   redirectTo = RB_ROUTES.music
 } = {}) {
-  const state = await requireSession({ redirectTo: RB_ROUTES.auth });
+  const state = await requireSession({
+    redirectTo: RB_ROUTES.auth
+  });
+
   if (!state) return null;
 
   const flags = getAuthFlags();
@@ -92,7 +106,10 @@ export async function requireArtist({
 export async function requireSeller({
   redirectTo = RB_ROUTES.store
 } = {}) {
-  const state = await requireSession({ redirectTo: RB_ROUTES.auth });
+  const state = await requireSession({
+    redirectTo: RB_ROUTES.auth
+  });
+
   if (!state) return null;
 
   const flags = getAuthFlags();
@@ -108,7 +125,10 @@ export async function requireSeller({
 export async function requireAdmin({
   redirectTo = RB_ROUTES.home
 } = {}) {
-  const state = await requireSession({ redirectTo: RB_ROUTES.auth });
+  const state = await requireSession({
+    redirectTo: RB_ROUTES.auth
+  });
+
   if (!state) return null;
 
   const flags = getAuthFlags();
