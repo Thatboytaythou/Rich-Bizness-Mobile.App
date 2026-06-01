@@ -1,4 +1,4 @@
- /* =========================
+/* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-dom.js
 
@@ -18,6 +18,15 @@ export function exists(selector, root = document) {
   return !!$(selector, root);
 }
 
+export function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 export function setText(target, value = "") {
   const el = typeof target === "string" ? $(target) : target;
   if (!el) return;
@@ -28,6 +37,12 @@ export function setHTML(target, value = "") {
   const el = typeof target === "string" ? $(target) : target;
   if (!el) return;
   el.innerHTML = value ?? "";
+}
+
+export function setSafeHTML(target, value = "") {
+  const el = typeof target === "string" ? $(target) : target;
+  if (!el) return;
+  el.innerHTML = escapeHtml(value);
 }
 
 export function setValue(target, value = "") {
@@ -41,18 +56,58 @@ export function getValue(target, fallback = "") {
   return el?.value?.trim() || fallback;
 }
 
+export function setAttr(target, key, value) {
+  const el = typeof target === "string" ? $(target) : target;
+  if (!el || !key) return;
+
+  if (value === null || value === undefined) {
+    el.removeAttribute(key);
+    return;
+  }
+
+  el.setAttribute(key, value);
+}
+
+export function getAttr(target, key, fallback = "") {
+  const el = typeof target === "string" ? $(target) : target;
+  if (!el || !key) return fallback;
+  return el.getAttribute(key) || fallback;
+}
+
+export function setData(target, key, value) {
+  const el = typeof target === "string" ? $(target) : target;
+  if (!el || !key) return;
+
+  if (value === null || value === undefined) {
+    delete el.dataset[key];
+    return;
+  }
+
+  el.dataset[key] = value;
+}
+
+export function getData(target, key, fallback = "") {
+  const el = typeof target === "string" ? $(target) : target;
+  if (!el || !key) return fallback;
+  return el.dataset[key] || fallback;
+}
+
 export function show(target) {
   const el = typeof target === "string" ? $(target) : target;
   if (!el) return;
+
   el.hidden = false;
   el.classList.remove("is-hidden", "hidden");
+  el.setAttribute("aria-hidden", "false");
 }
 
 export function hide(target) {
   const el = typeof target === "string" ? $(target) : target;
   if (!el) return;
+
   el.hidden = true;
   el.classList.add("is-hidden");
+  el.setAttribute("aria-hidden", "true");
 }
 
 export function toggle(target, force) {
@@ -73,6 +128,12 @@ export function removeClass(target, className) {
   el.classList.remove(className);
 }
 
+export function toggleClass(target, className, force) {
+  const el = typeof target === "string" ? $(target) : target;
+  if (!el || !className) return;
+  el.classList.toggle(className, force);
+}
+
 export function on(target, event, handler, options = {}) {
   const el = typeof target === "string" ? $(target) : target;
   if (!el || !event || typeof handler !== "function") return null;
@@ -84,9 +145,26 @@ export function on(target, event, handler, options = {}) {
 
 export function onAll(selector, event, handler, options = {}) {
   const els = $$(selector);
-  const cleanups = els.map((el) => on(el, event, handler, options)).filter(Boolean);
+  const cleanups = els
+    .map((el) => on(el, event, handler, options))
+    .filter(Boolean);
 
   return () => cleanups.forEach((cleanup) => cleanup());
+}
+
+export function delegate(root, selector, event, handler, options = {}) {
+  const base = typeof root === "string" ? $(root) : root;
+  if (!base || !selector || !event || typeof handler !== "function") return null;
+
+  const listener = (e) => {
+    const target = e.target.closest(selector);
+    if (!target || !base.contains(target)) return;
+    handler(e, target);
+  };
+
+  base.addEventListener(event, listener, options);
+
+  return () => base.removeEventListener(event, listener, options);
 }
 
 export function createElement(tag = "div", options = {}) {
@@ -129,7 +207,10 @@ export function renderList(target, items = [], renderer) {
   });
 }
 
-export function safeImage(url, fallback = "/images/brand/rb-placeholder.png") {
+export function safeImage(
+  url,
+  fallback = "/images/brand/Avatar-hero-Banner.png.jpeg"
+) {
   return url || fallback;
 }
 
@@ -157,3 +238,15 @@ export function clearPageLoading() {
   document.documentElement.classList.remove("rb-loading");
   document.body.classList.remove("rb-loading");
 }
+
+export function setPageError() {
+  document.documentElement.classList.add("rb-error");
+  document.body.classList.add("rb-error");
+}
+
+export function clearPageError() {
+  document.documentElement.classList.remove("rb-error");
+  document.body.classList.remove("rb-error");
+}
+
+console.log("RB DOM READY");
