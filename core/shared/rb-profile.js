@@ -6,26 +6,136 @@
    Profile Keys For All Systems
 ========================= */
 
-import { RB_TABLES } from "/core/shared/rb-config.js";
+import {
+  RB_ROUTES,
+  RB_TABLES,
+  RB_BRAND_ASSETS,
+  RB_PROFILE_KEYS
+} from "/core/shared/rb-config.js";
 
 import {
   getSupabase,
   getUser,
   getProfile,
-  loadProfile
+  loadProfile,
+  getProfileIdentity as getSupabaseProfileIdentity
 } from "/core/shared/rb-supabase.js";
 
+const supabase = getSupabase();
+
 const DEFAULT_AVATAR =
-  "/images/brand/Avatar-hero-Banner.png.jpeg";
+  RB_BRAND_ASSETS?.defaultAvatar || "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const DEFAULT_BANNER =
-  "/images/brand/Avatar-hero-Banner.png.jpeg";
+  RB_BRAND_ASSETS?.defaultProfileBanner || "/images/brand/hero-banner.png";
+
+function safeText(value, fallback = "") {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function cleanUsername(username = "") {
+  return String(username || "")
+    .replace("@", "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 24);
+}
+
+export function profileAvatar(profile = null) {
+  const active = profile || getProfile();
+  return active?.avatar_url || DEFAULT_AVATAR;
+}
+
+export function profileBanner(profile = null) {
+  const active = profile || getProfile();
+  return active?.banner_url || DEFAULT_BANNER;
+}
+
+export function profileName(profile = null) {
+  const user = getUser();
+  const active = profile || getProfile();
+
+  return (
+    active?.display_name ||
+    active?.full_name ||
+    active?.username ||
+    user?.email?.split("@")[0] ||
+    "Rich User"
+  );
+}
+
+export function profileUsername(profile = null) {
+  const user = getUser();
+  const active = profile || getProfile();
+
+  return (
+    active?.username ||
+    cleanUsername(user?.email?.split("@")[0]) ||
+    "richuser"
+  );
+}
+
+export function profileHandle(profile = null) {
+  const username = profileUsername(profile);
+  return username ? `@${username}` : "@richuser";
+}
+
+export function profileBadge(profile = null) {
+  const active = profile || getProfile();
+
+  if (active?.role === "founder") return "FOUNDER";
+  if (active?.role === "rich_admin") return "RICH ADMIN";
+  if (active?.role === "admin") return "ADMIN";
+  if (active?.is_verified) return "VERIFIED";
+  if (active?.is_artist) return "ARTIST";
+  if (active?.is_seller) return "SELLER";
+  if (active?.is_creator) return "CREATOR";
+
+  return active?.rank_title || "MEMBER";
+}
+
+export function profileLevel(profile = null) {
+  const active = profile || getProfile();
+  return Number(active?.rich_level || 1);
+}
+
+export function profileRank(profile = null) {
+  const active = profile || getProfile();
+  return active?.rank_title || "Member";
+}
+
+export function profilePoints(profile = null) {
+  const active = profile || getProfile();
+  return Number(active?.rich_points || 0);
+}
+
+export function isProfileOwner(profile = null) {
+  const user = getUser();
+  const active = profile || getProfile();
+  return !!user?.id && !!active?.id && user.id === active.id;
+}
 
 export function getProfileIdentity(profileOverride = null) {
   const user = getUser();
   const profile = profileOverride || getProfile();
+  const fromSupabase = getSupabaseProfileIdentity?.() || {};
 
-  const id = profile?.id || user?.id || null;
+  const id = profile?.id || fromSupabase?.id || fromSupabase?.user_id || user?.id || null;
+
+  const username =
+    profile?.username ||
+    fromSupabase?.username ||
+    cleanUsername(user?.email?.split("@")[0]) ||
+    "";
+
+  const displayName =
+    profile?.display_name ||
+    profile?.full_name ||
+    fromSupabase?.display_name ||
+    username ||
+    user?.email?.split("@")[0] ||
+    "Rich User";
 
   return {
     id,
@@ -33,24 +143,17 @@ export function getProfileIdentity(profileOverride = null) {
     creator_id: id,
     owner_id: id,
     seller_id: id,
+    artist_user_id: id,
+    from_user_id: id,
+    to_user_id: id,
 
     email: user?.email || "",
 
-    username: profile?.username || "",
-    display_name:
-      profile?.display_name ||
-      profile?.full_name ||
-      profile?.username ||
-      user?.email?.split("@")[0] ||
-      "Rich User",
+    username,
+    display_name: displayName,
+    displayName,
 
-    displayName:
-      profile?.display_name ||
-      profile?.full_name ||
-      profile?.username ||
-      user?.email?.split("@")[0] ||
-      "Rich User",
-
+    full_name: profile?.full_name || displayName,
     bio: profile?.bio || "",
 
     avatar_url: profileAvatar(profile),
@@ -60,14 +163,18 @@ export function getProfileIdentity(profileOverride = null) {
     bannerUrl: profileBanner(profile),
 
     role: profile?.role || "user",
-    rich_level: profile?.rich_level || 1,
-    richLevel: profile?.rich_level || 1,
 
-    rank_title: profile?.rank_title || "Member",
-    rankTitle: profile?.rank_title || "Member",
+    rich_level: profileLevel(profile),
+    richLevel: profileLevel(profile),
 
-    rich_points: profile?.rich_points || 0,
-    richPoints: profile?.rich_points || 0,
+    rank_title: profileRank(profile),
+    rankTitle: profileRank(profile),
+
+    rich_points: profilePoints(profile),
+    richPoints: profilePoints(profile),
+
+    balance_cents: Number(profile?.balance_cents || 0),
+    balanceCents: Number(profile?.balance_cents || 0),
 
     online_status: profile?.online_status || "offline",
     onlineStatus: profile?.online_status || "offline",
@@ -134,6 +241,32 @@ export function buildSellerInsert(values = {}, profileOverride = null) {
   };
 }
 
+export function buildArtistInsert(values = {}, profileOverride = null) {
+  const identity = getProfileIdentity(profileOverride);
+
+  return {
+    artist_user_id: identity.id,
+    username: identity.username,
+    display_name: identity.display_name,
+    ...values
+  };
+}
+
+export function buildLiveInsert(values = {}, profileOverride = null) {
+  const identity = getProfileIdentity(profileOverride);
+
+  return {
+    creator_id: identity.id,
+    metadata: {
+      profile_name: identity.display_name,
+      username: identity.username,
+      avatar_url: identity.avatar_url,
+      ...(values.metadata || {})
+    },
+    ...values
+  };
+}
+
 export async function refreshMyProfile() {
   const user = getUser();
   if (!user?.id) return null;
@@ -143,7 +276,7 @@ export async function refreshMyProfile() {
 export async function getProfileById(userId) {
   if (!userId) return null;
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from(RB_TABLES.profiles)
     .select("*")
     .eq("id", userId)
@@ -154,17 +287,13 @@ export async function getProfileById(userId) {
 }
 
 export async function getProfileByUsername(username) {
-  if (!username) return null;
+  const clean = cleanUsername(username);
+  if (!clean) return null;
 
-  const cleanUsername = String(username)
-    .replace("@", "")
-    .trim()
-    .toLowerCase();
-
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from(RB_TABLES.profiles)
     .select("*")
-    .eq("username", cleanUsername)
+    .eq("username", clean)
     .maybeSingle();
 
   if (error) throw error;
@@ -183,11 +312,15 @@ export async function updateMyProfile(values = {}) {
   delete cleanValues.id;
   delete cleanValues.created_at;
 
-  const { data, error } = await getSupabase()
+  if (cleanValues.username) {
+    cleanValues.username = cleanUsername(cleanValues.username);
+  }
+
+  const { data, error } = await supabase
     .from(RB_TABLES.profiles)
     .update(cleanValues)
     .eq("id", user.id)
-    .select()
+    .select("*")
     .maybeSingle();
 
   if (error) throw error;
@@ -196,66 +329,122 @@ export async function updateMyProfile(values = {}) {
   return data || null;
 }
 
-export function profileAvatar(profile = null) {
-  const active = profile || getProfile();
-
-  return active?.avatar_url || DEFAULT_AVATAR;
-}
-
-export function profileBanner(profile = null) {
-  const active = profile || getProfile();
-
-  return active?.banner_url || DEFAULT_BANNER;
-}
-
-export function profileName(profile = null) {
+export async function updateOnlineStatus(status = "online") {
   const user = getUser();
-  const active = profile || getProfile();
+  if (!user?.id) return null;
 
-  return (
-    active?.display_name ||
-    active?.full_name ||
-    active?.username ||
-    user?.email?.split("@")[0] ||
-    "Rich User"
-  );
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .update({
+      online_status: status,
+      last_seen_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", user.id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) throw error;
+
+  await loadProfile(user.id);
+  return data || null;
 }
 
-export function profileHandle(profile = null) {
-  const active = profile || getProfile();
+export async function loadProfileExtensions(userId = null) {
+  const id = userId || getProfileKey();
+  if (!id) return {};
 
-  if (active?.username) return `@${active.username}`;
-  return "@richuser";
+  const [
+    userSettings,
+    userLevels,
+    theme,
+    metaAvatar,
+    gamer,
+    sports,
+    seller,
+    creator
+  ] = await Promise.allSettled([
+    supabase.from(RB_TABLES.userSettings).select("*").eq("user_id", id).maybeSingle(),
+    supabase.from(RB_TABLES.userLevels).select("*").eq("user_id", id).maybeSingle(),
+    supabase.from(RB_TABLES.profileThemeSettings).select("*").eq("user_id", id).maybeSingle(),
+    supabase.from(RB_TABLES.metaAvatars).select("*").eq("user_id", id).maybeSingle(),
+    supabase.from(RB_TABLES.gamerProfiles).select("*").eq("user_id", id).maybeSingle(),
+    supabase.from(RB_TABLES.sportsProfiles).select("*").eq("user_id", id).maybeSingle(),
+    supabase.from(RB_TABLES.storeSellerProfiles).select("*").eq("user_id", id).maybeSingle(),
+    supabase.from(RB_TABLES.creatorPageSettings).select("*").eq("user_id", id).maybeSingle()
+  ]);
+
+  const unwrap = (result) =>
+    result.status === "fulfilled" ? result.value?.data || null : null;
+
+  return {
+    userSettings: unwrap(userSettings),
+    userLevels: unwrap(userLevels),
+    profileThemeSettings: unwrap(theme),
+    metaAvatar: unwrap(metaAvatar),
+    gamerProfile: unwrap(gamer),
+    sportsProfile: unwrap(sports),
+    storeSellerProfile: unwrap(seller),
+    creatorPageSettings: unwrap(creator)
+  };
 }
 
-export function profileBadge(profile = null) {
-  const active = profile || getProfile();
+export async function getProfileStats(userId = null) {
+  const id = userId || getProfileKey();
+  if (!id) {
+    return {
+      followers: 0,
+      following: 0,
+      posts: 0,
+      uploads: 0
+    };
+  }
 
-  if (active?.is_verified) return "VERIFIED";
-  if (active?.is_artist) return "ARTIST";
-  if (active?.is_seller) return "SELLER";
-  if (active?.is_creator) return "CREATOR";
+  const [followers, following, posts, uploads] = await Promise.allSettled([
+    supabase
+      .from(RB_TABLES.followers)
+      .select("id", { count: "exact", head: true })
+      .eq("following_id", id),
 
-  return active?.rank_title || "MEMBER";
-}
+    supabase
+      .from(RB_TABLES.followers)
+      .select("id", { count: "exact", head: true })
+      .eq("follower_id", id),
 
-export function profileLevel(profile = null) {
-  const active = profile || getProfile();
-  return active?.rich_level || 1;
+    supabase
+      .from(RB_TABLES.feedPosts)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", id),
+
+    supabase
+      .from(RB_TABLES.uploads)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", id)
+  ]);
+
+  const count = (result) =>
+    result.status === "fulfilled" ? result.value?.count || 0 : 0;
+
+  return {
+    followers: count(followers),
+    following: count(following),
+    posts: count(posts),
+    uploads: count(uploads)
+  };
 }
 
 export function buildProfileUrl(profile = null) {
   const active = profile || getProfile();
 
   if (active?.username) {
-    return `/profile?u=${encodeURIComponent(active.username)}`;
+    return `${RB_ROUTES.profile}?u=${encodeURIComponent(active.username)}`;
   }
 
   if (active?.id) {
-    return `/profile?id=${encodeURIComponent(active.id)}`;
+    return `${RB_ROUTES.profile}?id=${encodeURIComponent(active.id)}`;
   }
 
-  return "/profile";
+  return RB_ROUTES.profile;
 }
 
 export function bindProfileShell({
@@ -264,7 +453,8 @@ export function bindProfileShell({
   nameSelector = "[data-rb-name]",
   handleSelector = "[data-rb-handle]",
   badgeSelector = "[data-rb-badge]",
-  levelSelector = "[data-rb-level]"
+  levelSelector = "[data-rb-level]",
+  pointsSelector = "[data-rb-points]"
 } = {}) {
   const profile = getProfile();
 
@@ -298,6 +488,14 @@ export function bindProfileShell({
   document.querySelectorAll(levelSelector).forEach((el) => {
     el.textContent = `LVL ${profileLevel(profile)}`;
   });
+
+  document.querySelectorAll(pointsSelector).forEach((el) => {
+    el.textContent = `${profilePoints(profile)} pts`;
+  });
+}
+
+export function routeRequiresProfile(routeKey = "") {
+  return (RB_PROFILE_KEYS?.controlledRoutes || []).includes(routeKey);
 }
 
 console.log("RB PROFILE READY");
