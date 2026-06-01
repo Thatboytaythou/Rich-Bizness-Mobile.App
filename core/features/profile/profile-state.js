@@ -35,9 +35,10 @@ const supabase = getSupabase();
 let profileReady = false;
 let activeProfile = null;
 let activeIdentity = null;
-let activeProfileMode = "me";
+let activeProfileMode = "guest";
 let profileChannel = null;
 let profileLoading = false;
+let profileRefreshingFromRealtime = false;
 
 const listeners = new Set();
 
@@ -107,6 +108,9 @@ export async function refreshProfileState() {
     activeIdentity = getProfileIdentity(activeProfile);
     notifyProfileListeners();
 
+    return getProfileState();
+  } catch (error) {
+    console.warn("[RB PROFILE REFRESH WARNING]", error);
     return getProfileState();
   } finally {
     profileLoading = false;
@@ -198,7 +202,7 @@ function resolveProfileMode({
   username,
   authState
 }) {
-  if (mode === "me" || mode === "public") return mode;
+  if (mode === "me" || mode === "public" || mode === "guest") return mode;
   if (userId || username) return "public";
   if (authState?.user?.id) return "me";
   return "guest";
@@ -237,7 +241,7 @@ async function loadActiveProfile({
 
     return null;
   } catch (error) {
-    console.warn("[RB PROFILE LOAD WARNING]", error.message);
+    console.warn("[RB PROFILE LOAD WARNING]", error?.message || error);
     return null;
   } finally {
     profileLoading = false;
@@ -263,16 +267,31 @@ function bindProfileRealtime(profileId) {
         filter: `id=eq.${profileId}`
       },
       async () => {
-        await refreshProfileState();
+        if (profileRefreshingFromRealtime) return;
 
-        window.dispatchEvent(
-          new CustomEvent("rb:profile-updated", {
-            detail: getProfileState()
-          })
-        );
+        profileRefreshingFromRealtime = true;
+
+        try {
+          await refreshProfileState();
+
+          window.dispatchEvent(
+            new CustomEvent("rb:profile-updated", {
+              detail: getProfileState()
+            })
+          );
+        } finally {
+          profileRefreshingFromRealtime = false;
+        }
       }
     )
     .subscribe();
+}
+
+export function clearProfileRealtime() {
+  if (!profileChannel) return;
+
+  supabase.removeChannel(profileChannel);
+  profileChannel = null;
 }
 
 onAuthState(async (authState) => {
@@ -281,6 +300,18 @@ onAuthState(async (authState) => {
   if (activeProfileMode === "me" && authState.user?.id) {
     await refreshProfileState();
   }
+
+  if (!authState.user?.id) {
+    activeProfile = null;
+    activeIdentity = getProfileIdentity(null);
+    activeProfileMode = "guest";
+    clearProfileRealtime();
+    notifyProfileListeners();
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  clearProfileRealtime();
 });
 
 console.log("RB PROFILE STATE READY");
