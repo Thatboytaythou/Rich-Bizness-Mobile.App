@@ -17,15 +17,22 @@ const RAIL = {
   streams: [],
   featured: [],
   cards: [],
-
   channel: null,
   listeners: new Set(),
-
   limit: 20,
   statusFilter: ["live", "scheduled"]
 };
 
 const DEFAULT_THUMBNAIL = "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+function watchUrl(stream = {}) {
+  const base = RB_ROUTES.watch || "/watch";
+  const key = stream.slug || stream.id || stream.stream_id;
+
+  if (!key) return base;
+
+  return `${base}?stream=${encodeURIComponent(key)}`;
+}
 
 function emitRail() {
   const state = getLiveRailState();
@@ -43,14 +50,6 @@ function emitRail() {
       detail: state
     })
   );
-}
-
-function watchUrl(stream) {
-  if (!stream) return RB_ROUTES.watch || "/watch";
-
-  return `${RB_ROUTES.watch || "/watch"}?stream=${encodeURIComponent(
-    stream.slug || stream.id
-  )}`;
 }
 
 function normalizeStream(row = {}) {
@@ -95,6 +94,7 @@ function normalizeStream(row = {}) {
 function normalizeCard(row = {}) {
   return {
     ...row,
+
     thumbnail_url:
       row.thumbnail_url ||
       row.cover_url ||
@@ -250,6 +250,8 @@ export async function searchLiveRail(queryText = "", limit = 20) {
 
   const supabase = getSupabase();
 
+  const safeQ = q.replaceAll(",", " ").replaceAll("%", "");
+
   const { data, error } = await supabase
     .from(RB_TABLES.liveStreams)
     .select(`
@@ -263,7 +265,7 @@ export async function searchLiveRail(queryText = "", limit = 20) {
       )
     `)
     .or(
-      `title.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%,display_slug.ilike.%${q}%`
+      `title.ilike.%${safeQ}%,description.ilike.%${safeQ}%,category.ilike.%${safeQ}%,display_slug.ilike.%${safeQ}%`
     )
     .in("status", ["live", "scheduled"])
     .order("viewer_count", { ascending: false })
@@ -290,38 +292,67 @@ export async function upsertLiveRailCard(stream) {
 
   const payload = {
     stream_id: stream.id,
-    creator_id: stream.creator_id,
-    title: stream.title,
-    subtitle: stream.description,
+    creator_id: stream.creator_id || null,
+    title: stream.title || "Family Bizness",
+    subtitle: stream.description || null,
     card_type: stream.status === "live" ? "live" : "highlight",
-    thumbnail_url: stream.thumbnail_url,
-    cover_url: stream.cover_url,
+    thumbnail_url: stream.thumbnail_url || null,
+    cover_url: stream.cover_url || null,
     target_url: watchUrl(stream),
     is_active: ["live", "scheduled", "draft"].includes(stream.status),
     metadata: {
       source: "live-rail.js",
-      status: stream.status,
-      slug: stream.slug
+      status: stream.status || null,
+      slug: stream.slug || null,
+      livekit_room_name: stream.livekit_room_name || null
     },
     updated_at: new Date().toISOString()
   };
 
-  const { data, error } = await supabase
+  const { data: existing } = await supabase
     .from(RB_TABLES.liveStreamCards)
-    .upsert(payload, {
-      onConflict: "stream_id"
-    })
-    .select("*")
-    .single();
+    .select("id")
+    .eq("stream_id", stream.id)
+    .limit(1)
+    .maybeSingle();
 
-  if (error) {
-    console.warn("[RB LIVE RAIL CARD UPSERT]", error);
-    throw error;
+  let result;
+
+  if (existing?.id) {
+    const { data, error } = await supabase
+      .from(RB_TABLES.liveStreamCards)
+      .update(payload)
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.warn("[RB LIVE RAIL CARD UPDATE]", error);
+      throw error;
+    }
+
+    result = data;
+  } else {
+    const { data, error } = await supabase
+      .from(RB_TABLES.liveStreamCards)
+      .insert({
+        ...payload,
+        created_at: new Date().toISOString()
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      console.warn("[RB LIVE RAIL CARD INSERT]", error);
+      throw error;
+    }
+
+    result = data;
   }
 
   await loadLiveCards();
 
-  return data;
+  return result;
 }
 
 export function clearLiveRailRealtime() {
