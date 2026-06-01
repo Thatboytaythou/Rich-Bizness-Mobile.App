@@ -35,7 +35,13 @@ export function getQueryParam(key) {
 
 export function setQueryParam(key, value) {
   const url = new URL(window.location.href);
-  url.searchParams.set(key, value);
+
+  if (value === null || value === undefined || value === "") {
+    url.searchParams.delete(key);
+  } else {
+    url.searchParams.set(key, value);
+  }
+
   window.history.replaceState({}, "", url);
 }
 
@@ -154,28 +160,41 @@ export function scrollBottomSmooth() {
 export const RB_ROUTE_ACCESS = Object.freeze({
   public: [
     "/",
+    "/index.html",
+
     "/auth",
     "/auth.html",
+
     "/feed",
     "/feed.html",
+
     "/watch",
     "/watch.html",
+
     "/live",
     "/live.html",
+
     "/music",
     "/music.html",
+
     "/podcast",
     "/podcast.html",
+
     "/radio",
     "/radio.html",
+
     "/gaming",
     "/gaming.html",
+
     "/sports",
     "/sports.html",
+
     "/gallery",
     "/gallery.html",
+
     "/store",
     "/store.html",
+
     "/meta",
     "/meta.html"
   ],
@@ -183,29 +202,91 @@ export const RB_ROUTE_ACCESS = Object.freeze({
   protected: [
     "/upload",
     "/upload.html",
+
     "/messages",
     "/messages.html",
+
     "/notifications",
     "/notifications.html",
+
     "/profile",
     "/profile.html",
+
     "/edit",
     "/edit.html",
+
     "/settings",
-    "/settings.html",
+    "/settings.html"
+  ],
+
+  creator: [
     "/creator",
-    "/creator.html",
+    "/creator.html"
+  ],
+
+  seller: [
+    "/store/manage",
+    "/store/manage.html",
+    "/seller",
+    "/seller.html"
+  ],
+
+  artist: [
+    "/artist",
+    "/artist.html",
+    "/artist/upload",
+    "/artist/upload.html",
+    "/artist/manage",
+    "/artist/manage.html",
+    "/artist/analytics",
+    "/artist/analytics.html"
+  ],
+
+  admin: [
     "/admin",
     "/admin.html"
+  ],
+
+  secret: [
+    "/rb-secret-door",
+    "/rb-secret-meta2",
+    "/rb-secret-meta3"
   ]
 });
 
 export function isProtectedRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.protected.includes(path);
+  return (
+    RB_ROUTE_ACCESS.protected.includes(path) ||
+    RB_ROUTE_ACCESS.creator.includes(path) ||
+    RB_ROUTE_ACCESS.seller.includes(path) ||
+    RB_ROUTE_ACCESS.artist.includes(path) ||
+    RB_ROUTE_ACCESS.admin.includes(path) ||
+    RB_ROUTE_ACCESS.secret.includes(path)
+  );
 }
 
 export function isPublicRoute(path = getCurrentPath()) {
   return RB_ROUTE_ACCESS.public.includes(path);
+}
+
+export function isCreatorRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.creator.includes(path);
+}
+
+export function isSellerRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.seller.includes(path);
+}
+
+export function isArtistRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.artist.includes(path);
+}
+
+export function isAdminRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.admin.includes(path);
+}
+
+export function isSecretRoute(path = getCurrentPath()) {
+  return RB_ROUTE_ACCESS.secret.includes(path);
 }
 
 export function safeRedirect(route, delay = 0) {
