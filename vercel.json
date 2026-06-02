@@ -5,12 +5,13 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
-
     { "source": "/auth", "destination": "/auth.html" },
     { "source": "/feed", "destination": "/feed.html" },
     { "source": "/watch", "destination": "/watch.html" },
     { "source": "/live", "destination": "/live.html" },
     { "source": "/music", "destination": "/music.html" },
+    { "source": "/podcast", "destination": "/music.html" },
+    { "source": "/radio", "destination": "/music.html" },
     { "source": "/gaming", "destination": "/gaming.html" },
     { "source": "/sports", "destination": "/sports.html" },
     { "source": "/gallery", "destination": "/gallery.html" },
@@ -26,10 +27,13 @@
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/avatar", "destination": "/avatar.html" },
 
+    { "source": "/rb-secret-door", "destination": "/secret-door.html" },
     { "source": "/secret-door", "destination": "/secret-door.html" },
     { "source": "/secretDoor", "destination": "/secret-door.html" },
+    { "source": "/rb-secret-meta2", "destination": "/secret-meta-2.html" },
     { "source": "/secret-meta-2", "destination": "/secret-meta-2.html" },
     { "source": "/secretMeta2", "destination": "/secret-meta-2.html" },
+    { "source": "/rb-secret-meta3", "destination": "/secret-meta-3.html" },
     { "source": "/secret-meta-3", "destination": "/secret-meta-3.html" },
     { "source": "/secretMeta3", "destination": "/secret-meta-3.html" },
 
