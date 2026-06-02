@@ -9,7 +9,10 @@ function base64url(input) {
 }
 
 function signJwt(payload, secret) {
-  const header = { alg: "HS256", typ: "JWT" };
+  const header = {
+    alg: "HS256",
+    typ: "JWT"
+  };
 
   const encodedHeader = base64url(JSON.stringify(header));
   const encodedPayload = base64url(JSON.stringify(payload));
@@ -26,7 +29,9 @@ function signJwt(payload, secret) {
 }
 
 function safeText(value, fallback = "") {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+  return typeof value === "string" && value.trim()
+    ? value.trim()
+    : fallback;
 }
 
 function makeIdentity(value) {
@@ -35,14 +40,67 @@ function makeIdentity(value) {
     .slice(0, 80);
 }
 
+function makeRoomName(value) {
+  return safeText(value, `rich-room-${crypto.randomUUID().slice(0, 8)}`)
+    .replace(/[^a-zA-Z0-9._:-]/g, "-")
+    .slice(0, 120);
+}
+
 function parseMetadata(body, role) {
   return {
     app: "Rich Bizness Mobile",
     role,
-    stream_id: body.streamId || body.stream_id || body.metadata?.stream_id || null,
-    stream_slug: body.streamSlug || body.stream_slug || body.metadata?.stream_slug || null,
-    user_id: body.userId || body.user_id || body.metadata?.user_id || null,
+    stream_id:
+      body.streamId ||
+      body.stream_id ||
+      body.metadata?.stream_id ||
+      null,
+    stream_slug:
+      body.streamSlug ||
+      body.stream_slug ||
+      body.metadata?.stream_slug ||
+      null,
+    user_id:
+      body.userId ||
+      body.user_id ||
+      body.metadata?.user_id ||
+      null,
     source: "api/livekit-token.js"
+  };
+}
+
+function getRolePermissions(role, body = {}) {
+  const normalizedRole = safeText(role, "viewer").toLowerCase();
+
+  const roleCanPublish = [
+    "host",
+    "cohost",
+    "moderator"
+  ].includes(normalizedRole);
+
+  return {
+    canPublish:
+      body.canPublish === true ||
+      body.canPublish === "true" ||
+      roleCanPublish,
+
+    canSubscribe:
+      body.canSubscribe === false ||
+      body.canSubscribe === "false"
+        ? false
+        : true,
+
+    canPublishData:
+      body.canPublishData === false ||
+      body.canPublishData === "false"
+        ? false
+        : true,
+
+    canUpdateOwnMetadata:
+      body.canUpdateOwnMetadata === false ||
+      body.canUpdateOwnMetadata === "false"
+        ? false
+        : true
   };
 }
 
@@ -51,10 +109,15 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
 
   if (!["GET", "POST"].includes(req.method)) {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return res.status(405).json({
+      ok: false,
+      error: "Method not allowed"
+    });
   }
 
   try {
@@ -69,36 +132,49 @@ export default async function handler(req, res) {
       });
     }
 
-    const body = req.method === "POST" ? req.body || {} : req.query || {};
+    const body =
+      req.method === "POST"
+        ? req.body || {}
+        : req.query || {};
 
-    const roomName = safeText(
-      body.roomName || body.room || body.livekit_room_name,
-      `rich-room-${crypto.randomUUID().slice(0, 8)}`
+    const roomName = makeRoomName(
+      body.roomName ||
+      body.room ||
+      body.livekit_room_name
     );
 
     const identity = makeIdentity(
-      body.identity || body.userId || body.user_id || body.participantIdentity
+      body.identity ||
+      body.userId ||
+      body.user_id ||
+      body.participantIdentity
     );
 
     const name = safeText(
-      body.name || body.displayName || body.display_name || body.username,
+      body.name ||
+      body.displayName ||
+      body.display_name ||
+      body.username,
       "Rich Bizness Guest"
-    );
+    ).slice(0, 80);
 
-    const role = safeText(body.role, "viewer");
+    const role = safeText(body.role, "viewer").toLowerCase();
 
-    const canPublish =
-      ["host", "cohost", "moderator"].includes(role) ||
-      body.canPublish === true;
-
-    const canSubscribe = body.canSubscribe !== false;
-    const canPublishData = body.canPublishData !== false;
+    const {
+      canPublish,
+      canSubscribe,
+      canPublishData,
+      canUpdateOwnMetadata
+    } = getRolePermissions(role, body);
 
     const now = Math.floor(Date.now() / 1000);
+
     const ttlSeconds = Math.min(
       Math.max(Number(body.ttlSeconds || body.ttl || 60 * 60 * 6), 60),
       60 * 60 * 24
     );
+
+    const metadata = parseMetadata(body, role);
 
     const payload = {
       iss: LIVEKIT_API_KEY,
@@ -112,9 +188,10 @@ export default async function handler(req, res) {
         roomJoin: true,
         canPublish,
         canSubscribe,
-        canPublishData
+        canPublishData,
+        canUpdateOwnMetadata
       },
-      metadata: JSON.stringify(parseMetadata(body, role))
+      metadata: JSON.stringify(metadata)
     };
 
     const token = signJwt(payload, LIVEKIT_API_SECRET);
@@ -134,6 +211,8 @@ export default async function handler(req, res) {
       canPublish,
       canSubscribe,
       canPublishData,
+      canUpdateOwnMetadata,
+      metadata,
       expiresAt: new Date((now + ttlSeconds) * 1000).toISOString()
     });
   } catch (error) {
