@@ -8,9 +8,7 @@
    Does not force profile binding on index
 ========================= */
 
-import {
-  RB_APP
-} from "/core/shared/rb-config.js";
+import { RB_APP } from "/core/shared/rb-config.js";
 
 import {
   getSession,
@@ -26,20 +24,15 @@ import {
 } from "/core/features/auth/auth-state.js";
 
 import {
+  initProfileState,
   refreshProfileState
 } from "/core/features/profile/profile-state.js";
 
-import {
-  ensureMyProfile
-} from "/core/shared/rb-auth.js";
+import { ensureMyProfile } from "/core/shared/rb-auth.js";
 
-import {
-  autoGuardCurrentPage
-} from "/core/features/auth/session-guard.js";
+import { autoGuardCurrentPage } from "/core/features/auth/session-guard.js";
 
-import {
-  unsubscribeAllChannels
-} from "/core/shared/rb-realtime.js";
+import { unsubscribeAllChannels } from "/core/shared/rb-realtime.js";
 
 import {
   toastInfo,
@@ -54,11 +47,10 @@ export async function initApp({
   guard = true,
   bindProfile = true,
   toast = false,
-  ensureProfile = true
+  ensureProfile = true,
+  profileState = true
 } = {}) {
-  if (appReady) {
-    return getAppState();
-  }
+  if (appReady) return getAppState();
 
   if (appBooting && appBootPromise) {
     await appBootPromise;
@@ -71,11 +63,11 @@ export async function initApp({
     guard,
     bindProfile,
     toast,
-    ensureProfile
+    ensureProfile,
+    profileState
   });
 
   await appBootPromise;
-
   return getAppState();
 }
 
@@ -83,7 +75,8 @@ async function bootApp({
   guard,
   bindProfile,
   toast,
-  ensureProfile
+  ensureProfile,
+  profileState
 }) {
   try {
     document.body.classList.add("rb-app-booting");
@@ -96,6 +89,14 @@ async function bootApp({
 
     if (ensureProfile && getUser()?.id) {
       await ensureMyProfile();
+    }
+
+    if (profileState) {
+      await initProfileState({
+        mode: "auto",
+        realtime: true
+      });
+    } else if (getUser()?.id) {
       await refreshProfileState();
     }
 
@@ -110,6 +111,12 @@ async function bootApp({
     document.body.classList.remove("rb-app-booting", "rb-app-error");
     document.body.classList.add("rb-app-ready");
 
+    window.dispatchEvent(
+      new CustomEvent("rb:app-ready", {
+        detail: getAppState()
+      })
+    );
+
     if (toast) {
       toastInfo("App system online.", RB_APP.name);
     }
@@ -120,7 +127,6 @@ async function bootApp({
     document.body.classList.add("rb-app-error");
 
     console.error("[RB APP BOOT ERROR]", error);
-
     throw error;
   } finally {
     appBooting = false;
@@ -170,6 +176,7 @@ export async function refreshAppIdentity() {
   await refreshAuthProfile();
 
   if (getUser()?.id) {
+    await ensureMyProfile();
     await refreshProfileState();
   }
 
