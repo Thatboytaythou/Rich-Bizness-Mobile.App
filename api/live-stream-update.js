@@ -38,6 +38,14 @@ function safeAccessType(value) {
   return allowed.includes(value) ? value : undefined;
 }
 
+function encode(value) {
+  return encodeURIComponent(String(value || ""));
+}
+
+function watchUrl(stream) {
+  return `/watch?stream=${encodeURIComponent(stream.slug || stream.id)}`;
+}
+
 async function supabaseFetch(path, options = {}) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     ...options,
@@ -51,7 +59,6 @@ async function supabaseFetch(path, options = {}) {
   });
 
   const raw = await response.text();
-
   let data = null;
 
   try {
@@ -93,6 +100,105 @@ async function getUserFromAuth(req) {
   if (!response.ok) return null;
 
   return response.json();
+}
+
+async function syncLiveCard(stream) {
+  if (!stream?.id) return null;
+
+  const existingRows = await supabaseFetch(
+    `/live_stream_cards?stream_id=eq.${encode(stream.id)}&select=id&limit=1`
+  );
+
+  const existing = existingRows?.[0];
+
+  const payload = {
+    stream_id: stream.id,
+    creator_id: stream.creator_id,
+    title: stream.title,
+    subtitle: stream.description,
+    card_type: stream.status === "live" ? "live" : "highlight",
+    thumbnail_url: stream.thumbnail_url,
+    cover_url: stream.cover_url,
+    target_url: watchUrl(stream),
+    is_active: ["draft", "scheduled", "live"].includes(stream.status),
+    metadata: {
+      source: "api/live-stream-update.js",
+      status: stream.status,
+      slug: stream.slug
+    },
+    updated_at: new Date().toISOString()
+  };
+
+  if (existing?.id) {
+    const rows = await supabaseFetch(
+      `/live_stream_cards?id=eq.${encode(existing.id)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload)
+      }
+    );
+
+    return rows?.[0] || null;
+  }
+
+  const rows = await supabaseFetch("/live_stream_cards", {
+    method: "POST",
+    body: JSON.stringify({
+      ...payload,
+      created_at: new Date().toISOString()
+    })
+  });
+
+  return rows?.[0] || null;
+}
+
+async function insertAnalyticsEvent({ userId, stream, eventName }) {
+  try {
+    await supabaseFetch("/platform_analytics_events", {
+      method: "POST",
+      body: JSON.stringify({
+        user_id: userId,
+        event_name: eventName,
+        section: "live",
+        target_table: "live_streams",
+        target_id: stream.id,
+        route: "/live",
+        metadata: {
+          title: stream.title,
+          slug: stream.slug,
+          status: stream.status,
+          source: "api/live-stream-update.js"
+        }
+      })
+    });
+  } catch {
+    return null;
+  }
+
+  return true;
+}
+
+async function insertLivekitEvent({ userId, stream, eventType }) {
+  try {
+    await supabaseFetch("/livekit_room_events", {
+      method: "POST",
+      body: JSON.stringify({
+        room_name: stream.livekit_room_name,
+        stream_id: stream.id,
+        event_type: eventType,
+        participant_identity: userId,
+        user_id: userId,
+        payload: {
+          source: "api/live-stream-update.js",
+          status: stream.status
+        }
+      })
+    });
+  } catch {
+    return null;
+  }
+
+  return true;
 }
 
 export default async function handler(req, res) {
@@ -139,7 +245,7 @@ export default async function handler(req, res) {
     }
 
     const rows = await supabaseFetch(
-      `/live_streams?id=eq.${encodeURIComponent(streamId)}&select=*`
+      `/live_streams?id=eq.${encode(streamId)}&select=*`
     );
 
     const existing = rows?.[0];
@@ -171,7 +277,9 @@ export default async function handler(req, res) {
     const category = cleanText(body.category);
     const statusLabel = cleanText(body.status_label || body.statusLabel);
     const displaySlug = cleanText(body.display_slug || body.displaySlug);
-    const displayRoomName = cleanText(body.display_room_name || body.displayRoomName);
+    const displayRoomName = cleanText(
+      body.display_room_name || body.displayRoomName
+    );
     const thumbnailUrl = cleanText(body.thumbnail_url || body.thumbnailUrl);
     const coverUrl = cleanText(body.cover_url || body.coverUrl);
     const recordingUrl = cleanText(body.recording_url || body.recordingUrl);
@@ -196,7 +304,9 @@ export default async function handler(req, res) {
     }
 
     if (body.currency) {
-      patch.currency = cleanText(body.currency, "usd").toLowerCase().slice(0, 8);
+      patch.currency = cleanText(body.currency, "usd")
+        .toLowerCase()
+        .slice(0, 8);
     }
 
     if (body.is_chat_enabled !== undefined || body.isChatEnabled !== undefined) {
@@ -206,7 +316,10 @@ export default async function handler(req, res) {
       );
     }
 
-    if (body.is_cohost_enabled !== undefined || body.isCohostEnabled !== undefined) {
+    if (
+      body.is_cohost_enabled !== undefined ||
+      body.isCohostEnabled !== undefined
+    ) {
       patch.is_cohost_enabled = toBool(
         body.is_cohost_enabled ?? body.isCohostEnabled,
         existing.is_cohost_enabled
@@ -243,16 +356,36 @@ export default async function handler(req, res) {
     };
 
     const updatedRows = await supabaseFetch(
-      `/live_streams?id=eq.${encodeURIComponent(streamId)}`,
+      `/live_streams?id=eq.${encode(streamId)}`,
       {
         method: "PATCH",
         body: JSON.stringify(patch)
       }
     );
 
+    const updated = updatedRows?.[0] || null;
+
+    if (updated) {
+      await syncLiveCard(updated);
+
+      if (status) {
+        await insertAnalyticsEvent({
+          userId: user.id,
+          stream: updated,
+          eventName: `live_stream_${status}`
+        });
+
+        await insertLivekitEvent({
+          userId: user.id,
+          stream: updated,
+          eventType: `stream_${status}`
+        });
+      }
+    }
+
     return json(res, 200, {
       ok: true,
-      stream: updatedRows?.[0] || null
+      stream: updated
     });
   } catch (error) {
     return json(res, 500, {
