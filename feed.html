@@ -10,10 +10,7 @@
 
   <title>Feed • Rich Bizness Mobile</title>
 
-  <meta
-    name="theme-color"
-    content="#050805"
-  />
+  <meta name="theme-color" content="#050805" />
 
   <meta
     name="description"
@@ -27,11 +24,10 @@
   <link rel="stylesheet" href="/styles/cards.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/feed.css" />
-  <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-feed-page">
+<body class="rb-body rb-feed-page" data-page="feed">
 
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
@@ -40,8 +36,7 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
-    <a class="rb-brand" href="/">
+    <a class="rb-brand" href="/" aria-label="Rich Bizness home">
       <span>WELCOME BACK</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
@@ -55,41 +50,28 @@
       <a href="/sports">Sports</a>
       <a href="/profile">Profile</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell rb-feed-shell">
 
     <section class="rb-section-hero">
-
       <div class="rb-section-hero-copy">
+        <p class="rb-kicker">RICH BIZNESS LLC</p>
 
-        <p class="rb-kicker">
-          RICH BIZNESS LLC
-        </p>
-
-        <h1>
-          Feed
-        </h1>
+        <h1>Feed</h1>
 
         <p class="rb-subtitle">
-          Post, react, comment, and keep the Rich Bizness universe fully synced in realtime.
+          Public to watch. Signed-in to post, like, and comment. Every Rich Bizness section can flow back into this realtime feed.
         </p>
-
       </div>
 
-      <a class="rb-back" href="/">
-        ← Back To Portal
-      </a>
-
+      <a class="rb-back" href="/">← Back To Portal</a>
     </section>
 
     <section class="rb-feed-layout">
 
-      <aside class="rb-panel rb-composer-card">
-
+      <aside class="rb-panel rb-composer-card" aria-label="Create feed post">
         <div class="rb-user-strip">
-
           <img
             id="composerAvatar"
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
@@ -97,108 +79,80 @@
           />
 
           <div>
-
-            <strong id="composerName">
-              Rich Bizness User
-            </strong>
-
-            <small id="feedStatus">
-              Loading feed...
-            </small>
-
+            <strong id="composerName">Guest Viewer</strong>
+            <small id="feedStatus">Loading feed...</small>
           </div>
-
         </div>
 
-        <form
-          id="feedForm"
-          class="rb-form"
-        >
-
+        <form id="feedForm" class="rb-form">
           <label for="feedTitle">
-
             Title
-
             <input
               id="feedTitle"
               type="text"
               placeholder="What’s the headline?"
+              autocomplete="off"
             />
-
           </label>
 
           <label for="feedBody">
-
             Post
-
             <textarea
               id="feedBody"
               rows="5"
               placeholder="Say what’s happening in Rich Bizness..."
             ></textarea>
-
           </label>
 
           <label for="feedMediaUrl">
-
             Media URL
-
             <input
               id="feedMediaUrl"
               type="url"
               placeholder="Image, video, or audio URL"
+              inputmode="url"
             />
-
           </label>
 
           <div class="rb-form-row">
-
             <label for="feedMediaType">
-
               Media Type
-
               <select id="feedMediaType">
-                <option value="">None</option>
+                <option value="">Auto / None</option>
                 <option value="image">Image</option>
                 <option value="video">Video</option>
                 <option value="audio">Audio</option>
               </select>
-
             </label>
 
             <label for="feedSection">
-
               Section
-
               <select id="feedSection">
                 <option value="feed">Feed</option>
                 <option value="music">Music</option>
+                <option value="podcast">Podcast</option>
+                <option value="radio">Radio</option>
                 <option value="live">Live</option>
+                <option value="watch">Watch</option>
                 <option value="gaming">Gaming</option>
                 <option value="sports">Sports</option>
                 <option value="gallery">Gallery</option>
                 <option value="store">Store</option>
                 <option value="meta">Meta</option>
               </select>
-
             </label>
-
           </div>
 
           <label for="feedVisibility">
-
             Visibility
-
             <select id="feedVisibility">
               <option value="public">Public</option>
               <option value="followers">Followers</option>
               <option value="private">Private</option>
             </select>
-
           </label>
 
           <div class="rb-form-actions">
-
             <button
               id="feedSubmitBtn"
               type="submit"
@@ -214,85 +168,31 @@
             >
               REFRESH
             </button>
-
           </div>
-
         </form>
-
       </aside>
 
-      <section class="rb-feed-main">
-
+      <section class="rb-feed-main" aria-label="Realtime feed posts">
         <div
           id="feedEmpty"
           class="rb-empty"
-          style="display:none;"
+          hidden
         >
-
-          <h2>
-            No Posts Yet
-          </h2>
-
-          <p>
-            Drop the first Rich Bizness post and start the motion.
-          </p>
-
+          <h2>No Posts Yet</h2>
+          <p>Drop the first Rich Bizness post and start the motion.</p>
         </div>
 
         <div
           id="feedList"
           class="rb-feed-list rb-list-stack"
-        >
-
-          <article class="feed-card rb-panel">
-
-            <header class="feed-card-head">
-
-              <div class="feed-user">
-
-                <img
-                  src="/images/brand/Avatar-hero-Banner.png.jpeg"
-                  alt="Feed User"
-                />
-
-                <span>
-
-                  <strong>
-                    Rich Bizness Universe
-                  </strong>
-
-                  <small>
-                    System feed synced successfully
-                  </small>
-
-                </span>
-
-              </div>
-
-            </header>
-
-            <div class="feed-card-body">
-
-              <p class="feed-body">
-                Realtime feed systems are online. Music, gaming, live, sports, gallery, creator uploads, and notifications are now connected into the Rich Bizness universe layer.
-              </p>
-
-            </div>
-
-          </article>
-
-        </div>
-
+          aria-live="polite"
+        ></div>
       </section>
 
     </section>
 
   </main>
 
-  <script
-    type="module"
-    src="/core/pages/feed.js"
-  ></script>
-
+  <script type="module" src="/core/pages/feed.js"></script>
 </body>
 </html>
