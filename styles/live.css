@@ -36,11 +36,12 @@
 
 .live-holo-top {
   position: relative;
-  z-index: 20;
+  z-index: 60;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  pointer-events: auto;
 }
 
 .live-brand {
@@ -86,6 +87,8 @@
   text-transform: uppercase;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .holo-tv-wrap {
@@ -94,6 +97,7 @@
   display: grid;
   place-items: center;
   perspective: 1100px;
+  pointer-events: none;
 }
 
 .holo-tv {
@@ -113,6 +117,8 @@
     0 0 140px rgba(250, 204, 21, 0.12),
     inset 0 0 90px rgba(255, 255, 255, 0.04);
   transform: rotateX(2deg);
+  isolation: isolate;
+  pointer-events: auto;
 }
 
 .holo-tv::before {
@@ -178,6 +184,7 @@
   min-height: 140px;
   display: grid;
   gap: 10px;
+  pointer-events: none;
 }
 
 .remote-video {
@@ -194,7 +201,7 @@
 .we-lit-float {
   position: absolute;
   left: 50%;
-  top: 10%;
+  top: 8%;
   z-index: 10;
   transform: translateX(-50%);
   color: #fefce8;
@@ -203,6 +210,7 @@
   letter-spacing: -0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+  pointer-events: none;
   text-shadow:
     0 0 18px rgba(0, 255, 157, 0.55),
     0 0 50px rgba(250, 204, 21, 0.34),
@@ -218,12 +226,13 @@
   display: grid;
   gap: 10px;
   max-width: 58%;
+  pointer-events: none;
 }
 
 .holo-room-info p {
   margin: 0;
   color: #7cffaa;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 1000;
   letter-spacing: 0.22em;
 }
@@ -278,13 +287,14 @@
   font-size: 1.15rem;
   font-weight: 1000;
   backdrop-filter: blur(16px);
+  pointer-events: none;
 }
 
 .live-control-dock {
   position: absolute;
   left: 50%;
   bottom: calc(18px + env(safe-area-inset-bottom));
-  z-index: 30;
+  z-index: 80;
   width: min(760px, calc(100vw - 24px));
   transform: translateX(-50%);
   display: grid;
@@ -299,6 +309,7 @@
   box-shadow:
     0 0 36px rgba(0, 255, 157, 0.15),
     0 0 80px rgba(0, 0, 0, 0.62);
+  pointer-events: auto;
 }
 
 .live-control-dock button {
@@ -328,7 +339,7 @@ button:disabled {
   position: absolute;
   left: 18px;
   top: 104px;
-  z-index: 25;
+  z-index: 70;
   width: min(360px, calc(100vw - 36px));
   max-height: 42dvh;
   overflow: auto;
@@ -337,17 +348,26 @@ button:disabled {
   padding: 12px;
   border-radius: 24px;
   border: 1px solid rgba(124, 255, 170, 0.18);
-  background: rgba(0, 0, 0, 0.44);
+  background: rgba(0, 0, 0, 0.66);
   backdrop-filter: blur(18px);
-  opacity: 0.18;
-  transform: scale(0.92);
+  -webkit-backdrop-filter: blur(18px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px) scale(0.96);
   transform-origin: top left;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    visibility 180ms ease;
 }
 
-.live-hidden-setup:focus-within,
-.live-hidden-setup:hover {
+.live-hidden-setup.is-open,
+.live-hidden-setup:focus-within {
   opacity: 1;
-  transform: scale(1);
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .live-hidden-setup input,
@@ -371,10 +391,11 @@ button:disabled {
   position: absolute;
   right: 18px;
   top: 104px;
-  z-index: 25;
+  z-index: 40;
   display: grid;
   gap: 8px;
   width: 180px;
+  pointer-events: none;
 }
 
 .live-overlay-stats span {
@@ -399,11 +420,26 @@ button:disabled {
   position: absolute;
   right: 18px;
   bottom: calc(96px + env(safe-area-inset-bottom));
-  z-index: 26;
+  z-index: 72;
   width: min(360px, calc(100vw - 36px));
   display: grid;
   gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    visibility 180ms ease;
+}
+
+.live-overlay-chat.is-open,
+.live-overlay-chat:focus-within {
+  opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transform: translateY(0);
 }
 
 .live-status {
@@ -417,6 +453,19 @@ button:disabled {
   font-weight: 900;
 }
 
+#liveStatus.live-status {
+  position: fixed;
+  left: 50%;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  z-index: 90;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 28px);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+}
+
 .chat-list,
 .tip-list,
 .mini-list {
@@ -425,6 +474,8 @@ button:disabled {
   max-height: 150px;
   overflow: auto;
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .chat-list li,
@@ -503,7 +554,10 @@ button:disabled {
 
 @media (max-width: 720px) {
   .live-holo-shell {
-    padding: calc(14px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+    padding:
+      calc(14px + env(safe-area-inset-top))
+      12px
+      calc(12px + env(safe-area-inset-bottom));
   }
 
   .live-brand strong {
@@ -528,13 +582,13 @@ button:disabled {
   }
 
   .we-lit-float {
-    top: 12%;
+    top: 8%;
     font-size: clamp(2.6rem, 14vw, 5rem);
   }
 
   .holo-room-info {
     left: 16px;
-    bottom: 16px;
+    bottom: 18px;
     max-width: 70%;
   }
 
@@ -560,14 +614,13 @@ button:disabled {
     left: 12px;
     width: calc(100vw - 24px);
     max-height: 34dvh;
-    opacity: 0.08;
+    transform-origin: bottom left;
   }
 
   .live-overlay-chat {
     right: 12px;
     bottom: calc(96px + env(safe-area-inset-bottom));
     width: calc(100vw - 24px);
-    opacity: 0.88;
   }
 
   .chat-list,
@@ -586,82 +639,10 @@ button:disabled {
     min-height: 44px;
     font-size: 0.62rem;
   }
-}
 
-/* =========================================
-   LIVE HOLOGRAM LAYER LOCK
-   Keep TV clean by default
-========================================= */
-
-.live-hidden-setup {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(14px) scale(0.96);
-}
-
-.live-hidden-setup.is-open,
-.live-hidden-setup:focus-within {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0) scale(1);
-}
-
-.live-overlay-chat {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(14px);
-}
-
-.live-overlay-chat.is-open,
-.live-overlay-chat:focus-within {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-/* status can stay visible without opening full chat */
-#liveStatus.live-status {
-  position: fixed;
-  left: 50%;
-  bottom: calc(92px + env(safe-area-inset-bottom));
-  z-index: 42;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: calc(100vw - 28px);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: none;
-}
-
-/* keep the screen clean */
-.holo-tv {
-  isolation: isolate;
-}
-
-.we-lit-float {
-  top: 8%;
-}
-
-.holo-room-info p {
-  font-size: 0.78rem;
-}
-
-@media (max-width: 720px) {
   #liveStatus.live-status {
     bottom: calc(96px + env(safe-area-inset-bottom));
     font-size: 0.72rem;
     padding: 9px 12px;
-  }
-
-  .we-lit-float {
-    top: 8%;
-  }
-
-  .holo-room-info {
-    bottom: 18px;
   }
 }
