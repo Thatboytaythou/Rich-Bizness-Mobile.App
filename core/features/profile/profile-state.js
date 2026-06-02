@@ -102,7 +102,9 @@ export async function refreshProfileState() {
     } else if (activeProfile?.id) {
       activeProfile = await getProfileById(activeProfile.id);
     } else {
-      activeProfile = await loadActiveProfile({ mode: activeProfileMode });
+      activeProfile = await loadActiveProfile({
+        mode: activeProfileMode
+      });
     }
 
     activeIdentity = getProfileIdentity(activeProfile);
