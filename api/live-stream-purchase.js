@@ -33,6 +33,10 @@ function cleanText(value, fallback = "") {
   return value.trim() || fallback;
 }
 
+function encode(value) {
+  return encodeURIComponent(String(value || ""));
+}
+
 function toCents(value, fallback = 0) {
   const number = Number(value);
   if (!Number.isFinite(number)) return fallback;
@@ -59,7 +63,6 @@ async function supabaseFetch(path, options = {}) {
   });
 
   const raw = await response.text();
-
   let data = null;
 
   try {
@@ -85,9 +88,7 @@ async function getUserFromAuth(req) {
     req.headers.authorization ||
     req.headers.Authorization;
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
+  if (!authHeader?.startsWith("Bearer ")) return null;
 
   const token = authHeader.replace("Bearer ", "").trim();
 
@@ -104,10 +105,10 @@ async function getUserFromAuth(req) {
 }
 
 async function findStream(streamKey) {
-  const value = encodeURIComponent(streamKey);
+  const value = encode(streamKey);
 
   const rows = await supabaseFetch(
-    `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*`
+    `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*&limit=1`
   );
 
   return rows?.[0] || null;
@@ -117,7 +118,7 @@ async function getProfile(userId) {
   if (!userId) return null;
 
   const rows = await supabaseFetch(
-    `/profiles?id=eq.${encodeURIComponent(userId)}&select=id,username,display_name,full_name,avatar_url,role,is_creator,is_verified&limit=1`
+    `/profiles?id=eq.${encode(userId)}&select=id,username,display_name,full_name,avatar_url,role,is_creator,is_verified&limit=1`
   );
 
   return rows?.[0] || null;
@@ -125,13 +126,13 @@ async function getProfile(userId) {
 
 async function existingPaidAccess(streamId, userId) {
   const purchases = await supabaseFetch(
-    `/live_stream_purchases?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&status=eq.paid&select=*&limit=1`
+    `/live_stream_purchases?stream_id=eq.${encode(streamId)}&user_id=eq.${encode(userId)}&status=eq.paid&select=*&limit=1`
   );
 
   if (purchases?.[0]) return purchases[0];
 
   const vip = await supabaseFetch(
-    `/vip_live_access?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&access_status=eq.active&select=*&limit=1`
+    `/vip_live_access?stream_id=eq.${encode(streamId)}&user_id=eq.${encode(userId)}&access_status=eq.active&select=*&limit=1`
   );
 
   return vip?.[0] || null;
@@ -256,7 +257,9 @@ export default async function handler(req, res) {
       });
     }
 
-    const currency = cleanText(stream.currency, "usd").toLowerCase();
+    const currency = cleanText(stream.currency, "usd")
+      .toLowerCase()
+      .slice(0, 8);
 
     const platformFeeCents = calcFee(amountCents);
     const creatorAmountCents = Math.max(
@@ -264,34 +267,31 @@ export default async function handler(req, res) {
       amountCents - platformFeeCents
     );
 
-    const purchaseRows = await supabaseFetch(
-      "/live_stream_purchases",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          stream_id: stream.id,
-          user_id: user.id,
-          amount_cents: amountCents,
-          platform_fee_cents: platformFeeCents,
-          creator_amount_cents: creatorAmountCents,
-          currency,
-          status: "pending",
-          metadata: {
-            app: "Rich Bizness Mobile",
-            source: "api/live-stream-purchase.js",
-            access_type: accessType,
-            buyer_username: profile?.username || null,
-            buyer_display_name:
-              profile?.display_name ||
-              profile?.full_name ||
-              null,
-            creator_id: stream.creator_id,
-            stream_slug: stream.slug,
-            livekit_room_name: stream.livekit_room_name
-          }
-        })
-      }
-    );
+    const purchaseRows = await supabaseFetch("/live_stream_purchases", {
+      method: "POST",
+      body: JSON.stringify({
+        stream_id: stream.id,
+        user_id: user.id,
+        amount_cents: amountCents,
+        platform_fee_cents: platformFeeCents,
+        creator_amount_cents: creatorAmountCents,
+        currency,
+        status: "pending",
+        metadata: {
+          app: "Rich Bizness Mobile",
+          source: "api/live-stream-purchase.js",
+          access_type: accessType,
+          buyer_username: profile?.username || null,
+          buyer_display_name:
+            profile?.display_name ||
+            profile?.full_name ||
+            null,
+          creator_id: stream.creator_id,
+          stream_slug: stream.slug,
+          livekit_room_name: stream.livekit_room_name
+        }
+      })
+    });
 
     const purchase = purchaseRows?.[0];
 
@@ -299,7 +299,7 @@ export default async function handler(req, res) {
       throw new Error("Purchase record was not created.");
     }
 
-    const streamRoute = encodeURIComponent(stream.slug || stream.id);
+    const streamRoute = encode(stream.slug || stream.id);
 
     const successUrl =
       `${APP_URL}/watch?stream=${streamRoute}` +
@@ -363,8 +363,8 @@ export default async function handler(req, res) {
       }
     });
 
-    await supabaseFetch(
-      `/live_stream_purchases?id=eq.${encodeURIComponent(purchase.id)}`,
+    const updatedPurchaseRows = await supabaseFetch(
+      `/live_stream_purchases?id=eq.${encode(purchase.id)}`,
       {
         method: "PATCH",
         body: JSON.stringify({
@@ -409,8 +409,10 @@ export default async function handler(req, res) {
     return json(res, 200, {
       ok: true,
       checkout_url: session.url,
+      url: session.url,
       session_id: session.id,
       purchase_id: purchase.id,
+      purchase: updatedPurchaseRows?.[0] || purchase,
       stream_id: stream.id,
       amount_cents: amountCents,
       platform_fee_cents: platformFeeCents,
