@@ -7,8 +7,7 @@
 ========================================= */
 
 import {
-  RB_TABLES,
-  RB_ROUTES
+  RB_TABLES
 } from "/core/shared/rb-config.js";
 
 import {
@@ -29,9 +28,33 @@ import {
 
 import {
   profileAvatar,
-  profileName,
-  profileHandle
+  profileName
 } from "/core/shared/rb-profile.js";
+
+import {
+  setFeedLoading,
+  setFeedPosts,
+  setFeedError
+} from "/core/features/feed/feed-state.js";
+
+import {
+  renderFeedList,
+  renderComposerIdentity,
+  renderCommentList
+} from "/core/features/feed/feed-render.js";
+
+import {
+  createFeedPost,
+  toggleFeedLike,
+  addFeedView,
+  addFeedComment,
+  loadFeedComments
+} from "/core/features/feed/feed-actions.js";
+
+import {
+  bindFeedRealtime,
+  clearFeedRealtime
+} from "/core/features/feed/feed-realtime.js";
 
 const supabase = getSupabase();
 
@@ -60,9 +83,9 @@ const FEED = {
   user: null,
   profile: null,
   posts: [],
-  channel: null,
   actionsBound: false,
-  booted: false
+  booted: false,
+  openComments: new Set()
 };
 
 function safeText(value, fallback = "") {
@@ -73,28 +96,10 @@ function setStatus(text) {
   if (els.status) els.status.textContent = text;
 }
 
-function escapeHtml(value = "") {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function timeAgo(value) {
-  if (!value) return "";
-
-  const diff = Date.now() - new Date(value).getTime();
-  const mins = Math.floor(diff / 60000);
-
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m`;
-
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-
-  return `${Math.floor(hrs / 24)}d`;
+function signInUrl() {
+  return `/auth?next=${encodeURIComponent(
+    window.location.pathname + window.location.search
+  )}`;
 }
 
 function currentAvatar() {
@@ -105,83 +110,13 @@ function currentName() {
   return profileName(FEED.profile) || "Rich Bizness User";
 }
 
-function currentUsername() {
-  return String(profileHandle(FEED.profile) || "@rich_user").replace("@", "");
-}
-
-function profileUrl(userId) {
-  return `${RB_ROUTES.profile || "/profile"}?id=${encodeURIComponent(userId)}`;
-}
-
-function signInUrl() {
-  return `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(window.location.pathname)}`;
-}
-
 function paintComposer() {
-  if (els.composerAvatar) els.composerAvatar.src = currentAvatar();
-
-  if (els.composerName) {
-    els.composerName.textContent = FEED.user?.id
-      ? currentName()
-      : "Guest Viewer";
-  }
-}
-
-function mediaHtml(post) {
-  const url = safeText(post.media_url || post.file_url || post.image_url);
-  if (!url) return "";
-
-  const type = safeText(post.media_type, "image").toLowerCase();
-
-  if (type.includes("video")) {
-    return `<video class="feed-media" src="${escapeHtml(url)}" controls playsinline></video>`;
-  }
-
-  if (type.includes("audio")) {
-    return `<audio class="feed-audio" src="${escapeHtml(url)}" controls></audio>`;
-  }
-
-  return `<img class="feed-media" src="${escapeHtml(url)}" alt="${escapeHtml(post.title || "Feed media")}" loading="lazy" />`;
-}
-
-function postCard(post) {
-  const avatar = post.avatar_url || DEFAULT_AVATAR;
-  const name = post.display_name || post.username || "Rich User";
-  const username = post.username || "rich_user";
-
-  return `
-    <article class="feed-card rb-feed-card" data-post-id="${escapeHtml(post.id)}">
-      <header class="feed-card-head">
-        <a class="feed-user" href="${profileUrl(post.user_id)}">
-          <img src="${escapeHtml(avatar)}" alt="" />
-          <span>
-            <strong>${escapeHtml(name)}</strong>
-            <small>@${escapeHtml(username)} · ${escapeHtml(timeAgo(post.created_at))}</small>
-          </span>
-        </a>
-
-        <span class="feed-chip">${escapeHtml(post.section || "feed")}</span>
-      </header>
-
-      ${post.title ? `<h2>${escapeHtml(post.title)}</h2>` : ""}
-      ${post.body ? `<p class="feed-body">${escapeHtml(post.body)}</p>` : ""}
-
-      ${mediaHtml(post)}
-
-      <footer class="feed-actions">
-        <button type="button" data-action="like" data-id="${escapeHtml(post.id)}">💚 <span>${Number(post.like_count || 0)}</span></button>
-        <button type="button" data-action="comment" data-id="${escapeHtml(post.id)}">💬 <span>${Number(post.comment_count || 0)}</span></button>
-        <button type="button" data-action="view" data-id="${escapeHtml(post.id)}">👁 <span>${Number(post.view_count || 0)}</span></button>
-      </footer>
-
-      <form class="feed-comment-form" data-comment-form="${escapeHtml(post.id)}">
-        <input type="text" placeholder="Drop a Rich Bizness comment..." />
-        <button type="submit">Send</button>
-      </form>
-
-      <div class="feed-comments" data-comments="${escapeHtml(post.id)}"></div>
-    </article>
-  `;
+  renderComposerIdentity({
+    avatarEl: els.composerAvatar,
+    nameEl: els.composerName,
+    avatarUrl: FEED.user?.id ? currentAvatar() : DEFAULT_AVATAR,
+    displayName: FEED.user?.id ? currentName() : "Guest Viewer"
+  });
 }
 
 async function initFeedAuth() {
@@ -189,7 +124,7 @@ async function initFeedAuth() {
 
   const auth = getAuthState();
 
-  FEED.user = auth.user || null;
+  FEED.user = auth.user || getUser() || null;
   FEED.profile = auth.profile || null;
 
   if (FEED.user?.id) {
@@ -211,6 +146,7 @@ async function initFeedAuth() {
 async function loadPosts() {
   if (!els.list) return;
 
+  setFeedLoading(true);
   setStatus("Loading feed...");
 
   const { data, error } = await supabase
@@ -222,6 +158,7 @@ async function loadPosts() {
     .limit(50);
 
   if (error) {
+    setFeedError(error);
     setStatus(error.message);
     return;
   }
@@ -248,27 +185,35 @@ async function loadPosts() {
 
     return {
       ...post,
-      avatar_url: post.avatar_url || profile.avatar_url || DEFAULT_AVATAR,
-      username: post.username || profile.username || "rich_user",
-      display_name: post.display_name || profile.display_name || "Rich User"
+      avatar_url:
+        post.avatar_url ||
+        post.metadata?.profile_avatar ||
+        profile.avatar_url ||
+        DEFAULT_AVATAR,
+      username:
+        post.username ||
+        profile.username ||
+        "rich_user",
+      display_name:
+        post.display_name ||
+        profile.display_name ||
+        profile.username ||
+        "Rich User"
     };
   });
 
-  renderPosts();
+  setFeedPosts(FEED.posts);
+
+  renderFeedList({
+    target: els.list,
+    posts: FEED.posts,
+    emptyTarget: els.empty,
+    options: {
+      openComments: Array.from(FEED.openComments)
+    }
+  });
+
   setStatus(`${FEED.posts.length} feed posts loaded.`);
-}
-
-function renderPosts() {
-  if (!els.list) return;
-
-  if (!FEED.posts.length) {
-    els.list.innerHTML = "";
-    if (els.empty) els.empty.style.display = "block";
-    return;
-  }
-
-  if (els.empty) els.empty.style.display = "none";
-  els.list.innerHTML = FEED.posts.map(postCard).join("");
 }
 
 async function createPost(event) {
@@ -280,200 +225,87 @@ async function createPost(event) {
     return;
   }
 
-  const body = safeText(els.body?.value);
-  const mediaUrl = safeText(els.mediaUrl?.value);
-  const title = safeText(els.title?.value);
-
-  if (!body && !mediaUrl && !title) {
-    setStatus("Add text, title, or media first.");
-    return;
-  }
-
   if (els.submit) els.submit.disabled = true;
 
-  const payload = {
-    user_id: FEED.user.id,
-    username: currentUsername(),
-    display_name: currentName(),
-    title: title || null,
-    body: body || null,
-    media_url: mediaUrl || null,
-    media_type: safeText(els.mediaType?.value, mediaUrl ? "image" : ""),
-    section: safeText(els.section?.value, "feed"),
-    visibility: safeText(els.visibility?.value, "public"),
-    like_count: 0,
-    comment_count: 0,
-    repost_count: 0,
-    view_count: 0,
-    metadata: {
-      source: "feed.js",
-      app: "Rich Bizness Mobile",
-      profile_avatar: currentAvatar()
-    }
-  };
-
-  const { error } = await supabase
-    .from(RB_TABLES.feedPosts)
-    .insert(payload);
-
-  if (error) {
-    setStatus(error.message);
-  } else {
-    els.form?.reset();
-    setStatus("Posted to feed.");
-    await loadPosts();
-  }
-
-  if (els.submit) els.submit.disabled = false;
-}
-
-async function likePost(postId) {
-  if (!FEED.user?.id) {
-    setStatus("Sign in to like.");
-    window.location.href = signInUrl();
-    return;
-  }
-
-  const { data: existing } = await supabase
-    .from(RB_TABLES.feedPostLikes)
-    .select("id")
-    .eq("post_id", postId)
-    .eq("user_id", FEED.user.id)
-    .maybeSingle();
-
-  if (existing?.id) {
-    await supabase
-      .from(RB_TABLES.feedPostLikes)
-      .delete()
-      .eq("id", existing.id);
-  } else {
-    await supabase.from(RB_TABLES.feedPostLikes).insert({
-      post_id: postId,
-      user_id: FEED.user.id
-    });
-  }
-
-  await syncLikeCount(postId);
-}
-
-async function syncLikeCount(postId) {
-  const { count } = await supabase
-    .from(RB_TABLES.feedPostLikes)
-    .select("*", { count: "exact", head: true })
-    .eq("post_id", postId);
-
-  await supabase
-    .from(RB_TABLES.feedPosts)
-    .update({
-      like_count: count || 0,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", postId);
-}
-
-async function addView(postId) {
-  const sessionId =
-    localStorage.getItem("rb_session_id") ||
-    crypto.randomUUID();
-
-  localStorage.setItem("rb_session_id", sessionId);
-
-  await supabase.from(RB_TABLES.feedPostViews).insert({
-    post_id: postId,
-    user_id: FEED.user?.id || null,
-    session_id: sessionId
-  });
-
-  const { count } = await supabase
-    .from(RB_TABLES.feedPostViews)
-    .select("*", { count: "exact", head: true })
-    .eq("post_id", postId);
-
-  await supabase
-    .from(RB_TABLES.feedPosts)
-    .update({
-      view_count: count || 0,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", postId);
-}
-
-async function addComment(postId, input) {
-  if (!FEED.user?.id) {
-    setStatus("Sign in to comment.");
-    window.location.href = signInUrl();
-    return;
-  }
-
-  const body = safeText(input?.value);
-  if (!body) return;
-
-  input.disabled = true;
-
-  const { error } = await supabase
-    .from(RB_TABLES.feedComments)
-    .insert({
-      post_id: postId,
-      user_id: FEED.user.id,
-      username: currentUsername(),
-      display_name: currentName(),
-      body,
+  try {
+    await createFeedPost({
+      title: safeText(els.title?.value),
+      body: safeText(els.body?.value),
+      mediaUrl: safeText(els.mediaUrl?.value),
+      mediaType: safeText(els.mediaType?.value),
+      section: safeText(els.section?.value, "feed"),
+      visibility: safeText(els.visibility?.value, "public"),
       metadata: {
-        source: "feed.js",
-        avatar_url: currentAvatar()
+        source_page: "feed.js"
       }
     });
 
-  if (error) {
-    setStatus(error.message);
-  } else {
-    input.value = "";
-    await syncCommentCount(postId);
-    await loadComments(postId);
+    els.form?.reset();
+    setStatus("Posted to feed.");
+    await loadPosts();
+  } catch (error) {
+    setStatus(error?.message || "Post failed.");
+  } finally {
+    if (els.submit) els.submit.disabled = false;
   }
-
-  input.disabled = false;
 }
 
-async function syncCommentCount(postId) {
-  const { count } = await supabase
-    .from(RB_TABLES.feedComments)
-    .select("*", { count: "exact", head: true })
-    .eq("post_id", postId);
-
-  await supabase
-    .from(RB_TABLES.feedPosts)
-    .update({
-      comment_count: count || 0,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", postId);
+async function handleLike(postId) {
+  try {
+    await toggleFeedLike(postId);
+    await loadPosts();
+  } catch (error) {
+    setStatus(error?.message || "Like failed.");
+  }
 }
 
-async function loadComments(postId) {
-  const holder = document.querySelector(
-    `[data-comments="${CSS.escape(postId)}"]`
-  );
+async function handleView(postId) {
+  try {
+    await addFeedView(postId);
+    await loadPosts();
+  } catch (error) {
+    setStatus(error?.message || "View failed.");
+  }
+}
 
-  if (!holder) return;
+async function handleComments(postId) {
+  try {
+    FEED.openComments.add(postId);
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.feedComments)
-    .select("*")
-    .eq("post_id", postId)
-    .order("created_at", { ascending: true })
-    .limit(25);
+    const comments = await loadFeedComments(postId);
 
-  if (error) return;
+    renderCommentList({
+      postId,
+      comments
+    });
+  } catch (error) {
+    setStatus(error?.message || "Comments failed.");
+  }
+}
 
-  holder.innerHTML = (data || [])
-    .map((comment) => `
-      <div class="feed-comment">
-        <strong>${escapeHtml(comment.display_name || comment.username || "Rich User")}</strong>
-        <span>${escapeHtml(comment.body)}</span>
-      </div>
-    `)
-    .join("");
+async function handleCommentSubmit(form) {
+  const postId = form.dataset.commentForm;
+  const input = form.querySelector("input");
+
+  if (!postId || !input) return;
+
+  try {
+    await addFeedComment(postId, input.value);
+    input.value = "";
+
+    FEED.openComments.add(postId);
+
+    const comments = await loadFeedComments(postId);
+
+    await loadPosts();
+
+    renderCommentList({
+      postId,
+      comments
+    });
+  } catch (error) {
+    setStatus(error?.message || "Comment failed.");
+  }
 }
 
 function bindClicks() {
@@ -487,11 +319,11 @@ function bindClicks() {
     const id = btn.dataset.id;
     const action = btn.dataset.action;
 
-    if (action === "like") await likePost(id);
-    if (action === "view") await addView(id);
-    if (action === "comment") await loadComments(id);
+    if (!id) return;
 
-    await loadPosts();
+    if (action === "like") await handleLike(id);
+    if (action === "view") await handleView(id);
+    if (action === "comment") await handleComments(id);
   });
 
   document.addEventListener("submit", async (event) => {
@@ -499,30 +331,8 @@ function bindClicks() {
     if (!form) return;
 
     event.preventDefault();
-
-    const postId = form.dataset.commentForm;
-    const input = form.querySelector("input");
-
-    await addComment(postId, input);
-    await loadPosts();
+    await handleCommentSubmit(form);
   });
-}
-
-function bindRealtime() {
-  if (FEED.channel) {
-    supabase.removeChannel(FEED.channel);
-  }
-
-  FEED.channel = supabase
-    .channel("rich-bizness-feed-sync")
-    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.feedPosts }, loadPosts)
-    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.feedComments }, loadPosts)
-    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.feedPostLikes }, loadPosts)
-    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.profiles }, async () => {
-      await initFeedAuth();
-      await loadPosts();
-    })
-    .subscribe();
 }
 
 function bindUI() {
@@ -530,9 +340,11 @@ function bindUI() {
   els.refresh?.addEventListener("click", loadPosts);
 
   onProfileState((profileState) => {
-    if (!profileState.ready || !profileState.profile) return;
+    if (!profileState.ready) return;
 
-    FEED.profile = profileState.profile;
+    FEED.profile = profileState.profile || FEED.profile;
+    FEED.user = profileState.auth?.user || FEED.user;
+
     paintComposer();
   });
 }
@@ -551,7 +363,13 @@ async function init() {
   await initFeedAuth();
   await loadPosts();
 
-  bindRealtime();
+  bindFeedRealtime({
+    onRefresh: loadPosts
+  });
+
+  window.addEventListener("beforeunload", () => {
+    clearFeedRealtime();
+  });
 
   document.body.classList.add("rb-feed-ready");
 
@@ -560,5 +378,6 @@ async function init() {
 
 init().catch((error) => {
   console.error("[RB FEED INIT FAILED]", error);
+  setFeedError(error);
   setStatus(error?.message || "Feed failed to load.");
 });
