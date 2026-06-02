@@ -15,6 +15,7 @@ import {
 } from "/core/shared/rb-auth.js";
 
 const DEFAULT_AUTH_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_AUTH_BANNER = "/images/brand/hero-banner.png";
 
 let authReady = false;
 let refreshRunning = false;
@@ -39,7 +40,15 @@ export function getAuthState() {
     session: getSession(),
     user,
     profile,
-    isAuthed: !!user?.id
+    isAuthed: !!user?.id,
+    id: profile?.id || user?.id || null,
+    user_id: profile?.id || user?.id || null,
+    username: getAuthUsername(),
+    display_name: getAuthDisplayName(),
+    avatar_url: getAuthAvatar(),
+    banner_url: getAuthBanner(),
+    role: getAuthRole(),
+    flags: getAuthFlags()
   };
 }
 
@@ -98,6 +107,12 @@ export function notifyAuthListeners() {
       console.warn("[RB AUTH LISTENER ERROR]", error);
     }
   });
+
+  window.dispatchEvent(
+    new CustomEvent("rb:auth-state", {
+      detail: state
+    })
+  );
 }
 
 export function requireAuthState() {
@@ -155,6 +170,12 @@ export function getAuthAvatar() {
   const profile = getProfile();
 
   return profile?.avatar_url || DEFAULT_AUTH_AVATAR;
+}
+
+export function getAuthBanner() {
+  const profile = getProfile();
+
+  return profile?.banner_url || DEFAULT_AUTH_BANNER;
 }
 
 export function getAuthFlags() {
