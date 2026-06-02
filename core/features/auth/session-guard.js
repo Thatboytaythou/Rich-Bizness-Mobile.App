@@ -14,6 +14,7 @@ import {
   isSellerRoute,
   isArtistRoute,
   isAdminRoute,
+  isSecretRoute,
   getCurrentPath
 } from "/core/shared/rb-router.js";
 
@@ -150,6 +151,10 @@ export async function autoGuardCurrentPage() {
     return await requireAdmin();
   }
 
+  if (isSecretRoute(path)) {
+    return await requireCreator();
+  }
+
   if (isCreatorRoute(path)) {
     return await requireCreator();
   }
@@ -174,7 +179,7 @@ export function currentPathIsProtected() {
 }
 
 export function currentPathNeedsCreator() {
-  return isCreatorRoute(getCurrentPath());
+  return isCreatorRoute(getCurrentPath()) || isSecretRoute(getCurrentPath());
 }
 
 export function currentPathNeedsSeller() {
@@ -187,6 +192,10 @@ export function currentPathNeedsArtist() {
 
 export function currentPathNeedsAdmin() {
   return isAdminRoute(getCurrentPath());
+}
+
+export function currentPathNeedsSecretAccess() {
+  return isSecretRoute(getCurrentPath());
 }
 
 console.log("RB SESSION GUARD READY");
