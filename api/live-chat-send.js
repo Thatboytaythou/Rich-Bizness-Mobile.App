@@ -19,6 +19,10 @@ function isUuid(value) {
   );
 }
 
+function encode(value) {
+  return encodeURIComponent(String(value || ""));
+}
+
 async function supabaseFetch(path, options = {}) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     ...options,
@@ -31,13 +35,13 @@ async function supabaseFetch(path, options = {}) {
     }
   });
 
-  const text = await response.text();
+  const raw = await response.text();
   let data = null;
 
   try {
-    data = text ? JSON.parse(text) : null;
+    data = raw ? JSON.parse(raw) : null;
   } catch {
-    data = text;
+    data = raw;
   }
 
   if (!response.ok) {
@@ -53,7 +57,9 @@ async function supabaseFetch(path, options = {}) {
 }
 
 async function getUserFromAuth(req) {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const authHeader =
+    req.headers.authorization ||
+    req.headers.Authorization;
 
   if (!authHeader?.startsWith("Bearer ")) return null;
 
@@ -72,7 +78,7 @@ async function getUserFromAuth(req) {
 }
 
 async function findStream(streamKey) {
-  const value = encodeURIComponent(streamKey);
+  const value = encode(streamKey);
 
   if (isUuid(streamKey)) {
     const rows = await supabaseFetch(
@@ -90,8 +96,10 @@ async function findStream(streamKey) {
 }
 
 async function getProfile(userId) {
+  if (!userId) return null;
+
   const rows = await supabaseFetch(
-    `/profiles?id=eq.${encodeURIComponent(
+    `/profiles?id=eq.${encode(
       userId
     )}&select=id,username,display_name,avatar_url,role,is_verified&limit=1`
   );
@@ -100,19 +108,29 @@ async function getProfile(userId) {
 }
 
 async function isBanned(streamId, userId) {
+  if (!streamId || !userId) return false;
+
   const rows = await supabaseFetch(
-    `/live_stream_bans?stream_id=eq.${encodeURIComponent(
+    `/live_stream_bans?stream_id=eq.${encode(
       streamId
-    )}&banned_user_id=eq.${encodeURIComponent(
+    )}&banned_user_id=eq.${encode(
       userId
     )}&select=id,expires_at&limit=1`
   );
 
   const ban = rows?.[0];
+
   if (!ban) return false;
   if (!ban.expires_at) return true;
 
   return new Date(ban.expires_at).getTime() > Date.now();
+}
+
+function normalizeMessage(value = "") {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 500);
 }
 
 export default async function handler(req, res) {
@@ -120,7 +138,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
 
   if (req.method !== "POST") {
     return json(res, 405, {
@@ -157,7 +177,10 @@ export default async function handler(req, res) {
         body.livekit_room_name
     );
 
-    const message = cleanText(body.message || body.body);
+    const message = normalizeMessage(
+      body.message ||
+        body.body
+    );
 
     if (!streamKey) {
       return json(res, 400, {
@@ -236,15 +259,15 @@ export default async function handler(req, res) {
         is_deleted: false,
         metadata: {
           app: "Rich Bizness Mobile",
-          source: "api/live-chat-send",
+          source: "api/live-chat-send.js",
           avatar_url: profile?.avatar_url || null,
-          is_verified: profile?.is_verified || false,
+          is_verified: !!profile?.is_verified,
           role: profile?.role || "user"
         }
       })
     });
 
-    await supabaseFetch(`/live_streams?id=eq.${encodeURIComponent(stream.id)}`, {
+    await supabaseFetch(`/live_streams?id=eq.${encode(stream.id)}`, {
       method: "PATCH",
       body: JSON.stringify({
         total_chat_messages: Number(stream.total_chat_messages || 0) + 1,
