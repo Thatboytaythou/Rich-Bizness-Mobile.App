@@ -1,14 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL =
-  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
 
 const supabase =
   SUPABASE_URL && SERVICE_KEY
-    ? createClient(SUPABASE_URL, SERVICE_KEY)
+    ? createClient(SUPABASE_URL, SERVICE_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        }
+      })
     : null;
 
 function json(res, status, payload) {
@@ -25,12 +32,24 @@ function isUuid(value) {
   );
 }
 
+function validDateOrNull(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toISOString();
+}
+
 async function getUserFromRequest(req) {
   const auth = req.headers.authorization || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+
   if (!token) return null;
 
   const { data, error } = await supabase.auth.getUser(token);
+
   if (error || !data?.user) return null;
 
   return data.user;
@@ -56,12 +75,107 @@ async function findStream(streamKey) {
   return data || null;
 }
 
+async function getProfile(userId) {
+  if (!userId) return null;
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, role, is_creator, is_verified")
+    .eq("id", userId)
+    .maybeSingle();
+
+  return data || null;
+}
+
 async function safeInsert(table, payload) {
   try {
-    await supabase.from(table).insert(payload);
+    const { data, error } = await supabase
+      .from(table)
+      .insert(payload)
+      .select("*")
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return data || null;
   } catch (error) {
     console.warn(`[${table}] optional insert skipped`, error?.message || error);
+    return null;
   }
+}
+
+async function getModeratorMembership(streamId, userId) {
+  const { data } = await supabase
+    .from("live_stream_members")
+    .select("role, status")
+    .eq("stream_id", streamId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return data || null;
+}
+
+function canModerate({ user, profile, stream, member }) {
+  if (!user?.id) return false;
+  if (stream.creator_id === user.id) return true;
+
+  const appRole = clean(profile?.role).toLowerCase();
+  const streamRole = clean(member?.role).toLowerCase();
+
+  return (
+    [
+      "founder",
+      "rich_admin",
+      "elite_mod",
+      "admin",
+      "moderator",
+      "support"
+    ].includes(appRole) ||
+    [
+      "host",
+      "cohost",
+      "moderator"
+    ].includes(streamRole)
+  );
+}
+
+async function upsertBan(banPayload) {
+  const { data: existing } = await supabase
+    .from("live_stream_bans")
+    .select("id, metadata")
+    .eq("stream_id", banPayload.stream_id)
+    .eq("banned_user_id", banPayload.banned_user_id)
+    .maybeSingle();
+
+  if (existing?.id) {
+    const { data, error } = await supabase
+      .from("live_stream_bans")
+      .update({
+        ...banPayload,
+        metadata: {
+          ...(existing.metadata || {}),
+          ...(banPayload.metadata || {}),
+          updated_by_api: true
+        }
+      })
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  }
+
+  const { data, error } = await supabase
+    .from("live_stream_bans")
+    .insert(banPayload)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  return data;
 }
 
 export default async function handler(req, res) {
@@ -69,10 +183,15 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
 
   if (req.method !== "POST") {
-    return json(res, 405, { ok: false, error: "Method not allowed" });
+    return json(res, 405, {
+      ok: false,
+      error: "Method not allowed"
+    });
   }
 
   try {
@@ -86,7 +205,10 @@ export default async function handler(req, res) {
     const user = await getUserFromRequest(req);
 
     if (!user?.id) {
-      return json(res, 401, { ok: false, error: "Login required" });
+      return json(res, 401, {
+        ok: false,
+        error: "Login required"
+      });
     }
 
     const body = req.body || {};
@@ -100,9 +222,15 @@ export default async function handler(req, res) {
         body.livekit_room_name
     );
 
-    const bannedUserId = clean(body.banned_user_id || body.bannedUserId);
+    const bannedUserId = clean(
+      body.banned_user_id ||
+        body.bannedUserId ||
+        body.user_id ||
+        body.userId
+    );
+
     const reason = clean(body.reason, "Removed from live stream");
-    const expiresAt = body.expires_at || body.expiresAt || null;
+    const expiresAt = validDateOrNull(body.expires_at || body.expiresAt);
 
     if (!streamKey || !bannedUserId) {
       return json(res, 400, {
@@ -111,24 +239,28 @@ export default async function handler(req, res) {
       });
     }
 
+    if (!isUuid(bannedUserId)) {
+      return json(res, 400, {
+        ok: false,
+        error: "banned_user_id must be a valid user id"
+      });
+    }
+
     const stream = await findStream(streamKey);
 
     if (!stream?.id) {
-      return json(res, 404, { ok: false, error: "Live stream not found" });
+      return json(res, 404, {
+        ok: false,
+        error: "Live stream not found"
+      });
     }
 
-    const { data: member } = await supabase
-      .from("live_stream_members")
-      .select("role, status")
-      .eq("stream_id", stream.id)
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const [profile, member] = await Promise.all([
+      getProfile(user.id),
+      getModeratorMembership(stream.id, user.id)
+    ]);
 
-    const isHost = stream.creator_id === user.id;
-    const canModerate =
-      isHost || ["host", "cohost", "moderator"].includes(member?.role);
-
-    if (!canModerate) {
+    if (!canModerate({ user, profile, stream, member })) {
       return json(res, 403, {
         ok: false,
         error: "You do not have permission to ban users from this stream"
@@ -142,6 +274,15 @@ export default async function handler(req, res) {
       });
     }
 
+    if (bannedUserId === user.id) {
+      return json(res, 400, {
+        ok: false,
+        error: "You cannot ban yourself"
+      });
+    }
+
+    const now = new Date().toISOString();
+
     const banPayload = {
       stream_id: stream.id,
       banned_user_id: bannedUserId,
@@ -150,33 +291,27 @@ export default async function handler(req, res) {
       expires_at: expiresAt,
       metadata: {
         app: "Rich Bizness Mobile",
-        source: "api/live-moderation-ban",
+        source: "api/live-moderation-ban.js",
         stream_title: stream.title || null,
         stream_slug: stream.slug || null,
-        livekit_room_name: stream.livekit_room_name || null
+        livekit_room_name: stream.livekit_room_name || null,
+        moderated_by_role: profile?.role || member?.role || "host",
+        moderated_at: now
       }
     };
 
-    const { data: ban, error: banError } = await supabase
-      .from("live_stream_bans")
-      .upsert(banPayload, {
-        onConflict: "stream_id,banned_user_id"
-      })
-      .select("*")
-      .single();
-
-    if (banError) throw banError;
+    const ban = await upsertBan(banPayload);
 
     await supabase
       .from("live_stream_members")
       .update({
         status: "blocked",
-        left_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        left_at: now,
+        updated_at: now,
         metadata: {
           blocked_by: user.id,
           reason,
-          source: "api/live-moderation-ban"
+          source: "api/live-moderation-ban.js"
         }
       })
       .eq("stream_id", stream.id)
@@ -185,11 +320,12 @@ export default async function handler(req, res) {
     await supabase
       .from("live_view_sessions")
       .update({
-        left_at: new Date().toISOString(),
+        left_at: now,
         metadata: {
           ended_by: "moderation_ban",
           banned_by: user.id,
-          reason
+          reason,
+          source: "api/live-moderation-ban.js"
         }
       })
       .eq("stream_id", stream.id)
@@ -211,7 +347,7 @@ export default async function handler(req, res) {
       metadata: {
         stream_id: stream.id,
         ban_id: ban.id,
-        source: "api/live-moderation-ban"
+        source: "api/live-moderation-ban.js"
       }
     });
 
@@ -224,14 +360,31 @@ export default async function handler(req, res) {
       metadata: {
         stream_id: stream.id,
         banned_user_id: bannedUserId,
-        reason
+        reason,
+        source: "api/live-moderation-ban.js"
+      }
+    });
+
+    await safeInsert("moderation_reports", {
+      reporter_id: user.id,
+      reported_user_id: bannedUserId,
+      target_table: "live_streams",
+      target_id: stream.id,
+      reason,
+      details: "Live stream moderation ban",
+      status: "resolved",
+      priority: "high",
+      metadata: {
+        ban_id: ban.id,
+        source: "api/live-moderation-ban.js"
       }
     });
 
     return json(res, 200, {
       ok: true,
       ban,
-      stream_id: stream.id
+      stream_id: stream.id,
+      banned_user_id: bannedUserId
     });
   } catch (error) {
     return json(res, 500, {
