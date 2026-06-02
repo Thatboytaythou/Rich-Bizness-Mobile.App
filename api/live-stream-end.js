@@ -15,6 +15,10 @@ function cleanText(value, fallback = "") {
   return value.trim() || fallback;
 }
 
+function encode(value) {
+  return encodeURIComponent(String(value || ""));
+}
+
 async function supabaseFetch(path, options = {}) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     ...options,
@@ -28,7 +32,6 @@ async function supabaseFetch(path, options = {}) {
   });
 
   const raw = await response.text();
-
   let data = null;
 
   try {
@@ -73,10 +76,10 @@ async function getUserFromAuth(req) {
 }
 
 async function findStream(streamKey) {
-  const value = encodeURIComponent(streamKey);
+  const value = encode(streamKey);
 
   const rows = await supabaseFetch(
-    `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*`
+    `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*&limit=1`
   );
 
   return rows?.[0] || null;
@@ -86,7 +89,7 @@ async function getProfile(userId) {
   if (!userId) return null;
 
   const rows = await supabaseFetch(
-    `/profiles?id=eq.${encodeURIComponent(userId)}&select=id,username,display_name,role,is_creator,is_verified&limit=1`
+    `/profiles?id=eq.${encode(userId)}&select=id,username,display_name,role,is_creator,is_verified&limit=1`
   );
 
   return rows?.[0] || null;
@@ -98,11 +101,73 @@ function canEndStream({ user, profile, stream }) {
 
   const role = cleanText(profile?.role).toLowerCase();
 
-  return (
-    role === "admin" ||
-    role === "founder" ||
-    role === "rich_admin"
+  return [
+    "admin",
+    "founder",
+    "rich_admin",
+    "elite_mod"
+  ].includes(role);
+}
+
+async function syncLiveCard(stream) {
+  if (!stream?.id) return null;
+
+  const now = new Date().toISOString();
+
+  const cards = await supabaseFetch(
+    `/live_stream_cards?stream_id=eq.${encode(stream.id)}&select=id&limit=1`
   );
+
+  const existing = cards?.[0];
+
+  const payload = {
+    is_active: false,
+    card_type: "ended",
+    title: stream.title,
+    subtitle: stream.description,
+    thumbnail_url: stream.thumbnail_url,
+    cover_url: stream.cover_url,
+    target_url: `/watch?stream=${encodeURIComponent(stream.slug || stream.id)}`,
+    metadata: {
+      source: "api/live-stream-end.js",
+      status: "ended",
+      slug: stream.slug
+    },
+    updated_at: now
+  };
+
+  if (existing?.id) {
+    return await supabaseFetch(
+      `/live_stream_cards?id=eq.${encode(existing.id)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload)
+      }
+    );
+  }
+
+  return await supabaseFetch("/live_stream_cards", {
+    method: "POST",
+    body: JSON.stringify({
+      stream_id: stream.id,
+      creator_id: stream.creator_id,
+      ...payload,
+      created_at: now
+    })
+  });
+}
+
+async function insertQuiet(path, payload) {
+  try {
+    await supabaseFetch(path, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  } catch {
+    return null;
+  }
+
+  return true;
 }
 
 export default async function handler(req, res) {
@@ -178,7 +243,7 @@ export default async function handler(req, res) {
     const reason = cleanText(body.reason, "host_ended");
 
     const updated = await supabaseFetch(
-      `/live_streams?id=eq.${encodeURIComponent(stream.id)}`,
+      `/live_streams?id=eq.${encode(stream.id)}`,
       {
         method: "PATCH",
         body: JSON.stringify({
@@ -199,8 +264,15 @@ export default async function handler(req, res) {
       }
     );
 
+    const endedStream = updated?.[0] || {
+      ...stream,
+      status: "ended",
+      ended_at: now,
+      viewer_count: 0
+    };
+
     await supabaseFetch(
-      `/live_stream_members?stream_id=eq.${encodeURIComponent(stream.id)}&status=eq.active`,
+      `/live_stream_members?stream_id=eq.${encode(stream.id)}&status=eq.active`,
       {
         method: "PATCH",
         body: JSON.stringify({
@@ -212,40 +284,54 @@ export default async function handler(req, res) {
     );
 
     await supabaseFetch(
-      `/live_view_sessions?stream_id=eq.${encodeURIComponent(stream.id)}&left_at=is.null`,
+      `/live_view_sessions?stream_id=eq.${encode(stream.id)}&left_at=is.null`,
       {
         method: "PATCH",
         body: JSON.stringify({
           left_at: now,
           metadata: {
             closed_by_stream_end: true,
-            closed_at: now
+            closed_at: now,
+            source: "api/live-stream-end.js"
           }
         })
       }
     );
 
-    await supabaseFetch("/livekit_room_events", {
-      method: "POST",
-      body: JSON.stringify({
-        room_name: stream.livekit_room_name,
-        stream_id: stream.id,
-        event_type: "stream_ended",
-        participant_identity: user?.id || null,
-        participant_name: profile?.display_name || profile?.username || null,
-        user_id: user?.id || null,
-        payload: {
-          app: "Rich Bizness Mobile",
-          source: "api/live-stream-end.js",
-          reason,
-          ended_at: now
-        }
-      })
+    await syncLiveCard(endedStream);
+
+    await insertQuiet("/livekit_room_events", {
+      room_name: stream.livekit_room_name,
+      stream_id: stream.id,
+      event_type: "stream_ended",
+      participant_identity: user?.id || null,
+      participant_name: profile?.display_name || profile?.username || null,
+      user_id: user?.id || null,
+      payload: {
+        app: "Rich Bizness Mobile",
+        source: "api/live-stream-end.js",
+        reason,
+        ended_at: now
+      }
+    });
+
+    await insertQuiet("/platform_analytics_events", {
+      user_id: user?.id || null,
+      event_name: "live_stream_ended",
+      section: "live",
+      target_table: "live_streams",
+      target_id: stream.id,
+      route: "/live",
+      metadata: {
+        slug: stream.slug,
+        reason,
+        source: "api/live-stream-end.js"
+      }
     });
 
     return json(res, 200, {
       ok: true,
-      stream: updated?.[0] || null,
+      stream: endedStream,
       stream_id: stream.id,
       slug: stream.slug,
       livekit_room_name: stream.livekit_room_name,
