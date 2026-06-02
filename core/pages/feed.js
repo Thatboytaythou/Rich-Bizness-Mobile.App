@@ -3,7 +3,7 @@
    /core/pages/feed.js
 
    FEED PAGE CONTROLLER
-   Synced with auth + profile-state
+   Public view + signed-in posting
 ========================================= */
 
 import {
@@ -61,7 +61,8 @@ const FEED = {
   profile: null,
   posts: [],
   channel: null,
-  actionsBound: false
+  actionsBound: false,
+  booted: false
 };
 
 function safeText(value, fallback = "") {
@@ -74,11 +75,11 @@ function setStatus(text) {
 
 function escapeHtml(value = "") {
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function timeAgo(value) {
@@ -109,16 +110,20 @@ function currentUsername() {
 }
 
 function profileUrl(userId) {
-  return `${RB_ROUTES.profile || "/profile"}?user=${encodeURIComponent(userId)}`;
+  return `${RB_ROUTES.profile || "/profile"}?id=${encodeURIComponent(userId)}`;
+}
+
+function signInUrl() {
+  return `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(window.location.pathname)}`;
 }
 
 function paintComposer() {
-  if (els.composerAvatar) {
-    els.composerAvatar.src = currentAvatar();
-  }
+  if (els.composerAvatar) els.composerAvatar.src = currentAvatar();
 
   if (els.composerName) {
-    els.composerName.textContent = currentName();
+    els.composerName.textContent = FEED.user?.id
+      ? currentName()
+      : "Guest Viewer";
   }
 }
 
@@ -166,7 +171,6 @@ function postCard(post) {
       <footer class="feed-actions">
         <button type="button" data-action="like" data-id="${escapeHtml(post.id)}">💚 <span>${Number(post.like_count || 0)}</span></button>
         <button type="button" data-action="comment" data-id="${escapeHtml(post.id)}">💬 <span>${Number(post.comment_count || 0)}</span></button>
-        <button type="button" data-action="repost" data-id="${escapeHtml(post.id)}">🔁 <span>${Number(post.repost_count || 0)}</span></button>
         <button type="button" data-action="view" data-id="${escapeHtml(post.id)}">👁 <span>${Number(post.view_count || 0)}</span></button>
       </footer>
 
@@ -198,7 +202,7 @@ async function initFeedAuth() {
   setStatus(
     FEED.user?.id
       ? `Signed in as ${currentName()}`
-      : "Sign in to post, like, and comment."
+      : "Public feed. Sign in to post, like, and comment."
   );
 
   return !!FEED.user?.id;
@@ -251,7 +255,6 @@ async function loadPosts() {
   });
 
   renderPosts();
-
   setStatus(`${FEED.posts.length} feed posts loaded.`);
 }
 
@@ -265,7 +268,6 @@ function renderPosts() {
   }
 
   if (els.empty) els.empty.style.display = "none";
-
   els.list.innerHTML = FEED.posts.map(postCard).join("");
 }
 
@@ -274,7 +276,7 @@ async function createPost(event) {
 
   if (!FEED.user?.id) {
     setStatus("Sign in first.");
-    window.location.href = RB_ROUTES.auth || "/auth";
+    window.location.href = signInUrl();
     return;
   }
 
@@ -328,6 +330,7 @@ async function createPost(event) {
 async function likePost(postId) {
   if (!FEED.user?.id) {
     setStatus("Sign in to like.");
+    window.location.href = signInUrl();
     return;
   }
 
@@ -344,12 +347,10 @@ async function likePost(postId) {
       .delete()
       .eq("id", existing.id);
   } else {
-    await supabase
-      .from(RB_TABLES.feedPostLikes)
-      .insert({
-        post_id: postId,
-        user_id: FEED.user.id
-      });
+    await supabase.from(RB_TABLES.feedPostLikes).insert({
+      post_id: postId,
+      user_id: FEED.user.id
+    });
   }
 
   await syncLikeCount(postId);
@@ -377,13 +378,11 @@ async function addView(postId) {
 
   localStorage.setItem("rb_session_id", sessionId);
 
-  await supabase
-    .from(RB_TABLES.feedPostViews)
-    .insert({
-      post_id: postId,
-      user_id: FEED.user?.id || null,
-      session_id: sessionId
-    });
+  await supabase.from(RB_TABLES.feedPostViews).insert({
+    post_id: postId,
+    user_id: FEED.user?.id || null,
+    session_id: sessionId
+  });
 
   const { count } = await supabase
     .from(RB_TABLES.feedPostViews)
@@ -402,6 +401,7 @@ async function addView(postId) {
 async function addComment(postId, input) {
   if (!FEED.user?.id) {
     setStatus("Sign in to comment.");
+    window.location.href = signInUrl();
     return;
   }
 
@@ -467,14 +467,12 @@ async function loadComments(postId) {
   if (error) return;
 
   holder.innerHTML = (data || [])
-    .map((comment) => {
-      return `
-        <div class="feed-comment">
-          <strong>${escapeHtml(comment.display_name || comment.username || "Rich User")}</strong>
-          <span>${escapeHtml(comment.body)}</span>
-        </div>
-      `;
-    })
+    .map((comment) => `
+      <div class="feed-comment">
+        <strong>${escapeHtml(comment.display_name || comment.username || "Rich User")}</strong>
+        <span>${escapeHtml(comment.body)}</span>
+      </div>
+    `)
     .join("");
 }
 
@@ -492,7 +490,6 @@ function bindClicks() {
     if (action === "like") await likePost(id);
     if (action === "view") await addView(id);
     if (action === "comment") await loadComments(id);
-    if (action === "repost") setStatus("Repost table not locked yet.");
 
     await loadPosts();
   });
@@ -518,29 +515,13 @@ function bindRealtime() {
 
   FEED.channel = supabase
     .channel("rich-bizness-feed-sync")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.feedPosts },
-      loadPosts
-    )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.feedComments },
-      loadPosts
-    )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.feedPostLikes },
-      loadPosts
-    )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.profiles },
-      async () => {
-        await initFeedAuth();
-        await loadPosts();
-      }
-    )
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.feedPosts }, loadPosts)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.feedComments }, loadPosts)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.feedPostLikes }, loadPosts)
+    .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.profiles }, async () => {
+      await initFeedAuth();
+      await loadPosts();
+    })
     .subscribe();
 }
 
@@ -557,6 +538,9 @@ function bindUI() {
 }
 
 async function init() {
+  if (FEED.booted) return;
+  FEED.booted = true;
+
   if (!localStorage.getItem("rb_session_id")) {
     localStorage.setItem("rb_session_id", crypto.randomUUID());
   }
