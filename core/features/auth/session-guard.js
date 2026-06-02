@@ -13,6 +13,7 @@ import {
   isCreatorRoute,
   isSellerRoute,
   isArtistRoute,
+  isAdminRoute,
   getCurrentPath
 } from "/core/shared/rb-router.js";
 
@@ -26,6 +27,7 @@ function redirect(route) {
   if (!route) return false;
 
   const current = `${window.location.pathname}${window.location.search}`;
+
   const target =
     route === RB_ROUTES.auth
       ? `${route}?next=${encodeURIComponent(current)}`
@@ -144,6 +146,10 @@ export async function requireAdmin({
 export async function autoGuardCurrentPage() {
   const path = getCurrentPath();
 
+  if (isAdminRoute(path)) {
+    return await requireAdmin();
+  }
+
   if (isCreatorRoute(path)) {
     return await requireCreator();
   }
@@ -177,6 +183,10 @@ export function currentPathNeedsSeller() {
 
 export function currentPathNeedsArtist() {
   return isArtistRoute(getCurrentPath());
+}
+
+export function currentPathNeedsAdmin() {
+  return isAdminRoute(getCurrentPath());
 }
 
 console.log("RB SESSION GUARD READY");
