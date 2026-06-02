@@ -9,7 +9,6 @@
 import {
   RB_ROUTES,
   RB_TABLES,
-  RB_BRAND_ASSETS,
   RB_PROFILE_KEYS
 } from "/core/shared/rb-config.js";
 
@@ -23,15 +22,8 @@ import {
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR =
-  RB_BRAND_ASSETS?.defaultAvatar || "/images/brand/Avatar-hero-Banner.png.jpeg";
-
-const DEFAULT_BANNER =
-  RB_BRAND_ASSETS?.defaultProfileBanner || "/images/brand/hero-banner.png";
-
-function safeText(value, fallback = "") {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_BANNER = "/images/brand/hero-banner.png";
 
 function cleanUsername(username = "") {
   return String(username || "")
@@ -121,7 +113,12 @@ export function getProfileIdentity(profileOverride = null) {
   const profile = profileOverride || getProfile();
   const fromSupabase = getSupabaseProfileIdentity?.() || {};
 
-  const id = profile?.id || fromSupabase?.id || fromSupabase?.user_id || user?.id || null;
+  const id =
+    profile?.id ||
+    fromSupabase?.id ||
+    fromSupabase?.user_id ||
+    user?.id ||
+    null;
 
   const username =
     profile?.username ||
@@ -391,6 +388,7 @@ export async function loadProfileExtensions(userId = null) {
 
 export async function getProfileStats(userId = null) {
   const id = userId || getProfileKey();
+
   if (!id) {
     return {
       followers: 0,
