@@ -3,32 +3,26 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-
   "description": "Rich Bizness Mobile cinematic universe platform",
   "author": "Rich Bizness LLC",
   "license": "UNLICENSED",
-
   "scripts": {
     "dev": "vercel dev",
     "start": "vercel dev",
     "build": "echo \"Rich Bizness Mobile Build Ready\"",
     "deploy": "vercel --prod",
-
     "dev:live": "vercel dev --listen 3000",
     "check": "node api/health.js"
   },
-
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
     "livekit-client": "^2.13.3",
     "livekit-server-sdk": "^2.11.3",
     "stripe": "^18.1.1"
   },
-
   "engines": {
     "node": ">=20.0.0"
   },
-
   "keywords": [
     "rich-bizness",
     "rich-bizness-mobile",
