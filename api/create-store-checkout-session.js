@@ -1,39 +1,124 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
 
 const APP_URL =
   process.env.APP_URL ||
   process.env.PUBLIC_SITE_URL ||
-  process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`;
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
-const PLATFORM_FEE_BPS = Number(process.env.STRIPE_PLATFORM_FEE_BPS || 1000);
+const PLATFORM_FEE_BPS = Number(
+  process.env.STRIPE_PLATFORM_FEE_BPS || 1000
+);
+
+const stripe = STRIPE_SECRET_KEY
+  ? new Stripe(STRIPE_SECRET_KEY)
+  : null;
+
+const supabase =
+  SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        }
+      })
+    : null;
 
 function json(res, status, data) {
   return res.status(status).json(data);
 }
 
 function getBearerToken(req) {
-  const auth = req.headers.authorization || "";
-  return auth.startsWith("Bearer ") ? auth.slice(7) : null;
+  const auth =
+    req.headers.authorization ||
+    req.headers.Authorization ||
+    "";
+
+  return auth.startsWith("Bearer ") ? auth.slice(7).trim() : null;
+}
+
+function cleanText(value, fallback = "") {
+  if (typeof value !== "string") return fallback;
+  return value.trim() || fallback;
+}
+
+function cleanQty(value) {
+  const qty = Number(value);
+  if (!Number.isFinite(qty)) return 1;
+  return Math.max(1, Math.min(Math.floor(qty), 99));
+}
+
+function absoluteUrl(urlOrPath = "/store.html") {
+  if (String(urlOrPath).startsWith("http")) return urlOrPath;
+  return `${APP_URL}${urlOrPath.startsWith("/") ? urlOrPath : `/${urlOrPath}`}`;
+}
+
+function calcFee(amountTotal) {
+  return Math.max(
+    0,
+    Math.floor((amountTotal * PLATFORM_FEE_BPS) / 10000)
+  );
+}
+
+async function insertStripeSyncEvent(payload) {
+  try {
+    await supabase.from("stripe_sync_events").insert(payload);
+  } catch {
+    return null;
+  }
+
+  return true;
 }
 
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
   if (req.method !== "POST") {
-    return json(res, 405, { error: "Method not allowed" });
+    return json(res, 405, {
+      ok: false,
+      error: "Method not allowed"
+    });
   }
 
   try {
+    if (!stripe) {
+      return json(res, 500, {
+        ok: false,
+        error: "Missing Stripe secret key"
+      });
+    }
+
+    if (!supabase) {
+      return json(res, 500, {
+        ok: false,
+        error: "Missing Supabase server environment variables"
+      });
+    }
+
     const token = getBearerToken(req);
 
     if (!token) {
-      return json(res, 401, { error: "Missing auth token" });
+      return json(res, 401, {
+        ok: false,
+        error: "Missing auth token"
+      });
     }
 
     const {
@@ -41,22 +126,40 @@ export default async function handler(req, res) {
       error: userError
     } = await supabase.auth.getUser(token);
 
-    if (userError || !user) {
-      return json(res, 401, { error: "Invalid auth token" });
+    if (userError || !user?.id) {
+      return json(res, 401, {
+        ok: false,
+        error: "Invalid auth token"
+      });
     }
 
-    const {
-      product_id,
-      quantity = 1,
-      success_url,
-      cancel_url
-    } = req.body || {};
+    const body = req.body || {};
 
-    if (!product_id) {
-      return json(res, 400, { error: "Missing product_id" });
+    const productId = cleanText(
+      body.product_id ||
+        body.productId
+    );
+
+    const qty = cleanQty(body.quantity);
+
+    const successUrlInput = cleanText(
+      body.success_url ||
+        body.successUrl,
+      `/store.html?checkout=success`
+    );
+
+    const cancelUrlInput = cleanText(
+      body.cancel_url ||
+        body.cancelUrl,
+      `/store.html?checkout=cancelled`
+    );
+
+    if (!productId) {
+      return json(res, 400, {
+        ok: false,
+        error: "Missing product_id"
+      });
     }
-
-    const qty = Math.max(1, Math.min(Number(quantity) || 1, 99));
 
     const { data: product, error: productError } = await supabase
       .from("products")
@@ -77,25 +180,37 @@ export default async function handler(req, res) {
         status,
         is_public
       `)
-      .eq("id", product_id)
+      .eq("id", productId)
       .single();
 
     if (productError || !product) {
-      return json(res, 404, { error: "Product not found" });
+      return json(res, 404, {
+        ok: false,
+        error: "Product not found"
+      });
     }
 
     if (product.status !== "active" || product.is_public === false) {
-      return json(res, 403, { error: "Product is not available" });
+      return json(res, 403, {
+        ok: false,
+        error: "Product is not available"
+      });
     }
 
     if (!product.price_cents || product.price_cents < 50) {
-      return json(res, 400, { error: "Product price must be at least 50 cents" });
+      return json(res, 400, {
+        ok: false,
+        error: "Product price must be at least 50 cents"
+      });
     }
 
     const inventory = Number(product.inventory_count ?? product.quantity ?? 0);
 
     if (!product.is_digital && inventory > 0 && qty > inventory) {
-      return json(res, 400, { error: "Not enough inventory" });
+      return json(res, 400, {
+        ok: false,
+        error: "Not enough inventory"
+      });
     }
 
     const { data: sellerProfile } = await supabase
@@ -104,9 +219,17 @@ export default async function handler(req, res) {
       .eq("user_id", product.seller_id)
       .maybeSingle();
 
-    const amountTotal = product.price_cents * qty;
-    const platformFeeCents = Math.floor((amountTotal * PLATFORM_FEE_BPS) / 10000);
-    const sellerAmountCents = amountTotal - platformFeeCents;
+    const amountTotal = Number(product.price_cents || 0) * qty;
+    const platformFeeCents = calcFee(amountTotal);
+    const sellerAmountCents = Math.max(0, amountTotal - platformFeeCents);
+
+    const currency = cleanText(product.currency, "usd")
+      .toLowerCase()
+      .slice(0, 8);
+
+    const fulfillmentType =
+      product.fulfillment_type ||
+      (product.is_digital ? "digital" : "shipping");
 
     const { data: order, error: orderError } = await supabase
       .from("store_orders")
@@ -119,55 +242,83 @@ export default async function handler(req, res) {
         amount_total: amountTotal,
         platform_fee_cents: platformFeeCents,
         seller_amount_cents: sellerAmountCents,
-        currency: product.currency || "usd",
+        currency,
         payment_status: "pending",
         order_status: "processing",
-        fulfillment_type: product.fulfillment_type || "shipping",
+        customer_email: user.email || null,
+        fulfillment_type: fulfillmentType,
         metadata: {
-          source: "create-store-checkout-session",
+          app: "Rich Bizness Mobile",
+          source: "api/create-store-checkout-session.js",
           product_type: product.product_type,
-          is_digital: product.is_digital
+          is_digital: !!product.is_digital
         }
       })
-      .select("id")
+      .select("*")
       .single();
 
     if (orderError || !order) {
-      return json(res, 500, { error: orderError?.message || "Failed to create order" });
+      return json(res, 500, {
+        ok: false,
+        error: orderError?.message || "Failed to create order"
+      });
     }
 
     const sessionConfig = {
       mode: "payment",
+
       success_url:
-        success_url ||
-        `${APP_URL}/store.html?checkout=success&order_id=${order.id}`,
+        `${absoluteUrl(successUrlInput)}` +
+        `${successUrlInput.includes("?") ? "&" : "?"}` +
+        `order_id=${order.id}&session_id={CHECKOUT_SESSION_ID}`,
+
       cancel_url:
-        cancel_url ||
-        `${APP_URL}/store.html?checkout=cancelled&order_id=${order.id}`,
+        `${absoluteUrl(cancelUrlInput)}` +
+        `${cancelUrlInput.includes("?") ? "&" : "?"}` +
+        `order_id=${order.id}`,
+
       customer_email: user.email || undefined,
+
       line_items: [
         {
           quantity: qty,
           price_data: {
-            currency: product.currency || "usd",
+            currency,
             unit_amount: product.price_cents,
             product_data: {
               name: product.title,
-              description: product.description || "Rich Bizness Store Item",
-              images: [product.image_url || product.cover_url].filter(Boolean)
+              description:
+                product.description ||
+                "Rich Bizness Store Item",
+              images: [
+                product.image_url ||
+                product.cover_url
+              ].filter(Boolean),
+              metadata: {
+                product_id: product.id,
+                seller_id: product.seller_id || "",
+                product_type: product.product_type || "physical"
+              }
             }
           }
         }
       ],
+
       metadata: {
+        app: "rich-bizness-mobile",
         type: "store_order",
         order_id: order.id,
         product_id: product.id,
         buyer_id: user.id,
-        seller_id: product.seller_id || ""
+        seller_id: product.seller_id || "",
+        amount_total: String(amountTotal),
+        platform_fee_cents: String(platformFeeCents),
+        seller_amount_cents: String(sellerAmountCents)
       },
+
       payment_intent_data: {
         metadata: {
+          app: "rich-bizness-mobile",
           type: "store_order",
           order_id: order.id,
           product_id: product.id,
@@ -177,12 +328,15 @@ export default async function handler(req, res) {
       }
     };
 
-    if (
+    const sellerCanTransfer =
       sellerProfile?.stripe_account_id &&
       sellerProfile?.payouts_enabled &&
-      sellerProfile?.stripe_onboarding_complete
-    ) {
-      sessionConfig.payment_intent_data.application_fee_amount = platformFeeCents;
+      sellerProfile?.stripe_onboarding_complete;
+
+    if (sellerCanTransfer) {
+      sessionConfig.payment_intent_data.application_fee_amount =
+        platformFeeCents;
+
       sessionConfig.payment_intent_data.transfer_data = {
         destination: sellerProfile.stripe_account_id
       };
@@ -194,22 +348,55 @@ export default async function handler(req, res) {
       .from("store_orders")
       .update({
         stripe_checkout_session_id: session.id,
+        stripe_customer_id:
+          typeof session.customer === "string"
+            ? session.customer
+            : null,
         metadata: {
-          source: "create-store-checkout-session",
+          ...(order.metadata || {}),
           stripe_session_id: session.id,
-          product_type: product.product_type,
-          is_digital: product.is_digital
-        }
+          stripe_checkout_url: session.url,
+          stripe_session_status: session.status,
+          stripe_payment_status: session.payment_status,
+          transfer_enabled: !!sellerCanTransfer
+        },
+        updated_at: new Date().toISOString()
       })
       .eq("id", order.id);
 
+    await insertStripeSyncEvent({
+      stripe_event_id: session.id,
+      stripe_object_id: session.id,
+      stripe_object_type: "checkout.session",
+      event_type: "store_order.created",
+      status: "pending",
+      related_user_id: user.id,
+      related_table: "store_orders",
+      related_id: order.id,
+      amount_cents: amountTotal,
+      currency,
+      payload: {
+        order_id: order.id,
+        product_id: product.id,
+        checkout_url: session.url,
+        source: "api/create-store-checkout-session.js"
+      }
+    });
+
     return json(res, 200, {
+      ok: true,
       url: session.url,
+      checkout_url: session.url,
+      checkoutUrl: session.url,
       session_id: session.id,
-      order_id: order.id
+      sessionId: session.id,
+      order_id: order.id,
+      orderId: order.id
     });
   } catch (error) {
-    console.error("CREATE STORE CHECKOUT ERROR:", error);
-    return json(res, 500, { error: error.message || "Checkout failed" });
+    return json(res, 500, {
+      ok: false,
+      error: error?.message || "Checkout failed"
+    });
   }
 }
