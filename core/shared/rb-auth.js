@@ -27,18 +27,13 @@ import {
 import {
   RB_ROUTES,
   RB_TABLES,
-  RB_PROFILE_KEYS,
-  RB_AUTH,
-  RB_BRAND_ASSETS
+  RB_PROFILE_KEYS
 } from "/core/shared/rb-config.js";
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR =
-  RB_BRAND_ASSETS?.defaultAvatar || "/images/brand/Avatar-hero-Banner.png.jpeg";
-
-const DEFAULT_BANNER =
-  RB_BRAND_ASSETS?.defaultProfileBanner || "/images/brand/hero-banner.png";
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_BANNER = "/images/brand/hero-banner.png";
 
 export {
   getSupabase,
@@ -271,7 +266,7 @@ async function upsertProfileFromAuth({
       ...(existingProfile?.metadata || {}),
       profile_lock: true,
       profile_source: RB_PROFILE_KEYS?.identitySource || "profiles",
-      auth_storage_key: RB_AUTH?.sessionStorageKey || "rich-bizness-mobile-auth",
+      auth_storage_key: "rich-bizness-mobile-auth",
       secret_routes_enabled: true
     }
   };
@@ -471,7 +466,12 @@ export async function refreshProfile() {
   const user = getUser();
   if (!user?.id) return null;
 
-  await ensureProfileExtensionTables(await loadProfile(user.id));
+  const profile = await loadProfile(user.id);
+
+  if (profile?.id) {
+    await ensureProfileExtensionTables(profile);
+  }
+
   return await loadProfile(user.id);
 }
 
