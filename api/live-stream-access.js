@@ -15,6 +15,10 @@ function cleanText(value, fallback = "") {
   return value.trim() || fallback;
 }
 
+function encode(value) {
+  return encodeURIComponent(String(value || ""));
+}
+
 async function supabaseFetch(path, options = {}) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     ...options,
@@ -22,6 +26,7 @@ async function supabaseFetch(path, options = {}) {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
       Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       "Content-Type": "application/json",
+      Prefer: "return=representation",
       ...(options.headers || {})
     }
   });
@@ -72,10 +77,10 @@ async function getUserFromAuth(req) {
 }
 
 async function findStream(streamKey) {
-  const value = encodeURIComponent(streamKey);
+  const value = encode(streamKey);
 
   const rows = await supabaseFetch(
-    `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*`
+    `/live_streams?or=(id.eq.${value},slug.eq.${value},livekit_room_name.eq.${value})&select=*&limit=1`
   );
 
   return rows?.[0] || null;
@@ -85,10 +90,11 @@ async function hasBan(streamId, userId) {
   if (!userId) return false;
 
   const rows = await supabaseFetch(
-    `/live_stream_bans?stream_id=eq.${encodeURIComponent(streamId)}&banned_user_id=eq.${encodeURIComponent(userId)}&select=id,expires_at&limit=1`
+    `/live_stream_bans?stream_id=eq.${encode(streamId)}&banned_user_id=eq.${encode(userId)}&select=id,expires_at&limit=1`
   );
 
   const ban = rows?.[0];
+
   if (!ban) return false;
   if (!ban.expires_at) return true;
 
@@ -99,7 +105,7 @@ async function hasPaidAccess(streamId, userId) {
   if (!userId) return false;
 
   const rows = await supabaseFetch(
-    `/live_stream_purchases?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&status=eq.paid&select=id&limit=1`
+    `/live_stream_purchases?stream_id=eq.${encode(streamId)}&user_id=eq.${encode(userId)}&status=eq.paid&select=id&limit=1`
   );
 
   return Boolean(rows?.[0]);
@@ -109,10 +115,11 @@ async function hasVipAccess(streamId, userId) {
   if (!userId) return false;
 
   const rows = await supabaseFetch(
-    `/vip_live_access?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&access_status=eq.active&select=id,expires_at&limit=1`
+    `/vip_live_access?stream_id=eq.${encode(streamId)}&user_id=eq.${encode(userId)}&access_status=eq.active&select=id,expires_at&limit=1`
   );
 
   const vip = rows?.[0];
+
   if (!vip) return false;
   if (!vip.expires_at) return true;
 
@@ -123,10 +130,59 @@ async function getMember(streamId, userId) {
   if (!userId) return null;
 
   const rows = await supabaseFetch(
-    `/live_stream_members?stream_id=eq.${encodeURIComponent(streamId)}&user_id=eq.${encodeURIComponent(userId)}&status=eq.active&select=id,role&limit=1`
+    `/live_stream_members?stream_id=eq.${encode(streamId)}&user_id=eq.${encode(userId)}&status=eq.active&select=id,role,status&limit=1`
   );
 
   return rows?.[0] || null;
+}
+
+async function getProfile(userId) {
+  if (!userId) return null;
+
+  const rows = await supabaseFetch(
+    `/profiles?id=eq.${encode(userId)}&select=id,username,display_name,role,is_creator,is_verified&limit=1`
+  );
+
+  return rows?.[0] || null;
+}
+
+function isAdminProfile(profile) {
+  const role = cleanText(profile?.role).toLowerCase();
+
+  return [
+    "founder",
+    "rich_admin",
+    "elite_mod",
+    "admin",
+    "moderator",
+    "support"
+  ].includes(role);
+}
+
+function accessPayload({
+  status = 200,
+  allowed = false,
+  reason = "access_denied",
+  role = "viewer",
+  stream = null,
+  userId = null,
+  extra = {}
+}) {
+  return {
+    status,
+    body: {
+      ok: true,
+      allowed,
+      reason,
+      role,
+      access_type: stream?.access_type || null,
+      price_cents: stream?.price_cents || 0,
+      currency: stream?.currency || "usd",
+      stream,
+      user_id: userId,
+      ...extra
+    }
+  };
 }
 
 export default async function handler(req, res) {
@@ -138,7 +194,7 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  if (req.method !== "GET" && req.method !== "POST") {
+  if (!["GET", "POST"].includes(req.method)) {
     return json(res, 405, {
       ok: false,
       allowed: false,
@@ -164,6 +220,7 @@ export default async function handler(req, res) {
         input.id ||
         input.slug ||
         input.room ||
+        input.roomName ||
         input.livekit_room_name
     );
 
@@ -187,7 +244,11 @@ export default async function handler(req, res) {
     }
 
     const userId = user?.id || null;
-    const member = await getMember(stream.id, userId);
+
+    const [member, profile] = await Promise.all([
+      getMember(stream.id, userId),
+      getProfile(userId)
+    ]);
 
     if (await hasBan(stream.id, userId)) {
       return json(res, 403, {
@@ -200,36 +261,65 @@ export default async function handler(req, res) {
     }
 
     if (stream.creator_id === userId) {
-      return json(res, 200, {
-        ok: true,
+      const result = accessPayload({
+        status: 200,
         allowed: true,
         reason: "creator",
         role: "host",
         stream,
-        user_id: userId
+        userId
       });
+
+      return json(res, result.status, result.body);
+    }
+
+    if (isAdminProfile(profile)) {
+      const result = accessPayload({
+        status: 200,
+        allowed: true,
+        reason: "admin",
+        role: profile.role || "admin",
+        stream,
+        userId
+      });
+
+      return json(res, result.status, result.body);
     }
 
     if (["host", "cohost", "moderator"].includes(member?.role)) {
-      return json(res, 200, {
-        ok: true,
+      const result = accessPayload({
+        status: 200,
         allowed: true,
         reason: "stream_member",
         role: member.role,
+        stream,
+        userId
+      });
+
+      return json(res, result.status, result.body);
+    }
+
+    if (["ended", "cancelled"].includes(stream.status)) {
+      return json(res, 403, {
+        ok: true,
+        allowed: false,
+        reason: "stream_closed",
         stream,
         user_id: userId
       });
     }
 
     if (stream.access_type === "free") {
-      return json(res, 200, {
-        ok: true,
+      const result = accessPayload({
+        status: 200,
         allowed: true,
         reason: "free",
         role: "viewer",
         stream,
-        user_id: userId
+        userId
       });
+
+      return json(res, result.status, result.body);
     }
 
     if (!userId) {
@@ -247,29 +337,31 @@ export default async function handler(req, res) {
     if (stream.access_type === "paid") {
       const paid = await hasPaidAccess(stream.id, userId);
 
-      return json(res, paid ? 200 : 402, {
-        ok: true,
+      const result = accessPayload({
+        status: paid ? 200 : 402,
         allowed: paid,
         reason: paid ? "paid" : "payment_required",
-        access_type: stream.access_type,
-        price_cents: stream.price_cents || 0,
-        currency: stream.currency || "usd",
+        role: "viewer",
         stream,
-        user_id: userId
+        userId
       });
+
+      return json(res, result.status, result.body);
     }
 
     if (stream.access_type === "vip") {
       const vip = await hasVipAccess(stream.id, userId);
 
-      return json(res, vip ? 200 : 403, {
-        ok: true,
+      const result = accessPayload({
+        status: vip ? 200 : 403,
         allowed: vip,
         reason: vip ? "vip" : "vip_required",
-        access_type: stream.access_type,
+        role: "viewer",
         stream,
-        user_id: userId
+        userId
       });
+
+      return json(res, result.status, result.body);
     }
 
     if (stream.access_type === "subscriber") {
@@ -277,27 +369,31 @@ export default async function handler(req, res) {
       const vip = await hasVipAccess(stream.id, userId);
       const allowed = paid || vip;
 
-      return json(res, allowed ? 200 : 403, {
-        ok: true,
+      const result = accessPayload({
+        status: allowed ? 200 : 403,
         allowed,
         reason: allowed ? "subscriber_access" : "subscriber_required",
-        access_type: stream.access_type,
+        role: "viewer",
         stream,
-        user_id: userId
+        userId
       });
+
+      return json(res, result.status, result.body);
     }
 
     if (stream.access_type === "private") {
       const allowed = Boolean(member);
 
-      return json(res, allowed ? 200 : 403, {
-        ok: true,
+      const result = accessPayload({
+        status: allowed ? 200 : 403,
         allowed,
         reason: allowed ? "private_member" : "private_required",
-        access_type: stream.access_type,
+        role: member?.role || "viewer",
         stream,
-        user_id: userId
+        userId
       });
+
+      return json(res, result.status, result.body);
     }
 
     return json(res, 403, {
