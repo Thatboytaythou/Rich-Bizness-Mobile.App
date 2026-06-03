@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-upload-page" data-section="upload">
+<body class="rb-body rb-upload-page" data-page="upload" data-section="upload">
 
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
@@ -67,13 +67,8 @@
         </p>
 
         <div class="rb-form-actions">
-          <a class="rb-btn ghost" href="/">
-            ← Back To Portal
-          </a>
-
-          <a class="rb-btn ghost" href="/profile">
-            Profile
-          </a>
+          <a class="rb-btn ghost" href="/">← Back To Portal</a>
+          <a class="rb-btn ghost" href="/profile">Profile</a>
         </div>
       </div>
     </section>
@@ -85,18 +80,18 @@
       </article>
 
       <article class="rb-mini-card">
-        <strong id="upload-route-label">general</strong>
+        <strong id="upload-route-label">feed → general-uploads</strong>
         <span>Route</span>
       </article>
 
       <article class="rb-mini-card">
-        <strong id="upload-bucket-label">auto</strong>
-        <span>Bucket</span>
+        <strong id="uploadProgressLabel">Ready.</strong>
+        <span>Progress</span>
       </article>
 
       <article class="rb-mini-card">
-        <strong id="upload-table-label">uploads</strong>
-        <span>Table</span>
+        <strong>uploads</strong>
+        <span>Ledger</span>
       </article>
     </section>
 
@@ -113,8 +108,7 @@
         <label for="routeKey">
           Upload Route
 
-          <select name="route_key" id="routeKey">
-            <option value="general">General Upload</option>
+          <select name="section" id="routeKey">
             <option value="feed">Feed Post</option>
             <option value="gallery">Gallery</option>
             <option value="music">Music Track</option>
@@ -124,12 +118,11 @@
             <option value="gaming">Game Clip</option>
             <option value="store-product">Store Product</option>
             <option value="store-digital">Store Digital</option>
-            <option value="store-seller">Store Seller Media</option>
             <option value="live-thumbnail">Live Thumbnail</option>
             <option value="live-recording">Live Recording</option>
             <option value="profile-avatar">Profile Avatar</option>
             <option value="profile-banner">Profile Banner</option>
-            <option value="meta-avatar">Meta Avatar</option>
+            <option value="meta">Meta World</option>
           </select>
         </label>
 
@@ -208,7 +201,14 @@
           class="rb-upload-preview"
           aria-live="polite"
         >
-          <span>No file selected</span>
+          <div class="upload-preview-empty">
+            <strong>No file selected</strong>
+            <span>Drop media here or tap to choose.</span>
+          </div>
+        </div>
+
+        <div class="rb-upload-progress" aria-hidden="true">
+          <span id="uploadProgressBar"></span>
         </div>
 
         <div class="rb-form-actions">
@@ -229,11 +229,7 @@
           </button>
         </div>
 
-        <p
-          id="uploadMessage"
-          class="rb-form-note"
-          aria-live="polite"
-        ></p>
+        <p id="uploadMessage" class="rb-form-note" aria-live="polite"></p>
 
       </form>
     </section>
@@ -244,10 +240,6 @@
     <span>© 2026 Rich Bizness LLC</span>
   </footer>
 
-  <script
-    type="module"
-    src="/core/pages/upload.js"
-  ></script>
-
+  <script type="module" src="/core/pages/upload.js"></script>
 </body>
 </html>
