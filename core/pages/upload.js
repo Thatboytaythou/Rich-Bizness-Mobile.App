@@ -3,52 +3,59 @@
    /core/pages/upload.js
 
    UPLOAD PAGE CONTROLLER
-   Synced with auth + profile-state
+   Signed-in upload router
 ========================= */
 
 import {
   initApp,
-  getCurrentUserState,
   markPageReady,
   markPageError,
   refreshAppIdentity
 } from "/core/app.js";
 
-import { getSupabase } from "/core/shared/rb-supabase.js";
-import { ensureMyProfile } from "/core/shared/rb-auth.js";
-import { refreshProfileState } from "/core/features/profile/profile-state.js";
-import { syncAvatarToUniverse } from "/core/features/profile/avatar-sync.js";
+import {
+  getUser,
+  ensureMyProfile
+} from "/core/shared/rb-auth.js";
 
 import {
-  RB_TABLES,
-  RB_BUCKETS,
-  RB_ROUTES
-} from "/core/shared/rb-config.js";
+  refreshProfileState
+} from "/core/features/profile/profile-state.js";
+
+import {
+  syncAvatarToUniverse
+} from "/core/features/profile/avatar-sync.js";
+
+import {
+  setUploadReady,
+  setUploadRoute,
+  getUploadState,
+  setUploading,
+  setUploadProgress,
+  setUploadResult,
+  setUploadError,
+  resetUploadState
+} from "/core/features/upload/upload-state.js";
+
+import {
+  uploadToBucket,
+  detectMediaType
+} from "/core/features/upload/upload-storage.js";
+
+import {
+  getUploadSectionRoute,
+  routeUploadedFile
+} from "/core/features/upload/upload-section-router.js";
+
+import {
+  bindUploadDropzone,
+  bindUploadProgress,
+  bindUploadStatusLabel,
+  readUploadForm,
+  resetUploadUI
+} from "/core/features/upload/upload-ui.js";
 
 const $ = (id) => document.getElementById(id);
-
-const ROUTES = {
-  general: { section: "feed", bucket: RB_BUCKETS.generalUploads, targetTable: RB_TABLES.feedPosts, mediaType: "file" },
-  feed: { section: "feed", bucket: RB_BUCKETS.generalUploads, targetTable: RB_TABLES.feedPosts, mediaType: "file" },
-  gallery: { section: "gallery", bucket: RB_BUCKETS.galleryMedia, targetTable: RB_TABLES.feedPosts, mediaType: "image" },
-
-  music: { section: "music", bucket: RB_BUCKETS.musicAudio, targetTable: RB_TABLES.musicTracks, mediaType: "audio" },
-  podcast: { section: "podcast", bucket: RB_BUCKETS.podcastAudio, targetTable: RB_TABLES.podcastEpisodes, mediaType: "audio" },
-  radio: { section: "radio", bucket: RB_BUCKETS.radioCovers, targetTable: RB_TABLES.radioStations, mediaType: "image" },
-
-  sports: { section: "sports", bucket: RB_BUCKETS.sportsMedia, targetTable: RB_TABLES.sportsUploads, mediaType: "video" },
-  gaming: { section: "gaming", bucket: RB_BUCKETS.gameClips, targetTable: RB_TABLES.gameClips, mediaType: "video" },
-
-  "store-product": { section: "store", bucket: RB_BUCKETS.storeProducts, targetTable: RB_TABLES.products, mediaType: "image" },
-  "store-digital": { section: "store", bucket: RB_BUCKETS.storeDigital, targetTable: RB_TABLES.products, mediaType: "file" },
-
-  "live-thumbnail": { section: "live", bucket: RB_BUCKETS.liveThumbnails, targetTable: RB_TABLES.liveStreams, mediaType: "image" },
-  "live-recording": { section: "live", bucket: RB_BUCKETS.liveRecordings, targetTable: RB_TABLES.uploads, mediaType: "video" },
-
-  "profile-avatar": { section: "profile", bucket: RB_BUCKETS.avatars, targetTable: RB_TABLES.profiles, mediaType: "image" },
-  "profile-banner": { section: "profile", bucket: RB_BUCKETS.profileBanners, targetTable: RB_TABLES.profiles, mediaType: "image" },
-  "meta-avatar": { section: "meta", bucket: RB_BUCKETS.metaAvatars, targetTable: RB_TABLES.metaAvatars, mediaType: "image" }
-};
 
 const els = {
   form: $("rb-upload-form"),
@@ -59,43 +66,68 @@ const els = {
   tag: $("uploadTag"),
   file: $("uploadFile"),
   preview: $("uploadPreview"),
+  dropzone: $("uploadDropzone") || $("uploadPreview"),
+  progressBar: $("uploadProgressBar"),
+  progressLabel: $("uploadProgressLabel"),
   statusLabel: $("upload-status-label"),
   routeLabel: $("upload-route-label"),
-  message: $("uploadMessage")
+  message: $("uploadMessage"),
+  submit: $("uploadSubmitBtn")
 };
 
-let supabase = null;
-let isUploading = false;
+let booted = false;
+let cleanupDropzone = null;
+let cleanupProgress = null;
+let cleanupStatus = null;
 
 function setStatus(text) {
   if (els.statusLabel) els.statusLabel.textContent = text;
   if (els.message) els.message.textContent = text;
 }
 
-function routeConfig() {
-  return ROUTES[els.routeKey?.value] || ROUTES.general;
+function normalizeRouteKey(value = "feed") {
+  const map = {
+    general: "feed",
+    feed: "feed",
+    gallery: "gallery",
+    music: "music",
+    podcast: "podcast",
+    radio: "radio",
+    sports: "sports",
+    gaming: "gaming",
+    "store-product": "storeProduct",
+    "store-digital": "storeDigital",
+    "live-thumbnail": "liveThumbnail",
+    "live-recording": "liveRecording",
+    "profile-avatar": "profileAvatar",
+    "profile-banner": "profileBanner",
+    "meta-avatar": "profileAvatar",
+    meta: "meta"
+  };
+
+  return map[value] || value || "feed";
 }
 
-function safeName(name) {
-  return String(name || "upload")
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "-")
-    .replace(/-+/g, "-")
-    .slice(0, 140);
+function getSelectedRouteKey() {
+  return normalizeRouteKey(els.routeKey?.value || "feed");
 }
 
-function safeValue(el, fallback = "") {
-  return String(el?.value || fallback).trim();
-}
+function syncRouteLabel() {
+  const routeKey = getSelectedRouteKey();
+  const route = getUploadSectionRoute(routeKey);
 
-function getMediaType(file, config) {
-  const mime = file?.type || "";
+  setUploadRoute({
+    routeKey,
+    section: route.section
+  });
 
-  if (mime.startsWith("image/")) return "image";
-  if (mime.startsWith("video/")) return "video";
-  if (mime.startsWith("audio/")) return "audio";
+  if (els.routeLabel) {
+    els.routeLabel.textContent = `${route.section} → ${route.bucket}`;
+  }
 
-  return config.mediaType || "file";
+  if (els.category && !els.category.value) {
+    els.category.value = route.section;
+  }
 }
 
 function setLoading(active) {
@@ -106,360 +138,132 @@ function setLoading(active) {
     .forEach((el) => {
       el.disabled = active;
     });
-}
 
-function publicUrl(bucket, path) {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data?.publicUrl || "";
-}
-
-function paintPreview() {
-  const file = els.file?.files?.[0];
-  if (!els.preview) return;
-
-  if (!file) {
-    els.preview.innerHTML = "<span>No file selected</span>";
-    return;
+  if (els.submit) {
+    els.submit.disabled = active;
   }
-
-  const url = URL.createObjectURL(file);
-
-  if (file.type.startsWith("image/")) {
-    els.preview.innerHTML = `<img src="${url}" alt="Upload preview" />`;
-    return;
-  }
-
-  if (file.type.startsWith("video/")) {
-    els.preview.innerHTML = `<video src="${url}" muted controls playsinline></video>`;
-    return;
-  }
-
-  if (file.type.startsWith("audio/")) {
-    els.preview.innerHTML = `<audio src="${url}" controls></audio>`;
-    return;
-  }
-
-  els.preview.innerHTML = `<span>${file.name}</span>`;
-}
-
-function syncRouteLabel() {
-  const config = routeConfig();
-
-  if (els.routeLabel) {
-    els.routeLabel.textContent = els.routeKey?.value || "general";
-  }
-
-  if (els.category && !els.category.value) {
-    els.category.value = config.section;
-  }
-}
-
-function profilePayload(profile, user) {
-  return {
-    username: profile?.username || null,
-    display_name:
-      profile?.display_name ||
-      profile?.full_name ||
-      profile?.username ||
-      user?.email?.split("@")[0] ||
-      "Rich User"
-  };
-}
-
-async function insertUploadRecord({ user, profile, config, file, filePath, url, mediaType }) {
-  const title = safeValue(els.title);
-  const description = safeValue(els.description);
-  const category = safeValue(els.category, config.section);
-  const routeKey = els.routeKey?.value || "general";
-  const identity = profilePayload(profile, user);
-
-  const { data, error } = await supabase
-    .from(RB_TABLES.uploads)
-    .insert({
-      user_id: user.id,
-      category,
-      section: config.section,
-      title,
-      description,
-      bucket: config.bucket,
-      file_path: filePath,
-      public_url: url,
-      mime_type: file.type || null,
-      file_size: file.size || null,
-      media_type: mediaType,
-      visibility: "public",
-      processing_status: "completed",
-      metadata: {
-        route_key: routeKey,
-        source: "Rich Bizness Mobile",
-        target_table: config.targetTable,
-        profile_id: user.id,
-        username: identity.username,
-        display_name: identity.display_name
-      }
-    })
-    .select("*")
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function createSectionRecord({ user, profile, config, upload, url, mediaType }) {
-  const routeKey = els.routeKey?.value || "general";
-  const title = safeValue(els.title, "Untitled Drop");
-  const description = safeValue(els.description);
-  const category = safeValue(els.category, config.section);
-  const tag = safeValue(els.tag);
-  const identity = profilePayload(profile, user);
-
-  const baseMetadata = {
-    upload_id: upload.id,
-    route_key: routeKey,
-    profile_id: user.id,
-    category,
-    tag
-  };
-
-  if (config.targetTable === RB_TABLES.feedPosts) {
-    return supabase.from(RB_TABLES.feedPosts).insert({
-      user_id: user.id,
-      ...identity,
-      title,
-      body: description || title,
-      media_url: url,
-      media_type: mediaType,
-      thumbnail_url: mediaType === "image" ? url : null,
-      section: config.section,
-      visibility: "public",
-      metadata: baseMetadata
-    });
-  }
-
-  if (config.targetTable === RB_TABLES.musicTracks) {
-    return supabase.from(RB_TABLES.musicTracks).insert({
-      user_id: user.id,
-      ...identity,
-      title,
-      description,
-      audio_url: url,
-      cover_url: null,
-      genre: category,
-      mood: tag,
-      is_published: true,
-      metadata: baseMetadata
-    });
-  }
-
-  if (config.targetTable === RB_TABLES.podcastEpisodes) {
-    return supabase.from(RB_TABLES.podcastEpisodes).insert({
-      user_id: user.id,
-      ...identity,
-      title,
-      description,
-      audio_url: url,
-      cover_url: null,
-      episode_number: 1,
-      season_number: 1,
-      is_published: true,
-      metadata: baseMetadata
-    });
-  }
-
-  if (config.targetTable === RB_TABLES.radioStations) {
-    return supabase.from(RB_TABLES.radioStations).insert({
-      user_id: user.id,
-      ...identity,
-      station_name: title,
-      station_tag: tag,
-      description,
-      stream_url: tag || url,
-      cover_url: url,
-      genre: category,
-      is_public: true,
-      metadata: baseMetadata
-    });
-  }
-
-  if (config.targetTable === RB_TABLES.sportsUploads) {
-    return supabase.from(RB_TABLES.sportsUploads).insert({
-      user_id: user.id,
-      ...identity,
-      title,
-      caption: description,
-      sport_name: category,
-      team_name: tag,
-      content_type: mediaType === "video" ? "clip" : mediaType,
-      clip_type: "highlight",
-      file_url: url,
-      thumbnail_url: null,
-      metadata: baseMetadata
-    });
-  }
-
-  if (config.targetTable === RB_TABLES.gameClips) {
-    return supabase.from(RB_TABLES.gameClips).insert({
-      user_id: user.id,
-      ...identity,
-      game_slug: tag || category || "rich-bizness",
-      title,
-      caption: description,
-      clip_url: url,
-      thumbnail_url: null,
-      metadata: baseMetadata
-    });
-  }
-
-  if (config.targetTable === RB_TABLES.products) {
-    const isDigital = routeKey === "store-digital";
-
-    return supabase.from(RB_TABLES.products).insert({
-      seller_id: user.id,
-      title,
-      description,
-      category,
-      product_type: isDigital ? "digital" : "physical",
-      fulfillment_type: isDigital ? "digital" : "shipping",
-      price_cents: 0,
-      currency: "usd",
-      image_url: mediaType === "image" ? url : null,
-      media_url: url,
-      digital_file_url: isDigital ? url : null,
-      is_digital: isDigital,
-      is_public: true,
-      status: "active",
-      metadata: baseMetadata
-    });
-  }
-
-  if (config.targetTable === RB_TABLES.profiles) {
-    const column = routeKey === "profile-banner" ? "banner_url" : "avatar_url";
-
-    return supabase
-      .from(RB_TABLES.profiles)
-      .update({
-        [column]: url,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", user.id);
-  }
-
-  if (config.targetTable === RB_TABLES.metaAvatars) {
-    return supabase.from(RB_TABLES.metaAvatars).upsert(
-      {
-        user_id: user.id,
-        display_name: identity.display_name,
-        avatar_url: url,
-        aura: "green-gold",
-        rank: profile?.rank_title || "Traveler",
-        level: profile?.rich_level || 1,
-        is_active: true,
-        metadata: baseMetadata,
-        updated_at: new Date().toISOString()
-      },
-      { onConflict: "user_id" }
-    );
-  }
-
-  return { error: null };
 }
 
 async function handleUpload(event) {
   event.preventDefault();
-  if (isUploading) return;
 
-  const authState = getCurrentUserState();
-  const user = authState?.user;
-  let profile = authState?.profile;
-  const file = els.file?.files?.[0];
+  const user = getUser();
+  const state = getUploadState();
 
   if (!user?.id) {
     setStatus("SIGN IN REQUIRED");
-    window.location.href = RB_ROUTES.auth || "/auth";
+    window.location.href = "/auth?next=/upload";
     return;
   }
 
-  if (!file) {
+  if (!state.file) {
     setStatus("CHOOSE A FILE");
     return;
   }
 
-  const config = routeConfig();
-  const mediaType = getMediaType(file, config);
-  const filePath = `${user.id}/${Date.now()}-${safeName(file.name)}`;
+  const routeKey = getSelectedRouteKey();
+  const route = getUploadSectionRoute(routeKey);
+  const formValues = readUploadForm(els.form);
 
   try {
-    isUploading = true;
     setLoading(true);
-
+    setUploading(true);
+    setUploadProgress(5);
     setStatus("SYNCING IDENTITY");
-    profile = await ensureMyProfile();
 
-    setStatus("UPLOADING");
+    await ensureMyProfile();
 
-    const uploadResult = await supabase.storage
-      .from(config.bucket)
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type || undefined
-      });
+    setStatus("UPLOADING TO STORAGE");
 
-    if (uploadResult.error) throw uploadResult.error;
-
-    const url = publicUrl(config.bucket, filePath);
-
-    const upload = await insertUploadRecord({
-      user,
-      profile,
-      config,
-      file,
-      filePath,
-      url,
-      mediaType
+    const uploaded = await uploadToBucket({
+      bucket: route.bucket,
+      file: state.file,
+      userId: user.id,
+      folder: route.section,
+      upsert: false
     });
 
-    const sectionResult = await createSectionRecord({
-      user,
-      profile,
-      config,
-      upload,
-      url,
-      mediaType
+    uploaded.mediaType = detectMediaType(state.file);
+
+    setUploadProgress(82);
+    setStatus("ROUTING TO SECTION");
+
+    const routed = await routeUploadedFile({
+      section: routeKey,
+      uploaded,
+      values: {
+        ...formValues,
+        category: formValues.category || route.section,
+        media_type: uploaded.mediaType
+      }
     });
 
-    if (sectionResult?.error) throw sectionResult.error;
+    setUploadProgress(95);
 
     await refreshProfileState();
     await refreshAppIdentity();
 
-    if (["profile-avatar", "profile-banner", "meta-avatar"].includes(els.routeKey?.value)) {
+    if (
+      ["profileAvatar", "profileBanner"].includes(routeKey)
+    ) {
       await syncAvatarToUniverse();
     }
 
+    setUploadResult({
+      uploaded,
+      routed,
+      routeKey,
+      section: route.section
+    });
+
     setStatus("DROP LIVE");
 
-    els.form?.reset();
-    paintPreview();
+    resetUploadUI({
+      form: els.form,
+      preview: els.preview,
+      input: els.file
+    });
+
     syncRouteLabel();
   } catch (error) {
     console.error("[RB UPLOAD FAILED]", error);
+    setUploadError(error);
     setStatus(error?.message || "UPLOAD FAILED");
   } finally {
-    isUploading = false;
     setLoading(false);
   }
 }
 
+function bindUI() {
+  els.routeKey?.addEventListener("change", syncRouteLabel);
+  els.form?.addEventListener("submit", handleUpload);
+
+  cleanupDropzone = bindUploadDropzone({
+    dropzone: els.dropzone,
+    fileInput: els.file,
+    preview: els.preview
+  });
+
+  cleanupProgress = bindUploadProgress({
+    bar: els.progressBar,
+    label: els.progressLabel
+  });
+
+  cleanupStatus = bindUploadStatusLabel({
+    target: els.statusLabel
+  });
+}
+
 async function bootUploadPage() {
+  if (booted) return;
+  booted = true;
+
   try {
     await initApp({
       guard: true,
       bindProfile: true,
       toast: false
     });
-
-    supabase = getSupabase();
 
     await ensureMyProfile();
     await refreshProfileState();
@@ -468,15 +272,15 @@ async function bootUploadPage() {
     const params = new URLSearchParams(window.location.search);
     const section = params.get("section");
 
-    if (section && ROUTES[section] && els.routeKey) {
+    if (section && els.routeKey) {
       els.routeKey.value = section;
     }
 
+    bindUI();
     syncRouteLabel();
 
-    els.routeKey?.addEventListener("change", syncRouteLabel);
-    els.file?.addEventListener("change", paintPreview);
-    els.form?.addEventListener("submit", handleUpload);
+    resetUploadState();
+    setUploadReady(true);
 
     document.body.classList.add("rb-upload-ready");
 
@@ -486,8 +290,15 @@ async function bootUploadPage() {
   } catch (error) {
     console.error("[RB UPLOAD BOOT FAILED]", error);
     markPageError(error);
+    setStatus(error?.message || "UPLOAD FAILED TO BOOT");
   }
 }
+
+window.addEventListener("beforeunload", () => {
+  cleanupDropzone?.();
+  cleanupProgress?.();
+  cleanupStatus?.();
+});
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootUploadPage);
