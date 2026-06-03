@@ -60,8 +60,6 @@ const $ = (id) => document.getElementById(id);
 const els = {
   form: $("rb-upload-form"),
   routeKey: $("routeKey"),
-  title: $("uploadTitle"),
-  description: $("uploadDescription"),
   category: $("uploadCategory"),
   tag: $("uploadTag"),
   file: $("uploadFile"),
@@ -71,6 +69,8 @@ const els = {
   progressLabel: $("uploadProgressLabel"),
   statusLabel: $("upload-status-label"),
   routeLabel: $("upload-route-label"),
+  bucketLabel: $("upload-bucket-label"),
+  tableLabel: $("upload-table-label"),
   message: $("uploadMessage"),
   submit: $("uploadSubmitBtn")
 };
@@ -95,13 +95,18 @@ function normalizeRouteKey(value = "feed") {
     radio: "radio",
     sports: "sports",
     gaming: "gaming",
+
     "store-product": "storeProduct",
     "store-digital": "storeDigital",
+    "store-seller": "storeSeller",
+
     "live-thumbnail": "liveThumbnail",
     "live-recording": "liveRecording",
+
     "profile-avatar": "profileAvatar",
     "profile-banner": "profileBanner",
-    "meta-avatar": "profileAvatar",
+
+    "meta-avatar": "metaAvatar",
     meta: "meta"
   };
 
@@ -122,7 +127,15 @@ function syncRouteLabel() {
   });
 
   if (els.routeLabel) {
-    els.routeLabel.textContent = `${route.section} → ${route.bucket}`;
+    els.routeLabel.textContent = route.section || "feed";
+  }
+
+  if (els.bucketLabel) {
+    els.bucketLabel.textContent = route.bucket || "auto";
+  }
+
+  if (els.tableLabel) {
+    els.tableLabel.textContent = route.table || "uploads";
   }
 
   if (els.category && !els.category.value) {
@@ -139,9 +152,7 @@ function setLoading(active) {
       el.disabled = active;
     });
 
-  if (els.submit) {
-    els.submit.disabled = active;
-  }
+  if (els.submit) els.submit.disabled = active;
 }
 
 async function handleUpload(event) {
@@ -193,7 +204,9 @@ async function handleUpload(event) {
       uploaded,
       values: {
         ...formValues,
+        tag: els.tag?.value?.trim() || formValues.tag || "",
         category: formValues.category || route.section,
+        section: route.section,
         media_type: uploaded.mediaType
       }
     });
@@ -204,7 +217,7 @@ async function handleUpload(event) {
     await refreshAppIdentity();
 
     if (
-      ["profileAvatar", "profileBanner"].includes(routeKey)
+      ["profileAvatar", "profileBanner", "metaAvatar"].includes(routeKey)
     ) {
       await syncAvatarToUniverse();
     }
@@ -216,6 +229,7 @@ async function handleUpload(event) {
       section: route.section
     });
 
+    setUploadProgress(100);
     setStatus("DROP LIVE");
 
     resetUploadUI({
@@ -283,7 +297,6 @@ async function bootUploadPage() {
     setUploadReady(true);
 
     document.body.classList.add("rb-upload-ready");
-
     markPageReady("upload");
 
     console.log("RB UPLOAD READY");
