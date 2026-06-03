@@ -8,8 +8,8 @@
   min-height: 100svh;
   color: #fff;
   background:
-    radial-gradient(circle at 50% 0%, rgba(0,255,120,.2), transparent 34%),
-    radial-gradient(circle at 84% 18%, rgba(255,215,90,.15), transparent 30%),
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.2), transparent 34%),
+    radial-gradient(circle at 84% 18%, rgba(255, 215, 90, 0.15), transparent 30%),
     linear-gradient(180deg, #03140b 0%, #020604 48%, #000 100%);
   overflow-x: hidden;
 }
@@ -21,7 +21,7 @@
   z-index: 0;
   pointer-events: none;
   background: url("/images/brand/hero-banner.png") center / cover no-repeat;
-  opacity: .14;
+  opacity: 0.14;
   filter: saturate(1.25) contrast(1.12);
 }
 
@@ -32,8 +32,8 @@
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 18%, transparent, rgba(0,0,0,.68) 58%, #000 100%),
-    linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.92));
+    radial-gradient(circle at 50% 18%, transparent, rgba(0, 0, 0, 0.68) 58%, #000 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.92));
 }
 
 .rb-upload-page .rb-topbar,
@@ -56,25 +56,29 @@
   display: grid;
   align-items: end;
   border-radius: 34px;
-  border: 1px solid rgba(255,215,100,.24);
+  border: 1px solid rgba(255, 215, 100, 0.24);
   background:
-    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.84)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.84)),
     url("/images/brand/Avatar-hero-Banner.png.jpeg") center / cover no-repeat;
-  box-shadow: 0 35px 90px rgba(0,0,0,.6);
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.6);
   overflow: hidden;
+}
+
+.rb-upload-page .rb-section-hero-copy {
+  max-width: 780px;
 }
 
 .rb-upload-page .rb-section-hero h1 {
   margin: 0;
   font-size: clamp(2.8rem, 8vw, 7rem);
-  line-height: .86;
-  letter-spacing: -.08em;
+  line-height: 0.86;
+  letter-spacing: -0.08em;
   text-transform: uppercase;
 }
 
 .rb-upload-page .rb-subtitle {
   max-width: 720px;
-  color: rgba(255,255,255,.78);
+  color: rgba(255, 255, 255, 0.78);
   line-height: 1.55;
 }
 
@@ -88,10 +92,11 @@
 .rb-upload-page .rb-mini-card {
   padding: 18px;
   border-radius: 24px;
-  border: 1px solid rgba(0,255,120,.18);
-  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(0, 255, 120, 0.18);
+  background: rgba(0, 0, 0, 0.55);
   text-align: center;
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .rb-upload-page .rb-mini-card strong {
@@ -106,10 +111,10 @@
 .rb-upload-page .rb-mini-card span {
   display: block;
   margin-top: 6px;
-  color: rgba(255,255,255,.62);
-  font-size: .72rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: .13em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
@@ -117,10 +122,11 @@
   margin-top: 18px;
   padding: 22px;
   border-radius: 32px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(0,0,0,.44);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.44);
   backdrop-filter: blur(18px);
-  box-shadow: 0 24px 70px rgba(0,0,0,.38);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
 }
 
 .rb-upload-page .rb-panel-head {
@@ -134,7 +140,7 @@
   margin: 0;
   font-size: clamp(1.7rem, 4vw, 3.2rem);
   line-height: 1;
-  letter-spacing: -.05em;
+  letter-spacing: -0.05em;
   text-transform: uppercase;
 }
 
@@ -147,9 +153,9 @@
   display: grid;
   gap: 7px;
   color: #7cffaa;
-  font-size: .78rem;
+  font-size: 0.78rem;
   font-weight: 950;
-  letter-spacing: .1em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -157,19 +163,24 @@
 .rb-upload-page .rb-form textarea,
 .rb-upload-page .rb-form select {
   width: 100%;
-  border: 1px solid rgba(255,255,255,.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
-  background: rgba(255,255,255,.07);
+  background: rgba(255, 255, 255, 0.07);
   color: #fff;
   outline: none;
   padding: 14px 15px;
   font: inherit;
 }
 
+.rb-upload-page .rb-form select option {
+  background: #041006;
+  color: #fff;
+}
+
 .rb-upload-page .rb-form input[type="file"] {
   padding: 16px;
   border-style: dashed;
-  background: rgba(0,0,0,.38);
+  background: rgba(0, 0, 0, 0.38);
 }
 
 .rb-upload-page .rb-form textarea {
@@ -180,8 +191,8 @@
 .rb-upload-page .rb-form input:focus,
 .rb-upload-page .rb-form textarea:focus,
 .rb-upload-page .rb-form select:focus {
-  border-color: rgba(124,255,170,.58);
-  box-shadow: 0 0 0 4px rgba(0,255,120,.1);
+  border-color: rgba(124, 255, 170, 0.58);
+  box-shadow: 0 0 0 4px rgba(0, 255, 120, 0.1);
 }
 
 .rb-form-grid {
@@ -190,26 +201,36 @@
   gap: 12px;
 }
 
+.rb-upload-dropzone {
+  min-height: 260px;
+  border-radius: 28px;
+  cursor: pointer;
+}
+
+.rb-upload-dropzone.is-dragging,
+.rb-upload-dropzone:hover {
+  filter: drop-shadow(0 0 34px rgba(0, 255, 120, 0.18));
+}
+
 .rb-upload-preview {
   min-height: 260px;
   display: grid;
   place-items: center;
   overflow: hidden;
   border-radius: 28px;
-  border: 1px dashed rgba(255,215,100,.32);
+  border: 1px dashed rgba(255, 215, 100, 0.32);
   background:
-    linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.74)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.74)),
     url("/images/brand/hero-banner.png") center / cover no-repeat;
-  color: rgba(255,255,255,.72);
+  color: rgba(255, 255, 255, 0.72);
   font-weight: 950;
   text-align: center;
-  cursor: pointer;
 }
 
-.rb-upload-preview.is-dragging,
-.rb-upload-preview:hover {
-  border-color: rgba(124,255,170,.72);
-  box-shadow: 0 0 34px rgba(0,255,120,.18);
+.rb-upload-dropzone.is-dragging .rb-upload-preview,
+.rb-upload-dropzone:hover .rb-upload-preview {
+  border-color: rgba(124, 255, 170, 0.72);
+  box-shadow: 0 0 34px rgba(0, 255, 120, 0.18);
 }
 
 .upload-preview-empty,
@@ -228,7 +249,7 @@
 
 .upload-preview-empty span,
 .upload-preview-file span {
-  color: rgba(255,255,255,.65);
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .rb-upload-preview img,
@@ -247,21 +268,35 @@
 }
 
 .rb-upload-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.rb-upload-progress-track {
   height: 10px;
   overflow: hidden;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.rb-upload-progress span {
+.rb-upload-progress-bar {
   display: block;
   width: 0%;
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(135deg, #7cffaa, #ffd76b);
-  box-shadow: 0 0 22px rgba(0,255,120,.32);
-  transition: width .22s ease;
+  box-shadow: 0 0 22px rgba(0, 255, 120, 0.32);
+  transition: width 0.22s ease;
+}
+
+#uploadProgressLabel {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .rb-main-launch {
@@ -271,14 +306,14 @@
   background: linear-gradient(135deg, #7cffaa, #ffd76b);
   color: #041006;
   font-weight: 1000;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  box-shadow: 0 0 28px rgba(0,255,120,.24);
+  box-shadow: 0 0 28px rgba(0, 255, 120, 0.24);
 }
 
 .rb-main-launch:disabled,
 .rb-form.is-loading .rb-main-launch {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -289,7 +324,17 @@
   font-weight: 900;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
+}
+
+.rb-upload-page .rb-footer {
+  padding: 22px;
+  color: rgba(255, 255, 255, 0.52);
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 920px) {
@@ -318,11 +363,21 @@
 }
 
 @media (max-width: 560px) {
+  .rb-upload-shell {
+    width: 92vw;
+    padding-bottom: calc(44px + env(safe-area-inset-bottom));
+  }
+
   .rb-upload-page .rb-profile-grid {
     grid-template-columns: 1fr;
   }
 
-  .rb-upload-preview {
+  .rb-upload-page .rb-section-hero h1 {
+    font-size: clamp(2.6rem, 16vw, 4.4rem);
+  }
+
+  .rb-upload-preview,
+  .rb-upload-dropzone {
     min-height: 220px;
   }
 }
