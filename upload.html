@@ -14,7 +14,7 @@
 
   <meta
     name="description"
-    content="Rich Bizness Mobile upload router for feed, gallery, music, podcast, sports, gaming, store, live, profile, and meta uploads."
+    content="Rich Bizness Mobile upload router for feed, gallery, music, podcast, radio, sports, gaming, store, live, profile, and meta uploads."
   />
 
   <link rel="stylesheet" href="/styles/base.css" />
@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-upload-page" data-page="upload" data-section="upload">
+<body class="rb-body rb-upload-page" data-section="upload">
 
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
@@ -62,8 +62,8 @@
         <h1>Drop Anything</h1>
 
         <p class="rb-subtitle">
-          Upload once. The router sends it to the right bucket, records it in uploads,
-          and creates the matching section record across the Rich Bizness universe.
+          Upload once. The router sends media to the right bucket, logs it in uploads,
+          then creates the matching section record.
         </p>
 
         <div class="rb-form-actions">
@@ -80,18 +80,18 @@
       </article>
 
       <article class="rb-mini-card">
-        <strong id="upload-route-label">feed → general-uploads</strong>
+        <strong id="upload-route-label">feed</strong>
         <span>Route</span>
       </article>
 
       <article class="rb-mini-card">
-        <strong id="uploadProgressLabel">Ready.</strong>
-        <span>Progress</span>
+        <strong id="upload-bucket-label">auto</strong>
+        <span>Bucket</span>
       </article>
 
       <article class="rb-mini-card">
-        <strong>uploads</strong>
-        <span>Ledger</span>
+        <strong id="upload-table-label">uploads</strong>
+        <span>Table</span>
       </article>
     </section>
 
@@ -107,8 +107,7 @@
 
         <label for="routeKey">
           Upload Route
-
-          <select name="section" id="routeKey">
+          <select name="route_key" id="routeKey">
             <option value="feed">Feed Post</option>
             <option value="gallery">Gallery</option>
             <option value="music">Music Track</option>
@@ -118,17 +117,18 @@
             <option value="gaming">Game Clip</option>
             <option value="store-product">Store Product</option>
             <option value="store-digital">Store Digital</option>
+            <option value="store-seller">Store Seller Media</option>
             <option value="live-thumbnail">Live Thumbnail</option>
             <option value="live-recording">Live Recording</option>
             <option value="profile-avatar">Profile Avatar</option>
             <option value="profile-banner">Profile Banner</option>
+            <option value="meta-avatar">Meta Avatar</option>
             <option value="meta">Meta World</option>
           </select>
         </label>
 
         <label for="uploadTitle">
           Title
-
           <input
             name="title"
             id="uploadTitle"
@@ -140,7 +140,6 @@
 
         <label for="uploadDescription">
           Description / Caption
-
           <textarea
             name="description"
             id="uploadDescription"
@@ -152,19 +151,17 @@
         <div class="rb-form-grid">
           <label for="uploadCategory">
             Category / Genre / Sport
-
             <input
               name="category"
               id="uploadCategory"
               type="text"
-              placeholder="general"
+              placeholder="auto"
               autocomplete="off"
             />
           </label>
 
           <label for="uploadTag">
-            Team / Game / Mood
-
+            Tag / Team / Game / Mood
             <input
               name="tag"
               id="uploadTag"
@@ -175,9 +172,114 @@
           </label>
         </div>
 
+        <div class="rb-form-grid">
+          <label for="uploadGenre">
+            Genre
+            <input
+              name="genre"
+              id="uploadGenre"
+              type="text"
+              placeholder="music / radio genre"
+              autocomplete="off"
+            />
+          </label>
+
+          <label for="uploadGameSlug">
+            Game Slug
+            <input
+              name="game_slug"
+              id="uploadGameSlug"
+              type="text"
+              placeholder="rich-chess"
+              autocomplete="off"
+            />
+          </label>
+        </div>
+
+        <div class="rb-form-grid">
+          <label for="uploadSportName">
+            Sport Name
+            <input
+              name="sport_name"
+              id="uploadSportName"
+              type="text"
+              placeholder="basketball"
+              autocomplete="off"
+            />
+          </label>
+
+          <label for="uploadProductType">
+            Product Type
+            <select name="product_type" id="uploadProductType">
+              <option value="">Auto</option>
+              <option value="physical">Physical</option>
+              <option value="digital">Digital</option>
+              <option value="download">Download</option>
+              <option value="vip">VIP</option>
+              <option value="collectible">Collectible</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="rb-form-grid">
+          <label for="uploadPriceCents">
+            Price Cents
+            <input
+              name="price_cents"
+              id="uploadPriceCents"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+            />
+          </label>
+
+          <label for="uploadCurrency">
+            Currency
+            <select name="currency" id="uploadCurrency">
+              <option value="usd">USD</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="rb-form-grid">
+          <label for="uploadShowId">
+            Podcast Show ID
+            <input
+              name="show_id"
+              id="uploadShowId"
+              type="text"
+              placeholder="optional uuid"
+              autocomplete="off"
+            />
+          </label>
+
+          <label for="uploadEpisodeNumber">
+            Episode Number
+            <input
+              name="episode_number"
+              id="uploadEpisodeNumber"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="1"
+            />
+          </label>
+        </div>
+
+        <label for="uploadTargetId">
+          Attach Target ID
+          <input
+            name="id"
+            id="uploadTargetId"
+            type="text"
+            placeholder="For live thumbnail / live recording target id"
+            autocomplete="off"
+          />
+        </label>
+
         <label for="uploadVisibility">
           Visibility
-
           <select name="visibility" id="uploadVisibility">
             <option value="public">Public</option>
             <option value="followers">Followers</option>
@@ -187,7 +289,6 @@
 
         <label for="uploadFile">
           File
-
           <input
             name="file"
             id="uploadFile"
@@ -197,18 +298,35 @@
         </label>
 
         <div
-          id="uploadPreview"
-          class="rb-upload-preview"
+          id="uploadDropzone"
+          class="rb-upload-dropzone"
           aria-live="polite"
         >
-          <div class="upload-preview-empty">
-            <strong>No file selected</strong>
-            <span>Drop media here or tap to choose.</span>
+          <div
+            id="uploadPreview"
+            class="rb-upload-preview"
+          >
+            <div class="upload-preview-empty">
+              <strong>No file selected</strong>
+              <span>Drop media here or tap to choose.</span>
+            </div>
           </div>
         </div>
 
-        <div class="rb-upload-progress" aria-hidden="true">
-          <span id="uploadProgressBar"></span>
+        <div class="rb-upload-progress" aria-hidden="false">
+          <div class="rb-upload-progress-track">
+            <div
+              id="uploadProgressBar"
+              class="rb-upload-progress-bar"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              style="width:0%;"
+            ></div>
+          </div>
+
+          <small id="uploadProgressLabel">Ready.</small>
         </div>
 
         <div class="rb-form-actions">
@@ -229,7 +347,11 @@
           </button>
         </div>
 
-        <p id="uploadMessage" class="rb-form-note" aria-live="polite"></p>
+        <p
+          id="uploadMessage"
+          class="rb-form-note"
+          aria-live="polite"
+        ></p>
 
       </form>
     </section>
