@@ -5,6 +5,7 @@ import { createPortalEngine } from "/core/engine/portal-engine.js";
 import { createOrbitCardsEngine } from "/core/engine/orbit-cards.js";
 import { createAvatarEngine } from "/core/engine/avatar-engine.js";
 import { createOmniFxEngine } from "/core/engine/omni-fx.js";
+import { createMetaWorldEngine } from "/core/features/meta/world-engine.js";
 
 /* =========================
    RICH BIZNESS MOBILE
@@ -120,6 +121,7 @@ function initUniverse() {
     0.1,
     1800
   );
+
   camera.position.set(0, 4.4, 55);
 
   renderer = new THREERef.WebGLRenderer({
@@ -144,9 +146,18 @@ function initUniverse() {
 
   engines.push(
     createGalaxyEngine(ctx),
+
+    createMetaWorldEngine(ctx, {
+      mode: "preview",
+      world: "rich-bizness"
+    }),
+
     createPortalEngine(ctx),
+
     createOrbitCardsEngine(ctx),
+
     createAvatarEngine(ctx),
+
     createOmniFxEngine(ctx)
   );
 
