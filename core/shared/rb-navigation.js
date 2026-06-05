@@ -6,6 +6,10 @@
    Route Lock
    Secret Routes
    Active Module Tracking
+   Supports:
+   - data-route="profile"
+   - data-route="/profile"
+   - href="/profile"
 ========================= */
 
 import {
@@ -18,8 +22,66 @@ import {
   getProfile
 } from "/core/shared/rb-supabase.js";
 
-let activeRoute = window.location.pathname || "/";
+let activeRoute = normalizePath(window.location.pathname || "/");
 let activeModule = null;
+
+/* =========================
+   NORMALIZE
+========================= */
+
+export function normalizePath(path = "") {
+  if (!path) return "/";
+
+  const clean = String(path).trim();
+
+  if (clean === "/index.html") return "/";
+
+  return (
+    clean
+      .replace(window.location.origin, "")
+      .replace(/\/index\.html$/, "/")
+      .replace(/\.html$/, "")
+      .replace(/\/$/, "") || "/"
+  );
+}
+
+export function resolveRoute(value = "") {
+  const raw = String(value || "").trim();
+
+  if (!raw) return "/";
+
+  if (
+    raw.startsWith("http://") ||
+    raw.startsWith("https://") ||
+    raw.startsWith("#") ||
+    raw.startsWith("mailto:") ||
+    raw.startsWith("tel:")
+  ) {
+    return raw;
+  }
+
+  if (raw.startsWith("/")) {
+    return normalizePath(raw);
+  }
+
+  if (RB_ROUTES?.[raw]) {
+    return normalizePath(RB_ROUTES[raw]);
+  }
+
+  const module = getModule(raw);
+  if (module?.route) {
+    return normalizePath(module.route);
+  }
+
+  const secretRoute =
+    RB_PROFILE_KEYS?.secretRoutes?.[raw];
+
+  if (secretRoute) {
+    return normalizePath(secretRoute);
+  }
+
+  return normalizePath(`/${raw}`);
+}
 
 /* =========================
    ROUTE HELPERS
@@ -34,13 +96,17 @@ export function currentModule() {
 }
 
 export function routeExists(route = "") {
+  const resolved = resolveRoute(route);
+
   return Object.values(RB_ROUTES).some((value) => {
     if (typeof value === "string") {
-      return value === route;
+      return normalizePath(value) === resolved;
     }
 
     if (typeof value === "object") {
-      return Object.values(value).includes(route);
+      return Object.values(value).some(
+        (nested) => normalizePath(nested) === resolved
+      );
     }
 
     return false;
@@ -48,9 +114,7 @@ export function routeExists(route = "") {
 }
 
 export function moduleExists(key = "") {
-  return RB_MODULES.some(
-    (module) => module.key === key
-  );
+  return RB_MODULES.some((module) => module.key === key);
 }
 
 /* =========================
@@ -59,25 +123,23 @@ export function moduleExists(key = "") {
 
 export function getModule(key = "") {
   return (
-    RB_MODULES.find(
-      (module) => module.key === key
-    ) || null
+    RB_MODULES.find((module) => module.key === key) ||
+    null
   );
 }
 
 export function getModuleByRoute(route = "") {
+  const resolved = resolveRoute(route);
+
   return (
     RB_MODULES.find(
-      (module) => module.route === route
+      (module) => normalizePath(module.route) === resolved
     ) || null
   );
 }
 
 export function getActiveModule() {
-  return (
-    getModuleByRoute(window.location.pathname) ||
-    null
-  );
+  return getModuleByRoute(window.location.pathname);
 }
 
 /* =========================
@@ -85,18 +147,18 @@ export function getActiveModule() {
 ========================= */
 
 export function isSecretRoute(route = "") {
-  const secrets =
-    RB_PROFILE_KEYS?.secretRoutes || {};
+  const resolved = resolveRoute(route);
+  const secrets = RB_PROFILE_KEYS?.secretRoutes || {};
 
-  return Object.values(secrets).includes(route);
+  return Object.values(secrets).some(
+    (secret) => normalizePath(secret) === resolved
+  );
 }
 
 export function canAccessSecretRoute(route = "") {
   const profile = getProfile();
 
-  if (!isSecretRoute(route)) {
-    return true;
-  }
+  if (!isSecretRoute(route)) return true;
 
   return !!(
     profile?.role === "founder" ||
@@ -112,35 +174,36 @@ export function canAccessSecretRoute(route = "") {
 ========================= */
 
 export function go(route = "/") {
-  if (!route) return;
+  const resolved = resolveRoute(route);
+
+  if (!resolved) return false;
 
   if (
-    isSecretRoute(route) &&
-    !canAccessSecretRoute(route)
+    isSecretRoute(resolved) &&
+    !canAccessSecretRoute(resolved)
   ) {
-    console.warn(
-      "[RB NAV] Secret route blocked:",
-      route
-    );
-
+    console.warn("[RB NAV] Secret route blocked:", resolved);
     return false;
   }
 
-  window.location.href = route;
+  window.location.href = resolved;
   return true;
 }
 
 export function replace(route = "/") {
-  if (!route) return;
+  const resolved = resolveRoute(route);
+
+  if (!resolved) return false;
 
   if (
-    isSecretRoute(route) &&
-    !canAccessSecretRoute(route)
+    isSecretRoute(resolved) &&
+    !canAccessSecretRoute(resolved)
   ) {
+    console.warn("[RB NAV] Secret route blocked:", resolved);
     return false;
   }
 
-  window.location.replace(route);
+  window.location.replace(resolved);
   return true;
 }
 
@@ -148,10 +211,7 @@ export function openModule(moduleKey = "") {
   const module = getModule(moduleKey);
 
   if (!module) {
-    console.warn(
-      `[RB NAV] Unknown module: ${moduleKey}`
-    );
-
+    console.warn(`[RB NAV] Unknown module: ${moduleKey}`);
     return false;
   }
 
@@ -175,26 +235,16 @@ export function reload() {
 ========================= */
 
 export function getQueryParam(key) {
-  const params = new URLSearchParams(
-    window.location.search
-  );
-
-  return params.get(key);
+  return new URLSearchParams(window.location.search).get(key);
 }
 
 export function getAllQueryParams() {
   return Object.fromEntries(
-    new URLSearchParams(
-      window.location.search
-    )
+    new URLSearchParams(window.location.search)
   );
 }
 
-export function setQueryParam(
-  key,
-  value,
-  replaceState = true
-) {
+export function setQueryParam(key, value, replaceState = true) {
   const url = new URL(window.location.href);
 
   if (
@@ -208,17 +258,9 @@ export function setQueryParam(
   }
 
   if (replaceState) {
-    window.history.replaceState(
-      {},
-      "",
-      url.toString()
-    );
+    window.history.replaceState({}, "", url.toString());
   } else {
-    window.history.pushState(
-      {},
-      "",
-      url.toString()
-    );
+    window.history.pushState({}, "", url.toString());
   }
 
   return url.toString();
@@ -229,11 +271,8 @@ export function setQueryParam(
 ========================= */
 
 export function updateActiveRoute() {
-  activeRoute =
-    window.location.pathname || "/";
-
-  activeModule =
-    getModuleByRoute(activeRoute);
+  activeRoute = normalizePath(window.location.pathname || "/");
+  activeModule = getModuleByRoute(activeRoute);
 
   return {
     route: activeRoute,
@@ -242,13 +281,11 @@ export function updateActiveRoute() {
 }
 
 export function isRoute(route = "") {
-  return currentRoute() === route;
+  return currentRoute() === resolveRoute(route);
 }
 
 export function isModule(moduleKey = "") {
-  return (
-    currentModule()?.key === moduleKey
-  );
+  return currentModule()?.key === moduleKey;
 }
 
 /* =========================
@@ -256,44 +293,73 @@ export function isModule(moduleKey = "") {
 ========================= */
 
 export function bindNavigation({
-  selector = "[data-route]"
+  selector = "[data-route], a[href]"
 } = {}) {
-  document
-    .querySelectorAll(selector)
-    .forEach((element) => {
-      element.addEventListener(
-        "click",
-        (event) => {
-          event.preventDefault();
+  document.querySelectorAll(selector).forEach((element) => {
+    if (element.dataset.rbNavBound === "true") return;
 
-          const route =
-            element.dataset.route;
+    const rawRoute =
+      element.dataset.route ||
+      element.getAttribute("href") ||
+      "";
 
-          if (route) {
-            go(route);
-          }
-        }
-      );
+    if (!rawRoute) return;
+
+    if (
+      rawRoute.startsWith("#") ||
+      rawRoute.startsWith("mailto:") ||
+      rawRoute.startsWith("tel:") ||
+      rawRoute.startsWith("http://") ||
+      rawRoute.startsWith("https://")
+    ) {
+      return;
+    }
+
+    element.dataset.rbNavBound = "true";
+
+    element.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      const route =
+        element.dataset.route ||
+        element.getAttribute("href");
+
+      go(route);
     });
+  });
 }
 
 export function bindActiveNavigation({
-  selector = "[data-route]"
+  selector = "[data-route], a[href]",
+  activeClass = "is-active"
 } = {}) {
-  const current =
-    window.location.pathname;
+  const current = normalizePath(window.location.pathname);
 
-  document
-    .querySelectorAll(selector)
-    .forEach((element) => {
-      const route =
-        element.dataset.route;
+  document.querySelectorAll(selector).forEach((element) => {
+    const rawRoute =
+      element.dataset.route ||
+      element.getAttribute("href") ||
+      "";
 
-      element.classList.toggle(
-        "active",
-        route === current
-      );
-    });
+    if (!rawRoute) return;
+
+    const resolved = resolveRoute(rawRoute);
+
+    element.classList.toggle(
+      activeClass,
+      resolved === current
+    );
+
+    element.classList.toggle(
+      "active",
+      resolved === current
+    );
+  });
+}
+
+export function bindGlobalNavigation(options = {}) {
+  bindNavigation(options);
+  bindActiveNavigation(options);
 }
 
 /* =========================
@@ -301,15 +367,15 @@ export function bindActiveNavigation({
 ========================= */
 
 export function buildModuleMenu() {
+  const current = normalizePath(window.location.pathname);
+
   return RB_MODULES.map((module) => ({
     key: module.key,
     label: module.label,
     icon: module.icon,
-    route: module.route,
+    route: normalizePath(module.route),
     color: module.color,
-    active:
-      module.route ===
-      window.location.pathname
+    active: normalizePath(module.route) === current
   }));
 }
 
@@ -317,13 +383,8 @@ export function buildModuleMenu() {
    STARTUP
 ========================= */
 
-window.addEventListener(
-  "popstate",
-  updateActiveRoute
-);
+window.addEventListener("popstate", updateActiveRoute);
 
 updateActiveRoute();
 
-console.log(
-  "RB NAVIGATION READY"
-);
+console.log("RB NAVIGATION READY");
