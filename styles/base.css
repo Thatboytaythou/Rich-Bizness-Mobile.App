@@ -2,6 +2,9 @@
    RICH BIZNESS MOBILE
    styles/base.css
    LAYER 1 / 22
+
+   GLOBAL BASE FOUNDATION
+   App Shell + Reset + Index Lock
 ========================= */
 
 :root {
@@ -19,10 +22,20 @@
   --rb-white: #f5f7f7;
   --rb-muted: rgba(245, 247, 247, 0.72);
 
+  --rb-red: #ff5757;
+  --rb-blue: #38bdf8;
+  --rb-purple: #a855f7;
+
   --rb-glass: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.09),
     rgba(255, 255, 255, 0.025)
+  );
+
+  --rb-glass-dark: linear-gradient(
+    145deg,
+    rgba(5, 8, 5, 0.88),
+    rgba(0, 0, 0, 0.72)
   );
 
   --rb-border: rgba(255, 255, 255, 0.12);
@@ -43,6 +56,8 @@
   --rb-vh: 1vh;
   --rb-safe-top: env(safe-area-inset-top);
   --rb-safe-bottom: env(safe-area-inset-bottom);
+  --rb-safe-left: env(safe-area-inset-left);
+  --rb-safe-right: env(safe-area-inset-right);
 
   --rb-z-bg: 0;
   --rb-z-canvas: 1;
@@ -99,11 +114,40 @@ body {
   overflow-x: hidden;
 }
 
+body.rb-app-booting {
+  cursor: progress;
+}
+
+body.rb-app-error {
+  --rb-border-green: rgba(239, 68, 68, 0.34);
+}
+
+body.rb-offline::before {
+  content: "OFFLINE";
+  position: fixed;
+  left: 50%;
+  top: calc(10px + env(safe-area-inset-top));
+  z-index: var(--rb-z-modal);
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: var(--rb-radius-pill);
+  border: 1px solid rgba(239, 68, 68, 0.34);
+  background: rgba(0, 0, 0, 0.72);
+  color: #fca5a5;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 /* FULLSCREEN APP LOCK */
 
 body.rb-index-page,
 body.rb-avatar-page,
-body.rb-base-test-page {
+body.rb-base-test-page,
+body.rb-live-hologram-page,
+body.rb-watch-hologram-page {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
@@ -152,6 +196,10 @@ button {
   color: inherit;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -160,6 +208,17 @@ a {
 ul,
 ol {
   list-style: none;
+}
+
+input,
+textarea,
+select {
+  color-scheme: dark;
+}
+
+::selection {
+  background: rgba(0, 255, 157, 0.28);
+  color: #ffffff;
 }
 
 /* HELPERS */
@@ -193,6 +252,82 @@ ol {
   transition:
     opacity 0.18s ease,
     filter 0.18s ease;
+}
+
+.rb-empty {
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(250, 204, 21, 0.14);
+  background: rgba(0, 0, 0, 0.38);
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.rb-shell {
+  position: relative;
+  z-index: var(--rb-z-ui);
+  width: min(1180px, calc(100% - 28px));
+  margin: 0 auto;
+  padding:
+    calc(18px + env(safe-area-inset-top))
+    0
+    calc(var(--rb-bottom-nav-height) + env(safe-area-inset-bottom) + 24px);
+}
+
+/* GLOBAL BACKGROUND LAYERS */
+
+.rb-bg-layer,
+.rb-bg-grid,
+.rb-bg-vignette,
+.rb-bg-noise,
+.rb-fx-smoke {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rb-bg-layer {
+  z-index: var(--rb-z-bg);
+  background:
+    radial-gradient(circle at 20% 12%, rgba(0, 255, 157, 0.13), transparent 32%),
+    radial-gradient(circle at 88% 18%, rgba(250, 204, 21, 0.1), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(0, 255, 157, 0.08), transparent 42%);
+}
+
+.rb-bg-grid {
+  z-index: var(--rb-z-bg);
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 74%);
+}
+
+.rb-bg-vignette {
+  z-index: var(--rb-z-fx);
+  background:
+    radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.18) 46%, rgba(0, 0, 0, 0.76) 100%);
+}
+
+.rb-bg-noise {
+  z-index: var(--rb-z-fx);
+  opacity: 0.075;
+  background-image:
+    repeating-radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 4px);
+  mix-blend-mode: soft-light;
+}
+
+.rb-fx-smoke {
+  z-index: var(--rb-z-fx);
+  opacity: 0.4;
+  background:
+    radial-gradient(circle at 14% 72%, rgba(255, 255, 255, 0.08), transparent 30%),
+    radial-gradient(circle at 84% 78%, rgba(0, 255, 157, 0.08), transparent 32%),
+    radial-gradient(circle at 54% 20%, rgba(250, 204, 21, 0.05), transparent 34%);
+  filter: blur(18px);
+  animation: rbSmokeFloat 14s ease-in-out infinite alternate;
 }
 
 /* INDEX ENGINE STRUCTURE */
@@ -333,6 +468,10 @@ ol {
     min-height: 100dvh;
   }
 
+  .rb-shell {
+    width: min(100% - 20px, 1180px);
+  }
+
   .rb-brand-header {
     top: max(64px, calc(env(safe-area-inset-top) + 28px));
   }
@@ -362,6 +501,20 @@ ol {
   .rb-brand-header p {
     font-size: 0.52rem;
     letter-spacing: 0.2em;
+  }
+}
+
+/* ANIMATIONS */
+
+@keyframes rbSmokeFloat {
+  0% {
+    transform: translate3d(-1%, -1%, 0) scale(1);
+    opacity: 0.34;
+  }
+
+  100% {
+    transform: translate3d(1.4%, 1.8%, 0) scale(1.04);
+    opacity: 0.5;
   }
 }
 
