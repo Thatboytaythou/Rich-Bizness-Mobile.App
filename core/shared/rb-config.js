@@ -5,7 +5,7 @@
    SINGLE SOURCE OF TRUTH
    Routes + Tables + Buckets
    Motion + Visual System
-   Profile Lock + Secret Worlds
+   Profile Lock + Avatar Lock + Secret Worlds
    No secrets in this file.
 ========================= */
 
@@ -73,9 +73,14 @@ const RB_CONFIG = Object.freeze({
 
   brandAssets: {
     heroBanner: "/images/brand/hero-banner.png",
-    avatarHeroBanner: "/images/brand/Avatar-hero-Banner.png.jpeg",
     defaultProfileBanner: "/images/brand/hero-banner.png",
-    defaultAvatar: "/images/brand/Avatar-hero-Banner.png.jpeg",
+
+    defaultProfileAvatar: "/images/brand/Avatar-hero-Banner.png.jpeg",
+    defaultMetaAvatar: "/images/brand/meta-avatar.png.jpeg",
+
+    avatarHeroBanner: "/images/brand/Avatar-hero-Banner.png.jpeg",
+    metaLogo: "/images/brand/meta-verse-elite.png.jpeg",
+
     tabIconImage: "/images/brand/hero-banner.png",
   },
 
@@ -90,14 +95,10 @@ const RB_CONFIG = Object.freeze({
     { key: "sports", label: "SPORTS", icon: "🏆", route: "/sports", color: "#00c2ff" },
     { key: "gallery", label: "GALLERY", icon: "🖼️", route: "/gallery", color: "#ff9f43" },
     { key: "store", label: "STORE", icon: "🛒", route: "/store", color: "#ffd700" },
-    { key: "meta", label: "META", icon: "🌌", route: "/meta", color: "#9d4dff" },
-    { key: "messages", label: "DM", icon: "💬", route: "/messages", color: "#00ffaa" },
-    { key: "notifications", label: "ALERTS", icon: "🔔", route: "/notifications", color: "#00ff95" },
     { key: "upload", label: "UPLOAD", icon: "⬆️", route: "/upload", color: "#00ffaa" },
-    { key: "profile", label: "PROFILE", icon: "👑", route: "/profile", color: "#ffe066" },
-    { key: "secretDoor", label: "SECRET DOOR", icon: "/images/brand/hero-banner.png", route: "/rb-secret-door", color: "#00ffae" },
-    { key: "secretMeta2", label: "SECRET META 2", icon: "/images/brand/hero-banner.png", route: "/rb-secret-meta2", color: "#00ffaa" },
-    { key: "secretMeta3", label: "SECRET META 3", icon: "/images/brand/hero-banner.png", route: "/rb-secret-meta3", color: "#ffe066" },
+    { key: "meta", label: "META", icon: "🌌", route: "/meta", color: "#9d4dff" },
+    { key: "avatar", label: "AVATAR", icon: "🧍", route: "/avatar", color: "#00ffae" },
+    { key: "profile", label: "PROFILE", icon: "👤", route: "/profile", color: "#ffe066" },
   ],
 
   routes: {
@@ -115,6 +116,7 @@ const RB_CONFIG = Object.freeze({
     upload: "/upload",
     store: "/store",
     meta: "/meta",
+    avatar: "/avatar",
     messages: "/messages",
     notifications: "/notifications",
     profile: "/profile",
@@ -123,6 +125,9 @@ const RB_CONFIG = Object.freeze({
     creator: "/creator",
     admin: "/admin",
     search: "/search",
+    monetization: "/monetization",
+    xp: "/xp",
+
     secretDoor: "/rb-secret-door",
     secretMeta2: "/rb-secret-meta2",
     secretMeta3: "/rb-secret-meta3",
@@ -279,6 +284,8 @@ const RB_CONFIG = Object.freeze({
 
   profileKeys: {
     identitySource: "profiles",
+    avatarSource: "meta_avatars",
+    playableAvatarSource: "avatar-engine",
 
     requiredProfileTables: [
       "profiles",
@@ -304,6 +311,7 @@ const RB_CONFIG = Object.freeze({
       "gallery",
       "store",
       "meta",
+      "avatar",
       "messages",
       "notifications",
       "upload",
@@ -578,7 +586,9 @@ const RB_CONFIG = Object.freeze({
     heroBanner: "/images/brand/hero-banner.png",
     avatarHeroBanner: "/images/brand/Avatar-hero-Banner.png.jpeg",
     defaultProfileBanner: "/images/brand/hero-banner.png",
-    defaultAvatar: "/images/brand/Avatar-hero-Banner.png.jpeg",
+    defaultProfileAvatar: "/images/brand/Avatar-hero-Banner.png.jpeg",
+    defaultMetaAvatar: "/images/brand/meta-avatar.png.jpeg",
+    metaLogo: "/images/brand/meta-verse-elite.png.jpeg",
 
     smokeCloud: true,
     cinemaMode: true,
