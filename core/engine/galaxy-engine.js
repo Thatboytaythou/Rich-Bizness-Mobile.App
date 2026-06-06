@@ -4,27 +4,30 @@
 
    ULTRA SPACE GALAXY ENGINE
    Deep Space + Nebula + Star Depth + Portal Energy Sync
+   Safer theme aliases + texture cleanup
 ========================= */
 
 export function createGalaxyEngine(ctx) {
   const { THREE, scene, motion, activityState } = ctx;
 
-  let starField;
-  let deepStars;
-  let microStars;
-  let galaxyCloud;
-  let galaxyGold;
-  let nebulaBack;
-  let nebulaMid;
-  let cosmicDust;
-  let portalAura;
-  let spaceFog;
-  let energyBands;
-  let meteorField;
+  let starField = null;
+  let deepStars = null;
+  let microStars = null;
+  let galaxyCloud = null;
+  let galaxyGold = null;
+  let nebulaBack = null;
+  let nebulaMid = null;
+  let cosmicDust = null;
+  let portalAura = null;
+  let spaceFog = null;
+  let energyBands = null;
+  let meteorField = null;
 
   let mounted = false;
+  let themeBound = false;
 
   const geos = [];
+  const textures = new Set();
 
   const state = {
     theme: "green-gold",
@@ -35,6 +38,13 @@ export function createGalaxyEngine(ctx) {
   };
 
   const themes = {
+    green: {
+      galaxy: 0x00ff9d,
+      gold: 0xfacc15,
+      stars: 0x8fffd2,
+      nebula: 0x00ff88,
+      fog: 0x03110b
+    },
     "green-gold": {
       galaxy: 0x00ff9d,
       gold: 0xfacc15,
@@ -42,12 +52,33 @@ export function createGalaxyEngine(ctx) {
       nebula: 0x00ff88,
       fog: 0x03110b
     },
+    default: {
+      galaxy: 0x00ff9d,
+      gold: 0xfacc15,
+      stars: 0x8fffd2,
+      nebula: 0x00ff88,
+      fog: 0x03110b
+    },
+    blue: {
+      galaxy: 0x38bdf8,
+      gold: 0x93c5fd,
+      stars: 0x7dd3fc,
+      nebula: 0x2563eb,
+      fog: 0x020617
+    },
     "blue-electric": {
       galaxy: 0x38bdf8,
       gold: 0x93c5fd,
       stars: 0x7dd3fc,
       nebula: 0x2563eb,
       fog: 0x020617
+    },
+    purple: {
+      galaxy: 0xa855f7,
+      gold: 0xf472b6,
+      stars: 0xe879f9,
+      nebula: 0xc084fc,
+      fog: 0x090015
     },
     "purple-pink": {
       galaxy: 0xa855f7,
@@ -63,12 +94,33 @@ export function createGalaxyEngine(ctx) {
       nebula: 0x8b5d00,
       fog: 0x020201
     },
+    gold: {
+      galaxy: 0x111827,
+      gold: 0xfacc15,
+      stars: 0xfff7cc,
+      nebula: 0x8b5d00,
+      fog: 0x020201
+    },
+    emerald: {
+      galaxy: 0x00ff88,
+      gold: 0x050805,
+      stars: 0xd1fae5,
+      nebula: 0x00ff9d,
+      fog: 0x020805
+    },
     "emerald-black": {
       galaxy: 0x00ff88,
       gold: 0x050805,
       stars: 0xd1fae5,
       nebula: 0x00ff9d,
       fog: 0x020805
+    },
+    royal: {
+      galaxy: 0x1f2937,
+      gold: 0xffd700,
+      stars: 0xfff7cc,
+      nebula: 0xfacc15,
+      fog: 0x080604
     },
     "royal-gold": {
       galaxy: 0x1f2937,
@@ -79,8 +131,19 @@ export function createGalaxyEngine(ctx) {
     }
   };
 
+  function rememberTexture(texture) {
+    if (texture) textures.add(texture);
+    return texture;
+  }
+
   function currentTheme() {
     return themes[state.theme] || themes["green-gold"];
+  }
+
+  function normalizeTheme(theme = "green-gold") {
+    return String(theme || "green-gold")
+      .trim()
+      .toLowerCase();
   }
 
   function mount() {
@@ -107,7 +170,14 @@ export function createGalaxyEngine(ctx) {
     canvas.height = size;
 
     const c = canvas.getContext("2d");
-    const g = c.createRadialGradient(size / 2, size / 2, 2, size / 2, size / 2, size / 2);
+    const g = c.createRadialGradient(
+      size / 2,
+      size / 2,
+      2,
+      size / 2,
+      size / 2,
+      size / 2
+    );
 
     g.addColorStop(0, "rgba(255,255,255,.75)");
     g.addColorStop(0.18, "rgba(250,204,21,.34)");
@@ -120,7 +190,8 @@ export function createGalaxyEngine(ctx) {
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.needsUpdate = true;
-    return tex;
+
+    return rememberTexture(tex);
   }
 
   function makeCloudTexture(size = 768) {
@@ -149,7 +220,8 @@ export function createGalaxyEngine(ctx) {
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.needsUpdate = true;
-    return tex;
+
+    return rememberTexture(tex);
   }
 
   function buildDeepStars() {
@@ -202,6 +274,7 @@ export function createGalaxyEngine(ctx) {
       );
 
       const tone = Math.random();
+
       if (tone > 0.82) colors.push(1, 0.82, 0.22);
       else if (tone > 0.46) colors.push(0.0, 1.0, 0.65);
       else colors.push(0.5, 0.95, 1);
@@ -512,11 +585,27 @@ export function createGalaxyEngine(ctx) {
   }
 
   function bindThemeEvents() {
-    window.addEventListener("rb:portal-theme-change", (event) => {
-      const name = event.detail?.name;
-      if (name) setTheme(name);
-      state.touchEnergy = 1;
-    });
+    if (themeBound) return;
+    themeBound = true;
+
+    window.addEventListener("rb:portal-theme-change", onPortalThemeChange);
+  }
+
+  function unbindThemeEvents() {
+    if (!themeBound) return;
+    themeBound = false;
+
+    window.removeEventListener("rb:portal-theme-change", onPortalThemeChange);
+  }
+
+  function onPortalThemeChange(event) {
+    const name = event.detail?.name || event.detail?.theme;
+
+    if (name) {
+      setTheme(name);
+    }
+
+    state.touchEnergy = 1;
   }
 
   function update(t) {
@@ -525,7 +614,10 @@ export function createGalaxyEngine(ctx) {
     state.touchEnergy *= 0.935;
     state.pulse = Math.sin(t * 1.7) * 0.5 + 0.5;
 
-    const breathe = 1 + state.pulse * 0.055 * state.intensity + state.touchEnergy * 0.025;
+    const breathe =
+      1 +
+      state.pulse * 0.055 * state.intensity +
+      state.touchEnergy * 0.025;
 
     if (deepStars) {
       deepStars.rotation.y -= 0.0001;
@@ -536,7 +628,10 @@ export function createGalaxyEngine(ctx) {
     if (starField) {
       starField.rotation.y += 0.00042 * state.intensity;
       starField.rotation.z = Math.sin(t * 0.11) * 0.025;
-      starField.material.opacity = 0.68 + state.pulse * 0.18 + state.touchEnergy * 0.08;
+      starField.material.opacity =
+        0.68 +
+        state.pulse * 0.18 +
+        state.touchEnergy * 0.08;
     }
 
     if (microStars) {
@@ -548,19 +643,32 @@ export function createGalaxyEngine(ctx) {
       galaxyCloud.rotation.y += 0.00105 * state.intensity;
       galaxyCloud.rotation.z = Math.sin(t * 0.14) * 0.045;
       galaxyCloud.scale.setScalar(breathe);
-      galaxyCloud.material.opacity = 0.5 + state.pulse * 0.2 + state.touchEnergy * 0.08;
+      galaxyCloud.material.opacity =
+        0.5 +
+        state.pulse * 0.2 +
+        state.touchEnergy * 0.08;
     }
 
     if (galaxyGold) {
       galaxyGold.rotation.y -= 0.00078 * state.intensity;
       galaxyGold.rotation.z = Math.cos(t * 0.12) * 0.028;
-      galaxyGold.scale.setScalar(1 + state.pulse * 0.04 + state.touchEnergy * 0.025);
-      galaxyGold.material.opacity = 0.34 + state.pulse * 0.16 + state.touchEnergy * 0.08;
+      galaxyGold.scale.setScalar(
+        1 +
+          state.pulse * 0.04 +
+          state.touchEnergy * 0.025
+      );
+      galaxyGold.material.opacity =
+        0.34 +
+        state.pulse * 0.16 +
+        state.touchEnergy * 0.08;
     }
 
     if (nebulaBack) {
       nebulaBack.rotation.z += 0.00018;
-      nebulaBack.material.opacity = 0.14 + state.pulse * 0.09 + state.touchEnergy * 0.08;
+      nebulaBack.material.opacity =
+        0.14 +
+        state.pulse * 0.09 +
+        state.touchEnergy * 0.08;
       nebulaBack.scale.set(
         270 + state.pulse * 14,
         190 + Math.cos(t * 0.8) * 10,
@@ -570,7 +678,10 @@ export function createGalaxyEngine(ctx) {
 
     if (nebulaMid) {
       nebulaMid.rotation.z -= 0.00028;
-      nebulaMid.material.opacity = 0.1 + state.pulse * 0.08 + state.touchEnergy * 0.1;
+      nebulaMid.material.opacity =
+        0.1 +
+        state.pulse * 0.08 +
+        state.touchEnergy * 0.1;
       nebulaMid.scale.set(
         210 + Math.sin(t * 0.9) * 12,
         150 + state.pulse * 9,
@@ -580,8 +691,15 @@ export function createGalaxyEngine(ctx) {
 
     if (portalAura) {
       portalAura.rotation.y += 0.0009;
-      portalAura.scale.setScalar(1 + state.pulse * 0.1 + state.touchEnergy * 0.18);
-      portalAura.material.opacity = 0.032 + state.pulse * 0.035 + state.touchEnergy * 0.07;
+      portalAura.scale.setScalar(
+        1 +
+          state.pulse * 0.1 +
+          state.touchEnergy * 0.18
+      );
+      portalAura.material.opacity =
+        0.032 +
+        state.pulse * 0.035 +
+        state.touchEnergy * 0.07;
     }
 
     if (cosmicDust) {
@@ -651,7 +769,9 @@ export function createGalaxyEngine(ctx) {
   }
 
   function setTheme(theme = "green-gold") {
-    state.theme = theme;
+    const nextTheme = normalizeTheme(theme);
+
+    state.theme = themes[nextTheme] ? nextTheme : "green-gold";
 
     const colors = currentTheme();
 
@@ -681,7 +801,34 @@ export function createGalaxyEngine(ctx) {
     if (cosmicDust) cosmicDust.material.size = isMobile ? 0.015 : 0.022;
   }
 
+  function disposeMaterial(material) {
+    if (!material) return;
+
+    if (Array.isArray(material)) {
+      material.forEach(disposeMaterial);
+      return;
+    }
+
+    material.dispose?.();
+  }
+
+  function removeAndDispose(obj) {
+    if (!obj) return;
+
+    scene.remove(obj);
+
+    obj.traverse?.((child) => {
+      child.geometry?.dispose?.();
+      disposeMaterial(child.material);
+    });
+
+    obj.geometry?.dispose?.();
+    disposeMaterial(obj.material);
+  }
+
   function destroy() {
+    unbindThemeEvents();
+
     [
       starField,
       deepStars,
@@ -695,12 +842,26 @@ export function createGalaxyEngine(ctx) {
       spaceFog,
       energyBands,
       meteorField
-    ].forEach((obj) => {
-      if (obj) scene.remove(obj);
-    });
+    ].forEach(removeAndDispose);
 
     geos.forEach((geo) => geo.dispose?.());
     geos.length = 0;
+
+    textures.forEach((texture) => texture.dispose?.());
+    textures.clear();
+
+    starField = null;
+    deepStars = null;
+    microStars = null;
+    galaxyCloud = null;
+    galaxyGold = null;
+    nebulaBack = null;
+    nebulaMid = null;
+    cosmicDust = null;
+    portalAura = null;
+    spaceFog = null;
+    energyBands = null;
+    meteorField = null;
 
     mounted = false;
   }
