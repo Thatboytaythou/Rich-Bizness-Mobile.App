@@ -46,46 +46,51 @@
   border: 1px solid rgba(250, 204, 21, 0.26);
 
   background:
-    radial-gradient(circle at 18% 18%, rgba(16,185,129,.16), transparent 34%),
-    radial-gradient(circle at 82% 72%, rgba(250,204,21,.14), transparent 38%),
-    linear-gradient(135deg, rgba(8,18,10,.9), rgba(0,0,0,.86));
+    radial-gradient(circle at 18% 18%, rgba(16, 185, 129, 0.16), transparent 34%),
+    radial-gradient(circle at 82% 72%, rgba(250, 204, 21, 0.14), transparent 38%),
+    linear-gradient(135deg, rgba(8, 18, 10, 0.9), rgba(0, 0, 0, 0.86));
 
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 
   box-shadow:
-    0 0 44px rgba(16,185,129,.18),
-    0 0 80px rgba(0,0,0,.36),
-    inset 0 0 80px rgba(250,204,21,.06);
+    0 0 44px rgba(16, 185, 129, 0.18),
+    0 0 80px rgba(0, 0, 0, 0.36),
+    inset 0 0 80px rgba(250, 204, 21, 0.06);
 }
 
 .rb-auth-hero::before {
   content: "";
+
   position: absolute;
   inset: 0;
   z-index: 0;
 
-  background: url("/images/brand/hero-logo.png.jpeg") center / cover no-repeat;
+  background:
+    url("/images/brand/hero-logo.png.jpeg")
+    center / cover
+    no-repeat;
 
-  opacity: .13;
+  opacity: 0.13;
   transform: scale(1.08);
 
   filter:
     saturate(1.25)
     contrast(1.12)
-    brightness(.92);
+    brightness(0.92);
 
   pointer-events: none;
 }
 
 .rb-auth-hero::after {
   content: "";
+
   position: absolute;
   inset: 0;
   z-index: 1;
 
   background:
-    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.54));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.54));
 
   pointer-events: none;
 }
@@ -101,19 +106,20 @@
   color: var(--rb-gold, #facc15);
 
   font-size: clamp(2.5rem, 10vw, 5.8rem);
-  line-height: .88;
-  letter-spacing: -.07em;
+  line-height: 0.88;
+  letter-spacing: -0.07em;
 
   text-shadow:
-    0 0 26px rgba(250,204,21,.25),
-    0 0 48px rgba(16,185,129,.1);
+    0 0 26px rgba(250, 204, 21, 0.25),
+    0 0 48px rgba(16, 185, 129, 0.1);
 }
 
 .rb-auth-hero p {
   margin: 14px 0 0;
   max-width: 680px;
 
-  color: var(--rb-muted, rgba(255,255,255,.72));
+  color: var(--rb-muted, rgba(255, 255, 255, 0.72));
+
   line-height: 1.55;
 }
 
@@ -127,29 +133,30 @@
   padding: 16px;
 
   border-radius: 30px;
-  border: 1px solid rgba(102,255,102,.35);
+  border: 1px solid rgba(102, 255, 102, 0.35);
 
   background:
-    radial-gradient(circle at top, rgba(16,185,129,.1), transparent 36%),
-    linear-gradient(135deg, rgba(8,18,10,.92), rgba(0,0,0,.88));
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.1), transparent 36%),
+    linear-gradient(135deg, rgba(8, 18, 10, 0.92), rgba(0, 0, 0, 0.88));
 
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
 
   box-shadow:
-    0 0 42px rgba(16,185,129,.2),
-    0 0 74px rgba(0,0,0,.42),
-    inset 0 0 50px rgba(250,204,21,.08);
+    0 0 42px rgba(16, 185, 129, 0.2),
+    0 0 74px rgba(0, 0, 0, 0.42),
+    inset 0 0 50px rgba(250, 204, 21, 0.08);
 }
 
 .rb-auth-panel::before {
   content: "";
+
   position: absolute;
   inset: 0;
   z-index: 0;
 
   background:
-    radial-gradient(circle at top, rgba(255,255,255,.08), transparent 42%);
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 42%);
 
   pointer-events: none;
 }
@@ -173,35 +180,37 @@
   min-height: 48px;
 
   border-radius: 999px;
-  border: 1px solid rgba(250,204,21,.26);
+  border: 1px solid rgba(250, 204, 21, 0.26);
 
   background:
-    linear-gradient(145deg, rgba(0,0,0,.62), rgba(5,12,7,.82));
+    linear-gradient(145deg, rgba(0, 0, 0, 0.62), rgba(5, 12, 7, 0.82));
 
-  color: var(--rb-muted, rgba(255,255,255,.7));
+  color: var(--rb-muted, rgba(255, 255, 255, 0.7));
 
   font-weight: 1000;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
 
   cursor: pointer;
   touch-action: manipulation;
 
   transition:
-    transform .22s ease,
-    color .22s ease,
-    background .22s ease,
-    box-shadow .22s ease,
-    border-color .22s ease;
+    transform 0.22s ease,
+    color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
 }
 
 .rb-auth-tabs button:hover {
-  border-color: rgba(16,185,129,.48);
+  border-color: rgba(16, 185, 129, 0.48);
   color: #fefce8;
-  box-shadow: 0 0 18px rgba(16,185,129,.18);
+
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.18);
 }
 
 .rb-auth-tabs button:active {
-  transform: scale(.97);
+  transform: scale(0.97);
 }
 
 body[data-auth-mode="signin"] [data-auth-mode="signin"],
@@ -212,11 +221,11 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   background:
     linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
 
-  border-color: rgba(250,204,21,.54);
+  border-color: rgba(250, 204, 21, 0.54);
 
   box-shadow:
-    0 0 24px rgba(16,185,129,.35),
-    inset 0 0 18px rgba(255,255,255,.14);
+    0 0 24px rgba(16, 185, 129, 0.35),
+    inset 0 0 18px rgba(255, 255, 255, 0.14);
 }
 
 /* FORMS */
@@ -246,7 +255,7 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   font-size: 1.5rem;
 
   text-shadow:
-    0 0 20px rgba(250,204,21,.16);
+    0 0 20px rgba(250, 204, 21, 0.16);
 }
 
 .rb-auth-form label,
@@ -256,9 +265,9 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 
   color: var(--rb-green, #10b981);
 
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 900;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -271,25 +280,25 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   width: 100%;
 
   border-radius: 18px;
-  border: 1px solid rgba(250,204,21,.24);
+  border: 1px solid rgba(250, 204, 21, 0.24);
 
   outline: none;
 
-  color: var(--rb-white, #fff);
+  color: var(--rb-white, #ffffff);
 
   background:
-    linear-gradient(180deg, rgba(0,0,0,.78), rgba(5,12,7,.92));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.78), rgba(5, 12, 7, 0.92));
 
   box-shadow:
-    inset 0 0 22px rgba(16,185,129,.08);
+    inset 0 0 22px rgba(16, 185, 129, 0.08);
 
   font: inherit;
 
   transition:
-    transform .2s ease,
-    border-color .2s ease,
-    box-shadow .2s ease,
-    background .2s ease;
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .rb-auth-form input,
@@ -311,7 +320,7 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-auth-form textarea::placeholder,
 .rb-form input::placeholder,
 .rb-form textarea::placeholder {
-  color: rgba(255,255,255,.34);
+  color: rgba(255, 255, 255, 0.34);
 }
 
 .rb-auth-form input:focus,
@@ -320,27 +329,28 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-form input:focus,
 .rb-form textarea:focus,
 .rb-form select:focus {
-  border-color: rgba(102,255,102,.75);
+  border-color: rgba(102, 255, 102, 0.75);
 
   background:
-    linear-gradient(180deg, rgba(0,0,0,.82), rgba(5,16,8,.94));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.82), rgba(5, 16, 8, 0.94));
 
   box-shadow:
-    0 0 22px rgba(16,185,129,.25),
-    inset 0 0 22px rgba(16,185,129,.1);
+    0 0 22px rgba(16, 185, 129, 0.25),
+    inset 0 0 22px rgba(16, 185, 129, 0.1);
 
   transform: translateY(-1px);
 }
 
 .rb-auth-form input:-webkit-autofill,
 .rb-form input:-webkit-autofill {
-  -webkit-text-fill-color: #fff;
+  -webkit-text-fill-color: #ffffff;
 
   box-shadow:
     0 0 0 1000px #061008 inset,
-    0 0 22px rgba(16,185,129,.22);
+    0 0 22px rgba(16, 185, 129, 0.22);
 
-  transition: background-color 9999s ease-in-out 0s;
+  transition:
+    background-color 9999s ease-in-out 0s;
 }
 
 .rb-form-row,
@@ -364,9 +374,9 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   min-height: 22px;
   margin: 4px 0 0;
 
-  color: rgba(255,255,255,.64);
+  color: rgba(255, 255, 255, 0.64);
 
-  font-size: .82rem;
+  font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.4;
 }
@@ -377,9 +387,9 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   min-height: 22px;
   margin: 14px 4px 0;
 
-  color: rgba(255,255,255,.72);
+  color: rgba(255, 255, 255, 0.72);
 
-  font-size: .82rem;
+  font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.4;
   text-align: center;
@@ -387,12 +397,16 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 
 .rb-auth-message[data-type="success"] {
   color: #34d399;
-  text-shadow: 0 0 14px rgba(16,185,129,.3);
+
+  text-shadow:
+    0 0 14px rgba(16, 185, 129, 0.3);
 }
 
 .rb-auth-message[data-type="error"] {
   color: #fca5a5;
-  text-shadow: 0 0 14px rgba(239,68,68,.24);
+
+  text-shadow:
+    0 0 14px rgba(239, 68, 68, 0.24);
 }
 
 /* BUTTON OVERRIDES */
@@ -409,20 +423,20 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
     linear-gradient(135deg, var(--rb-green, #10b981), var(--rb-gold, #facc15));
 
   font-weight: 1000;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
 
   cursor: pointer;
   touch-action: manipulation;
 
   box-shadow:
-    0 0 24px rgba(16,185,129,.34),
-    0 0 40px rgba(250,204,21,.16),
-    inset 0 0 18px rgba(255,255,255,.18);
+    0 0 24px rgba(16, 185, 129, 0.34),
+    0 0 40px rgba(250, 204, 21, 0.16),
+    inset 0 0 18px rgba(255, 255, 255, 0.18);
 
   transition:
-    transform .22s ease,
-    filter .22s ease,
-    opacity .22s ease;
+    transform 0.22s ease,
+    filter 0.22s ease,
+    opacity 0.22s ease;
 }
 
 .rb-main-launch:hover {
@@ -431,11 +445,11 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 }
 
 .rb-main-launch:active {
-  transform: scale(.98);
+  transform: scale(0.98);
 }
 
 .rb-main-launch:disabled {
-  opacity: .6;
+  opacity: 0.6;
   cursor: wait;
   transform: none;
 }
@@ -449,20 +463,23 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   text-decoration: none;
 
   font-weight: 1000;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
 
   cursor: pointer;
   touch-action: manipulation;
 
   transition:
-    transform .2s ease,
-    color .2s ease,
-    text-shadow .2s ease;
+    transform 0.2s ease,
+    color 0.2s ease,
+    text-shadow 0.2s ease;
 }
 
 .rb-auth-home:hover {
   color: #fefce8;
-  text-shadow: 0 0 14px rgba(250,204,21,.35);
+
+  text-shadow:
+    0 0 14px rgba(250, 204, 21, 0.35);
+
   transform: translateY(-1px);
 }
 
@@ -471,7 +488,7 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 .rb-auth-form input[type="file"],
 .rb-form input[type="file"] {
   padding: 13px 14px;
-  color: rgba(255,255,255,.72);
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .rb-auth-form input[type="file"]::file-selector-button,
@@ -496,12 +513,12 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 
 .rb-auth-page:not(.rb-auth-ready) .rb-auth-panel,
 .rb-auth-page:not(.rb-auth-ready) .rb-auth-hero {
-  opacity: .92;
+  opacity: 0.92;
 }
 
 .is-loading {
   pointer-events: none;
-  opacity: .76;
+  opacity: 0.76;
 }
 
 /* MOBILE */
@@ -532,7 +549,7 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 
   .rb-auth-tabs button {
     min-height: 46px;
-    font-size: .82rem;
+    font-size: 0.82rem;
   }
 
   .rb-auth-form input,
