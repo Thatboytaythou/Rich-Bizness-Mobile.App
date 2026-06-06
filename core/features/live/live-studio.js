@@ -4,6 +4,7 @@
 
    LIVE STUDIO ENGINE
    Creator stream create/start/end + LiveKit host room
+   Safe State Sync + Rail/Card/Notification Sync
 ========================= */
 
 import {
@@ -18,15 +19,18 @@ import {
   RB_ROUTES
 } from "/core/shared/rb-config.js";
 
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   initLiveState,
-  setLiveStateStream,
-  getLiveState,
-  updateLiveStreamStatus,
-  touchLiveStream
+  refreshLiveState
 } from "/core/features/live/live-state.js";
+
+import {
+  upsertLiveRailCard
+} from "/core/features/live/live-rail.js";
 
 import {
   initLiveChat,
@@ -57,6 +61,8 @@ const STUDIO = {
 
   connecting: false,
   live: false,
+  ready: false,
+  error: null,
 
   listeners: new Set()
 };
@@ -77,6 +83,12 @@ function emitStudio() {
       detail: state
     })
   );
+
+  window.dispatchEvent(
+    new CustomEvent("rb:live-studio-state", {
+      detail: state
+    })
+  );
 }
 
 function displayName() {
@@ -90,19 +102,156 @@ function displayName() {
 }
 
 function username() {
-  return STUDIO.profile?.username || STUDIO.user?.email || "rich_creator";
+  return (
+    STUDIO.profile?.username ||
+    STUDIO.user?.email?.split("@")[0] ||
+    "rich_creator"
+  );
+}
+
+function avatarUrl() {
+  return (
+    STUDIO.profile?.avatar_url ||
+    "/images/brand/Avatar-hero-Banner.png.jpeg"
+  );
 }
 
 function watchUrl(stream = STUDIO.stream) {
   if (!stream) return RB_ROUTES.watch || "/watch";
 
   return `${RB_ROUTES.watch || "/watch"}?stream=${encodeURIComponent(
-    stream.slug || stream.id
+    stream.slug || stream.display_slug || stream.id
   )}`;
 }
 
 function moneyCents(value) {
-  return Math.max(0, Number(value || 0));
+  const cents = Number(value || 0);
+  return Number.isFinite(cents) ? Math.max(0, Math.round(cents)) : 0;
+}
+
+function cleanText(value = "", fallback = "") {
+  return String(value || fallback || "").trim();
+}
+
+function setStudioError(error = null) {
+  STUDIO.error = error;
+  emitStudio();
+}
+
+async function safeInsert(table, payload) {
+  if (!table) return null;
+
+  try {
+    const { data, error } = await getSupabase()
+      .from(table)
+      .insert(payload)
+      .select("*")
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return data || null;
+  } catch (error) {
+    console.warn(`[RB LIVE STUDIO INSERT SKIPPED: ${table}]`, error?.message || error);
+    return null;
+  }
+}
+
+async function safeUpdate(table, match = {}, values = {}) {
+  if (!table) return null;
+
+  try {
+    let query = getSupabase().from(table).update(values);
+
+    Object.entries(match).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        query = query.eq(key, value);
+      }
+    });
+
+    const { data, error } = await query.select("*").maybeSingle();
+
+    if (error) throw error;
+
+    return data || null;
+  } catch (error) {
+    console.warn(`[RB LIVE STUDIO UPDATE SKIPPED: ${table}]`, error?.message || error);
+    return null;
+  }
+}
+
+async function updateStudioStream(values = {}) {
+  if (!STUDIO.stream?.id) {
+    throw new Error("No stream selected.");
+  }
+
+  const supabase = getSupabase();
+
+  const payload = {
+    ...values,
+    updated_at: new Date().toISOString(),
+    last_activity_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.liveStreams)
+    .update(payload)
+    .eq("id", STUDIO.stream.id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) throw error;
+
+  STUDIO.stream = data || {
+    ...STUDIO.stream,
+    ...payload
+  };
+
+  STUDIO.live = STUDIO.stream.status === "live";
+
+  await refreshLiveState().catch(() => {});
+  await upsertLiveRailCard(STUDIO.stream).catch(() => {});
+
+  emitStudio();
+
+  return STUDIO.stream;
+}
+
+async function touchStudioStream() {
+  if (!STUDIO.stream?.id) return null;
+
+  return await updateStudioStream({
+    last_activity_at: new Date().toISOString()
+  });
+}
+
+async function notifySelf({
+  type,
+  title,
+  body,
+  emoji = "💨"
+} = {}) {
+  const table = RB_TABLES.richNotifications || RB_TABLES.notifications;
+
+  if (!table || !STUDIO.user?.id || !STUDIO.stream?.id) return null;
+
+  return await safeInsert(table, {
+    user_id: STUDIO.user.id,
+    actor_id: STUDIO.user.id,
+    type,
+    title,
+    body,
+    target_table: RB_TABLES.liveStreams,
+    target_type: "live",
+    target_id: STUDIO.stream.id,
+    target_url: watchUrl(STUDIO.stream),
+    emoji,
+    priority: type === "live_started" ? "high" : "normal",
+    metadata: {
+      source: "live-studio.js",
+      stream_slug: STUDIO.stream.slug || null
+    }
+  });
 }
 
 export function getLiveStudioState() {
@@ -119,7 +268,9 @@ export function getLiveStudioState() {
     screen: STUDIO.screen,
 
     connecting: STUDIO.connecting,
-    live: STUDIO.live
+    live: STUDIO.live,
+    ready: STUDIO.ready,
+    error: STUDIO.error
   };
 }
 
@@ -127,7 +278,12 @@ export function onLiveStudio(listener) {
   if (typeof listener !== "function") return () => {};
 
   STUDIO.listeners.add(listener);
-  listener(getLiveStudioState());
+
+  try {
+    listener(getLiveStudioState());
+  } catch (error) {
+    console.warn("[RB LIVE STUDIO LISTENER]", error);
+  }
 
   return () => {
     STUDIO.listeners.delete(listener);
@@ -156,19 +312,19 @@ export async function createLiveStudioStream({
   const payload = {
     creator_id: STUDIO.user.id,
 
-    title: String(title || "Family Bizness").trim(),
-    description: description || null,
-    category: category || "general",
+    title: cleanText(title, "Family Bizness"),
+    description: cleanText(description) || null,
+    category: cleanText(category, "general"),
 
     status: "draft",
     status_label: "Get Right",
 
-    access_type: accessType || "free",
+    access_type: cleanText(accessType, "free"),
     price_cents: moneyCents(priceCents),
     currency: "usd",
 
-    thumbnail_url: thumbnailUrl || null,
-    cover_url: coverUrl || null,
+    thumbnail_url: cleanText(thumbnailUrl) || null,
+    cover_url: cleanText(coverUrl) || null,
 
     livekit_room_name: roomName,
 
@@ -190,7 +346,8 @@ export async function createLiveStudioStream({
       source: "live-studio.js",
       watch_ready: true,
       username: username(),
-      display_name: displayName()
+      display_name: displayName(),
+      avatar_url: avatarUrl()
     }
   };
 
@@ -198,86 +355,66 @@ export async function createLiveStudioStream({
     .from(RB_TABLES.liveStreams)
     .insert(payload)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
 
-  STUDIO.stream = data;
-  STUDIO.live = data.status === "live";
+  STUDIO.stream = data || payload;
+  STUDIO.live = STUDIO.stream.status === "live";
+  STUDIO.error = null;
 
-  await setLiveStateStream(data);
-
-  await Promise.all([
-    supabase.from(RB_TABLES.liveStreamMembers).insert({
-      stream_id: data.id,
+  await Promise.allSettled([
+    safeInsert(RB_TABLES.liveStreamMembers, {
+      stream_id: STUDIO.stream.id,
       user_id: STUDIO.user.id,
       role: "host",
       status: "active",
       metadata: {
         source: "live-studio.js",
         username: username(),
-        display_name: displayName()
+        display_name: displayName(),
+        avatar_url: avatarUrl()
       }
     }),
 
-    supabase.from(RB_TABLES.liveStreamCards).insert({
-      stream_id: data.id,
-      creator_id: STUDIO.user.id,
-      title: data.title,
-      subtitle: data.description,
-      card_type: "live",
-      thumbnail_url: data.thumbnail_url,
-      cover_url: data.cover_url,
-      target_url: watchUrl(data),
-      is_active: true,
-      metadata: {
-        source: "live-studio.js",
-        section: "watch"
-      }
-    }),
+    upsertLiveRailCard(STUDIO.stream),
 
-    supabase.from(RB_TABLES.richNotifications).insert({
-      user_id: STUDIO.user.id,
-      actor_id: STUDIO.user.id,
+    notifySelf({
       type: "live_created",
       title: "Live studio created",
-      body: `${data.title} is ready to start.`,
-      target_table: RB_TABLES.liveStreams,
-      target_type: "live",
-      target_id: data.id,
-      target_url: watchUrl(data),
-      emoji: "📺",
-      metadata: {
-        source: "live-studio.js",
-        stream_slug: data.slug
-      }
+      body: `${STUDIO.stream.title} is ready to start.`,
+      emoji: "📺"
     })
   ]);
 
-  await initLiveChat({
-    stream: data,
-    user: STUDIO.user,
-    profile: STUDIO.profile,
-    realtime: true
-  });
+  await Promise.allSettled([
+    initLiveChat({
+      stream: STUDIO.stream,
+      user: STUDIO.user,
+      profile: STUDIO.profile,
+      realtime: true
+    }),
 
-  await initLiveReactions({
-    stream: data,
-    user: STUDIO.user,
-    profile: STUDIO.profile,
-    realtime: true
-  });
+    initLiveReactions({
+      stream: STUDIO.stream,
+      user: STUDIO.user,
+      profile: STUDIO.profile,
+      realtime: true
+    }),
 
-  await initLivePresence({
-    stream: data,
-    user: STUDIO.user,
-    profile: STUDIO.profile,
-    realtime: true
-  });
+    initLivePresence({
+      stream: STUDIO.stream,
+      user: STUDIO.user,
+      profile: STUDIO.profile,
+      realtime: true
+    }),
+
+    refreshLiveState()
+  ]);
 
   emitStudio();
 
-  return data;
+  return STUDIO.stream;
 }
 
 async function getLivekitHostToken() {
@@ -289,7 +426,7 @@ async function getLivekitHostToken() {
     STUDIO.stream.livekit_room_name ||
     `rb-live-${STUDIO.stream.id}`;
 
-  const res = await fetch("/api/livekit-token", {
+  const response = await fetch("/api/livekit-token", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -300,27 +437,78 @@ async function getLivekitHostToken() {
       identity: STUDIO.user.id,
       userId: STUDIO.user.id,
       name: displayName(),
+      participantName: displayName(),
       role: "host",
       metadata: {
         stream_id: STUDIO.stream.id,
-        stream_slug: STUDIO.stream.slug,
+        stream_slug: STUDIO.stream.slug || null,
         user_id: STUDIO.user.id,
+        username: username(),
+        display_name: displayName(),
+        avatar_url: avatarUrl(),
         role: "host",
         source: "live-studio.js"
       }
     })
   });
 
-  if (!res.ok) {
-    throw new Error("LiveKit token request failed.");
-  }
+  const data = await response.json().catch(() => ({}));
 
-  const data = await res.json();
+  if (!response.ok) {
+    throw new Error(data?.error || "LiveKit token request failed.");
+  }
 
   return {
     token: data.token || data.accessToken,
     url: data.url || data.livekitUrl || data.wsUrl
   };
+}
+
+function bindRoomEvents(room) {
+  room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+    window.dispatchEvent(
+      new CustomEvent("rb-live-studio-remote-track", {
+        detail: {
+          track,
+          publication,
+          participant
+        }
+      })
+    );
+  });
+
+  room.on(RoomEvent.TrackUnsubscribed, (track) => {
+    track.detach().forEach((el) => el.remove());
+  });
+
+  room.on(RoomEvent.ParticipantConnected, (participant) => {
+    window.dispatchEvent(
+      new CustomEvent("rb-live-studio-participants", {
+        detail: {
+          participant,
+          type: "connected"
+        }
+      })
+    );
+  });
+
+  room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+    window.dispatchEvent(
+      new CustomEvent("rb-live-studio-participants", {
+        detail: {
+          participant,
+          type: "disconnected"
+        }
+      })
+    );
+  });
+
+  room.on(RoomEvent.Disconnected, () => {
+    STUDIO.room = null;
+    STUDIO.localTracks = [];
+    STUDIO.connecting = false;
+    emitStudio();
+  });
 }
 
 export async function startLiveStudio() {
@@ -333,16 +521,15 @@ export async function startLiveStudio() {
   }
 
   STUDIO.connecting = true;
+  STUDIO.error = null;
   emitStudio();
 
   try {
-    const stream = await updateLiveStreamStatus("live", {
+    STUDIO.stream = await updateStudioStream({
+      status: "live",
       status_label: "WE LIT 🔥",
       started_at: new Date().toISOString()
     });
-
-    STUDIO.stream = stream;
-    STUDIO.live = true;
 
     const tokenData = await getLivekitHostToken();
 
@@ -356,33 +543,7 @@ export async function startLiveStudio() {
     });
 
     STUDIO.room = room;
-
-    room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-      window.dispatchEvent(
-        new CustomEvent("rb-live-studio-remote-track", {
-          detail: { track, publication, participant }
-        })
-      );
-    });
-
-    room.on(RoomEvent.TrackUnsubscribed, (track) => {
-      track.detach().forEach((el) => el.remove());
-    });
-
-    room.on(RoomEvent.ParticipantConnected, () => {
-      window.dispatchEvent(new CustomEvent("rb-live-studio-participants"));
-    });
-
-    room.on(RoomEvent.ParticipantDisconnected, () => {
-      window.dispatchEvent(new CustomEvent("rb-live-studio-participants"));
-    });
-
-    room.on(RoomEvent.Disconnected, () => {
-      STUDIO.room = null;
-      STUDIO.localTracks = [];
-      STUDIO.connecting = false;
-      emitStudio();
-    });
+    bindRoomEvents(room);
 
     await room.connect(tokenData.url, tokenData.token);
 
@@ -406,27 +567,18 @@ export async function startLiveStudio() {
       }
     }
 
-    await getSupabase()
-      .from(RB_TABLES.richNotifications)
-      .insert({
-        user_id: STUDIO.user.id,
-        actor_id: STUDIO.user.id,
-        type: "live_started",
-        title: "WE LIT 🔥",
-        body: `${STUDIO.stream.title} is live now.`,
-        target_table: RB_TABLES.liveStreams,
-        target_type: "live",
-        target_id: STUDIO.stream.id,
-        target_url: watchUrl(),
-        emoji: "🔥",
-        metadata: {
-          source: "live-studio.js",
-          stream_slug: STUDIO.stream.slug
-        }
-      });
+    await notifySelf({
+      type: "live_started",
+      title: "WE LIT 🔥",
+      body: `${STUDIO.stream.title} is live now.`,
+      emoji: "🔥"
+    });
 
     STUDIO.connecting = false;
     STUDIO.live = true;
+    STUDIO.error = null;
+
+    await touchStudioStream();
 
     emitStudio();
 
@@ -434,7 +586,10 @@ export async function startLiveStudio() {
   } catch (error) {
     STUDIO.connecting = false;
     STUDIO.live = false;
+    STUDIO.error = error;
+
     emitStudio();
+
     throw error;
   }
 }
@@ -444,25 +599,28 @@ export async function endLiveStudio() {
 
   await disconnectLiveStudioRoom();
 
-  const stream = await updateLiveStreamStatus("ended", {
+  STUDIO.stream = await updateStudioStream({
+    status: "ended",
     status_label: "Ended",
     ended_at: new Date().toISOString()
   });
 
-  STUDIO.stream = stream;
   STUDIO.live = false;
 
-  await getSupabase()
-    .from(RB_TABLES.liveStreamCards)
-    .update({
+  await safeUpdate(
+    RB_TABLES.liveStreamCards,
+    { stream_id: STUDIO.stream.id },
+    {
       is_active: false,
       updated_at: new Date().toISOString()
-    })
-    .eq("stream_id", STUDIO.stream.id);
+    }
+  );
 
   clearLiveChatRealtime();
   clearLiveReactionRealtime();
   clearLivePresenceRealtime();
+
+  await refreshLiveState().catch(() => {});
 
   emitStudio();
 
@@ -480,7 +638,9 @@ export async function disconnectLiveStudioRoom() {
   STUDIO.localTracks = [];
 
   if (STUDIO.room) {
-    await STUDIO.room.disconnect();
+    try {
+      await STUDIO.room.disconnect();
+    } catch {}
     STUDIO.room = null;
   }
 
@@ -517,33 +677,44 @@ export async function toggleStudioCam() {
   return STUDIO.cam;
 }
 
+export async function startStudioScreenShare() {
+  if (!STUDIO.room) {
+    throw new Error("Start live before sharing screen.");
+  }
+
+  await STUDIO.room.localParticipant.setScreenShareEnabled(true);
+
+  STUDIO.screen = true;
+  emitStudio();
+
+  return true;
+}
+
+export async function stopStudioScreenShare() {
+  if (!STUDIO.room) return false;
+
+  await STUDIO.room.localParticipant.setScreenShareEnabled(false);
+
+  STUDIO.screen = false;
+  emitStudio();
+
+  return true;
+}
+
+export async function toggleStudioScreenShare() {
+  if (STUDIO.screen) {
+    return await stopStudioScreenShare();
+  }
+
+  return await startStudioScreenShare();
+}
+
 export async function updateLiveStudioMeta(updates = {}) {
   if (!STUDIO.stream?.id) {
     throw new Error("No stream selected.");
   }
 
-  const supabase = getSupabase();
-
-  const payload = {
-    ...updates,
-    updated_at: new Date().toISOString(),
-    last_activity_at: new Date().toISOString()
-  };
-
-  const { data, error } = await supabase
-    .from(RB_TABLES.liveStreams)
-    .update(payload)
-    .eq("id", STUDIO.stream.id)
-    .select("*")
-    .single();
-
-  if (error) throw error;
-
-  STUDIO.stream = data;
-  await setLiveStateStream(data);
-  emitStudio();
-
-  return data;
+  return await updateStudioStream(updates);
 }
 
 export async function loadLatestStudioStream() {
@@ -551,37 +722,54 @@ export async function loadLatestStudioStream() {
 
   const supabase = getSupabase();
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.liveStreams)
-    .select("*")
-    .eq("creator_id", STUDIO.user.id)
-    .in("status", ["draft", "scheduled", "live"])
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const attempts = [
+    {
+      name: "draft_scheduled_live",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .eq("creator_id", STUDIO.user.id)
+          .in("status", ["draft", "scheduled", "live"])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+    },
+    {
+      name: "creator_latest",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .eq("creator_id", STUDIO.user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+    }
+  ];
 
-  if (error) throw error;
+  for (const attempt of attempts) {
+    try {
+      const { data, error } = await attempt.run();
+      if (error) throw error;
 
-  if (data) {
-    STUDIO.stream = data;
-    STUDIO.live = data.status === "live";
-    await setLiveStateStream(data);
+      if (data) {
+        STUDIO.stream = data;
+        STUDIO.live = data.status === "live";
+        emitStudio();
+      }
+
+      return data || null;
+    } catch (error) {
+      console.warn(`[RB LIVE STUDIO LATEST SKIPPED: ${attempt.name}]`, error?.message || error);
+    }
   }
 
-  emitStudio();
-
-  return data || null;
+  return null;
 }
 
 export async function touchLiveStudio() {
-  if (!STUDIO.stream?.id) return null;
-
-  const stream = await touchLiveStream();
-
-  STUDIO.stream = stream;
-  emitStudio();
-
-  return stream;
+  return await touchStudioStream();
 }
 
 export async function initLiveStudio({
@@ -590,9 +778,11 @@ export async function initLiveStudio({
   profile = null,
   loadLatest = true
 } = {}) {
-  STUDIO.stream = stream;
-  STUDIO.user = user;
-  STUDIO.profile = profile;
+  await disconnectLiveStudioRoom().catch(() => {});
+
+  STUDIO.stream = stream || null;
+  STUDIO.user = user || null;
+  STUDIO.profile = profile || null;
 
   STUDIO.room = null;
   STUDIO.localTracks = [];
@@ -601,44 +791,63 @@ export async function initLiveStudio({
   STUDIO.screen = false;
   STUDIO.connecting = false;
   STUDIO.live = stream?.status === "live";
+  STUDIO.ready = false;
+  STUDIO.error = null;
 
   await initLiveState({
-    stream,
-    user,
-    profile,
     realtime: true
-  });
+  }).catch(() => {});
 
   if (loadLatest && !stream?.id) {
     await loadLatestStudioStream();
   }
 
   if (STUDIO.stream?.id) {
-    await initLiveChat({
-      stream: STUDIO.stream,
-      user: STUDIO.user,
-      profile: STUDIO.profile,
-      realtime: true
-    });
+    await Promise.allSettled([
+      initLiveChat({
+        stream: STUDIO.stream,
+        user: STUDIO.user,
+        profile: STUDIO.profile,
+        realtime: true
+      }),
 
-    await initLiveReactions({
-      stream: STUDIO.stream,
-      user: STUDIO.user,
-      profile: STUDIO.profile,
-      realtime: true
-    });
+      initLiveReactions({
+        stream: STUDIO.stream,
+        user: STUDIO.user,
+        profile: STUDIO.profile,
+        realtime: true
+      }),
 
-    await initLivePresence({
-      stream: STUDIO.stream,
-      user: STUDIO.user,
-      profile: STUDIO.profile,
-      realtime: true
-    });
+      initLivePresence({
+        stream: STUDIO.stream,
+        user: STUDIO.user,
+        profile: STUDIO.profile,
+        realtime: true
+      })
+    ]);
   }
 
+  STUDIO.ready = true;
   emitStudio();
 
   return getLiveStudioState();
+}
+
+export function resetLiveStudio() {
+  disconnectLiveStudioRoom().catch(() => {});
+
+  clearLiveChatRealtime();
+  clearLiveReactionRealtime();
+  clearLivePresenceRealtime();
+
+  STUDIO.stream = null;
+  STUDIO.user = null;
+  STUDIO.profile = null;
+  STUDIO.ready = false;
+  STUDIO.live = false;
+  STUDIO.error = null;
+
+  emitStudio();
 }
 
 window.addEventListener("beforeunload", () => {
