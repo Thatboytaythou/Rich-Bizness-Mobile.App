@@ -4,12 +4,19 @@
 
    GLOBAL PROFILE + IDENTITY ENGINE
    Profile Keys For All Systems
+
+   Identity Rules:
+   - Profile avatar = profiles.avatar_url
+   - Profile banner = profiles.banner_url
+   - Meta avatar = meta_avatars only
+   - Playable avatar = avatar engine only
 ========================= */
 
 import {
   RB_ROUTES,
   RB_TABLES,
-  RB_PROFILE_KEYS
+  RB_PROFILE_KEYS,
+  RB_BRAND_ASSETS
 } from "/core/shared/rb-config.js";
 
 import {
@@ -22,8 +29,13 @@ import {
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
-const DEFAULT_BANNER = "/images/brand/hero-banner.png";
+const DEFAULT_AVATAR =
+  RB_BRAND_ASSETS?.defaultProfileAvatar ||
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+const DEFAULT_BANNER =
+  RB_BRAND_ASSETS?.defaultProfileBanner ||
+  "/images/brand/hero-banner.png";
 
 function cleanUsername(username = "") {
   return String(username || "")
@@ -32,6 +44,11 @@ function cleanUsername(username = "") {
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, "")
     .slice(0, 24);
+}
+
+function safeNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 export function profileAvatar(profile = null) {
@@ -52,6 +69,8 @@ export function profileName(profile = null) {
     active?.display_name ||
     active?.full_name ||
     active?.username ||
+    user?.user_metadata?.display_name ||
+    user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     "Rich User"
   );
@@ -63,6 +82,7 @@ export function profileUsername(profile = null) {
 
   return (
     active?.username ||
+    cleanUsername(user?.user_metadata?.username) ||
     cleanUsername(user?.email?.split("@")[0]) ||
     "richuser"
   );
@@ -75,10 +95,11 @@ export function profileHandle(profile = null) {
 
 export function profileBadge(profile = null) {
   const active = profile || getProfile();
+  const role = active?.role || "user";
 
-  if (active?.role === "founder") return "FOUNDER";
-  if (active?.role === "rich_admin") return "RICH ADMIN";
-  if (active?.role === "admin") return "ADMIN";
+  if (role === "founder") return "FOUNDER";
+  if (role === "rich_admin") return "RICH ADMIN";
+  if (role === "admin") return "ADMIN";
   if (active?.is_verified) return "VERIFIED";
   if (active?.is_artist) return "ARTIST";
   if (active?.is_seller) return "SELLER";
@@ -89,7 +110,7 @@ export function profileBadge(profile = null) {
 
 export function profileLevel(profile = null) {
   const active = profile || getProfile();
-  return Number(active?.rich_level || 1);
+  return safeNumber(active?.rich_level, 1);
 }
 
 export function profileRank(profile = null) {
@@ -99,12 +120,13 @@ export function profileRank(profile = null) {
 
 export function profilePoints(profile = null) {
   const active = profile || getProfile();
-  return Number(active?.rich_points || 0);
+  return safeNumber(active?.rich_points, 0);
 }
 
 export function isProfileOwner(profile = null) {
   const user = getUser();
   const active = profile || getProfile();
+
   return !!user?.id && !!active?.id && user.id === active.id;
 }
 
@@ -123,6 +145,7 @@ export function getProfileIdentity(profileOverride = null) {
   const username =
     profile?.username ||
     fromSupabase?.username ||
+    cleanUsername(user?.user_metadata?.username) ||
     cleanUsername(user?.email?.split("@")[0]) ||
     "";
 
@@ -130,13 +153,19 @@ export function getProfileIdentity(profileOverride = null) {
     profile?.display_name ||
     profile?.full_name ||
     fromSupabase?.display_name ||
+    user?.user_metadata?.display_name ||
+    user?.user_metadata?.full_name ||
     username ||
     user?.email?.split("@")[0] ||
     "Rich User";
 
+  const avatar = profile?.avatar_url || fromSupabase?.avatar_url || DEFAULT_AVATAR;
+  const banner = profile?.banner_url || fromSupabase?.banner_url || DEFAULT_BANNER;
+
   return {
     id,
     user_id: id,
+    profile_id: id,
     creator_id: id,
     owner_id: id,
     seller_id: id,
@@ -153,11 +182,11 @@ export function getProfileIdentity(profileOverride = null) {
     full_name: profile?.full_name || displayName,
     bio: profile?.bio || "",
 
-    avatar_url: profileAvatar(profile),
-    avatarUrl: profileAvatar(profile),
+    avatar_url: avatar,
+    avatarUrl: avatar,
 
-    banner_url: profileBanner(profile),
-    bannerUrl: profileBanner(profile),
+    banner_url: banner,
+    bannerUrl: banner,
 
     role: profile?.role || "user",
 
@@ -170,8 +199,8 @@ export function getProfileIdentity(profileOverride = null) {
     rich_points: profilePoints(profile),
     richPoints: profilePoints(profile),
 
-    balance_cents: Number(profile?.balance_cents || 0),
-    balanceCents: Number(profile?.balance_cents || 0),
+    balance_cents: safeNumber(profile?.balance_cents, 0),
+    balanceCents: safeNumber(profile?.balance_cents, 0),
 
     online_status: profile?.online_status || "offline",
     onlineStatus: profile?.online_status || "offline",
@@ -201,6 +230,7 @@ export function buildProfileInsert(values = {}, profileOverride = null) {
     user_id: identity.user_id,
     username: identity.username,
     display_name: identity.display_name,
+    avatar_url: identity.avatar_url,
     ...values
   };
 }
@@ -267,6 +297,7 @@ export function buildLiveInsert(values = {}, profileOverride = null) {
 export async function refreshMyProfile() {
   const user = getUser();
   if (!user?.id) return null;
+
   return await loadProfile(user.id);
 }
 
@@ -323,6 +354,8 @@ export async function updateMyProfile(values = {}) {
   if (error) throw error;
 
   await loadProfile(user.id);
+  window.dispatchEvent(new CustomEvent("rb:profile-updated", { detail: data || null }));
+
   return data || null;
 }
 
@@ -351,39 +384,41 @@ export async function loadProfileExtensions(userId = null) {
   const id = userId || getProfileKey();
   if (!id) return {};
 
-  const [
-    userSettings,
-    userLevels,
-    theme,
-    metaAvatar,
-    gamer,
-    sports,
-    seller,
-    creator
-  ] = await Promise.allSettled([
-    supabase.from(RB_TABLES.userSettings).select("*").eq("user_id", id).maybeSingle(),
-    supabase.from(RB_TABLES.userLevels).select("*").eq("user_id", id).maybeSingle(),
-    supabase.from(RB_TABLES.profileThemeSettings).select("*").eq("user_id", id).maybeSingle(),
-    supabase.from(RB_TABLES.metaAvatars).select("*").eq("user_id", id).maybeSingle(),
-    supabase.from(RB_TABLES.gamerProfiles).select("*").eq("user_id", id).maybeSingle(),
-    supabase.from(RB_TABLES.sportsProfiles).select("*").eq("user_id", id).maybeSingle(),
-    supabase.from(RB_TABLES.storeSellerProfiles).select("*").eq("user_id", id).maybeSingle(),
-    supabase.from(RB_TABLES.creatorPageSettings).select("*").eq("user_id", id).maybeSingle()
-  ]);
-
-  const unwrap = (result) =>
-    result.status === "fulfilled" ? result.value?.data || null : null;
-
-  return {
-    userSettings: unwrap(userSettings),
-    userLevels: unwrap(userLevels),
-    profileThemeSettings: unwrap(theme),
-    metaAvatar: unwrap(metaAvatar),
-    gamerProfile: unwrap(gamer),
-    sportsProfile: unwrap(sports),
-    storeSellerProfile: unwrap(seller),
-    creatorPageSettings: unwrap(creator)
+  const queries = {
+    userSettings: RB_TABLES.userSettings,
+    userLevels: RB_TABLES.userLevels,
+    profileThemeSettings: RB_TABLES.profileThemeSettings,
+    metaAvatar: RB_TABLES.metaAvatars,
+    gamerProfile: RB_TABLES.gamerProfiles,
+    sportsProfile: RB_TABLES.sportsProfiles,
+    storeSellerProfile: RB_TABLES.storeSellerProfiles,
+    creatorPageSettings: RB_TABLES.creatorPageSettings
   };
+
+  const entries = await Promise.allSettled(
+    Object.entries(queries)
+      .filter(([, table]) => Boolean(table))
+      .map(async ([key, table]) => {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq("user_id", id)
+          .maybeSingle();
+
+        if (error) {
+          console.warn(`[RB PROFILE EXTENSION WARNING: ${key}]`, error.message);
+          return [key, null];
+        }
+
+        return [key, data || null];
+      })
+  );
+
+  return Object.fromEntries(
+    entries
+      .filter((entry) => entry.status === "fulfilled")
+      .map((entry) => entry.value)
+  );
 }
 
 export async function getProfileStats(userId = null) {
@@ -445,6 +480,22 @@ export function buildProfileUrl(profile = null) {
   return RB_ROUTES.profile;
 }
 
+function setImage(el, url, alt = "") {
+  if (!el || !url) return;
+
+  if (el.tagName === "IMG") {
+    if (el.dataset.rbLockedSrc !== url) {
+      el.dataset.rbLockedSrc = url;
+      el.src = url;
+    }
+
+    if (alt) el.alt = alt;
+    return;
+  }
+
+  el.style.backgroundImage = `url("${url}")`;
+}
+
 export function bindProfileShell({
   avatarSelector = "[data-rb-avatar]",
   bannerSelector = "[data-rb-banner]",
@@ -455,24 +506,18 @@ export function bindProfileShell({
   pointsSelector = "[data-rb-points]"
 } = {}) {
   const profile = getProfile();
+  const name = profileName(profile);
 
   document.querySelectorAll(avatarSelector).forEach((el) => {
-    const url = profileAvatar(profile);
-
-    if (el.tagName === "IMG") {
-      el.src = url;
-      el.alt = profileName(profile);
-    } else {
-      el.style.backgroundImage = `url("${url}")`;
-    }
+    setImage(el, profileAvatar(profile), name);
   });
 
   document.querySelectorAll(bannerSelector).forEach((el) => {
-    el.style.backgroundImage = `url("${profileBanner(profile)}")`;
+    setImage(el, profileBanner(profile));
   });
 
   document.querySelectorAll(nameSelector).forEach((el) => {
-    el.textContent = profileName(profile);
+    el.textContent = name;
   });
 
   document.querySelectorAll(handleSelector).forEach((el) => {
