@@ -4,11 +4,12 @@
 
    AVATAR + BANNER SYNC ENGINE
    Profiles table + storage buckets
+   Profile avatar stays profile avatar
+   Meta avatar stays meta avatar
 ========================= */
 
 import {
-  RB_BUCKETS,
-  RB_TABLES
+  RB_BUCKETS
 } from "/core/shared/rb-config.js";
 
 import {
@@ -32,11 +33,8 @@ import {
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR =
-  "/images/brand/Avatar-hero-Banner.png.jpeg";
-
-const DEFAULT_BANNER =
-  "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_BANNER = "/images/brand/hero-banner.png";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -47,13 +45,25 @@ const ACCEPTED_IMAGE_TYPES = [
 
 const MAX_IMAGE_SIZE_MB = 12;
 
+let avatarSyncBooted = false;
+
+/* =========================
+   HELPERS
+========================= */
+
 function createSafeFileName(file, prefix = "image") {
   const user = getUser();
-  const ext = String(file?.name || "upload.png")
-    .split(".")
-    .pop()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "") || "png";
+
+  if (!user?.id) {
+    throw new Error("You must be signed in.");
+  }
+
+  const ext =
+    String(file?.name || "upload.png")
+      .split(".")
+      .pop()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "") || "png";
 
   const stamp = Date.now();
 
@@ -77,6 +87,46 @@ function validateImageFile(file) {
 
   return true;
 }
+
+function dispatchProfileUpdated({
+  type,
+  profile,
+  url
+}) {
+  window.dispatchEvent(
+    new CustomEvent("rb:profile-updated", {
+      detail: {
+        type,
+        profile,
+        url
+      }
+    })
+  );
+}
+
+async function refreshAfterProfileImageChange(profile, type, url) {
+  const user = getUser();
+
+  if (user?.id) {
+    await loadProfile(user.id);
+  }
+
+  await refreshProfileState();
+
+  syncProfileDom(profile);
+
+  notifyProfileListeners?.();
+
+  dispatchProfileUpdated({
+    type,
+    profile,
+    url
+  });
+}
+
+/* =========================
+   UPLOAD
+========================= */
 
 export async function uploadProfileImage({
   file,
@@ -129,18 +179,7 @@ export async function uploadProfileImage({
     [column]: publicUrl
   });
 
-  await loadProfile(user.id);
-  await refreshProfileState();
-
-  window.dispatchEvent(
-    new CustomEvent("rb:profile-updated", {
-      detail: {
-        type,
-        profile,
-        url: publicUrl
-      }
-    })
-  );
+  await refreshAfterProfileImageChange(profile, type, publicUrl);
 
   return {
     type,
@@ -165,21 +204,19 @@ export async function uploadBanner(file) {
   });
 }
 
+/* =========================
+   RESET
+========================= */
+
 export async function resetAvatar() {
   const profile = await updateMyProfile({
     avatar_url: DEFAULT_AVATAR
   });
 
-  await refreshProfileState();
-
-  window.dispatchEvent(
-    new CustomEvent("rb:profile-updated", {
-      detail: {
-        type: "avatar",
-        profile,
-        url: DEFAULT_AVATAR
-      }
-    })
+  await refreshAfterProfileImageChange(
+    profile,
+    "avatar",
+    DEFAULT_AVATAR
   );
 
   return profile;
@@ -190,48 +227,106 @@ export async function resetBanner() {
     banner_url: DEFAULT_BANNER
   });
 
-  await refreshProfileState();
-
-  window.dispatchEvent(
-    new CustomEvent("rb:profile-updated", {
-      detail: {
-        type: "banner",
-        profile,
-        url: DEFAULT_BANNER
-      }
-    })
+  await refreshAfterProfileImageChange(
+    profile,
+    "banner",
+    DEFAULT_BANNER
   );
 
   return profile;
 }
 
-export function syncAvatarDom(profile = getProfile()) {
-  document.querySelectorAll("[data-rb-avatar], [data-rb-auth-avatar]").forEach((el) => {
-    const url = profileAvatar(profile);
+/* =========================
+   DOM SYNC
+========================= */
 
-    if (el.tagName === "IMG") {
-      el.src = url;
-      el.alt =
-        profile?.display_name ||
-        profile?.username ||
-        "Rich Bizness Avatar";
-    } else {
-      el.style.backgroundImage = `url("${url}")`;
-    }
-  });
+export function syncAvatarDom(profile = getProfile()) {
+  document
+    .querySelectorAll("[data-rb-avatar], [data-rb-profile-avatar], [data-rb-auth-avatar]")
+    .forEach((el) => {
+      const url = profileAvatar(profile) || DEFAULT_AVATAR;
+
+      if (el.tagName === "IMG") {
+        el.src = url;
+        el.alt =
+          profile?.display_name ||
+          profile?.username ||
+          "Rich Bizness Avatar";
+      } else {
+        el.style.backgroundImage = `url("${url}")`;
+      }
+    });
 }
 
 export function syncBannerDom(profile = getProfile()) {
-  document.querySelectorAll("[data-rb-banner]").forEach((el) => {
-    el.style.backgroundImage = `url("${profileBanner(profile)}")`;
-  });
+  document
+    .querySelectorAll("[data-rb-banner], [data-rb-profile-banner]")
+    .forEach((el) => {
+      el.style.backgroundImage = `url("${profileBanner(profile) || DEFAULT_BANNER}")`;
+    });
 }
 
 export function syncProfileDom(profile = getProfile()) {
-  bindProfileShell();
+  bindProfileShell?.();
   syncAvatarDom(profile);
   syncBannerDom(profile);
 }
+
+/* =========================
+   META AVATAR SEPARATION
+========================= */
+
+export async function syncAvatarToUniverse() {
+  const profile = getProfile();
+  const user = getUser();
+
+  if (!user?.id || !profile?.id) return null;
+
+  const now = new Date().toISOString();
+
+  const payload = {
+    user_id: user.id,
+    display_name:
+      profile.display_name ||
+      profile.full_name ||
+      profile.username ||
+      "Rich User",
+    avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+    updated_at: now,
+    metadata: {
+      source: "avatar-sync.js",
+      synced_from_profile: true
+    }
+  };
+
+  const { data, error } = await supabase
+    .from("meta_avatars")
+    .upsert(payload, {
+      onConflict: "user_id"
+    })
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB META AVATAR SYNC SKIPPED]", error.message);
+    return null;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:avatar-synced", {
+      detail: {
+        profile,
+        metaAvatar: data
+      }
+    })
+  );
+
+  return data;
+}
+
+/* =========================
+   INPUT BINDING
+========================= */
 
 export function bindAvatarInputs({
   avatarInput = "[data-rb-avatar-input]",
@@ -241,6 +336,7 @@ export function bindAvatarInputs({
 } = {}) {
   document.querySelectorAll(avatarInput).forEach((input) => {
     if (input.dataset.rbAvatarInputBound === "true") return;
+
     input.dataset.rbAvatarInputBound = "true";
 
     input.addEventListener("change", async () => {
@@ -251,10 +347,11 @@ export function bindAvatarInputs({
 
       try {
         const result = await uploadAvatar(file);
+        await syncAvatarToUniverse();
         syncProfileDom(result.profile);
       } catch (error) {
         console.warn("[RB AVATAR UPLOAD FAILED]", error);
-        alert(error.message || "Avatar upload failed.");
+        alert(error?.message || "Avatar upload failed.");
       } finally {
         input.value = "";
         input.disabled = false;
@@ -264,6 +361,7 @@ export function bindAvatarInputs({
 
   document.querySelectorAll(bannerInput).forEach((input) => {
     if (input.dataset.rbBannerInputBound === "true") return;
+
     input.dataset.rbBannerInputBound = "true";
 
     input.addEventListener("change", async () => {
@@ -277,7 +375,7 @@ export function bindAvatarInputs({
         syncProfileDom(result.profile);
       } catch (error) {
         console.warn("[RB BANNER UPLOAD FAILED]", error);
-        alert(error.message || "Banner upload failed.");
+        alert(error?.message || "Banner upload failed.");
       } finally {
         input.value = "";
         input.disabled = false;
@@ -287,6 +385,7 @@ export function bindAvatarInputs({
 
   document.querySelectorAll(resetAvatarButton).forEach((button) => {
     if (button.dataset.rbResetAvatarBound === "true") return;
+
     button.dataset.rbResetAvatarBound = "true";
 
     button.addEventListener("click", async () => {
@@ -294,10 +393,11 @@ export function bindAvatarInputs({
 
       try {
         const profile = await resetAvatar();
+        await syncAvatarToUniverse();
         syncProfileDom(profile);
       } catch (error) {
         console.warn("[RB AVATAR RESET FAILED]", error);
-        alert(error.message || "Avatar reset failed.");
+        alert(error?.message || "Avatar reset failed.");
       } finally {
         button.disabled = false;
       }
@@ -306,6 +406,7 @@ export function bindAvatarInputs({
 
   document.querySelectorAll(resetBannerButton).forEach((button) => {
     if (button.dataset.rbResetBannerBound === "true") return;
+
     button.dataset.rbResetBannerBound = "true";
 
     button.addEventListener("click", async () => {
@@ -316,7 +417,7 @@ export function bindAvatarInputs({
         syncProfileDom(profile);
       } catch (error) {
         console.warn("[RB BANNER RESET FAILED]", error);
-        alert(error.message || "Banner reset failed.");
+        alert(error?.message || "Banner reset failed.");
       } finally {
         button.disabled = false;
       }
@@ -324,17 +425,29 @@ export function bindAvatarInputs({
   });
 }
 
+/* =========================
+   BOOT
+========================= */
+
 export function bootAvatarSync() {
+  if (avatarSyncBooted) return;
+
+  avatarSyncBooted = true;
+
   bindAvatarInputs();
 
   window.addEventListener("rb:profile-updated", () => {
     syncProfileDom(getProfile());
-    notifyProfileListeners();
+    notifyProfileListeners?.();
   });
 
   syncProfileDom(getProfile());
 
   console.log("RB AVATAR SYNC READY");
+}
+
+export function resetAvatarSyncBoot() {
+  avatarSyncBooted = false;
 }
 
 if (document.readyState === "loading") {
