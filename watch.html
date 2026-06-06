@@ -1,1 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Watch Live • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile watch room for live streams, chat, reactions, tips, access unlocks, and realtime viewer sync."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/live.css" />
+</head>
+
+<body
+  class="rb-body rb-watch-page live-body rb-watch-hologram-page"
+  data-page="watch"
+  data-rb-route="watch"
+>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <main class="live-holo-shell watch-holo-shell" aria-label="Rich Bizness Watch Room">
+    <header class="live-holo-top">
+      <a class="live-brand" href="/" data-route="home">
+        <span>WATCH ROOM</span>
+        <strong>RICH BIZNESS</strong>
+        <small>LLC</small>
+      </a>
+
+      <nav class="live-top-actions" aria-label="Watch navigation">
+        <a class="live-watch-link ghost" href="/live" data-route="live">
+          GO LIVE
+        </a>
+
+        <a class="live-watch-link ghost" href="/profile" data-route="profile">
+          PROFILE
+        </a>
+      </nav>
+    </header>
+
+    <section class="holo-tv-wrap" aria-label="Live watch stage">
+      <div id="watchStage" class="holo-tv watch-tv" data-watch-stage>
+        <div class="holo-tv-glass" aria-hidden="true"></div>
+
+        <div
+          id="watchVideoGrid"
+          class="remote-videos watch-video-grid"
+          data-watch-videos
+          aria-label="Live video feed"
+        ></div>
+
+        <div id="watchEmpty" class="stage-empty holo-empty" data-watch-empty>
+          Choose a live room, unlock access if needed, then join the stream.
+        </div>
+
+        <div
+          id="reactionLayer"
+          class="reaction-layer"
+          data-reaction-layer
+          aria-hidden="true"
+        ></div>
+
+        <div class="we-lit-float" aria-hidden="true">
+          WATCH🔥📺
+        </div>
+
+        <div class="holo-room-info">
+          <p id="watchCreator" data-watch-creator>
+            Rich Bizness Creator
+          </p>
+
+          <h1 id="watchTitle" data-watch-title>
+            No live stream selected
+          </h1>
+
+          <p id="watchDescription" class="watch-description" data-watch-description>
+            Choose a live room to watch.
+          </p>
+
+          <div class="watch-badge-row">
+            <div id="watchBadge" class="live-badge off" data-watch-badge>
+              OFF AIR
+            </div>
+
+            <div id="watchAccess" class="live-badge access" data-watch-access>
+              FREE
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="live-control-dock watch-control-dock" aria-label="Watch controls">
+      <button id="joinWatchBtn" type="button" data-join-watch>
+        Join Live
+      </button>
+
+      <button id="leaveWatchBtn" type="button" data-leave-watch disabled>
+        Leave
+      </button>
+
+      <button id="payWatchBtn" type="button" data-pay-watch style="display:none;">
+        Unlock
+      </button>
+
+      <button id="copyWatchBtn" type="button" data-copy-watch>
+        Copy
+      </button>
+
+      <button id="watchReactionBtn" type="button" data-send-reaction>
+        🔥
+      </button>
+    </section>
+
+    <aside class="live-overlay-stats watch-overlay-stats" aria-label="Watch stats">
+      <span>Status <strong id="watchStatus" data-watch-status>Loading...</strong></span>
+      <span>Viewers <strong id="watchViewers" data-watch-viewers>0</strong></span>
+      <span>Peak <strong id="watchPeak" data-watch-peak>0</strong></span>
+      <span>Chat <strong id="watchChatCount" data-watch-chat-count>0</strong></span>
+      <span>Reactions <strong id="watchReactions" data-watch-reactions>0</strong></span>
+      <span>Revenue <strong id="watchRevenue" data-watch-revenue>$0.00</strong></span>
+    </aside>
+
+    <aside class="live-overlay-chat watch-overlay-chat" aria-label="Watch chat and support">
+      <ul
+        id="watchChatList"
+        class="chat-list"
+        data-watch-chat-list
+        aria-live="polite"
+      >
+        <li>No chat yet.</li>
+      </ul>
+
+      <form id="watchChatForm" class="chat-form" data-watch-chat-form>
+        <input
+          id="watchChatInput"
+          data-watch-chat-input
+          type="text"
+          placeholder="Chat with the room..."
+          maxlength="300"
+          autocomplete="off"
+        />
+
+        <button type="submit">
+          Send
+        </button>
+      </form>
+
+      <section class="watch-tip-box" aria-label="Send tip">
+        <div class="rb-form-grid">
+          <label for="tipAmount">
+            Tip
+            <input
+              id="tipAmount"
+              data-tip-amount
+              type="number"
+              min="1"
+              step="1"
+              value="1"
+              inputmode="decimal"
+            />
+          </label>
+
+          <label for="tipMessage">
+            Message
+            <input
+              id="tipMessage"
+              data-tip-message
+              type="text"
+              placeholder="Show love..."
+              maxlength="120"
+              autocomplete="off"
+            />
+          </label>
+        </div>
+
+        <button id="sendTipBtn" class="rb-main-launch" type="button" data-send-tip>
+          Send Tip
+        </button>
+      </section>
+
+      <section class="watch-tips-panel" aria-label="Recent tips">
+        <strong>Tips</strong>
+
+        <div id="watchTipList" class="mini-list" data-watch-tips>
+          <div class="rb-empty">No tips yet.</div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="watch-stream-rail" aria-label="Live rooms">
+      <div class="rb-module-head">
+        <div>
+          <p class="rb-kicker">LIVE ROOMS</p>
+          <h2>Watch Rail</h2>
+        </div>
+
+        <a class="rb-btn ghost" href="/live" data-route="live">
+          Start Live
+        </a>
+      </div>
+
+      <div id="watchStreamList" class="watch-stream-list" data-watch-stream-list>
+        <div class="rb-empty">Loading live rooms...</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/core/pages/watch.js"></script>
+</body>
+</html>
