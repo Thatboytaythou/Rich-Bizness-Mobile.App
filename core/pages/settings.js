@@ -4,6 +4,7 @@
 
    SETTINGS PAGE CONTROLLER
    Profile Lock + Auth + Realtime Settings
+   Uses locked rb-supabase.js client
 ========================================= */
 
 import {
@@ -21,7 +22,8 @@ import {
 } from "/core/shared/rb-config.js";
 
 import {
-  getSupabase
+  createRealtimeChannel,
+  removeRealtimeChannel
 } from "/core/shared/rb-supabase.js";
 
 import {
@@ -42,7 +44,6 @@ import {
 } from "/core/shared/rb-profile.js";
 
 import {
-  toastInfo,
   toastError
 } from "/core/shared/rb-toast.js";
 
@@ -63,7 +64,6 @@ const els = {
   profileLock: $("settings-profile-lock")
 };
 
-let supabase = null;
 let channel = null;
 let actionsBound = false;
 
@@ -83,6 +83,18 @@ function setText(el, value) {
   if (el) el.textContent = value ?? "";
 }
 
+function setImage(el, url, alt = "") {
+  if (!el || !url) return;
+
+  if (el.tagName === "IMG") {
+    el.src = url;
+    el.alt = alt;
+    return;
+  }
+
+  el.style.backgroundImage = `url("${url}")`;
+}
+
 function paintSettings() {
   const user = currentUser();
   const profile = currentProfile();
@@ -93,32 +105,29 @@ function paintSettings() {
   setText(els.badge, profileBadge(profile));
   setText(els.role, String(profile?.role || "user").toUpperCase());
 
-  if (els.avatar) {
-    const avatarUrl = profileAvatar(profile);
-
-    if (els.avatar.tagName === "IMG") {
-      els.avatar.src = avatarUrl;
-      els.avatar.alt = profileName(profile);
-    } else {
-      els.avatar.style.backgroundImage = `url("${avatarUrl}")`;
-    }
-  }
+  setImage(
+    els.avatar,
+    profileAvatar(profile),
+    profileName(profile)
+  );
 
   if (els.status) {
     const role = profile?.role || "user";
 
+    els.status.style.color = "";
+
     if (profile?.is_verified) {
       els.status.textContent = "✅ Verified";
       els.status.style.color = "#66ff99";
-    } else if (["admin", "owner", "super_admin", "founder", "rich_admin"].includes(role)) {
+    } else if (
+      ["admin", "owner", "super_admin", "founder", "rich_admin"].includes(role)
+    ) {
       els.status.textContent = "Admin Access";
       els.status.style.color = "#ffd86b";
     } else if (profile?.is_creator || profile?.is_artist || profile?.is_seller) {
       els.status.textContent = "Creator Access";
-      els.status.style.color = "";
     } else {
       els.status.textContent = "Standard Member";
-      els.status.style.color = "";
     }
   }
 
@@ -135,21 +144,26 @@ function paintSettings() {
   );
 }
 
-function clearRealtime() {
-  if (channel && supabase) {
-    supabase.removeChannel(channel);
-    channel = null;
-  }
+async function refreshSettingsIdentity() {
+  await refreshProfileState();
+  await refreshAppIdentity();
+  paintSettings();
+}
+
+async function clearRealtime() {
+  if (!channel) return;
+
+  await removeRealtimeChannel(channel);
+  channel = null;
 }
 
 function bindRealtime() {
   const user = currentUser();
-  if (!user?.id || !supabase) return;
+  if (!user?.id) return;
 
   clearRealtime();
 
-  channel = supabase
-    .channel(`rb-settings-${user.id}`)
+  channel = createRealtimeChannel(`rb-settings-${user.id}`)
     .on(
       "postgres_changes",
       {
@@ -158,11 +172,7 @@ function bindRealtime() {
         table: RB_TABLES.profiles,
         filter: `id=eq.${user.id}`
       },
-      async () => {
-        await refreshProfileState();
-        await refreshAppIdentity();
-        paintSettings();
-      }
+      refreshSettingsIdentity
     )
     .on(
       "postgres_changes",
@@ -172,11 +182,7 @@ function bindRealtime() {
         table: RB_TABLES.userSettings,
         filter: `user_id=eq.${user.id}`
       },
-      async () => {
-        await refreshProfileState();
-        await refreshAppIdentity();
-        paintSettings();
-      }
+      refreshSettingsIdentity
     )
     .subscribe();
 }
@@ -194,11 +200,14 @@ function bindSettingsActions() {
   });
 
   els.signOutBtn?.addEventListener("click", async () => {
-    if (!confirm("Are you sure you want to sign out?")) return;
+    const confirmSignOut = window.confirm("Are you sure you want to sign out?");
+    if (!confirmSignOut) return;
 
     try {
       els.signOutBtn.disabled = true;
       els.signOutBtn.textContent = "Signing out...";
+
+      await clearRealtime();
 
       await rbSignOut({
         redirectTo: RB_ROUTES.auth || "/auth"
@@ -220,10 +229,10 @@ async function bootSettingsPage() {
     await initApp({
       guard: true,
       bindProfile: true,
-      toast: false
+      toast: false,
+      ensureProfile: true,
+      profileState: true
     });
-
-    supabase = getSupabase();
 
     await ensureMyProfile();
     await refreshProfileState();
@@ -240,6 +249,7 @@ async function bootSettingsPage() {
     bindRealtime();
 
     document.body.dataset.rbPage = "settings";
+    document.body.dataset.rbRoute = "settings";
     document.body.dataset.rbProfileLock = "true";
     document.body.classList.add("rb-settings-ready");
 
