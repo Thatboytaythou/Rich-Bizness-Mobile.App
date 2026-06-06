@@ -42,13 +42,19 @@ import {
 let appReady = false;
 let appBooting = false;
 let appBootPromise = null;
+let runtimeBound = false;
+
+/* =========================
+   INIT
+========================= */
 
 export async function initApp({
   guard = true,
   bindProfile = true,
   toast = false,
   ensureProfile = true,
-  profileState = true
+  profileState = true,
+  pageName = ""
 } = {}) {
   if (appReady) return getAppState();
 
@@ -64,10 +70,12 @@ export async function initApp({
     bindProfile,
     toast,
     ensureProfile,
-    profileState
+    profileState,
+    pageName
   });
 
   await appBootPromise;
+
   return getAppState();
 }
 
@@ -76,10 +84,12 @@ async function bootApp({
   bindProfile,
   toast,
   ensureProfile,
-  profileState
+  profileState,
+  pageName
 }) {
   try {
-    document.body.classList.add("rb-app-booting");
+    document.body?.classList.add("rb-app-booting");
+    document.body?.classList.remove("rb-app-error");
 
     await initAuthState();
 
@@ -108,8 +118,13 @@ async function bootApp({
 
     appReady = true;
 
-    document.body.classList.remove("rb-app-booting", "rb-app-error");
-    document.body.classList.add("rb-app-ready");
+    document.body?.classList.remove("rb-app-booting", "rb-app-error");
+    document.body?.classList.add("rb-app-ready");
+
+    if (pageName) {
+      document.body.dataset.page = pageName;
+      document.body.dataset.rbPage = pageName;
+    }
 
     window.dispatchEvent(
       new CustomEvent("rb:app-ready", {
@@ -120,18 +135,35 @@ async function bootApp({
     if (toast) {
       toastInfo("App system online.", RB_APP.name);
     }
+
+    return getAppState();
   } catch (error) {
     appReady = false;
 
-    document.body.classList.remove("rb-app-booting");
-    document.body.classList.add("rb-app-error");
+    document.body?.classList.remove("rb-app-booting");
+    document.body?.classList.add("rb-app-error");
 
     console.error("[RB APP BOOT ERROR]", error);
+
+    window.dispatchEvent(
+      new CustomEvent("rb:app-error", {
+        detail: {
+          error,
+          state: getAppState()
+        }
+      })
+    );
+
     throw error;
   } finally {
     appBooting = false;
+    appBootPromise = null;
   }
 }
+
+/* =========================
+   PROFILE BIND
+========================= */
 
 async function bindProfileShellSafe() {
   try {
@@ -144,6 +176,10 @@ async function bindProfileShellSafe() {
     console.warn("[RB PROFILE BIND SKIPPED]", error);
   }
 }
+
+/* =========================
+   STATE
+========================= */
 
 export function getAppState() {
   return {
@@ -159,12 +195,14 @@ export function getAppState() {
 }
 
 export function getCurrentUserState() {
+  const user = getUser();
+
   return {
     session: getSession(),
-    user: getUser(),
+    user,
     profile: getProfile(),
     auth: getAuthState(),
-    authed: !!getUser()?.id
+    authed: !!user?.id
   };
 }
 
@@ -172,7 +210,13 @@ export function isAppReady() {
   return appReady;
 }
 
-export async function refreshAppIdentity() {
+/* =========================
+   REFRESH
+========================= */
+
+export async function refreshAppIdentity({
+  bindProfile = true
+} = {}) {
   await refreshAuthProfile();
 
   if (getUser()?.id) {
@@ -180,7 +224,9 @@ export async function refreshAppIdentity() {
     await refreshProfileState();
   }
 
-  await bindProfileShellSafe();
+  if (bindProfile) {
+    await bindProfileShellSafe();
+  }
 
   window.dispatchEvent(
     new CustomEvent("rb:app-identity-refreshed", {
@@ -191,20 +237,38 @@ export async function refreshAppIdentity() {
   return getAppState();
 }
 
-function bindRuntimeEvents() {
-  if (window.__RB_RUNTIME_BOUND__) return;
+/* =========================
+   RUNTIME EVENTS
+========================= */
 
+function bindRuntimeEvents() {
+  if (runtimeBound || window.__RB_RUNTIME_BOUND__) return;
+
+  runtimeBound = true;
   window.__RB_RUNTIME_BOUND__ = true;
 
   window.addEventListener("online", () => {
-    document.body.classList.remove("rb-offline");
-    document.body.classList.add("rb-online");
+    document.body?.classList.remove("rb-offline");
+    document.body?.classList.add("rb-online");
+
+    window.dispatchEvent(
+      new CustomEvent("rb:network-online", {
+        detail: getAppState()
+      })
+    );
   });
 
   window.addEventListener("offline", () => {
-    document.body.classList.remove("rb-online");
-    document.body.classList.add("rb-offline");
+    document.body?.classList.remove("rb-online");
+    document.body?.classList.add("rb-offline");
+
     toastWarn("Connection dropped. Some features may pause.", "Offline");
+
+    window.dispatchEvent(
+      new CustomEvent("rb:network-offline", {
+        detail: getAppState()
+      })
+    );
   });
 
   document.addEventListener("visibilitychange", async () => {
@@ -223,20 +287,43 @@ function bindRuntimeEvents() {
   });
 }
 
-export function markPageReady(pageName = "") {
-  document.body.classList.add("rb-page-ready");
-  document.body.classList.remove("rb-page-error");
+/* =========================
+   PAGE STATUS
+========================= */
 
-  if (pageName) {
+export function markPageReady(pageName = "") {
+  document.body?.classList.add("rb-page-ready");
+  document.body?.classList.remove("rb-page-error");
+
+  if (pageName && document.body) {
     document.body.dataset.page = pageName;
+    document.body.dataset.rbPage = pageName;
   }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:page-ready", {
+      detail: {
+        page: pageName,
+        state: getAppState()
+      }
+    })
+  );
 }
 
 export function markPageError(error) {
   console.error("[RB PAGE ERROR]", error);
 
-  document.body.classList.add("rb-page-error");
-  document.body.classList.remove("rb-page-ready");
+  document.body?.classList.add("rb-page-error");
+  document.body?.classList.remove("rb-page-ready");
+
+  window.dispatchEvent(
+    new CustomEvent("rb:page-error", {
+      detail: {
+        error,
+        state: getAppState()
+      }
+    })
+  );
 }
 
 console.log("RB APP ORCHESTRATOR READY");
