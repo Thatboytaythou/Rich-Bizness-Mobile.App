@@ -38,6 +38,7 @@ const DEFAULT_XP_RULES = Object.freeze({
 
   game_score_submitted: { xp: 20, rich_points: 5, coins: 0 },
   game_clip_uploaded: { xp: 25, rich_points: 6, coins: 0 },
+
   sports_upload_created: { xp: 20, rich_points: 5, coins: 0 },
   sports_pick_created: { xp: 15, rich_points: 4, coins: 0 },
 
@@ -49,6 +50,10 @@ const DEFAULT_XP_RULES = Object.freeze({
   meta_avatar_updated: { xp: 15, rich_points: 4, coins: 0 },
   meta_world_created: { xp: 35, rich_points: 10, coins: 0 }
 });
+
+function now() {
+  return new Date().toISOString();
+}
 
 function cleanKey(value = "unknown_event") {
   return String(value || "unknown_event")
@@ -63,14 +68,14 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(number) ? Math.floor(number) : fallback;
 }
 
-function nextLevelFromXp(totalXp = 0) {
-  const xp = safeNumber(totalXp, 0);
-  return Math.max(1, Math.floor(Math.sqrt(xp / 100)) + 1);
-}
-
-function nextXpForLevel(level = 1) {
+function xpRequiredForLevel(level = 1) {
   const lvl = Math.max(1, safeNumber(level, 1));
   return lvl * lvl * 100;
+}
+
+function levelFromXp(totalXp = 0) {
+  const xp = Math.max(0, safeNumber(totalXp, 0));
+  return Math.max(1, Math.floor(Math.sqrt(xp / 100)) + 1);
 }
 
 function rankFromLevel(level = 1) {
@@ -80,6 +85,22 @@ function rankFromLevel(level = 1) {
   if (level >= 25) return "Rich Boss";
   if (level >= 10) return "Rising Creator";
   return "Smoke Rookie";
+}
+
+function buildXpProgress(totalXp = 0) {
+  const xpTotal = Math.max(0, safeNumber(totalXp, 0));
+  const level = levelFromXp(xpTotal);
+
+  const levelFloor = level <= 1 ? 0 : xpRequiredForLevel(level - 1);
+  const levelNext = xpRequiredForLevel(level);
+
+  return {
+    level,
+    xp_total: xpTotal,
+    xp_current: Math.max(0, xpTotal - levelFloor),
+    xp_next: Math.max(100, levelNext - levelFloor),
+    rank_title: rankFromLevel(level)
+  };
 }
 
 export function getXpRule(eventKey = "") {
@@ -109,11 +130,10 @@ export async function ensureUserLevel(userId = null) {
   if (!id) throw new Error("User required for XP.");
 
   const existing = await getMyLevelState(id);
-
   if (existing?.id) return existing;
 
   const identity = getProfileIdentity();
-  const now = new Date().toISOString();
+  const stamp = now();
 
   const inserted = await rbInsert({
     table: RB_TABLES.userLevels,
@@ -133,7 +153,8 @@ export async function ensureUserLevel(userId = null) {
         username: identity.username,
         display_name: identity.display_name
       },
-      updated_at: now
+      created_at: stamp,
+      updated_at: stamp
     }
   });
 
@@ -171,13 +192,13 @@ export async function awardXp({
   const oldRichPoints = safeNumber(levelState?.rich_points, 0);
   const oldCoins = safeNumber(levelState?.coins, 0);
 
-  const newXpTotal = oldXpTotal + xpAmount;
-  const newLevel = nextLevelFromXp(newXpTotal);
-  const newXpNext = nextXpForLevel(newLevel + 1);
-  const newXpCurrent = newXpTotal - nextXpForLevel(newLevel);
-  const newRank = rankFromLevel(newLevel);
+  const newXpTotal = Math.max(0, oldXpTotal + xpAmount);
+  const progress = buildXpProgress(newXpTotal);
 
-  const now = new Date().toISOString();
+  const newRichPoints = Math.max(0, oldRichPoints + richPointsAmount);
+  const newCoins = Math.max(0, oldCoins + coinsAmount);
+
+  const stamp = now();
 
   let ledger = null;
 
@@ -197,10 +218,11 @@ export async function awardXp({
           app: "Rich Bizness Mobile",
           source: "rb-xp.js",
           level_before: safeNumber(levelState?.level, 1),
-          level_after: newLevel,
-          rank_after: newRank,
+          level_after: progress.level,
+          rank_after: progress.rank_title,
           ...metadata
-        }
+        },
+        created_at: stamp
       }
     });
 
@@ -213,21 +235,21 @@ export async function awardXp({
     table: RB_TABLES.userLevels,
     match: { user_id: id },
     values: {
-      level: newLevel,
-      xp_total: newXpTotal,
-      xp_current: Math.max(0, newXpCurrent),
-      xp_next: newXpNext,
-      rank_title: newRank,
-      rich_points: oldRichPoints + richPointsAmount,
-      coins: oldCoins + coinsAmount,
-      updated_at: now,
+      level: progress.level,
+      xp_total: progress.xp_total,
+      xp_current: progress.xp_current,
+      xp_next: progress.xp_next,
+      rank_title: progress.rank_title,
+      rich_points: newRichPoints,
+      coins: newCoins,
+      updated_at: stamp,
       metadata: {
         ...(levelState?.metadata || {}),
         last_event_key: key,
         last_section: section,
         last_xp_amount: xpAmount,
         last_rich_points_amount: richPointsAmount,
-        last_awarded_at: now
+        last_awarded_at: stamp
       }
     }
   });
@@ -237,10 +259,10 @@ export async function awardXp({
       table: RB_TABLES.profiles,
       match: { id },
       values: {
-        rich_level: newLevel,
-        rank_title: newRank,
-        rich_points: oldRichPoints + richPointsAmount,
-        updated_at: now
+        rich_level: progress.level,
+        rank_title: progress.rank_title,
+        rich_points: newRichPoints,
+        updated_at: stamp
       }
     });
   } catch (error) {
@@ -262,10 +284,11 @@ export async function awardXp({
           xp_amount: xpAmount,
           rich_points_amount: richPointsAmount,
           coins_amount: coinsAmount,
-          level_after: newLevel,
-          rank_after: newRank,
+          level_after: progress.level,
+          rank_after: progress.rank_title,
           ...metadata
-        }
+        },
+        created_at: stamp
       }
     });
   } catch (error) {
@@ -321,7 +344,7 @@ export async function syncProfileXp(userId = null) {
       rich_level: level,
       rich_points: richPoints,
       rank_title: rankTitle,
-      updated_at: new Date().toISOString()
+      updated_at: now()
     }
   });
 
