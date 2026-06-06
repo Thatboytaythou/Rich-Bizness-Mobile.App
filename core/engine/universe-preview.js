@@ -11,8 +11,8 @@ import { createMetaWorldEngine } from "/core/features/meta/world-engine.js";
    RICH BIZNESS MOBILE
    /core/engine/universe-preview.js
 
-   STEP 2 LOCKED
-   MASTER UNIVERSE BOOT ONLY
+   MASTER UNIVERSE BOOT
+   Galaxy + Portal + Orbit Cards + Avatar + Meta Preview
 ========================= */
 
 const container = document.getElementById("canvas-container");
@@ -47,26 +47,93 @@ const motion = {
 };
 
 const modules = [
-  { key: "feed", title: "Global Feed", tag: "FEED", icon: "🔥", image: "/images/brand/hero-banner.png" },
-  { key: "live", title: "Go Live", tag: "LIVE", icon: "📡", image: "/images/brand/omni-watch.png.jpeg" },
-  { key: "music", title: "Music Universe", tag: "MUSIC", icon: "🎵", image: "/images/brand/music-log.png.jpeg" },
-  { key: "podcast", title: "Podcast Shows", tag: "PODCAST", icon: "🎙️", image: "/images/brand/Avatar-hero-Banner.png.jpeg" },
-  { key: "radio", title: "Live Radio", tag: "RADIO", icon: "📻", image: "/images/brand/background-v2.png.jpeg" },
-  { key: "gaming", title: "Arcade District", tag: "GAMING", icon: "🎮", image: "/images/brand/gaming-hero.png.jpeg" },
-  { key: "upload", title: "Upload Content", tag: "UPLOAD", icon: "⬆️", image: "/images/brand/3d-logo.png.jpeg" },
-  { key: "sports", title: "Sports Arena", tag: "SPORTS", icon: "🏆", image: "/images/brand/sports-logo.png.jpeg" },
-  { key: "gallery", title: "Visual Drops", tag: "GALLERY", icon: "🖼️", image: "/images/brand/father-son-elite.png.jpeg" },
-  { key: "store", title: "Creator Market", tag: "STORE", icon: "🛒", image: "/images/brand/gta-style-elite.png.jpeg" },
-  { key: "meta", title: "Meta World", tag: "META", icon: "🌎", image: "/images/brand/meta-verse-elite.png.jpeg" }
+  {
+    key: "feed",
+    title: "Global Feed",
+    tag: "FEED",
+    icon: "🔥",
+    image: "/images/brand/hero-banner.png"
+  },
+  {
+    key: "live",
+    title: "Go Live",
+    tag: "LIVE",
+    icon: "📡",
+    image: "/images/brand/omni-watch.png.jpeg"
+  },
+  {
+    key: "music",
+    title: "Music Universe",
+    tag: "MUSIC",
+    icon: "🎵",
+    image: "/images/brand/music-log.png.jpeg"
+  },
+  {
+    key: "podcast",
+    title: "Podcast Shows",
+    tag: "PODCAST",
+    icon: "🎙️",
+    image: "/images/brand/Avatar-hero-Banner.png.jpeg"
+  },
+  {
+    key: "radio",
+    title: "Live Radio",
+    tag: "RADIO",
+    icon: "📻",
+    image: "/images/brand/background-v2.png.jpeg"
+  },
+  {
+    key: "gaming",
+    title: "Arcade District",
+    tag: "GAMING",
+    icon: "🎮",
+    image: "/images/brand/gaming-hero.png.jpeg"
+  },
+  {
+    key: "upload",
+    title: "Upload Content",
+    tag: "UPLOAD",
+    icon: "⬆️",
+    image: "/images/brand/3d-logo.png.jpeg"
+  },
+  {
+    key: "sports",
+    title: "Sports Arena",
+    tag: "SPORTS",
+    icon: "🏆",
+    image: "/images/brand/sports-logo.png.jpeg"
+  },
+  {
+    key: "gallery",
+    title: "Visual Drops",
+    tag: "GALLERY",
+    icon: "🖼️",
+    image: "/images/brand/father-son-elite.png.jpeg"
+  },
+  {
+    key: "store",
+    title: "Creator Market",
+    tag: "STORE",
+    icon: "🛒",
+    image: "/images/brand/gta-style-elite.png.jpeg"
+  },
+  {
+    key: "meta",
+    title: "Meta World",
+    tag: "META",
+    icon: "🌎",
+    image: "/images/brand/meta-verse-elite.png.jpeg"
+  }
 ];
 
-let scene;
-let camera;
-let renderer;
-let textureLoader;
-let raycaster;
-let pointer;
+let scene = null;
+let camera = null;
+let renderer = null;
+let textureLoader = null;
+let raycaster = null;
+let pointer = null;
 let animationFrame = null;
+let eventsBound = false;
 
 const engines = [];
 
@@ -107,7 +174,11 @@ function safeCall(engine, method, ...args) {
 }
 
 function initUniverse() {
-  if (!container || !THREERef) return;
+  if (!container || !THREERef) {
+    console.warn("[RB UNIVERSE] Missing canvas container or THREE.");
+    return;
+  }
+
   if (container.dataset.rbUniverseMounted === "true") return;
 
   container.dataset.rbUniverseMounted = "true";
@@ -146,18 +217,13 @@ function initUniverse() {
 
   engines.push(
     createGalaxyEngine(ctx),
-
     createMetaWorldEngine(ctx, {
       mode: "preview",
       world: "rich-bizness"
     }),
-
     createPortalEngine(ctx),
-
     createOrbitCardsEngine(ctx),
-
     createAvatarEngine(ctx),
-
     createOmniFxEngine(ctx)
   );
 
@@ -168,9 +234,14 @@ function initUniverse() {
   animateUniverse();
 
   document.body.classList.add("rb-universe-ready");
+
+  console.log("RB UNIVERSE PREVIEW READY");
 }
 
 function bindEvents() {
+  if (eventsBound) return;
+  eventsBound = true;
+
   window.addEventListener("pointerdown", onPointerDown, { passive: true });
   window.addEventListener("pointermove", onPointerMove, { passive: true });
   window.addEventListener("pointerup", onPointerUp, { passive: true });
@@ -191,6 +262,25 @@ function bindEvents() {
     activityState.theme = theme;
     engines.forEach((engine) => safeCall(engine, "setTheme", theme));
   };
+
+  window.RB_UNIVERSE_DESTROY = destroyUniverse;
+}
+
+function unbindEvents() {
+  if (!eventsBound) return;
+  eventsBound = false;
+
+  window.removeEventListener("pointerdown", onPointerDown);
+  window.removeEventListener("pointermove", onPointerMove);
+  window.removeEventListener("pointerup", onPointerUp);
+  window.removeEventListener("pointercancel", onPointerUp);
+
+  window.removeEventListener("resize", resizeUniverse);
+  window.removeEventListener("orientationchange", resizeUniverse);
+  window.removeEventListener("beforeunload", destroyUniverse);
+
+  window.removeEventListener("rb:activity-update", onActivityUpdate);
+  window.removeEventListener("rb:presence-update", onPresenceUpdate);
 }
 
 function onActivityUpdate(event) {
@@ -198,17 +288,20 @@ function onActivityUpdate(event) {
   if (!live) return;
 
   activityState.liveActive = Boolean(live.active);
-  activityState.liveCount = live.count || 0;
+  activityState.liveCount = Number(live.count || 0);
   activityState.orbitBoost = live.active ? 1.28 : 1;
   activityState.portalBoost = live.active ? 1.22 : 1;
 
-  document.body.classList.toggle("rb-orbit-live-energy", activityState.liveActive);
+  document.body.classList.toggle(
+    "rb-orbit-live-energy",
+    activityState.liveActive
+  );
 
   engines.forEach((engine) => safeCall(engine, "onActivityUpdate", activityState));
 }
 
 function onPresenceUpdate(event) {
-  activityState.onlineCount = event.detail?.onlineCount || 0;
+  activityState.onlineCount = Number(event.detail?.onlineCount || 0);
 
   document.body.classList.toggle(
     "rb-orbit-presence-energy",
@@ -218,42 +311,50 @@ function onPresenceUpdate(event) {
   engines.forEach((engine) => safeCall(engine, "onPresenceUpdate", activityState));
 }
 
+function updatePointer(event) {
+  if (!pointer) return;
+
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+}
+
 function onPointerDown(event) {
+  updatePointer(event);
   engines.forEach((engine) => safeCall(engine, "onPointerDown", event));
 }
 
 function onPointerMove(event) {
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
+  updatePointer(event);
   engines.forEach((engine) => safeCall(engine, "onPointerMove", event));
 }
 
 function onPointerUp(event) {
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
+  updatePointer(event);
   engines.forEach((engine) => safeCall(engine, "onPointerUp", event));
 }
 
 function resizeUniverse() {
   if (!camera || !renderer) return;
 
-  const mobile = window.innerWidth <= motion.mobileBreakpoint;
+  const width = Math.max(1, window.innerWidth);
+  const height = Math.max(1, window.innerHeight);
+  const mobile = width <= motion.mobileBreakpoint;
 
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = width / height;
   camera.fov = mobile ? 49 : 44;
   camera.position.set(0, mobile ? 4.2 : 4.4, mobile ? 56 : 55);
   camera.updateProjectionMatrix();
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(width, height);
 
   engines.forEach((engine) => safeCall(engine, "resize"));
 }
 
 function animateUniverse() {
   animationFrame = requestAnimationFrame(animateUniverse);
+
+  if (!renderer || !scene || !camera) return;
 
   const now = performance.now();
   const t = now * 0.001;
@@ -264,11 +365,38 @@ function animateUniverse() {
 }
 
 function destroyUniverse() {
-  if (animationFrame) cancelAnimationFrame(animationFrame);
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame);
+  }
 
   engines.forEach((engine) => safeCall(engine, "destroy"));
   engines.length = 0;
+
+  if (renderer) {
+    renderer.dispose?.();
+    renderer.forceContextLoss?.();
+  }
+
+  if (container) {
+    container.innerHTML = "";
+    delete container.dataset.rbUniverseMounted;
+  }
+
   animationFrame = null;
+  scene = null;
+  camera = null;
+  renderer = null;
+  textureLoader = null;
+  raycaster = null;
+  pointer = null;
+
+  unbindEvents();
+
+  document.body.classList.remove(
+    "rb-universe-ready",
+    "rb-orbit-live-energy",
+    "rb-orbit-presence-energy"
+  );
 }
 
 initUniverse();
