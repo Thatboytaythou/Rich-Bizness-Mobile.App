@@ -5,11 +5,17 @@
    PROFILE PAGE CONTROLLER
    Synced with auth + profile-state
    Auto Profile Ensure Enabled
+
+   Image Lock:
+   - Profile avatar = profiles.avatar_url only
+   - Profile banner = profile_theme_settings.background_url OR profiles.banner_url
+   - Meta avatar = Meta tab only
 ========================= */
 
 import {
   RB_TABLES,
-  RB_ROUTES
+  RB_ROUTES,
+  RB_BRAND_ASSETS
 } from "/core/shared/rb-config.js";
 
 import {
@@ -26,8 +32,6 @@ import {
 } from "/core/features/profile/profile-state.js";
 
 import {
-  profileAvatar,
-  profileBanner,
   profileName,
   profileHandle,
   profileBadge,
@@ -41,8 +45,13 @@ import {
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
-const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_AVATAR =
+  RB_BRAND_ASSETS?.defaultProfileAvatar ||
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+const DEFAULT_BANNER =
+  RB_BRAND_ASSETS?.defaultProfileBanner ||
+  "/images/brand/hero-banner.png";
 
 const state = {
   profile: null,
@@ -75,6 +84,7 @@ const els = {
   followers: $("profileFollowers"),
   following: $("profileFollowing"),
   postsCount: $("profilePostsCount"),
+  liveCount: $("profileLiveCount"),
   editBtn: $("profileEditBtn"),
   followBtn: $("profileFollowBtn"),
   messageBtn: $("profileMessageBtn"),
@@ -115,6 +125,31 @@ function escapeHtml(value = "") {
     .replace(/'/g, "&#039;");
 }
 
+function lockedProfileAvatar(profile = {}) {
+  return profile?.avatar_url || DEFAULT_AVATAR;
+}
+
+function lockedProfileBanner(profile = {}, extras = {}) {
+  return (
+    extras?.theme?.background_url ||
+    profile?.banner_url ||
+    DEFAULT_BANNER
+  );
+}
+
+function setImageOnce(img, src, alt = "Profile") {
+  if (!img || !src) return;
+
+  if (img.dataset.rbLockedSrc === src) {
+    img.alt = alt;
+    return;
+  }
+
+  img.dataset.rbLockedSrc = src;
+  img.src = src;
+  img.alt = alt;
+}
+
 function mediaMarkup(post) {
   const url = post.media_url || post.file_url || post.image_url || "";
   if (!url) return "";
@@ -135,7 +170,7 @@ function mediaMarkup(post) {
 async function fetchCounts(profileId) {
   if (!profileId) return state.counts;
 
-  const [followers, following, posts] = await Promise.allSettled([
+  const [followers, following, posts, live] = await Promise.allSettled([
     supabase
       .from(RB_TABLES.followers)
       .select("id", { count: "exact", head: true })
@@ -149,13 +184,19 @@ async function fetchCounts(profileId) {
     supabase
       .from(RB_TABLES.feedPosts)
       .select("id", { count: "exact", head: true })
+      .eq("user_id", profileId),
+
+    supabase
+      .from(RB_TABLES.liveStreams)
+      .select("id", { count: "exact", head: true })
       .eq("user_id", profileId)
   ]);
 
   state.counts = {
     followers: followers.value?.count || 0,
     following: following.value?.count || 0,
-    posts: posts.value?.count || 0
+    posts: posts.value?.count || 0,
+    live: live.value?.count || 0
   };
 
   return state.counts;
@@ -226,15 +267,22 @@ async function fetchExtras(profileId) {
   };
 
   const entries = await Promise.allSettled(
-    Object.entries(tables).map(async ([key, table]) => {
-      const { data } = await supabase
-        .from(table)
-        .select("*")
-        .eq("user_id", profileId)
-        .maybeSingle();
+    Object.entries(tables)
+      .filter(([, table]) => Boolean(table))
+      .map(async ([key, table]) => {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq("user_id", profileId)
+          .maybeSingle();
 
-      return [key, data || null];
-    })
+        if (error) {
+          console.warn(`[RB PROFILE EXTRA WARNING: ${key}]`, error.message);
+          return [key, null];
+        }
+
+        return [key, data || null];
+      })
   );
 
   state.extras = Object.fromEntries(
@@ -250,11 +298,9 @@ function renderProfile() {
   const profile = state.profile || {};
   const extras = state.extras || {};
 
-  const avatar = profileAvatar(profile) || DEFAULT_AVATAR;
-  const banner =
-    extras.theme?.background_url ||
-    profileBanner(profile) ||
-    DEFAULT_BANNER;
+  const name = profileName(profile);
+  const avatar = lockedProfileAvatar(profile);
+  const banner = lockedProfileBanner(profile, extras);
 
   if (els.status) {
     els.status.textContent = state.isMine
@@ -267,8 +313,7 @@ function renderProfile() {
   }
 
   if (els.avatar) {
-    els.avatar.src = avatar;
-    els.avatar.alt = profileName(profile);
+    setImageOnce(els.avatar, avatar, name);
 
     attachProfileRoute(els.avatar, {
       id: profile.id,
@@ -276,7 +321,7 @@ function renderProfile() {
     });
   }
 
-  if (els.name) els.name.textContent = profileName(profile);
+  if (els.name) els.name.textContent = name;
   if (els.username) els.username.textContent = profileHandle(profile);
 
   if (els.bio) {
@@ -287,6 +332,7 @@ function renderProfile() {
   if (els.rank) {
     els.rank.textContent =
       extras.level?.rank_title ||
+      profile.rank_title ||
       profileBadge(profile);
   }
 
@@ -306,6 +352,7 @@ function renderProfile() {
   if (els.followers) els.followers.textContent = state.counts.followers;
   if (els.following) els.following.textContent = state.counts.following;
   if (els.postsCount) els.postsCount.textContent = state.counts.posts;
+  if (els.liveCount) els.liveCount.textContent = state.counts.live || 0;
 
   if (els.editBtn) {
     els.editBtn.style.display = state.isMine ? "block" : "none";
@@ -357,7 +404,7 @@ function renderLinks(profile) {
     .join("");
 }
 
-function fillPanel(el, data, title) {
+function fillPanel(el, data, title, details = "") {
   if (!el) return;
 
   if (!data) {
@@ -368,17 +415,46 @@ function fillPanel(el, data, title) {
   el.innerHTML = `
     <div class="rb-mini-card">
       <h3>${escapeHtml(title)}</h3>
-      <p>Connected</p>
+      <p>${escapeHtml(details || "Connected")}</p>
     </div>
   `;
 }
 
 function renderExtras() {
-  fillPanel(els.creatorPanel, state.extras.creator, "Creator Hub");
-  fillPanel(els.storePanel, state.extras.seller, "Store");
-  fillPanel(els.gamingPanel, state.extras.gamer, "Gaming");
-  fillPanel(els.sportsPanel, state.extras.sports, "Sports");
-  fillPanel(els.metaPanel, state.extras.meta, "Meta Avatar");
+  fillPanel(
+    els.creatorPanel,
+    state.extras.creator,
+    "Creator Hub",
+    state.extras.creator?.page_theme || "Creator system connected"
+  );
+
+  fillPanel(
+    els.storePanel,
+    state.extras.seller,
+    "Store",
+    state.extras.seller?.display_name || "Seller profile connected"
+  );
+
+  fillPanel(
+    els.gamingPanel,
+    state.extras.gamer,
+    "Gaming",
+    state.extras.gamer?.display_name || "Gaming profile connected"
+  );
+
+  fillPanel(
+    els.sportsPanel,
+    state.extras.sports,
+    "Sports",
+    state.extras.sports?.display_name || "Sports profile connected"
+  );
+
+  fillPanel(
+    els.metaPanel,
+    state.extras.meta,
+    "Meta Avatar",
+    state.extras.meta?.display_name || "Meta avatar connected"
+  );
 }
 
 function renderPosts() {
