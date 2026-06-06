@@ -4,14 +4,19 @@
 
    LIVE RAIL ENGINE
    Watch rail + homepage live cards + realtime discovery
+   Safe Loader + Card Sync
 ========================= */
 
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   RB_TABLES,
   RB_ROUTES
 } from "/core/shared/rb-config.js";
+
+const DEFAULT_THUMBNAIL = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const RAIL = {
   streams: [],
@@ -20,40 +25,28 @@ const RAIL = {
   channel: null,
   listeners: new Set(),
   limit: 20,
-  statusFilter: ["live", "scheduled"]
+  statusFilter: ["live", "scheduled"],
+  ready: false,
+  loading: false,
+  error: null
 };
-
-const DEFAULT_THUMBNAIL = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 function watchUrl(stream = {}) {
   const base = RB_ROUTES.watch || "/watch";
-  const key = stream.slug || stream.id || stream.stream_id;
+  const key = stream.slug || stream.display_slug || stream.id || stream.stream_id;
 
   if (!key) return base;
 
   return `${base}?stream=${encodeURIComponent(key)}`;
 }
 
-function emitRail() {
-  const state = getLiveRailState();
-
-  RAIL.listeners.forEach((listener) => {
-    try {
-      listener(state);
-    } catch (error) {
-      console.warn("[RB LIVE RAIL LISTENER]", error);
-    }
-  });
-
-  window.dispatchEvent(
-    new CustomEvent("rb-live-rail-update", {
-      detail: state
-    })
-  );
+function normalizeProfile(profile) {
+  if (Array.isArray(profile)) return profile[0] || null;
+  return profile || null;
 }
 
 function normalizeStream(row = {}) {
-  const profile = row.profiles || row.profile || null;
+  const profile = normalizeProfile(row.profiles || row.profile);
 
   return {
     ...row,
@@ -85,6 +78,9 @@ function normalizeStream(row = {}) {
       row.thumbnail_url ||
       DEFAULT_THUMBNAIL,
 
+    viewer_count: Number(row.viewer_count || 0),
+    peak_viewers: Number(row.peak_viewers || 0),
+
     target_url:
       row.target_url ||
       watchUrl(row)
@@ -94,6 +90,15 @@ function normalizeStream(row = {}) {
 function normalizeCard(row = {}) {
   return {
     ...row,
+
+    title:
+      row.title ||
+      "Rich Bizness Live",
+
+    subtitle:
+      row.subtitle ||
+      row.description ||
+      "",
 
     thumbnail_url:
       row.thumbnail_url ||
@@ -111,8 +116,35 @@ function normalizeCard(row = {}) {
   };
 }
 
+function emitRail() {
+  const state = getLiveRailState();
+
+  RAIL.listeners.forEach((listener) => {
+    try {
+      listener(state);
+    } catch (error) {
+      console.warn("[RB LIVE RAIL LISTENER]", error);
+    }
+  });
+
+  window.dispatchEvent(
+    new CustomEvent("rb-live-rail-update", {
+      detail: state
+    })
+  );
+
+  window.dispatchEvent(
+    new CustomEvent("rb:live-rail-state", {
+      detail: state
+    })
+  );
+}
+
 export function getLiveRailState() {
   return {
+    ready: RAIL.ready,
+    loading: RAIL.loading,
+    error: RAIL.error,
     streams: [...RAIL.streams],
     featured: [...RAIL.featured],
     cards: [...RAIL.cards],
@@ -125,56 +157,143 @@ export function onLiveRail(listener) {
   if (typeof listener !== "function") return () => {};
 
   RAIL.listeners.add(listener);
-  listener(getLiveRailState());
+
+  try {
+    listener(getLiveRailState());
+  } catch (error) {
+    console.warn("[RB LIVE RAIL LISTENER]", error);
+  }
 
   return () => {
     RAIL.listeners.delete(listener);
   };
 }
 
-export async function loadLiveRail({
+async function safeLoadStreams({
   limit = RAIL.limit,
   statusFilter = RAIL.statusFilter
 } = {}) {
   const supabase = getSupabase();
 
+  const attempts = [
+    {
+      name: "full_join",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select(`
+            *,
+            profiles:creator_id (
+              username,
+              display_name,
+              full_name,
+              avatar_url,
+              banner_url
+            )
+          `)
+          .in("status", statusFilter)
+          .order("status", { ascending: true })
+          .order("is_featured", { ascending: false })
+          .order("viewer_count", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    },
+    {
+      name: "no_join",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .in("status", statusFilter)
+          .order("viewer_count", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    },
+    {
+      name: "live_only",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .eq("status", "live")
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    },
+    {
+      name: "latest_filter_client",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    }
+  ];
+
+  let lastError = null;
+
+  for (const attempt of attempts) {
+    try {
+      const { data, error } = await attempt.run();
+
+      if (error) throw error;
+
+      const rows = data || [];
+
+      if (attempt.name === "latest_filter_client") {
+        return rows.filter((row) => statusFilter.includes(row.status));
+      }
+
+      return rows;
+    } catch (error) {
+      lastError = error;
+      console.warn(`[RB LIVE RAIL QUERY SKIPPED: ${attempt.name}]`, error?.message || error);
+    }
+  }
+
+  throw lastError || new Error("Live rail failed to load.");
+}
+
+export async function loadLiveRail({
+  limit = RAIL.limit,
+  statusFilter = RAIL.statusFilter
+} = {}) {
+  RAIL.loading = true;
+  RAIL.error = null;
   RAIL.limit = limit;
   RAIL.statusFilter = statusFilter;
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.liveStreams)
-    .select(`
-      *,
-      profiles:creator_id (
-        username,
-        display_name,
-        full_name,
-        avatar_url,
-        banner_url
-      )
-    `)
-    .in("status", statusFilter)
-    .order("status", { ascending: true })
-    .order("is_featured", { ascending: false })
-    .order("viewer_count", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  emitRail();
 
-  if (error) {
-    console.warn("[RB LIVE RAIL LOAD]", error);
+  try {
+    const rows = await safeLoadStreams({
+      limit,
+      statusFilter
+    });
+
+    RAIL.streams = rows.map(normalizeStream);
+
+    RAIL.featured = RAIL.streams.filter(
+      (stream) => stream.is_featured || stream.status === "live"
+    );
+
+    if (!RAIL.featured.length) {
+      RAIL.featured = RAIL.streams.slice(0, Math.min(8, RAIL.streams.length));
+    }
+
+    RAIL.ready = true;
+    RAIL.error = null;
+  } catch (error) {
+    console.warn("[RB LIVE RAIL LOAD]", error?.message || error);
+
     RAIL.streams = [];
     RAIL.featured = [];
+    RAIL.ready = true;
+    RAIL.error = error;
+  } finally {
+    RAIL.loading = false;
     emitRail();
-    return [];
   }
-
-  RAIL.streams = (data || []).map(normalizeStream);
-
-  RAIL.featured = RAIL.streams.filter(
-    (stream) => stream.is_featured || stream.status === "live"
-  );
-
-  emitRail();
 
   return RAIL.streams;
 }
@@ -183,32 +302,79 @@ export async function loadLiveCards({
   limit = 20,
   activeOnly = true
 } = {}) {
-  const supabase = getSupabase();
-
-  let query = supabase
-    .from(RB_TABLES.liveStreamCards)
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (activeOnly) {
-    query = query.eq("is_active", true);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.warn("[RB LIVE CARDS LOAD]", error);
+  if (!RB_TABLES.liveStreamCards) {
     RAIL.cards = [];
     emitRail();
     return [];
   }
 
-  RAIL.cards = (data || []).map(normalizeCard);
+  const supabase = getSupabase();
+
+  const attempts = [
+    {
+      name: "active_sort",
+      run: () => {
+        let query = supabase
+          .from(RB_TABLES.liveStreamCards)
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        if (activeOnly) query = query.eq("is_active", true);
+
+        return query;
+      }
+    },
+    {
+      name: "active_created",
+      run: () => {
+        let query = supabase
+          .from(RB_TABLES.liveStreamCards)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        if (activeOnly) query = query.eq("is_active", true);
+
+        return query;
+      }
+    },
+    {
+      name: "no_filter",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreamCards)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    }
+  ];
+
+  let lastError = null;
+
+  for (const attempt of attempts) {
+    try {
+      const { data, error } = await attempt.run();
+
+      if (error) throw error;
+
+      RAIL.cards = (data || []).map(normalizeCard);
+      emitRail();
+
+      return RAIL.cards;
+    } catch (error) {
+      lastError = error;
+      console.warn(`[RB LIVE CARDS QUERY SKIPPED: ${attempt.name}]`, error?.message || error);
+    }
+  }
+
+  console.warn("[RB LIVE CARDS LOAD]", lastError?.message || lastError);
+
+  RAIL.cards = [];
   emitRail();
 
-  return RAIL.cards;
+  return [];
 }
 
 export async function loadFeaturedLiveRail(limit = 8) {
@@ -225,20 +391,42 @@ export async function loadCreatorLiveRail(creatorId, limit = 12) {
 
   const supabase = getSupabase();
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.liveStreams)
-    .select("*")
-    .eq("creator_id", creatorId)
-    .in("status", ["live", "scheduled", "draft", "ended"])
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const attempts = [
+    {
+      name: "creator_status",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .eq("creator_id", creatorId)
+          .in("status", ["live", "scheduled", "draft", "ended"])
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    },
+    {
+      name: "creator_only",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .eq("creator_id", creatorId)
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    }
+  ];
 
-  if (error) {
-    console.warn("[RB CREATOR LIVE RAIL]", error);
-    return [];
+  for (const attempt of attempts) {
+    try {
+      const { data, error } = await attempt.run();
+      if (error) throw error;
+
+      return (data || []).map(normalizeStream);
+    } catch (error) {
+      console.warn(`[RB CREATOR LIVE RAIL SKIPPED: ${attempt.name}]`, error?.message || error);
+    }
   }
 
-  return (data || []).map(normalizeStream);
+  return [];
 }
 
 export async function searchLiveRail(queryText = "", limit = 20) {
@@ -249,44 +437,69 @@ export async function searchLiveRail(queryText = "", limit = 20) {
   }
 
   const supabase = getSupabase();
-
   const safeQ = q.replaceAll(",", " ").replaceAll("%", "");
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.liveStreams)
-    .select(`
-      *,
-      profiles:creator_id (
-        username,
-        display_name,
-        full_name,
-        avatar_url,
-        banner_url
-      )
-    `)
-    .or(
-      `title.ilike.%${safeQ}%,description.ilike.%${safeQ}%,category.ilike.%${safeQ}%,display_slug.ilike.%${safeQ}%`
-    )
-    .in("status", ["live", "scheduled"])
-    .order("viewer_count", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const attempts = [
+    {
+      name: "search_with_display_slug",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select(`
+            *,
+            profiles:creator_id (
+              username,
+              display_name,
+              full_name,
+              avatar_url,
+              banner_url
+            )
+          `)
+          .or(
+            `title.ilike.%${safeQ}%,description.ilike.%${safeQ}%,category.ilike.%${safeQ}%,display_slug.ilike.%${safeQ}%`
+          )
+          .in("status", ["live", "scheduled"])
+          .order("viewer_count", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    },
+    {
+      name: "search_basic",
+      run: () =>
+        supabase
+          .from(RB_TABLES.liveStreams)
+          .select("*")
+          .or(
+            `title.ilike.%${safeQ}%,description.ilike.%${safeQ}%,category.ilike.%${safeQ}%`
+          )
+          .in("status", ["live", "scheduled"])
+          .order("created_at", { ascending: false })
+          .limit(limit)
+    }
+  ];
 
-  if (error) {
-    console.warn("[RB LIVE RAIL SEARCH]", error);
-    return [];
+  for (const attempt of attempts) {
+    try {
+      const { data, error } = await attempt.run();
+
+      if (error) throw error;
+
+      RAIL.streams = (data || []).map(normalizeStream);
+      RAIL.featured = RAIL.streams.filter((stream) => stream.status === "live");
+
+      emitRail();
+
+      return RAIL.streams;
+    } catch (error) {
+      console.warn(`[RB LIVE RAIL SEARCH SKIPPED: ${attempt.name}]`, error?.message || error);
+    }
   }
 
-  RAIL.streams = (data || []).map(normalizeStream);
-  RAIL.featured = RAIL.streams.filter((stream) => stream.status === "live");
-
-  emitRail();
-
-  return RAIL.streams;
+  return [];
 }
 
 export async function upsertLiveRailCard(stream) {
-  if (!stream?.id) return null;
+  if (!stream?.id || !RB_TABLES.liveStreamCards) return null;
 
   const supabase = getSupabase();
 
@@ -296,8 +509,8 @@ export async function upsertLiveRailCard(stream) {
     title: stream.title || "Family Bizness",
     subtitle: stream.description || null,
     card_type: stream.status === "live" ? "live" : "highlight",
-    thumbnail_url: stream.thumbnail_url || null,
-    cover_url: stream.cover_url || null,
+    thumbnail_url: stream.thumbnail_url || stream.cover_url || null,
+    cover_url: stream.cover_url || stream.thumbnail_url || null,
     target_url: watchUrl(stream),
     is_active: ["live", "scheduled", "draft"].includes(stream.status),
     metadata: {
@@ -309,56 +522,30 @@ export async function upsertLiveRailCard(stream) {
     updated_at: new Date().toISOString()
   };
 
-  const { data: existing } = await supabase
-    .from(RB_TABLES.liveStreamCards)
-    .select("id")
-    .eq("stream_id", stream.id)
-    .limit(1)
-    .maybeSingle();
-
-  let result;
-
-  if (existing?.id) {
+  try {
     const { data, error } = await supabase
       .from(RB_TABLES.liveStreamCards)
-      .update(payload)
-      .eq("id", existing.id)
-      .select("*")
-      .single();
-
-    if (error) {
-      console.warn("[RB LIVE RAIL CARD UPDATE]", error);
-      throw error;
-    }
-
-    result = data;
-  } else {
-    const { data, error } = await supabase
-      .from(RB_TABLES.liveStreamCards)
-      .insert({
-        ...payload,
-        created_at: new Date().toISOString()
+      .upsert(payload, {
+        onConflict: "stream_id"
       })
       .select("*")
-      .single();
+      .maybeSingle();
 
-    if (error) {
-      console.warn("[RB LIVE RAIL CARD INSERT]", error);
-      throw error;
-    }
+    if (error) throw error;
 
-    result = data;
+    await loadLiveCards();
+
+    return data || null;
+  } catch (error) {
+    console.warn("[RB LIVE RAIL CARD UPSERT]", error?.message || error);
+    return null;
   }
-
-  await loadLiveCards();
-
-  return result;
 }
 
 export function clearLiveRailRealtime() {
   const supabase = getSupabase();
 
-  if (RAIL.channel) {
+  if (RAIL.channel && supabase) {
     supabase.removeChannel(RAIL.channel);
   }
 
@@ -368,9 +555,11 @@ export function clearLiveRailRealtime() {
 export function bindLiveRailRealtime() {
   const supabase = getSupabase();
 
+  if (!supabase || !RB_TABLES.liveStreams) return null;
+
   clearLiveRailRealtime();
 
-  RAIL.channel = supabase
+  const channel = supabase
     .channel("rb-live-rail")
     .on(
       "postgres_changes",
@@ -386,8 +575,10 @@ export function bindLiveRailRealtime() {
 
         await loadLiveRail();
       }
-    )
-    .on(
+    );
+
+  if (RB_TABLES.liveStreamCards) {
+    channel.on(
       "postgres_changes",
       {
         event: "*",
@@ -395,8 +586,18 @@ export function bindLiveRailRealtime() {
         table: RB_TABLES.liveStreamCards
       },
       () => loadLiveCards()
-    )
-    .subscribe();
+    );
+  }
+
+  RAIL.channel = channel.subscribe((status) => {
+    window.dispatchEvent(
+      new CustomEvent("rb:live-rail-realtime-status", {
+        detail: {
+          status
+        }
+      })
+    );
+  });
 
   return RAIL.channel;
 }
@@ -417,6 +618,18 @@ export async function initLiveRail({
   }
 
   return getLiveRailState();
+}
+
+export function resetLiveRail() {
+  RAIL.streams = [];
+  RAIL.featured = [];
+  RAIL.cards = [];
+  RAIL.ready = false;
+  RAIL.loading = false;
+  RAIL.error = null;
+
+  clearLiveRailRealtime();
+  emitRail();
 }
 
 window.addEventListener("beforeunload", clearLiveRailRealtime);
