@@ -1,1 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
+  <title>Rich Bizness • Universe Test</title>
+  <meta name="theme-color" content="#050805" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+</head>
+
+<body class="rb-index-page rb-profile-page" data-page="index-test">
+  <div id="canvas-container" aria-hidden="true"></div>
+
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-brand-header">
+    <h1>RICH <span>BIZNESS</span></h1>
+    <p>LLC • SMOKE &amp; EMPIRE</p>
+  </header>
+
+  <button
+    class="rb-profile-chip"
+    data-route="profile"
+    type="button"
+    aria-label="Open profile"
+  >
+    <img src="/images/brand/meta-avatar.png.jpeg" alt="Profile" />
+    <span>Tap In</span>
+  </button>
+
+  <button
+    class="rb-tab-dropper"
+    id="tabDropper"
+    type="button"
+    aria-label="Open quick tabs"
+  >
+    ☰
+  </button>
+
+  <nav class="rb-side-tabs rb-slide-tabs" id="slideTabs" aria-label="Quick actions">
+    <button data-route="auth" type="button">🔑</button>
+    <button data-route="profile" type="button">👤</button>
+    <button data-route="messages" type="button">💬</button>
+    <button data-route="notifications" type="button">🔔</button>
+    <button data-route="settings" type="button">⚙️</button>
+    <button data-route="creator" type="button">👑</button>
+    <button data-route="admin" type="button">🛡️</button>
+  </nav>
+
+  <main class="rb-universe-shell">
+    <section class="rb-universe-stage" aria-label="Rich Bizness Universe Hub">
+      <div id="module-label" class="rb-module-label active">
+        RICH BIZNESS ONLINE
+      </div>
+    </section>
+  </main>
+
+  <nav class="rb-bottom-nav" aria-label="Primary navigation">
+    <button data-route="feed" type="button">
+      <span class="rb-nav-icon">🔥</span>
+      <span>Feed</span>
+    </button>
+
+    <button data-route="live" type="button">
+      <span class="rb-nav-icon">📡</span>
+      <span>Live</span>
+    </button>
+
+    <button data-route="music" type="button">
+      <span class="rb-nav-icon">🎵</span>
+      <span>Music</span>
+    </button>
+
+    <button data-route="gaming" type="button">
+      <span class="rb-nav-icon">🎮</span>
+      <span>Gaming</span>
+    </button>
+
+    <button data-route="upload" type="button">
+      <span class="rb-nav-icon">⬆️</span>
+      <span>Upload</span>
+    </button>
+  </nav>
+
+  <script type="module" src="/core/engine/universe-preview.js"></script>
+  <script type="module" src="/core/pages/live-activity.js"></script>
+  <script type="module" src="/core/pages/online-presence.js"></script>
+  <script type="module" src="/core/pages/realtime-notifications.js"></script>
+  <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+
+    const dropper = document.getElementById("tabDropper");
+    const tabs = document.getElementById("slideTabs");
+
+    dropper?.addEventListener("click", () => {
+      dropper.classList.toggle("is-open");
+      tabs?.classList.toggle("is-open");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest("#slideTabs") && !event.target.closest("#tabDropper")) {
+        dropper?.classList.remove("is-open");
+        tabs?.classList.remove("is-open");
+      }
+    });
+  </script>
+
+  <script type="module" src="/core/pages/index.js"></script>
+</body>
+</html>
