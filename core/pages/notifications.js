@@ -4,6 +4,7 @@
 
    NOTIFICATIONS PAGE CONTROLLER
    Synced with auth + profile-state
+   Uses notification state/render/actions/realtime engines
 ========================= */
 
 import {
@@ -13,14 +14,6 @@ import {
   markPageError,
   refreshAppIdentity
 } from "/core/app.js";
-
-import {
-  RB_TABLES
-} from "/core/shared/rb-config.js";
-
-import {
-  getSupabase
-} from "/core/shared/rb-supabase.js";
 
 import {
   ensureMyProfile
@@ -40,28 +33,49 @@ import {
   toastError
 } from "/core/shared/rb-toast.js";
 
+import {
+  initNotificationState,
+  refreshNotifications,
+  getNotificationState,
+  onNotificationState,
+  readAllNotifications,
+  seenNotifications
+} from "/core/features/notifications/notification-state.js";
+
+import {
+  renderNotificationList,
+  renderLatestNotification,
+  bindNotificationShell,
+  bindNotificationClicks
+} from "/core/features/notifications/notification-render.js";
+
+import {
+  startNotificationRealtime,
+  stopNotificationRealtime
+} from "/core/features/notifications/notification-realtime.js";
+
 const $ = (id) => document.getElementById(id);
 
 const els = {
   title: $("notifications-title"),
   status: $("notifications-status"),
   list: $("notifications-list"),
+  empty: $("notifications-empty"),
+  latest: $("notifications-latest"),
   refreshBtn: $("notifications-refresh-btn"),
+  readAllBtn: $("notifications-read-all-btn"),
+  seenBtn: $("notifications-seen-btn"),
   unreadCount: $("notifications-unread-count"),
   syncStatus: $("notifications-sync-status"),
   identityStatus: $("notifications-identity-status")
 };
 
-let supabase = null;
-let channel = null;
 let actionsBound = false;
-
-function notificationsTable() {
-  return RB_TABLES.richNotifications || RB_TABLES.notifications;
-}
+let unsubscribeNotificationState = null;
+let unsubscribeProfileState = null;
 
 function currentState() {
-  return getCurrentUserState() || {};
+  return getCurrentUserState?.() || {};
 }
 
 function currentUser() {
@@ -72,171 +86,87 @@ function currentProfile() {
   return currentState().profile || null;
 }
 
-function escapeHtml(value = "") {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+function setText(el, value) {
+  if (el) el.textContent = value ?? "";
 }
 
-function notificationTitle(item) {
-  return item?.title || item?.type || "Rich Bizness Alert";
-}
-
-function notificationBody(item) {
-  return item?.body || item?.message || "New activity in your Rich Bizness universe.";
-}
-
-function renderEmpty() {
-  if (!els.list) return;
-
-  els.list.innerHTML = `
-    <article class="rb-notification-card">
-      <strong>No alerts yet</strong>
-      <span>Your notification center is ready.</span>
-    </article>
-  `;
-}
-
-function renderNotifications(items = []) {
-  if (!els.list) return;
-
-  if (!items.length) {
-    renderEmpty();
-    return;
-  }
-
-  els.list.innerHTML = items
-    .map((item) => {
-      return `
-        <article class="rb-notification-card ${item.is_read ? "" : "is-unread"}">
-          <strong>${escapeHtml(notificationTitle(item))}</strong>
-          <span>${escapeHtml(notificationBody(item))}</span>
-          <small>${escapeHtml(item.priority || item.type || "normal")}</small>
-        </article>
-      `;
-    })
-    .join("");
-}
-
-function paintNotifications() {
+function paintIdentity() {
   const user = currentUser();
   const profile = currentProfile();
 
-  if (els.title) {
-    els.title.textContent = `${profileName(profile)} Notifications`;
-  }
+  setText(
+    els.title,
+    `${profileName(profile)} Notifications`
+  );
 
-  if (els.status) {
-    els.status.textContent = user?.id
+  setText(
+    els.status,
+    user?.id
       ? "Notification center connected to your Rich Bizness identity."
-      : "Sign in to load notifications.";
-  }
+      : "Sign in to load notifications."
+  );
 
-  if (els.identityStatus) {
-    els.identityStatus.textContent = profile?.id
-      ? "Profile synced"
-      : "Waiting for profile";
-  }
+  setText(
+    els.identityStatus,
+    profile?.id ? "Profile synced" : "Waiting for profile"
+  );
 }
 
-async function loadNotifications() {
-  const user = currentUser();
+function paintNotificationState(state = getNotificationState()) {
+  const unread = Number(state.unreadCount || 0);
 
-  if (!user?.id) {
-    renderEmpty();
-
-    if (els.unreadCount) {
-      els.unreadCount.textContent = "0 unread alerts";
-    }
-
-    if (els.syncStatus) {
-      els.syncStatus.textContent = "Sign in required";
-    }
-
-    return;
+  if (els.unreadCount) {
+    els.unreadCount.textContent =
+      `${unread} unread alert${unread === 1 ? "" : "s"}`;
   }
 
-  try {
-    const { data, error } = await supabase
-      .from(notificationsTable())
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30);
-
-    if (error) throw error;
-
-    const items = data || [];
-    const unread = items.filter((item) => !item.is_read).length;
-
-    renderNotifications(items);
-
-    if (els.unreadCount) {
-      els.unreadCount.textContent = `${unread} unread alerts`;
-    }
-
-    if (els.syncStatus) {
+  if (els.syncStatus) {
+    if (state.loading) {
+      els.syncStatus.textContent = "Syncing alerts...";
+    } else if (state.error) {
+      els.syncStatus.textContent =
+        state.error?.message || "Notification sync warning";
+    } else if (state.ready) {
       els.syncStatus.textContent = "Notifications synced";
+    } else {
+      els.syncStatus.textContent = "Notification system starting";
+    }
+  }
+
+  if (els.list) {
+    renderNotificationList({
+      target: els.list,
+      emptyTarget: els.empty,
+      notifications: state.notifications,
+      emptyText: "No Rich Bizness alerts yet."
+    });
+  }
+
+  if (els.latest) {
+    renderLatestNotification({
+      target: els.latest,
+      notification: state.latest
+    });
+  }
+
+  bindNotificationClicks(els.list || document);
+}
+
+async function refreshAllNotifications({ silent = false } = {}) {
+  try {
+    await refreshNotifications({
+      limit: 50
+    });
+
+    paintNotificationState();
+
+    if (!silent) {
+      toastInfo("Alerts refreshed.", "Rich Bizness");
     }
   } catch (error) {
-    console.warn("[RB NOTIFICATIONS LOAD WARNING]", error.message);
-
-    renderEmpty();
-
-    if (els.unreadCount) {
-      els.unreadCount.textContent = "0 unread alerts";
-    }
-
-    if (els.syncStatus) {
-      els.syncStatus.textContent = "Notification table waiting";
-    }
+    console.warn("[RB NOTIFICATIONS REFRESH FAILED]", error?.message || error);
+    toastError(error?.message || "Alerts refresh failed.");
   }
-}
-
-function clearRealtime() {
-  if (channel) {
-    supabase?.removeChannel(channel);
-    channel = null;
-  }
-}
-
-function bindRealtime() {
-  const user = currentUser();
-
-  if (!user?.id || !supabase) return;
-
-  clearRealtime();
-
-  channel = supabase
-    .channel(`rb-notifications-${user.id}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: notificationsTable(),
-        filter: `user_id=eq.${user.id}`
-      },
-      loadNotifications
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: RB_TABLES.profiles,
-        filter: `id=eq.${user.id}`
-      },
-      async () => {
-        await refreshProfileState();
-        await refreshAppIdentity();
-        paintNotifications();
-      }
-    )
-    .subscribe();
 }
 
 function bindNotificationActions() {
@@ -244,11 +174,77 @@ function bindNotificationActions() {
   actionsBound = true;
 
   els.refreshBtn?.addEventListener("click", async () => {
-    await loadNotifications();
-    toastInfo("Alerts refreshed.", "Rich Bizness");
+    els.refreshBtn.disabled = true;
+
+    try {
+      await refreshAllNotifications();
+    } finally {
+      els.refreshBtn.disabled = false;
+    }
   });
 
-  window.addEventListener("beforeunload", clearRealtime);
+  els.readAllBtn?.addEventListener("click", async () => {
+    els.readAllBtn.disabled = true;
+
+    try {
+      await readAllNotifications();
+      toastInfo("All alerts marked read.", "Rich Bizness");
+    } catch (error) {
+      toastError(error?.message || "Could not mark alerts read.");
+    } finally {
+      els.readAllBtn.disabled = false;
+    }
+  });
+
+  els.seenBtn?.addEventListener("click", async () => {
+    els.seenBtn.disabled = true;
+
+    try {
+      await seenNotifications();
+      toastInfo("Alerts marked seen.", "Rich Bizness");
+    } catch (error) {
+      toastError(error?.message || "Could not mark alerts seen.");
+    } finally {
+      els.seenBtn.disabled = false;
+    }
+  });
+
+  window.addEventListener("rb:notifications-refresh-request", async () => {
+    await refreshAllNotifications({
+      silent: true
+    });
+  });
+
+  window.addEventListener("beforeunload", cleanupNotificationsPage);
+}
+
+function bindStateWatchers() {
+  if (!unsubscribeNotificationState) {
+    unsubscribeNotificationState = onNotificationState((state) => {
+      paintNotificationState(state);
+    });
+  }
+
+  if (!unsubscribeProfileState) {
+    unsubscribeProfileState = onProfileState((profileState) => {
+      if (!profileState?.ready) return;
+      paintIdentity();
+    });
+  }
+}
+
+async function cleanupNotificationsPage() {
+  try {
+    unsubscribeNotificationState?.();
+    unsubscribeProfileState?.();
+
+    unsubscribeNotificationState = null;
+    unsubscribeProfileState = null;
+
+    await stopNotificationRealtime();
+  } catch (error) {
+    console.warn("[RB NOTIFICATIONS CLEANUP SKIPPED]", error?.message || error);
+  }
 }
 
 async function bootNotificationsPage() {
@@ -259,32 +255,49 @@ async function bootNotificationsPage() {
       toast: false
     });
 
-    supabase = getSupabase();
-
     await ensureMyProfile();
     await refreshProfileState();
     await refreshAppIdentity();
 
-    paintNotifications();
+    paintIdentity();
     bindNotificationActions();
+    bindStateWatchers();
 
-    onProfileState((profileState) => {
-      if (!profileState.ready) return;
-      paintNotifications();
+    bindNotificationShell({
+      listSelector: "[data-notification-list]",
+      emptySelector: "[data-notification-empty]",
+      latestSelector: "[data-notification-latest-card]",
+      countSelector: "[data-rb-notification-count]",
+      dotSelector: "[data-rb-notification-dot]"
     });
 
-    await loadNotifications();
-    bindRealtime();
+    await initNotificationState({
+      limit: 50,
+      realtime: false
+    });
 
+    await startNotificationRealtime({
+      refreshOnStart: false
+    });
+
+    paintNotificationState();
+
+    document.body.dataset.rbPage = "notifications";
+    document.body.dataset.rbRoute = "notifications";
+    document.body.dataset.rbProfileLock = "true";
     document.body.classList.add("rb-notifications-ready");
 
     markPageReady("notifications");
 
-    console.log("RB NOTIFICATIONS READY");
+    console.log("RB NOTIFICATIONS PAGE READY");
   } catch (error) {
     console.error("[RB NOTIFICATIONS BOOT FAILED]", error);
     markPageError(error);
     toastError(error?.message || "Notifications failed to load.");
+
+    if (els.syncStatus) {
+      els.syncStatus.textContent = error?.message || "Notifications failed";
+    }
   }
 }
 
