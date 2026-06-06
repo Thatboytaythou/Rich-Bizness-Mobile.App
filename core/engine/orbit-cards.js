@@ -5,6 +5,7 @@
    STEP 3 LOCKED
    REAL PHONE ORBIT ENGINE
    Phones + Saturn Tilt + Tap Into Portal
+   Safer cleanup + stronger routing event
 ========================= */
 
 export function createOrbitCardsEngine(ctx) {
@@ -22,8 +23,8 @@ export function createOrbitCardsEngine(ctx) {
     labelEl
   } = ctx;
 
-  let orbitRoot;
-  let ringRoot;
+  let orbitRoot = null;
+  let ringRoot = null;
   let mounted = false;
 
   let orbitOffset = 0;
@@ -39,9 +40,15 @@ export function createOrbitCardsEngine(ctx) {
   let dragMoved = false;
 
   const cards = [];
+  const textures = new Set();
 
   const ORBIT_TILT_X = -0.48;
   const ORBIT_TILT_Z = 0.12;
+
+  function rememberTexture(texture) {
+    if (texture) textures.add(texture);
+    return texture;
+  }
 
   function mount() {
     if (mounted) return;
@@ -87,6 +94,7 @@ export function createOrbitCardsEngine(ctx) {
 
       ring.userData.speed = 0.00045 + index * 0.00025;
       ring.userData.baseOpacity = item.opacity;
+
       ringRoot.add(ring);
     });
   }
@@ -133,15 +141,17 @@ export function createOrbitCardsEngine(ctx) {
       })
     );
 
-    const screenTexture = textureLoader.load(
-      mod.image,
-      (texture) => {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-        texture.needsUpdate = true;
-      },
-      undefined,
-      () => console.warn("[RB PHONE IMAGE MISSING]", mod.image)
+    const screenTexture = rememberTexture(
+      textureLoader.load(
+        mod.image,
+        (texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          texture.needsUpdate = true;
+        },
+        undefined,
+        () => console.warn("[RB PHONE IMAGE MISSING]", mod.image)
+      )
     );
 
     const screen = new THREE.Mesh(
@@ -266,7 +276,7 @@ export function createOrbitCardsEngine(ctx) {
     ctx2d.font = "900 44px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
     ctx2d.fillText(tag, 438, 124);
 
-    const texture = new THREE.CanvasTexture(canvas);
+    const texture = rememberTexture(new THREE.CanvasTexture(canvas));
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
 
@@ -306,6 +316,8 @@ export function createOrbitCardsEngine(ctx) {
   }
 
   function updateRings(t) {
+    if (!ringRoot) return;
+
     ringRoot.children.forEach((ring, index) => {
       ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1);
 
@@ -321,7 +333,6 @@ export function createOrbitCardsEngine(ctx) {
 
     const radiusX = mobile ? 18.8 : 25.8;
     const radiusZ = mobile ? 6.8 : 9.4;
-
     const baseY = mobile ? -0.9 : -0.45;
 
     orbitOffset += (targetOffset - orbitOffset) * 0.065;
@@ -353,7 +364,8 @@ export function createOrbitCardsEngine(ctx) {
         0.42 +
         frontPower * 0.5 +
         (card === hoveredCard ? 0.08 : 0) +
-        (card.userData.isHot ? 0.06 : 0);
+        (card.userData.isHot ? 0.06 : 0) +
+        card.userData.presenceBoost * 0.025;
 
       card.position.set(x, saturnY, z + 1.15);
 
@@ -374,12 +386,13 @@ export function createOrbitCardsEngine(ctx) {
   function updatePhoneLook(card, depth, t) {
     const backFade = 0.38 + depth * 0.62;
     const hot = card.userData.isHot;
+    const presence = card.userData.presenceBoost || 0;
 
     card.children.forEach((child, index) => {
       if (!child.material) return;
 
       if (index === 0) child.material.opacity = 0.72 + depth * 0.26;
-      if (index === 1) child.material.opacity = 0.04 + depth * 0.12;
+      if (index === 1) child.material.opacity = 0.04 + depth * 0.12 + presence * 0.035;
       if (index === 2) child.material.opacity = backFade;
       if (index === 3) child.material.opacity = 0.025 + depth * 0.075;
       if (index === 4) child.material.opacity = 0.035 + depth * 0.09;
@@ -388,7 +401,7 @@ export function createOrbitCardsEngine(ctx) {
       if (index === 7) {
         child.material.opacity = hot
           ? 0.12 + Math.sin(t * 5) * 0.045
-          : depth * 0.035;
+          : depth * 0.035 + presence * 0.035;
       }
 
       if (child.userData?.isLabel) {
@@ -406,7 +419,6 @@ export function createOrbitCardsEngine(ctx) {
     if (!card?.userData?.module || portalPush) return;
 
     card.userData.pushing = true;
-
     portalPushProgress = 0;
 
     portalPush = {
@@ -435,7 +447,6 @@ export function createOrbitCardsEngine(ctx) {
 
     const p = THREE.MathUtils.clamp(portalPushProgress, 0, 1);
     const ease = 1 - Math.pow(1 - p, 3);
-
     const card = portalPush.card;
 
     card.position.lerpVectors(
@@ -467,6 +478,15 @@ export function createOrbitCardsEngine(ctx) {
         })
       );
 
+      window.dispatchEvent(
+        new CustomEvent("rb:navigate-module", {
+          detail: {
+            key: mod.key,
+            module: mod
+          }
+        })
+      );
+
       resetPortalPush();
     }
   }
@@ -480,6 +500,8 @@ export function createOrbitCardsEngine(ctx) {
   }
 
   function onPointerDown(event) {
+    if (!mounted) return;
+
     isDragging = true;
     startX = event.clientX;
     lastX = event.clientX;
@@ -489,6 +511,8 @@ export function createOrbitCardsEngine(ctx) {
   }
 
   function onPointerMove(event) {
+    if (!mounted) return;
+
     updatePointer(event);
 
     if (!isDragging) {
@@ -507,6 +531,8 @@ export function createOrbitCardsEngine(ctx) {
   }
 
   function onPointerUp(event) {
+    if (!mounted) return;
+
     updatePointer(event);
     isDragging = false;
 
@@ -521,11 +547,15 @@ export function createOrbitCardsEngine(ctx) {
   }
 
   function updatePointer(event) {
+    if (!pointer) return;
+
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   }
 
   function getHitCard() {
+    if (!raycaster || !camera || !cards.length) return null;
+
     raycaster.setFromCamera(pointer, camera);
 
     const hits = raycaster.intersectObjects(cards, true);
@@ -570,25 +600,46 @@ export function createOrbitCardsEngine(ctx) {
 
   function resize() {}
 
+  function destroyMaterial(material) {
+    if (!material) return;
+
+    if (Array.isArray(material)) {
+      material.forEach(destroyMaterial);
+      return;
+    }
+
+    material.dispose?.();
+  }
+
   function destroy() {
+    resetPortalPush();
+
     cards.forEach((card) => {
       card.traverse((obj) => {
         obj.geometry?.dispose?.();
-        obj.material?.dispose?.();
+        destroyMaterial(obj.material);
       });
     });
 
     ringRoot?.traverse((obj) => {
       obj.geometry?.dispose?.();
-      obj.material?.dispose?.();
+      destroyMaterial(obj.material);
     });
 
-    scene.remove(orbitRoot);
-    scene.remove(ringRoot);
+    textures.forEach((texture) => texture.dispose?.());
+    textures.clear();
+
+    if (orbitRoot) scene.remove(orbitRoot);
+    if (ringRoot) scene.remove(ringRoot);
 
     cards.length = 0;
+
     orbitRoot = null;
     ringRoot = null;
+    hoveredCard = null;
+
+    isDragging = false;
+    dragMoved = false;
     mounted = false;
   }
 
