@@ -4,31 +4,33 @@
 
    POWERHOUSE OMNI FX ENGINE
    Breathing FX • Shockwaves • Trails • Atmosphere • Portal Reactions
+   Safer cleanup + theme event sync
 ========================= */
 
 export function createOmniFxEngine(ctx) {
   const {
     THREE,
     scene,
-    camera,
     motion,
     activityState
   } = ctx;
 
-  let fxRoot;
-  let auraField;
-  let cometField;
-  let moneyDust;
-  let shockwaveGroup;
-  let dimensionalGrid;
-  let lightLeaks;
-  let portalReactionGroup;
+  let fxRoot = null;
+  let auraField = null;
+  let cometField = null;
+  let moneyDust = null;
+  let shockwaveGroup = null;
+  let dimensionalGrid = null;
+  let lightLeaks = null;
+  let portalReactionGroup = null;
   let mounted = false;
+  let eventsBound = false;
 
   const shockwaves = [];
   const comets = [];
   const leaks = [];
   const reactionBursts = [];
+  const textures = new Set();
 
   let theme = "green";
   let breathePower = 1;
@@ -37,21 +39,53 @@ export function createOmniFxEngine(ctx) {
 
   const themes = {
     green: {
+      alias: ["green-gold", "default"],
       primary: 0x00ff9d,
       secondary: 0xfacc15,
       soft: 0x7cffaa
     },
     blue: {
+      alias: ["blue-electric"],
       primary: 0x38bdf8,
       secondary: 0x93c5fd,
       soft: 0x67e8f9
     },
     purple: {
+      alias: ["purple-pink", "pink"],
       primary: 0xa855f7,
       secondary: 0xf472b6,
       soft: 0xc084fc
+    },
+    gold: {
+      alias: ["black-gold", "royal-gold", "royal"],
+      primary: 0xfacc15,
+      secondary: 0x00ff9d,
+      soft: 0xfff7cc
+    },
+    emerald: {
+      alias: ["emerald-black"],
+      primary: 0x00ff88,
+      secondary: 0xfacc15,
+      soft: 0xd1fae5
     }
   };
+
+  function rememberTexture(texture) {
+    if (texture) textures.add(texture);
+    return texture;
+  }
+
+  function normalizeTheme(next = "green") {
+    const key = String(next || "green").trim().toLowerCase();
+
+    if (themes[key]) return key;
+
+    const found = Object.entries(themes).find(([, value]) => {
+      return value.alias?.includes(key);
+    });
+
+    return found?.[0] || "green";
+  }
 
   function colors() {
     return themes[theme] || themes.green;
@@ -101,7 +135,8 @@ export function createOmniFxEngine(ctx) {
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
-    return texture;
+
+    return rememberTexture(texture);
   }
 
   function buildAuraField() {
@@ -301,40 +336,73 @@ export function createOmniFxEngine(ctx) {
   }
 
   function bindFxEvents() {
-    window.addEventListener("rb:portal-card-push", (event) => {
-      triggerShockwave(0, -0.6, 2.4);
-      triggerBurst(event.detail?.key || "portal");
-    });
+    if (eventsBound) return;
+    eventsBound = true;
 
-    window.addEventListener("rb:avatar-portal-jump", () => {
-      triggerShockwave(0, -0.4, 2.6);
-      triggerBurst("avatar");
-    });
+    window.addEventListener("rb:portal-card-push", handlePortalCardPush);
+    window.addEventListener("rb:avatar-portal-jump", handleAvatarPortalJump);
+    window.addEventListener("rb:portal-theme-change", handlePortalThemeChange);
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+  }
 
-    window.addEventListener("pointerdown", (event) => {
-      const x = event.clientX / window.innerWidth - 0.5;
-      const y = event.clientY / window.innerHeight - 0.5;
+  function unbindFxEvents() {
+    if (!eventsBound) return;
+    eventsBound = false;
 
-      if (Math.abs(x) < 0.36 && Math.abs(y) < 0.36) {
-        touchPulse = 1;
-        triggerShockwave(0, -0.6, 2.2);
-      }
-    }, { passive: true });
+    window.removeEventListener("rb:portal-card-push", handlePortalCardPush);
+    window.removeEventListener("rb:avatar-portal-jump", handleAvatarPortalJump);
+    window.removeEventListener("rb:portal-theme-change", handlePortalThemeChange);
+    window.removeEventListener("pointerdown", handlePointerDown);
+  }
+
+  function handlePortalCardPush(event) {
+    triggerShockwave(0, -0.6, 2.4);
+    triggerBurst(event.detail?.key || "portal");
+  }
+
+  function handleAvatarPortalJump() {
+    triggerShockwave(0, -0.4, 2.6);
+    triggerBurst("avatar");
+  }
+
+  function handlePortalThemeChange(event) {
+    setTheme(event.detail?.name || event.detail?.theme || "green");
+    touchPulse = Math.max(touchPulse, 0.6);
+  }
+
+  function handlePointerDown(event) {
+    const x = event.clientX / window.innerWidth - 0.5;
+    const y = event.clientY / window.innerHeight - 0.5;
+
+    if (Math.abs(x) < 0.36 && Math.abs(y) < 0.36) {
+      touchPulse = 1;
+      triggerShockwave(0, -0.6, 2.2);
+    }
   }
 
   function triggerShockwave(x = 0, y = 0, z = 2.2) {
+    if (!shockwaveGroup) return null;
+
     const wave = shockwaves.find((item) => !item.visible) || createShockwave();
 
-    if (!wave.parent) shockwaveGroup.add(wave);
+    if (!wave.parent) {
+      shockwaves.push(wave);
+      shockwaveGroup.add(wave);
+    }
 
     wave.visible = true;
     wave.position.set(x, y, z);
     wave.scale.setScalar(0.35);
     wave.material.opacity = 0.22;
+    wave.material.color.setHex(colors().primary);
     wave.userData.life = 1;
+
+    return wave;
   }
 
   function triggerBurst(type = "portal") {
+    if (!portalReactionGroup) return;
+
     const texture = makeGlowTexture();
     const count = type === "avatar" ? 18 : 26;
 
@@ -383,10 +451,10 @@ export function createOmniFxEngine(ctx) {
     updateAura(t);
     updateComets(t);
     updateMoneyDust(t);
-    updateShockwaves(t);
+    updateShockwaves();
     updateGrid(t);
     updateLightLeaks(t);
-    updateBursts(t);
+    updateBursts();
   }
 
   function updateAura(t) {
@@ -425,8 +493,8 @@ export function createOmniFxEngine(ctx) {
 
       comet.scale.setScalar(
         comet.userData.size +
-        Math.sin(t * 2 + index) * 0.18 +
-        touchPulse * 0.24
+          Math.sin(t * 2 + index) * 0.18 +
+          touchPulse * 0.24
       );
 
       comet.material.opacity =
@@ -442,10 +510,12 @@ export function createOmniFxEngine(ctx) {
     moneyDust.rotation.y += 0.00045 * breathePower;
     moneyDust.rotation.x = Math.sin(t * 0.08) * 0.035;
     moneyDust.material.opacity =
-      0.28 + Math.sin(t * 1.1) * 0.05 + touchPulse * 0.08;
+      0.28 +
+      Math.sin(t * 1.1) * 0.05 +
+      touchPulse * 0.08;
   }
 
-  function updateShockwaves(t) {
+  function updateShockwaves() {
     shockwaves.forEach((wave) => {
       if (!wave.visible) return;
 
@@ -492,14 +562,16 @@ export function createOmniFxEngine(ctx) {
     });
   }
 
-  function updateBursts(t) {
+  function updateBursts() {
     for (let i = reactionBursts.length - 1; i >= 0; i -= 1) {
       const burst = reactionBursts[i];
 
       burst.userData.life -= 0.015;
 
       burst.position.x += Math.cos(burst.userData.angle) * burst.userData.speed;
-      burst.position.y += Math.sin(burst.userData.angle) * burst.userData.speed + burst.userData.lift;
+      burst.position.y +=
+        Math.sin(burst.userData.angle) * burst.userData.speed +
+        burst.userData.lift;
       burst.position.z += 0.025;
 
       burst.scale.x += burst.userData.grow;
@@ -516,7 +588,7 @@ export function createOmniFxEngine(ctx) {
   }
 
   function setTheme(next = "green") {
-    theme = next;
+    theme = normalizeTheme(next);
     const c = colors();
 
     auraField?.children.forEach((aura, index) => {
@@ -529,6 +601,10 @@ export function createOmniFxEngine(ctx) {
 
     leaks.forEach((leak, index) => {
       leak.material.color.setHex(index % 2 ? c.secondary : c.primary);
+    });
+
+    shockwaves.forEach((wave) => {
+      wave.material?.color?.setHex(c.primary);
     });
   }
 
@@ -551,23 +627,50 @@ export function createOmniFxEngine(ctx) {
       window.innerWidth <= motion.mobileBreakpoint ? 0.055 : 0.075;
   }
 
+  function disposeMaterial(material) {
+    if (!material) return;
+
+    if (Array.isArray(material)) {
+      material.forEach(disposeMaterial);
+      return;
+    }
+
+    material.dispose?.();
+  }
+
   function destroy() {
     if (!fxRoot) return;
+
+    unbindFxEvents();
 
     scene.remove(fxRoot);
 
     fxRoot.traverse((obj) => {
       obj.geometry?.dispose?.();
-      obj.material?.dispose?.();
+      disposeMaterial(obj.material);
     });
+
+    textures.forEach((texture) => texture.dispose?.());
+    textures.clear();
 
     shockwaves.length = 0;
     comets.length = 0;
     leaks.length = 0;
     reactionBursts.length = 0;
 
-    mounted = false;
     fxRoot = null;
+    auraField = null;
+    cometField = null;
+    moneyDust = null;
+    shockwaveGroup = null;
+    dimensionalGrid = null;
+    lightLeaks = null;
+    portalReactionGroup = null;
+
+    breathePower = 1;
+    targetPower = 1;
+    touchPulse = 0;
+    mounted = false;
   }
 
   return {
