@@ -4,11 +4,14 @@
 
    SUPABASE ENGINE
    Auth + Profile State + Storage + Realtime
+   Locked App URL Redirects
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import {
+  RB_APP,
+  RB_AUTH,
   RB_SUPABASE,
   RB_TABLES
 } from "/core/shared/rb-config.js";
@@ -16,13 +19,20 @@ import {
 const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 const DEFAULT_BANNER = "/images/brand/hero-banner.png";
 
+const APP_URL =
+  RB_APP?.appUrl ||
+  RB_APP?.siteUrl ||
+  "https://rich-bizness-mobile-app.vercel.app";
+
+const AUTH_REDIRECT_URL = `${APP_URL}/auth`;
+
 const supabase = createClient(RB_SUPABASE.url, RB_SUPABASE.publishableKey, {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: "pkce",
-    storageKey: "rich-bizness-mobile-auth"
+    persistSession: RB_AUTH?.persistSession ?? true,
+    autoRefreshToken: RB_AUTH?.autoRefreshToken ?? true,
+    detectSessionInUrl: RB_AUTH?.detectSessionInUrl ?? true,
+    flowType: RB_AUTH?.flowType || "pkce",
+    storageKey: RB_AUTH?.sessionStorageKey || "rich-bizness-mobile-auth"
   },
   realtime: {
     params: {
@@ -82,7 +92,9 @@ function profilePayloadFromUser(user) {
     last_seen_at: new Date().toISOString(),
     metadata: {
       source: "rb-supabase.js",
-      auth_email: user.email || null
+      auth_email: user.email || null,
+      auth_origin: window.location.origin,
+      locked_app_url: APP_URL
     },
     updated_at: new Date().toISOString()
   };
@@ -155,6 +167,28 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
 
   const jobs = [
     {
+      table: RB_TABLES.userSettings,
+      payload: {
+        user_id: profile.id,
+        updated_at: now
+      }
+    },
+    {
+      table: RB_TABLES.userLevels,
+      payload: {
+        user_id: profile.id,
+        updated_at: now
+      }
+    },
+    {
+      table: RB_TABLES.profileThemeSettings,
+      payload: {
+        user_id: profile.id,
+        background_url: profile.banner_url || DEFAULT_BANNER,
+        updated_at: now
+      }
+    },
+    {
       table: RB_TABLES.metaAvatars,
       payload: {
         user_id: profile.id,
@@ -191,6 +225,14 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
         display_name: profile.display_name || profile.username || "Rich User",
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
         banner_url: profile.banner_url || DEFAULT_BANNER,
+        updated_at: now
+      }
+    },
+    {
+      table: RB_TABLES.creatorPageSettings,
+      payload: {
+        user_id: profile.id,
+        hero_background_url: profile.banner_url || DEFAULT_BANNER,
         updated_at: now
       }
     }
@@ -302,7 +344,7 @@ export async function signUp({ email, password, metadata = {} }) {
     password,
     options: {
       data: metadata,
-      emailRedirectTo: `${window.location.origin}/auth`
+      emailRedirectTo: AUTH_REDIRECT_URL
     }
   });
 
