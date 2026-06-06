@@ -4,6 +4,7 @@
 
    PROFILE EDITOR ENGINE
    Text fields + avatar/banner sync
+   No auto image swapping outside profile fields
 ========================= */
 
 import {
@@ -14,7 +15,8 @@ import {
 
 import {
   getUser,
-  getProfile
+  getProfile,
+  ensureMyProfile
 } from "/core/shared/rb-auth.js";
 
 import {
@@ -24,10 +26,11 @@ import {
 
 import {
   bindAvatarInputs,
-  syncProfileDom
+  syncProfileDom,
+  syncAvatarToUniverse
 } from "/core/features/profile/avatar-sync.js";
 
-const DEFAULT_FIELDS = {
+const DEFAULT_FIELDS = Object.freeze({
   display_name: "",
   username: "",
   full_name: "",
@@ -39,7 +42,7 @@ const DEFAULT_FIELDS = {
   facebook_url: "",
   snapchat_url: "",
   favorite_section: ""
-};
+});
 
 let editorBound = false;
 
@@ -54,6 +57,46 @@ function cleanUsername(username = "") {
     .slice(0, 24);
 }
 
+function cleanUrl(value = "") {
+  const url = String(value || "").trim();
+
+  if (!url) return "";
+
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://")
+  ) {
+    return url;
+  }
+
+  return `https://${url}`;
+}
+
+function cleanProfileValues(values = {}) {
+  const cleaned = { ...values };
+
+  if (cleaned.username) {
+    cleaned.username = cleanUsername(cleaned.username);
+  }
+
+  [
+    "website_url",
+    "instagram_url",
+    "youtube_url",
+    "tiktok_url",
+    "facebook_url",
+    "snapchat_url"
+  ].forEach((key) => {
+    if (cleaned[key]) cleaned[key] = cleanUrl(cleaned[key]);
+  });
+
+  if (cleaned.display_name && !cleaned.full_name) {
+    cleaned.full_name = cleaned.display_name;
+  }
+
+  return cleaned;
+}
+
 function getFormValues(form) {
   const formData = new FormData(form);
   const values = {};
@@ -64,15 +107,15 @@ function getFormValues(form) {
     values[key] = String(formData.get(key) || "").trim();
   });
 
-  if (values.username) {
-    values.username = cleanUsername(values.username);
-  }
-
-  return values;
+  return cleanProfileValues(values);
 }
 
 function setEditorMessage(text = "", type = "info") {
-  const el = $("[data-rb-profile-message]") || $("#rb-profile-message");
+  const el =
+    $("[data-rb-profile-message]") ||
+    $("#rb-profile-message") ||
+    $("#edit-profile-message");
+
   if (!el) return;
 
   el.textContent = text;
@@ -84,9 +127,18 @@ function setLoading(form, isLoading) {
 
   form.classList.toggle("is-loading", isLoading);
 
-  form.querySelectorAll("button, input, textarea, select").forEach((el) => {
-    el.disabled = isLoading;
-  });
+  form
+    .querySelectorAll("button, input, textarea, select")
+    .forEach((el) => {
+      el.disabled = isLoading;
+    });
+}
+
+function setValue(form, key, value = "") {
+  const input = form.elements[key];
+  if (!input) return;
+
+  input.value = value || "";
 }
 
 export function fillProfileEditor(formSelector = "#rb-profile-editor-form") {
@@ -96,30 +148,35 @@ export function fillProfileEditor(formSelector = "#rb-profile-editor-form") {
   if (!form || !profile) return;
 
   Object.keys(DEFAULT_FIELDS).forEach((key) => {
-    const input = form.elements[key];
-    if (!input) return;
-
-    input.value = profile[key] || "";
+    setValue(form, key, profile[key] || "");
   });
 
-  bindProfileShell();
-  syncProfileDom(profile);
+  bindProfileShell?.();
+  syncProfileDom?.(profile);
 }
 
 export async function saveProfileFromForm(form) {
-  if (!getUser()?.id) {
+  if (!form) {
+    throw new Error("Profile form not found.");
+  }
+
+  const user = getUser();
+
+  if (!user?.id) {
     throw new Error("You must be signed in.");
   }
 
-  const values = getFormValues(form);
+  await ensureMyProfile();
 
+  const values = getFormValues(form);
   const profile = await updateMyProfile(values);
 
   await refreshMyProfile();
   await refreshProfileState();
 
-  syncProfileDom(profile);
-  notifyProfileListeners();
+  bindProfileShell?.();
+  syncProfileDom?.(profile);
+  notifyProfileListeners?.();
 
   window.dispatchEvent(
     new CustomEvent("rb:profile-updated", {
@@ -150,10 +207,13 @@ export function bindProfileEditor(formSelector = "#rb-profile-editor-form") {
       const profile = await saveProfileFromForm(form);
 
       setEditorMessage("Profile updated.", "success");
-      syncProfileDom(profile);
+      syncProfileDom?.(profile);
+      bindProfileShell?.();
+
+      await syncAvatarToUniverse?.();
     } catch (error) {
       console.warn("[RB PROFILE SAVE FAILED]", error);
-      setEditorMessage(error.message || "Profile save failed.", "error");
+      setEditorMessage(error?.message || "Profile save failed.", "error");
     } finally {
       setLoading(form, false);
     }
@@ -163,11 +223,13 @@ export function bindProfileEditor(formSelector = "#rb-profile-editor-form") {
 }
 
 export function bindProfileEditorButtons({
+  formSelector = "#rb-profile-editor-form",
   refreshButton = "[data-rb-refresh-profile]",
   resetButton = "[data-rb-reset-profile-form]"
 } = {}) {
   document.querySelectorAll(refreshButton).forEach((button) => {
     if (button.dataset.rbRefreshProfileBound === "true") return;
+
     button.dataset.rbRefreshProfileBound = "true";
 
     button.addEventListener("click", async () => {
@@ -177,11 +239,13 @@ export function bindProfileEditorButtons({
       try {
         await refreshMyProfile();
         await refreshProfileState();
-        fillProfileEditor();
+
+        fillProfileEditor(formSelector);
+
         setEditorMessage("Profile refreshed.", "success");
       } catch (error) {
         console.warn("[RB PROFILE REFRESH FAILED]", error);
-        setEditorMessage(error.message || "Profile refresh failed.", "error");
+        setEditorMessage(error?.message || "Profile refresh failed.", "error");
       } finally {
         button.disabled = false;
       }
@@ -190,10 +254,11 @@ export function bindProfileEditorButtons({
 
   document.querySelectorAll(resetButton).forEach((button) => {
     if (button.dataset.rbResetProfileFormBound === "true") return;
+
     button.dataset.rbResetProfileFormBound = "true";
 
     button.addEventListener("click", () => {
-      fillProfileEditor();
+      fillProfileEditor(formSelector);
       setEditorMessage("Changes reset.", "info");
     });
   });
@@ -203,17 +268,22 @@ export function bootProfileEditor({
   formSelector = "#rb-profile-editor-form"
 } = {}) {
   if (editorBound) return;
+
   editorBound = true;
 
-  bindAvatarInputs();
+  bindAvatarInputs?.();
   bindProfileEditor(formSelector);
-  bindProfileEditorButtons();
+  bindProfileEditorButtons({ formSelector });
 
   window.addEventListener("rb:profile-updated", () => {
     fillProfileEditor(formSelector);
   });
 
   console.log("RB PROFILE EDITOR READY");
+}
+
+export function resetProfileEditorBoot() {
+  editorBound = false;
 }
 
 if (document.readyState === "loading") {
