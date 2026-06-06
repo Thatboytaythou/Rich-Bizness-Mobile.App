@@ -4,9 +4,12 @@
 
    SESSION + ROUTE GUARD
    Synced With RB Router
+   Route access only, no UI paint
 ========================= */
 
-import { RB_ROUTES } from "/core/shared/rb-config.js";
+import {
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
 
 import {
   isProtectedRoute,
@@ -24,19 +27,36 @@ import {
   getAuthFlags
 } from "/core/features/auth/auth-state.js";
 
+function currentFullPath() {
+  return `${window.location.pathname}${window.location.search}`;
+}
+
+function buildRedirectTarget(route = RB_ROUTES.auth) {
+  if (!route) return "";
+
+  if (route === RB_ROUTES.auth || route === "/auth") {
+    return `${route}?next=${encodeURIComponent(currentFullPath())}`;
+  }
+
+  return route;
+}
+
 function redirect(route) {
-  if (!route) return false;
+  const target = buildRedirectTarget(route);
 
-  const current = `${window.location.pathname}${window.location.search}`;
+  if (!target) return false;
 
-  const target =
-    route === RB_ROUTES.auth
-      ? `${route}?next=${encodeURIComponent(current)}`
-      : route;
+  if (window.location.href.endsWith(target)) {
+    return false;
+  }
 
   window.location.href = target;
   return true;
 }
+
+/* =========================
+   SESSION GUARDS
+========================= */
 
 export async function requireSession({
   redirectTo = RB_ROUTES.auth
@@ -144,6 +164,33 @@ export async function requireAdmin({
   return state;
 }
 
+export async function requireSecret({
+  redirectTo = RB_ROUTES.profile
+} = {}) {
+  const state = await requireSession({
+    redirectTo: RB_ROUTES.auth
+  });
+
+  if (!state) return null;
+
+  const flags = getAuthFlags();
+
+  if (
+    !flags.isAdmin &&
+    !flags.isCreator &&
+    !flags.isVerified
+  ) {
+    redirect(redirectTo);
+    return null;
+  }
+
+  return state;
+}
+
+/* =========================
+   AUTO GUARD
+========================= */
+
 export async function autoGuardCurrentPage() {
   const path = getCurrentPath();
 
@@ -152,7 +199,7 @@ export async function autoGuardCurrentPage() {
   }
 
   if (isSecretRoute(path)) {
-    return await requireCreator();
+    return await requireSecret();
   }
 
   if (isCreatorRoute(path)) {
@@ -174,12 +221,16 @@ export async function autoGuardCurrentPage() {
   return await initAuthState();
 }
 
+/* =========================
+   PATH CHECKS
+========================= */
+
 export function currentPathIsProtected() {
   return isProtectedRoute(getCurrentPath());
 }
 
 export function currentPathNeedsCreator() {
-  return isCreatorRoute(getCurrentPath()) || isSecretRoute(getCurrentPath());
+  return isCreatorRoute(getCurrentPath());
 }
 
 export function currentPathNeedsSeller() {
