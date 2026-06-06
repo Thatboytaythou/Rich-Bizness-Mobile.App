@@ -4,6 +4,7 @@
 
    UNIVERSAL PROFILE LINK ENGINE
    Avatar + Username Routing
+   No duplicate routing / no forced image swapping
 ========================= */
 
 import {
@@ -16,13 +17,48 @@ import {
   buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
+import {
+  go
+} from "/core/shared/rb-navigation.js";
+
 const PROFILE_SELECTOR = `
   [data-profile-id],
   [data-profile-username],
-  [data-rb-profile-link]
+  [data-rb-profile-link],
+  [data-rb-avatar-link],
+  [data-rb-username-link]
 `;
 
 let linksBound = false;
+let observer = null;
+
+/* =========================
+   CLEAN HELPERS
+========================= */
+
+function cleanUsername(username = "") {
+  return String(username || "")
+    .replace("@", "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 24);
+}
+
+function cleanId(id = "") {
+  return String(id || "").trim();
+}
+
+function getElementProfileTarget(el) {
+  return {
+    id:
+      cleanId(el?.dataset?.profileId) ||
+      cleanId(el?.getAttribute?.("data-profile-id")),
+    username:
+      cleanUsername(el?.dataset?.profileUsername) ||
+      cleanUsername(el?.getAttribute?.("data-profile-username"))
+  };
+}
 
 /* =========================
    PROFILE URL HELPERS
@@ -32,43 +68,51 @@ export function buildProfileRoute({
   id = "",
   username = ""
 } = {}) {
-  const cleanUsername = String(username || "")
-    .replace("@", "")
-    .trim()
-    .toLowerCase();
+  const cleanUser = cleanUsername(username);
+  const cleanUserId = cleanId(id);
 
-  if (cleanUsername) {
-    return `${RB_ROUTES.profile}?u=${encodeURIComponent(cleanUsername)}`;
+  if (cleanUser) {
+    return `${RB_ROUTES.profile || "/profile"}?u=${encodeURIComponent(cleanUser)}`;
   }
 
-  if (id) {
-    return `${RB_ROUTES.profile}?id=${encodeURIComponent(id)}`;
+  if (cleanUserId) {
+    return `${RB_ROUTES.profile || "/profile"}?id=${encodeURIComponent(cleanUserId)}`;
   }
 
-  return RB_ROUTES.profile;
+  return RB_ROUTES.profile || "/profile";
 }
 
 export async function resolveProfileRoute({
   id = "",
   username = ""
 } = {}) {
-  if (username) {
-    const profile = await getProfileByUsername(username);
+  const cleanUser = cleanUsername(username);
+  const cleanUserId = cleanId(id);
 
-    if (profile) {
-      return buildProfileUrl(profile);
+  try {
+    if (cleanUser) {
+      const profile = await getProfileByUsername(cleanUser);
+
+      if (profile?.id) {
+        return buildProfileUrl(profile);
+      }
     }
+
+    if (cleanUserId) {
+      const profile = await getProfileById(cleanUserId);
+
+      if (profile?.id) {
+        return buildProfileUrl(profile);
+      }
+    }
+  } catch (error) {
+    console.warn("[RB PROFILE ROUTE RESOLVE SKIPPED]", error?.message || error);
   }
 
-  if (id) {
-    const profile = await getProfileById(id);
-
-    if (profile) {
-      return buildProfileUrl(profile);
-    }
-  }
-
-  return RB_ROUTES.profile;
+  return buildProfileRoute({
+    id: cleanUserId,
+    username: cleanUser
+  });
 }
 
 /* =========================
@@ -87,27 +131,90 @@ export async function openProfile({
 
   if (replace) {
     window.location.replace(url);
-    return;
+    return url;
   }
 
-  window.location.href = url;
+  go(url);
+  return url;
 }
 
-export function attachProfileRoute(el, {
-  id = "",
-  username = ""
-} = {}) {
-  if (!el) return;
+export function attachProfileRoute(
+  el,
+  {
+    id = "",
+    username = ""
+  } = {}
+) {
+  if (!el) return null;
 
-  if (id) {
-    el.dataset.profileId = id;
+  const cleanUserId = cleanId(id);
+  const cleanUser = cleanUsername(username);
+
+  if (cleanUserId) {
+    el.dataset.profileId = cleanUserId;
   }
 
-  if (username) {
-    el.dataset.profileUsername = username;
+  if (cleanUser) {
+    el.dataset.profileUsername = cleanUser;
   }
 
   el.dataset.rbProfileLink = "true";
+
+  if (!el.hasAttribute("role") && el.tagName !== "A" && el.tagName !== "BUTTON") {
+    el.setAttribute("role", "link");
+  }
+
+  if (!el.hasAttribute("tabindex") && el.tagName !== "A" && el.tagName !== "BUTTON") {
+    el.tabIndex = 0;
+  }
+
+  return el;
+}
+
+/* =========================
+   BIND ONE
+========================= */
+
+function bindOneProfileLink(el) {
+  if (!el || el.dataset.rbProfileBound === "true") return;
+
+  el.dataset.rbProfileBound = "true";
+  el.style.cursor = "pointer";
+
+  if (!el.hasAttribute("role") && el.tagName !== "A" && el.tagName !== "BUTTON") {
+    el.setAttribute("role", "link");
+  }
+
+  if (!el.hasAttribute("tabindex") && el.tagName !== "A" && el.tagName !== "BUTTON") {
+    el.tabIndex = 0;
+  }
+
+  const handler = async (event) => {
+    const nestedAction = event.target.closest(
+      "button, input, textarea, select, audio, video, [data-no-profile-link]"
+    );
+
+    if (nestedAction && nestedAction !== el) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const target = getElementProfileTarget(el);
+
+    await openProfile(target);
+  };
+
+  el.addEventListener("click", handler);
+
+  el.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+
+    const target = getElementProfileTarget(el);
+
+    await openProfile(target);
+  });
 }
 
 /* =========================
@@ -115,35 +222,9 @@ export function attachProfileRoute(el, {
 ========================= */
 
 export function bindProfileLinks(root = document) {
-  if (!root) return;
+  if (!root?.querySelectorAll) return;
 
-  root.querySelectorAll(PROFILE_SELECTOR).forEach((el) => {
-    if (el.dataset.rbProfileBound === "true") return;
-
-    el.dataset.rbProfileBound = "true";
-
-    el.style.cursor = "pointer";
-
-    el.addEventListener("click", async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const profileId =
-        el.dataset.profileId ||
-        el.getAttribute("data-profile-id") ||
-        "";
-
-      const profileUsername =
-        el.dataset.profileUsername ||
-        el.getAttribute("data-profile-username") ||
-        "";
-
-      await openProfile({
-        id: profileId,
-        username: profileUsername
-      });
-    });
-  });
+  root.querySelectorAll(PROFILE_SELECTOR).forEach(bindOneProfileLink);
 }
 
 /* =========================
@@ -156,18 +237,12 @@ export function bindProfileCards(selector = ".rb-profile-card") {
 
     card.dataset.rbProfileCardBound = "true";
 
-    const profileId =
-      card.dataset.profileId || "";
-
-    const profileUsername =
-      card.dataset.profileUsername || "";
-
-    card.addEventListener("click", async () => {
-      await openProfile({
-        id: profileId,
-        username: profileUsername
-      });
+    attachProfileRoute(card, {
+      id: card.dataset.profileId || "",
+      username: card.dataset.profileUsername || ""
     });
+
+    bindOneProfileLink(card);
   });
 }
 
@@ -177,19 +252,12 @@ export function bindProfileCards(selector = ".rb-profile-card") {
 
 export function bindAvatarLinks(selector = "[data-rb-avatar-link]") {
   document.querySelectorAll(selector).forEach((avatar) => {
-    if (avatar.dataset.rbAvatarBound === "true") return;
-
-    avatar.dataset.rbAvatarBound = "true";
-
-    avatar.addEventListener("click", async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      await openProfile({
-        id: avatar.dataset.profileId,
-        username: avatar.dataset.profileUsername
-      });
+    attachProfileRoute(avatar, {
+      id: avatar.dataset.profileId || "",
+      username: avatar.dataset.profileUsername || ""
     });
+
+    bindOneProfileLink(avatar);
   });
 }
 
@@ -199,19 +267,12 @@ export function bindAvatarLinks(selector = "[data-rb-avatar-link]") {
 
 export function bindUsernameLinks(selector = "[data-rb-username-link]") {
   document.querySelectorAll(selector).forEach((username) => {
-    if (username.dataset.rbUsernameBound === "true") return;
-
-    username.dataset.rbUsernameBound = "true";
-
-    username.addEventListener("click", async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      await openProfile({
-        id: username.dataset.profileId,
-        username: username.dataset.profileUsername
-      });
+    attachProfileRoute(username, {
+      id: username.dataset.profileId || "",
+      username: username.dataset.profileUsername || username.textContent || ""
     });
+
+    bindOneProfileLink(username);
   });
 }
 
@@ -229,19 +290,34 @@ export function bootProfileLinks() {
   bindAvatarLinks();
   bindUsernameLinks();
 
-  const observer = new MutationObserver(() => {
-    bindProfileLinks();
-    bindProfileCards();
-    bindAvatarLinks();
-    bindUsernameLinks();
+  observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+
+        if (node.matches?.(PROFILE_SELECTOR)) {
+          bindOneProfileLink(node);
+        }
+
+        bindProfileLinks(node);
+      });
+    });
   });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+  if (document.body) {
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
 
   console.log("RB PROFILE LINKS READY");
+}
+
+export function stopProfileLinks() {
+  observer?.disconnect?.();
+  observer = null;
+  linksBound = false;
 }
 
 if (document.readyState === "loading") {
