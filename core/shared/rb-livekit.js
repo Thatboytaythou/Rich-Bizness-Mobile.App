@@ -1,6 +1,9 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/shared/rb-livekit.js
+
+   LIVEKIT CORE
+   Room + Token + Tracks + Controls
 ========================= */
 
 import {
@@ -10,9 +13,16 @@ import {
   VideoPresets
 } from "https://esm.sh/livekit-client@2";
 
-let activeRoom = null;
+import {
+  RB_LIVEKIT
+} from "/core/shared/rb-config.js";
 
-export const LIVEKIT_CONFIG = {
+let activeRoom = null;
+let boundRoom = null;
+
+const roomCleanups = new Set();
+
+export const LIVEKIT_CONFIG = Object.freeze({
   adaptiveStream: true,
   dynacast: true,
   videoCaptureDefaults: {
@@ -21,7 +31,37 @@ export const LIVEKIT_CONFIG = {
   publishDefaults: {
     simulcast: true
   }
-};
+});
+
+function cleanString(value = "") {
+  return String(value || "").trim();
+}
+
+function getTokenEndpoint() {
+  return "/api/livekit-token";
+}
+
+function rememberCleanup(fn) {
+  if (typeof fn === "function") {
+    roomCleanups.add(fn);
+  }
+
+  return () => {
+    roomCleanups.delete(fn);
+  };
+}
+
+function runRoomCleanups() {
+  roomCleanups.forEach((fn) => {
+    try {
+      fn();
+    } catch (error) {
+      console.warn("[RB LIVEKIT CLEANUP WARNING]", error);
+    }
+  });
+
+  roomCleanups.clear();
+}
 
 export async function createRoom() {
   if (activeRoom) return activeRoom;
@@ -40,6 +80,10 @@ export function getRoom() {
   return activeRoom;
 }
 
+export function isRoomConnected() {
+  return !!activeRoom?.state && activeRoom.state !== "disconnected";
+}
+
 export async function requestLiveKitToken({
   roomName,
   room,
@@ -50,27 +94,41 @@ export async function requestLiveKitToken({
   role = "viewer",
   metadata = {}
 }) {
-  const response = await fetch("/api/livekit-token", {
+  const finalRoom = cleanString(roomName || room);
+  const finalIdentity = cleanString(identity || userId);
+  const finalName = cleanString(name || participantName || identity || userId);
+
+  if (!finalRoom) {
+    throw new Error("Missing LiveKit room name.");
+  }
+
+  const response = await fetch(getTokenEndpoint(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      roomName: roomName || room,
-      room: room || roomName,
-      identity,
+      roomName: finalRoom,
+      room: finalRoom,
+      identity: finalIdentity,
       userId,
-      name: name || participantName,
-      participantName,
+      name: finalName,
+      participantName: finalName,
       role,
       metadata
     })
   });
 
-  const data = await response.json();
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
 
   if (!response.ok) {
-    throw new Error(data?.error || "Token request failed");
+    throw new Error(data?.error || "Token request failed.");
   }
 
   return data;
@@ -88,6 +146,10 @@ export async function connectToRoom({
 }) {
   const active = await createRoom();
 
+  if (isRoomConnected()) {
+    return active;
+  }
+
   const tokenData = await requestLiveKitToken({
     roomName,
     room,
@@ -99,8 +161,16 @@ export async function connectToRoom({
     metadata
   });
 
-  const token = tokenData.token || tokenData.accessToken;
-  const url = tokenData.url || tokenData.livekitUrl || tokenData.wsUrl;
+  const token =
+    tokenData.token ||
+    tokenData.accessToken ||
+    tokenData.jwt;
+
+  const url =
+    tokenData.url ||
+    tokenData.livekitUrl ||
+    tokenData.wsUrl ||
+    RB_LIVEKIT?.url;
 
   if (!token || !url) {
     throw new Error("Missing LiveKit URL or token.");
@@ -121,40 +191,97 @@ export async function enableCameraAndMic() {
 }
 
 export async function disableCamera() {
-  if (!activeRoom) return;
+  if (!activeRoom) return null;
+
   await activeRoom.localParticipant.setCameraEnabled(false);
+  return activeRoom;
 }
 
 export async function disableMic() {
-  if (!activeRoom) return;
+  if (!activeRoom) return null;
+
   await activeRoom.localParticipant.setMicrophoneEnabled(false);
+  return activeRoom;
 }
 
 export async function enableCamera() {
-  if (!activeRoom) return;
+  if (!activeRoom) return null;
+
   await activeRoom.localParticipant.setCameraEnabled(true);
+  return activeRoom;
 }
 
 export async function enableMic() {
-  if (!activeRoom) return;
+  if (!activeRoom) return null;
+
   await activeRoom.localParticipant.setMicrophoneEnabled(true);
+  return activeRoom;
+}
+
+export async function toggleCamera(force = null) {
+  if (!activeRoom) return false;
+
+  const enabled =
+    force === null
+      ? !activeRoom.localParticipant.isCameraEnabled
+      : Boolean(force);
+
+  await activeRoom.localParticipant.setCameraEnabled(enabled);
+
+  return enabled;
+}
+
+export async function toggleMic(force = null) {
+  if (!activeRoom) return false;
+
+  const enabled =
+    force === null
+      ? !activeRoom.localParticipant.isMicrophoneEnabled
+      : Boolean(force);
+
+  await activeRoom.localParticipant.setMicrophoneEnabled(enabled);
+
+  return enabled;
 }
 
 export async function startScreenShare() {
-  if (!activeRoom) return;
+  if (!activeRoom) return null;
+
   await activeRoom.localParticipant.setScreenShareEnabled(true);
+  return activeRoom;
 }
 
 export async function stopScreenShare() {
-  if (!activeRoom) return;
+  if (!activeRoom) return null;
+
   await activeRoom.localParticipant.setScreenShareEnabled(false);
+  return activeRoom;
+}
+
+export async function toggleScreenShare(force = null) {
+  if (!activeRoom) return false;
+
+  const enabled =
+    force === null
+      ? !activeRoom.localParticipant.isScreenShareEnabled
+      : Boolean(force);
+
+  await activeRoom.localParticipant.setScreenShareEnabled(enabled);
+
+  return enabled;
 }
 
 export async function disconnectRoom() {
   if (!activeRoom) return;
 
-  await activeRoom.disconnect();
-  activeRoom = null;
+  runRoomCleanups();
+
+  try {
+    await activeRoom.disconnect();
+  } finally {
+    activeRoom = null;
+    boundRoom = null;
+  }
 }
 
 export function getParticipants() {
@@ -162,14 +289,34 @@ export function getParticipants() {
   return Array.from(activeRoom.remoteParticipants.values());
 }
 
+export function getLocalParticipant() {
+  return activeRoom?.localParticipant || null;
+}
+
 export function attachTrack(track, element) {
-  if (!track || !element) return;
-  track.attach(element);
+  if (!track || !element) return null;
+
+  return track.attach(element);
 }
 
 export function detachTrack(track) {
   if (!track) return;
-  track.detach().forEach((el) => el.remove());
+
+  track.detach().forEach((el) => {
+    el.remove();
+  });
+}
+
+export function attachPublication(publication, element) {
+  if (!publication?.track || !element) return null;
+
+  return attachTrack(publication.track, element);
+}
+
+export function detachPublication(publication) {
+  if (!publication?.track) return;
+
+  detachTrack(publication.track);
 }
 
 export function bindRoomEvents({
@@ -177,34 +324,121 @@ export function bindRoomEvents({
   onParticipantDisconnected,
   onTrackSubscribed,
   onTrackUnsubscribed,
-  onDisconnected
+  onLocalTrackPublished,
+  onLocalTrackUnpublished,
+  onDisconnected,
+  onConnectionStateChanged
 } = {}) {
-  if (!activeRoom) return;
+  if (!activeRoom) return () => {};
 
-  if (typeof onParticipantConnected === "function") {
-    activeRoom.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+  if (boundRoom === activeRoom) {
+    runRoomCleanups();
   }
 
-  if (typeof onParticipantDisconnected === "function") {
-    activeRoom.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
-  }
+  boundRoom = activeRoom;
+
+  const bindings = [
+    [
+      RoomEvent.ParticipantConnected,
+      onParticipantConnected
+    ],
+    [
+      RoomEvent.ParticipantDisconnected,
+      onParticipantDisconnected
+    ],
+    [
+      RoomEvent.LocalTrackPublished,
+      onLocalTrackPublished
+    ],
+    [
+      RoomEvent.LocalTrackUnpublished,
+      onLocalTrackUnpublished
+    ],
+    [
+      RoomEvent.Disconnected,
+      onDisconnected
+    ],
+    [
+      RoomEvent.ConnectionStateChanged,
+      onConnectionStateChanged
+    ]
+  ];
+
+  bindings.forEach(([eventName, handler]) => {
+    if (typeof handler !== "function") return;
+
+    activeRoom.on(eventName, handler);
+
+    rememberCleanup(() => {
+      activeRoom?.off?.(eventName, handler);
+    });
+  });
 
   if (typeof onTrackSubscribed === "function") {
-    activeRoom.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-      onTrackSubscribed({ track, publication, participant });
+    const handler = (track, publication, participant) => {
+      onTrackSubscribed({
+        track,
+        publication,
+        participant
+      });
+    };
+
+    activeRoom.on(RoomEvent.TrackSubscribed, handler);
+
+    rememberCleanup(() => {
+      activeRoom?.off?.(RoomEvent.TrackSubscribed, handler);
     });
   }
 
   if (typeof onTrackUnsubscribed === "function") {
-    activeRoom.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
-      onTrackUnsubscribed({ track, publication, participant });
+    const handler = (track, publication, participant) => {
+      onTrackUnsubscribed({
+        track,
+        publication,
+        participant
+      });
+    };
+
+    activeRoom.on(RoomEvent.TrackUnsubscribed, handler);
+
+    rememberCleanup(() => {
+      activeRoom?.off?.(RoomEvent.TrackUnsubscribed, handler);
     });
   }
 
-  if (typeof onDisconnected === "function") {
-    activeRoom.on(RoomEvent.Disconnected, onDisconnected);
-  }
+  return () => {
+    runRoomCleanups();
+  };
 }
+
+export function renderParticipantTracks({
+  participant,
+  container,
+  includeAudio = true,
+  includeVideo = true
+}) {
+  if (!participant || !container) return;
+
+  participant.trackPublications.forEach((publication) => {
+    const track = publication.track;
+    if (!track) return;
+
+    if (track.kind === Track.Kind.Video && includeVideo) {
+      const el = track.attach();
+      el.playsInline = true;
+      container.appendChild(el);
+    }
+
+    if (track.kind === Track.Kind.Audio && includeAudio) {
+      const el = track.attach();
+      container.appendChild(el);
+    }
+  });
+}
+
+window.addEventListener("beforeunload", () => {
+  disconnectRoom();
+});
 
 export {
   Room,
