@@ -4,6 +4,7 @@
 
    STORAGE ENGINE
    Bucket Uploads + Public URLs
+   State-aware storage helper
 ========================= */
 
 import {
@@ -20,17 +21,41 @@ import {
 
 const supabase = getSupabase();
 
+function cleanFileName(fileName = "") {
+  return (
+    String(fileName || "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/_+/g, "_")
+      .slice(0, 120) || crypto.randomUUID()
+  );
+}
+
+function cleanFolder(folder = "uploads") {
+  return (
+    String(folder || "uploads")
+      .trim()
+      .toLowerCase()
+      .replace(/^\/+|\/+$/g, "")
+      .replace(/[^a-z0-9/_-]/g, "-") || "uploads"
+  );
+}
+
 function buildFilePath({
   userId,
-  folder = "general",
+  folder = "uploads",
   fileName = ""
 }) {
-  const safeName =
-    fileName
-      .replace(/[^a-zA-Z0-9._-]/g, "_")
-      .trim() || crypto.randomUUID();
+  if (!userId) {
+    throw new Error("User required.");
+  }
 
-  return `${userId}/${folder}/${Date.now()}-${safeName}`;
+  const safeFolder = cleanFolder(folder);
+  const safeName = cleanFileName(fileName);
+  const stamp = Date.now();
+
+  return `${userId}/${safeFolder}/${stamp}-${safeName}`;
 }
 
 export function detectMediaType(file) {
@@ -43,12 +68,19 @@ export function detectMediaType(file) {
   return "file";
 }
 
+export function isPublicStorageUrl(url = "") {
+  return String(url || "").includes("/storage/v1/object/public/");
+}
+
 export async function uploadToBucket({
   bucket,
   file,
   userId,
   folder = "uploads",
-  upsert = false
+  upsert = false,
+  contentType = file?.type || "application/octet-stream",
+  cacheControl = "3600",
+  metadata = {}
 }) {
   try {
     if (!bucket) {
@@ -77,26 +109,37 @@ export async function uploadToBucket({
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {
-        upsert
+        upsert,
+        cacheControl,
+        contentType,
+        metadata: {
+          source: "upload-storage.js",
+          media_type: detectMediaType(file),
+          original_name: file.name || null,
+          ...metadata
+        }
       });
 
     if (error) throw error;
 
-    setUploadProgress(80);
+    setUploadProgress(82);
 
-    const publicUrl = getPublicFileUrl(
-      bucket,
-      data.path
-    );
+    const publicUrl = getPublicFileUrl(bucket, data.path);
 
     const result = {
       bucket,
       path: data.path,
       publicUrl,
+      public_url: publicUrl,
       fileName: file.name,
+      file_name: file.name,
       fileSize: file.size,
+      file_size: file.size,
       mimeType: file.type,
-      mediaType: detectMediaType(file)
+      mime_type: file.type,
+      mediaType: detectMediaType(file),
+      media_type: detectMediaType(file),
+      isPublicUrl: isPublicStorageUrl(publicUrl)
     };
 
     setUploadProgress(100);
@@ -104,7 +147,7 @@ export async function uploadToBucket({
 
     return result;
   } catch (error) {
-    setUploadError(error.message);
+    setUploadError(error);
     throw error;
   }
 }
@@ -117,28 +160,84 @@ export async function deleteStorageFile({
     throw new Error("Bucket and path required.");
   }
 
-  const { data, error } =
-    await supabase.storage
-      .from(bucket)
-      .remove([path]);
-
-  if (error) throw error;
-
-  return data;
-}
-
-export async function listStorageFiles({
-  bucket,
-  folder = ""
-}) {
-  const { data, error } =
-    await supabase.storage
-      .from(bucket)
-      .list(folder);
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .remove([path]);
 
   if (error) throw error;
 
   return data || [];
+}
+
+export async function deleteStorageFiles({
+  bucket,
+  paths = []
+}) {
+  if (!bucket || !paths.length) {
+    throw new Error("Bucket and paths required.");
+  }
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .remove(paths);
+
+  if (error) throw error;
+
+  return data || [];
+}
+
+export async function listStorageFiles({
+  bucket,
+  folder = "",
+  limit = 100,
+  offset = 0,
+  sortBy = {
+    column: "created_at",
+    order: "desc"
+  }
+}) {
+  if (!bucket) {
+    throw new Error("Bucket required.");
+  }
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .list(cleanFolder(folder), {
+      limit,
+      offset,
+      sortBy
+    });
+
+  if (error) throw error;
+
+  return data || [];
+}
+
+export async function createSignedStorageUrl({
+  bucket,
+  path,
+  expiresIn = 60 * 10
+}) {
+  if (!bucket || !path) {
+    throw new Error("Bucket and path required.");
+  }
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresIn);
+
+  if (error) throw error;
+
+  return data?.signedUrl || null;
+}
+
+export function getStoragePublicUrl({
+  bucket,
+  path
+}) {
+  if (!bucket || !path) return null;
+
+  return getPublicFileUrl(bucket, path);
 }
 
 console.log("RB UPLOAD STORAGE READY");
