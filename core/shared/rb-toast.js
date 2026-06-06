@@ -29,6 +29,10 @@ function escapeHtml(value = "") {
 ========================= */
 
 function ensureToastRoot() {
+  if (toastRoot?.isConnected) return toastRoot;
+
+  toastRoot = document.getElementById("rb-toast-root");
+
   if (toastRoot) return toastRoot;
 
   toastRoot = document.createElement("div");
@@ -38,7 +42,8 @@ function ensureToastRoot() {
   toastRoot.setAttribute("aria-live", "polite");
   toastRoot.setAttribute("aria-atomic", "true");
 
-  document.body.appendChild(toastRoot);
+  const mount = document.body || document.documentElement;
+  mount.appendChild(toastRoot);
 
   return toastRoot;
 }
@@ -54,7 +59,7 @@ function trimToasts() {
 
   const overflow = active.length - MAX_TOASTS;
 
-  for (let i = 0; i < overflow; i++) {
+  for (let i = 0; i < overflow; i += 1) {
     active[i]?.close?.();
   }
 }
@@ -72,11 +77,14 @@ export function toast({
   const root = ensureToastRoot();
   const item = document.createElement("div");
 
-  item.className = `rb-toast rb-toast-${type}`;
-  item.setAttribute("data-toast-type", type);
+  const cleanType = String(type || "info").replace(/[^a-z0-9_-]/gi, "");
+
+  item.className = `rb-toast rb-toast-${cleanType}`;
+  item.setAttribute("data-toast-type", cleanType);
+  item.setAttribute("role", cleanType === "error" ? "alert" : "status");
 
   item.innerHTML = `
-    <div class="rb-toast-orb"></div>
+    <div class="rb-toast-orb" aria-hidden="true"></div>
 
     <div class="rb-toast-copy">
       <strong>${escapeHtml(title)}</strong>
@@ -104,6 +112,7 @@ export function toast({
   });
 
   let closed = false;
+  let timer = null;
 
   const api = {
     element: item,
@@ -114,6 +123,11 @@ export function toast({
     if (closed) return;
 
     closed = true;
+
+    if (timer) {
+      window.clearTimeout(timer);
+      timer = null;
+    }
 
     ACTIVE_TOASTS.delete(api);
 
@@ -132,7 +146,7 @@ export function toast({
     ?.addEventListener("click", close);
 
   if (duration > 0) {
-    window.setTimeout(close, duration);
+    timer = window.setTimeout(close, duration);
   }
 
   ACTIVE_TOASTS.add(api);
@@ -198,6 +212,15 @@ export function clearToasts() {
   Array.from(ACTIVE_TOASTS).forEach((toastRef) => {
     toastRef.close();
   });
+
+  ACTIVE_TOASTS.clear();
 }
+
+window.RBToast = toast;
+window.RBToastSuccess = toastSuccess;
+window.RBToastError = toastError;
+window.RBToastInfo = toastInfo;
+window.RBToastWarn = toastWarn;
+window.RBClearToasts = clearToasts;
 
 console.log("RB TOAST ENGINE READY");
