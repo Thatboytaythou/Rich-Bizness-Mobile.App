@@ -1,1 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Podcast • Rich Bizness LLC</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile podcast universe with shows, episodes, featured drops, realtime playback, likes, comments, and creator sync."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/music.css" />
+</head>
+
+<body class="rb-body rb-podcast-page rb-music-page" data-page="podcast" data-rb-route="podcast">
+
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/" data-route="home">
+      <span>RICH</span>
+      <strong>BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Main navigation">
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/watch" data-route="watch">Watch</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast" class="is-active">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
+      <a href="/upload" data-route="upload">Upload</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
+    </nav>
+  </header>
+
+  <main class="rb-section-shell rb-music-shell rb-podcast-shell">
+
+    <section class="rb-section-hero rb-music-hero rb-podcast-hero">
+      <div class="rb-section-copy">
+        <p class="rb-kicker">RICH BIZNESS PODCAST</p>
+
+        <h1>
+          Podcast Universe
+        </h1>
+
+        <p>
+          Podcast shows, episodes, featured drops, likes, comments, and realtime playback synced to the Rich Bizness identity system.
+        </p>
+
+        <div class="rb-section-actions">
+          <a class="rb-btn primary" href="/upload?section=podcast" data-route="/upload?section=podcast">
+            Drop Podcast
+          </a>
+
+          <a class="rb-btn ghost" href="/music" data-route="music">
+            Music Universe
+          </a>
+
+          <a class="rb-btn ghost" href="/profile" data-route="profile" data-rb-profile-link>
+            My Profile
+          </a>
+        </div>
+      </div>
+
+      <aside class="rb-music-now rb-podcast-now rb-panel" aria-label="Now playing podcast">
+        <div class="rb-music-now-cover-wrap">
+          <img
+            id="podcast-now-cover"
+            data-podcast-now-cover
+            src="/images/brand/hero-banner.png"
+            alt="Now Playing Podcast Cover"
+          />
+        </div>
+
+        <div class="rb-music-now-copy">
+          <p class="rb-kicker">
+            PODCAST
+          </p>
+
+          <h2 id="podcast-now-title" data-podcast-now-title>
+            Nothing Playing
+          </h2>
+
+          <p id="podcast-now-meta" data-podcast-now-meta>
+            Rich Bizness Podcast
+          </p>
+        </div>
+
+        <audio
+          id="podcast-audio-player"
+          controls
+          preload="metadata"
+          playsinline
+        ></audio>
+      </aside>
+    </section>
+
+    <section class="rb-panel rb-music-stats rb-podcast-stats">
+      <div class="rb-stat-grid">
+        <article>
+          <strong id="podcast-show-count">0</strong>
+          <span>Shows</span>
+        </article>
+
+        <article>
+          <strong id="podcast-episode-count">0</strong>
+          <span>Episodes</span>
+        </article>
+
+        <article>
+          <strong id="podcast-comment-count">0</strong>
+          <span>Comments</span>
+        </article>
+
+        <article>
+          <strong id="podcast-like-count">0</strong>
+          <span>Likes</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="rb-tabs rb-music-tabs rb-podcast-tabs" aria-label="Podcast sections">
+      <button class="is-active" type="button" data-podcast-tab="shows">
+        Shows
+      </button>
+
+      <button type="button" data-podcast-tab="episodes">
+        Episodes
+      </button>
+
+      <button type="button" data-podcast-tab="featured">
+        Featured
+      </button>
+    </section>
+
+    <section class="rb-music-panels rb-podcast-panels">
+
+      <section class="rb-music-panel rb-podcast-panel is-active" data-podcast-panel="shows">
+        <div class="rb-module-head">
+          <div>
+            <p class="rb-kicker">SHOWS</p>
+            <h2>Podcast Shows</h2>
+          </div>
+
+          <a class="rb-btn ghost" href="/upload?section=podcast">
+            Create Show
+          </a>
+        </div>
+
+        <div id="podcast-shows-list" class="rb-music-grid rb-podcast-grid">
+          <p class="rb-empty">Loading podcast shows...</p>
+        </div>
+      </section>
+
+      <section class="rb-music-panel rb-podcast-panel" data-podcast-panel="episodes">
+        <div class="rb-module-head">
+          <div>
+            <p class="rb-kicker">EPISODES</p>
+            <h2>Podcast Episodes</h2>
+          </div>
+
+          <a class="rb-btn ghost" href="/upload?section=podcast">
+            Drop Episode
+          </a>
+        </div>
+
+        <div id="podcast-episodes-list" class="rb-music-grid rb-podcast-grid">
+          <p class="rb-empty">Loading podcast episodes...</p>
+        </div>
+      </section>
+
+      <section class="rb-music-panel rb-podcast-panel" data-podcast-panel="featured">
+        <div class="rb-module-head">
+          <div>
+            <p class="rb-kicker">FEATURED</p>
+            <h2>Featured Podcast</h2>
+          </div>
+
+          <a class="rb-btn ghost" href="/music">
+            Back To Music
+          </a>
+        </div>
+
+        <div id="podcast-featured-list" class="rb-music-grid rb-podcast-grid">
+          <p class="rb-empty">Loading featured podcast...</p>
+        </div>
+      </section>
+
+    </section>
+
+  </main>
+
+  <nav class="rb-bottom-nav" aria-label="Primary navigation">
+    <button data-route="feed" type="button" aria-label="Feed">
+      <span class="rb-nav-icon">🔥</span>
+      <span>Feed</span>
+    </button>
+
+    <button data-route="live" type="button" aria-label="Live">
+      <span class="rb-nav-icon">📡</span>
+      <span>Live</span>
+    </button>
+
+    <button data-route="music" type="button" aria-label="Music">
+      <span class="rb-nav-icon">🎵</span>
+      <span>Music</span>
+    </button>
+
+    <button data-route="podcast" class="is-active" type="button" aria-label="Podcast">
+      <span class="rb-nav-icon">🎙️</span>
+      <span>Podcast</span>
+    </button>
+
+    <button data-route="upload" type="button" aria-label="Upload">
+      <span class="rb-nav-icon">⬆️</span>
+      <span>Upload</span>
+    </button>
+  </nav>
+
+  <footer class="rb-footer">
+    <span>© 2026 Rich Bizness LLC</span>
+  </footer>
+
+  <script type="module">
+    import {
+      bindGlobalNavigation
+    } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/live-activity.js"></script>
+  <script type="module" src="/core/pages/online-presence.js"></script>
+  <script type="module" src="/core/pages/realtime-notifications.js"></script>
+  <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
+
+  <script type="module" src="/core/pages/podcast.js"></script>
+</body>
+</html>
