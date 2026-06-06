@@ -4,16 +4,79 @@
 
    ROUTER CORE
    FINAL LOCKED VERSION
+   Synced with rb-navigation.js
 ========================= */
 
-import { RB_ROUTES } from "/core/shared/rb-config.js";
+import {
+  RB_ROUTES,
+  RB_PROFILE_KEYS
+} from "/core/shared/rb-config.js";
+
+export function normalizePath(path = "") {
+  if (!path) return "/";
+
+  const clean = String(path).trim();
+
+  if (!clean) return "/";
+  if (clean === "/index.html") return "/";
+
+  return (
+    clean
+      .replace(window.location.origin, "")
+      .replace(/\/index\.html$/, "/")
+      .replace(/\.html$/, "")
+      .replace(/\/$/, "") || "/"
+  );
+}
+
+export function resolveRoute(route = "/") {
+  const raw = String(route || "").trim();
+
+  if (!raw) return "/";
+
+  if (
+    raw.startsWith("http://") ||
+    raw.startsWith("https://") ||
+    raw.startsWith("#") ||
+    raw.startsWith("mailto:") ||
+    raw.startsWith("tel:") ||
+    raw.startsWith("sms:")
+  ) {
+    return raw;
+  }
+
+  if (raw.startsWith("/")) {
+    return normalizePath(raw);
+  }
+
+  if (RB_ROUTES?.[raw] && typeof RB_ROUTES[raw] === "string") {
+    return normalizePath(RB_ROUTES[raw]);
+  }
+
+  if (RB_PROFILE_KEYS?.secretRoutes?.[raw]) {
+    return normalizePath(RB_PROFILE_KEYS.secretRoutes[raw]);
+  }
+
+  return normalizePath(`/${raw}`);
+}
 
 export function goTo(route = "/") {
-  window.location.href = route;
+  const resolved = resolveRoute(route);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:route-before-change", {
+      detail: {
+        from: normalizePath(window.location.pathname),
+        to: resolved
+      }
+    })
+  );
+
+  window.location.href = resolved;
 }
 
 export function replaceTo(route = "/") {
-  window.location.replace(route);
+  window.location.replace(resolveRoute(route));
 }
 
 export function reloadPage() {
@@ -33,28 +96,62 @@ export function getQueryParam(key) {
   return new URLSearchParams(window.location.search).get(key);
 }
 
+export function getAllQueryParams() {
+  return Object.fromEntries(
+    new URLSearchParams(window.location.search)
+  );
+}
+
 export function setQueryParam(key, value) {
   const url = new URL(window.location.href);
 
-  if (value === null || value === undefined || value === "") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
     url.searchParams.delete(key);
   } else {
     url.searchParams.set(key, value);
   }
 
-  window.history.replaceState({}, "", url);
+  window.history.replaceState({}, "", url.toString());
+
+  window.dispatchEvent(
+    new CustomEvent("rb:route-query-change", {
+      detail: getAllQueryParams()
+    })
+  );
+
+  return url.toString();
 }
 
 export function removeQueryParam(key) {
   const url = new URL(window.location.href);
   url.searchParams.delete(key);
-  window.history.replaceState({}, "", url);
+  window.history.replaceState({}, "", url.toString());
+
+  window.dispatchEvent(
+    new CustomEvent("rb:route-query-change", {
+      detail: getAllQueryParams()
+    })
+  );
+
+  return url.toString();
 }
 
 export function clearQueryParams() {
   const url = new URL(window.location.href);
   url.search = "";
-  window.history.replaceState({}, "", url);
+  window.history.replaceState({}, "", url.toString());
+
+  window.dispatchEvent(
+    new CustomEvent("rb:route-query-change", {
+      detail: {}
+    })
+  );
+
+  return url.toString();
 }
 
 export function getWatchUrl(slug = "") {
@@ -65,6 +162,11 @@ export function getWatchUrl(slug = "") {
 export function getProfileUrl(username = "") {
   if (!username) return RB_ROUTES.profile;
   return `${RB_ROUTES.profile}?u=${encodeURIComponent(username)}`;
+}
+
+export function getProfileIdUrl(userId = "") {
+  if (!userId) return RB_ROUTES.profile;
+  return `${RB_ROUTES.profile}?id=${encodeURIComponent(userId)}`;
 }
 
 export function getEditUrl(userId = "") {
@@ -89,27 +191,27 @@ export function getUploadUrl(section = "") {
 
 export function getGameUrl(slug = "") {
   if (!slug) return RB_ROUTES.gaming;
-  return `/games/${slug}`;
+  return `/games/${encodeURIComponent(slug)}`;
 }
 
 export function getChessUrl() {
-  return RB_ROUTES.games.richChess;
+  return RB_ROUTES.games?.richChess || "/games/rich-chess";
 }
 
 export function getMoneyRoadRunnerUrl() {
-  return RB_ROUTES.games.moneyRoadRunner;
+  return RB_ROUTES.games?.moneyRoadRunner || "/games/money-road-runner";
 }
 
 export function getSmokeCityHustleUrl() {
-  return RB_ROUTES.games.smokeCityHustle;
+  return RB_ROUTES.games?.smokeCityHustle || "/games/smoke-city-hustle";
 }
 
 export function getStudioShowdownUrl() {
-  return RB_ROUTES.games.studioShowdown;
+  return RB_ROUTES.games?.studioShowdown || "/games/studio-showdown";
 }
 
 export function getCurrentPath() {
-  return window.location.pathname;
+  return normalizePath(window.location.pathname);
 }
 
 export function getCurrentPage() {
@@ -119,12 +221,13 @@ export function getCurrentPage() {
 
   return path
     .split("/")
+    .filter(Boolean)
     .pop()
-    .replace(".html", "");
+    ?.replace(".html", "") || "index";
 }
 
 export function isPage(page = "") {
-  return getCurrentPage() === page.replace(".html", "");
+  return getCurrentPage() === String(page).replace(".html", "").replace("/", "");
 }
 
 export function getHash() {
@@ -160,91 +263,48 @@ export function scrollBottomSmooth() {
 export const RB_ROUTE_ACCESS = Object.freeze({
   public: [
     "/",
-    "/index.html",
-
     "/auth",
-    "/auth.html",
-
     "/feed",
-    "/feed.html",
-
     "/watch",
-    "/watch.html",
-
     "/live",
-    "/live.html",
-
     "/music",
-    "/music.html",
-
     "/podcast",
-    "/podcast.html",
-
     "/radio",
-    "/radio.html",
-
     "/gaming",
-    "/gaming.html",
-
     "/sports",
-    "/sports.html",
-
     "/gallery",
-    "/gallery.html",
-
     "/store",
-    "/store.html",
-
     "/meta",
-    "/meta.html"
+    "/avatar"
   ],
 
   protected: [
     "/upload",
-    "/upload.html",
-
     "/messages",
-    "/messages.html",
-
     "/notifications",
-    "/notifications.html",
-
     "/profile",
-    "/profile.html",
-
     "/edit",
-    "/edit.html",
-
-    "/settings",
-    "/settings.html"
+    "/settings"
   ],
 
   creator: [
-    "/creator",
-    "/creator.html"
+    "/creator"
   ],
 
   seller: [
     "/store/manage",
-    "/store/manage.html",
-    "/seller",
-    "/seller.html"
+    "/seller"
   ],
 
   artist: [
     "/artist",
-    "/artist.html",
     "/artist/upload",
-    "/artist/upload.html",
     "/artist/manage",
-    "/artist/manage.html",
-    "/artist/analytics",
-    "/artist/analytics.html"
+    "/artist/analytics"
   ],
 
   admin: [
-    "/admin",
-    "/admin.html"
+    "/admin"
   ],
 
   secret: [
@@ -254,39 +314,48 @@ export const RB_ROUTE_ACCESS = Object.freeze({
   ]
 });
 
+function inRouteList(list = [], path = getCurrentPath()) {
+  const current = normalizePath(path);
+
+  return list.some((route) => {
+    const normalized = normalizePath(route);
+    return normalized === current;
+  });
+}
+
 export function isProtectedRoute(path = getCurrentPath()) {
   return (
-    RB_ROUTE_ACCESS.protected.includes(path) ||
-    RB_ROUTE_ACCESS.creator.includes(path) ||
-    RB_ROUTE_ACCESS.seller.includes(path) ||
-    RB_ROUTE_ACCESS.artist.includes(path) ||
-    RB_ROUTE_ACCESS.admin.includes(path) ||
-    RB_ROUTE_ACCESS.secret.includes(path)
+    inRouteList(RB_ROUTE_ACCESS.protected, path) ||
+    inRouteList(RB_ROUTE_ACCESS.creator, path) ||
+    inRouteList(RB_ROUTE_ACCESS.seller, path) ||
+    inRouteList(RB_ROUTE_ACCESS.artist, path) ||
+    inRouteList(RB_ROUTE_ACCESS.admin, path) ||
+    inRouteList(RB_ROUTE_ACCESS.secret, path)
   );
 }
 
 export function isPublicRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.public.includes(path);
+  return inRouteList(RB_ROUTE_ACCESS.public, path);
 }
 
 export function isCreatorRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.creator.includes(path);
+  return inRouteList(RB_ROUTE_ACCESS.creator, path);
 }
 
 export function isSellerRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.seller.includes(path);
+  return inRouteList(RB_ROUTE_ACCESS.seller, path);
 }
 
 export function isArtistRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.artist.includes(path);
+  return inRouteList(RB_ROUTE_ACCESS.artist, path);
 }
 
 export function isAdminRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.admin.includes(path);
+  return inRouteList(RB_ROUTE_ACCESS.admin, path);
 }
 
 export function isSecretRoute(path = getCurrentPath()) {
-  return RB_ROUTE_ACCESS.secret.includes(path);
+  return inRouteList(RB_ROUTE_ACCESS.secret, path);
 }
 
 export function safeRedirect(route, delay = 0) {
@@ -298,9 +367,25 @@ export function safeRedirect(route, delay = 0) {
 export function preloadRoute(route = "") {
   if (!route) return;
 
+  const resolved = resolveRoute(route);
+
+  if (
+    resolved.startsWith("http://") ||
+    resolved.startsWith("https://") ||
+    resolved.startsWith("#")
+  ) {
+    return;
+  }
+
+  const exists = document.querySelector(
+    `link[rel="prefetch"][href="${resolved}"]`
+  );
+
+  if (exists) return;
+
   const link = document.createElement("link");
   link.rel = "prefetch";
-  link.href = route;
+  link.href = resolved;
 
   document.head.appendChild(link);
 }
@@ -313,7 +398,7 @@ export function preloadCoreRoutes() {
     RB_ROUTES.music,
     RB_ROUTES.gaming,
     RB_ROUTES.profile
-  ].forEach(preloadRoute);
+  ].filter(Boolean).forEach(preloadRoute);
 }
 
 console.log("RB ROUTER READY");
