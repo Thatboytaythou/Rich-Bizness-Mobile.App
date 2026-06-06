@@ -4,6 +4,7 @@
 
    UNIVERSAL ULTRA 4K LIVING PORTAL ENGINE
    Hollow Portal + Smoke Rim + Lightning + Touch Color Shift
+   Safer cleanup + external theme support
 ========================= */
 
 export function createPortalEngine(ctx) {
@@ -14,15 +15,15 @@ export function createPortalEngine(ctx) {
     activityState
   } = ctx;
 
-  let portal;
-  let mist;
-  let storm;
-  let blackVoid;
-  let whiteCore;
-  let eventHorizon;
-  let mouth;
-  let lens;
-  let tunnel;
+  let portal = null;
+  let mist = null;
+  let storm = null;
+  let blackVoid = null;
+  let whiteCore = null;
+  let eventHorizon = null;
+  let mouth = null;
+  let lens = null;
+  let tunnel = null;
 
   const rings = [];
   const streams = [];
@@ -31,15 +32,18 @@ export function createPortalEngine(ctx) {
   const lightning = [];
   const rimFlames = [];
   const touchBursts = [];
+  const textures = new Set();
 
   let mounted = false;
+  let touchBound = false;
   let themeIndex = 0;
   let touchPower = 0;
   let targetTouchPower = 0;
 
   const themes = [
     {
-      name: "green-gold",
+      name: "green",
+      alias: ["green-gold", "default"],
       primary: 0x00ff9d,
       secondary: 0xfacc15,
       core: 0xffffff,
@@ -47,7 +51,8 @@ export function createPortalEngine(ctx) {
       fog: 0x03110b
     },
     {
-      name: "blue-electric",
+      name: "blue",
+      alias: ["blue-electric", "electric"],
       primary: 0x38bdf8,
       secondary: 0x93c5fd,
       core: 0xffffff,
@@ -55,7 +60,8 @@ export function createPortalEngine(ctx) {
       fog: 0x020617
     },
     {
-      name: "purple-pink",
+      name: "purple",
+      alias: ["purple-pink", "pink"],
       primary: 0xa855f7,
       secondary: 0xf472b6,
       core: 0xffffff,
@@ -64,6 +70,7 @@ export function createPortalEngine(ctx) {
     },
     {
       name: "black-gold",
+      alias: ["gold", "black"],
       primary: 0x050805,
       secondary: 0xfacc15,
       core: 0xfff7cc,
@@ -71,7 +78,8 @@ export function createPortalEngine(ctx) {
       fog: 0x020201
     },
     {
-      name: "emerald-black",
+      name: "emerald",
+      alias: ["emerald-black"],
       primary: 0x00ff88,
       secondary: 0x050805,
       core: 0xffffff,
@@ -79,7 +87,8 @@ export function createPortalEngine(ctx) {
       fog: 0x020805
     },
     {
-      name: "royal-gold",
+      name: "royal",
+      alias: ["royal-gold"],
       primary: 0x111827,
       secondary: 0xffd700,
       core: 0xffffff,
@@ -88,8 +97,21 @@ export function createPortalEngine(ctx) {
     }
   ];
 
+  function rememberTexture(texture) {
+    if (texture) textures.add(texture);
+    return texture;
+  }
+
   function getTheme() {
     return themes[themeIndex % themes.length];
+  }
+
+  function findThemeIndex(themeName = "") {
+    const key = String(themeName || "").trim().toLowerCase();
+
+    return themes.findIndex((theme) => {
+      return theme.name === key || theme.alias?.includes(key);
+    });
   }
 
   function makeGlowTexture(size = 512) {
@@ -118,7 +140,8 @@ export function createPortalEngine(ctx) {
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
-    return texture;
+
+    return rememberTexture(texture);
   }
 
   function makeSmokeTexture(size = 512) {
@@ -148,7 +171,8 @@ export function createPortalEngine(ctx) {
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
-    return texture;
+
+    return rememberTexture(texture);
   }
 
   function makeNoiseTexture(size = 512) {
@@ -171,7 +195,8 @@ export function createPortalEngine(ctx) {
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
-    return texture;
+
+    return rememberTexture(texture);
   }
 
   function mount() {
@@ -308,7 +333,8 @@ export function createPortalEngine(ctx) {
         transparent: true,
         opacity: 0.9,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        color: getTheme().core
       })
     );
 
@@ -525,21 +551,33 @@ export function createPortalEngine(ctx) {
   }
 
   function bindTouch() {
-    window.addEventListener(
-      "pointerdown",
-      (event) => {
-        const x = event.clientX / window.innerWidth - 0.5;
-        const y = event.clientY / window.innerHeight - 0.5;
+    if (touchBound) return;
+    touchBound = true;
 
-        if (Math.abs(x) < 0.36 && Math.abs(y) < 0.36) {
-          pulseTouch();
-        }
-      },
-      { passive: true }
-    );
+    window.addEventListener("pointerdown", handlePortalPointerDown, {
+      passive: true
+    });
+  }
+
+  function unbindTouch() {
+    if (!touchBound) return;
+    touchBound = false;
+
+    window.removeEventListener("pointerdown", handlePortalPointerDown);
+  }
+
+  function handlePortalPointerDown(event) {
+    const x = event.clientX / window.innerWidth - 0.5;
+    const y = event.clientY / window.innerHeight - 0.5;
+
+    if (Math.abs(x) < 0.36 && Math.abs(y) < 0.36) {
+      pulseTouch();
+    }
   }
 
   function pulseTouch() {
+    if (!portal) return;
+
     targetTouchPower = 1.9;
     themeIndex += 1;
     applyTheme();
@@ -590,15 +628,16 @@ export function createPortalEngine(ctx) {
 
     if (scene.fog) scene.fog.color.set(theme.fog);
 
-    [
-      mouth,
-      eventHorizon
-    ].forEach((obj) => {
+    [mouth, eventHorizon].forEach((obj) => {
       if (obj?.material?.color) obj.material.color.set(theme.primary);
     });
 
     if (blackVoid?.material?.color) {
       blackVoid.material.color.set(theme.void);
+    }
+
+    if (whiteCore?.material?.color) {
+      whiteCore.material.color.set(theme.core);
     }
 
     rings.forEach((ring, index) => {
@@ -692,7 +731,10 @@ export function createPortalEngine(ctx) {
     rimFlames.forEach((flame, index) => {
       flame.userData.angle += flame.userData.spin * boost;
 
-      const r = flame.userData.radius + Math.sin(t * 1.4 + index) * 0.42 + touchPower * 0.7;
+      const r =
+        flame.userData.radius +
+        Math.sin(t * 1.4 + index) * 0.42 +
+        touchPower * 0.7;
 
       flame.position.set(
         Math.cos(flame.userData.angle) * r,
@@ -700,7 +742,11 @@ export function createPortalEngine(ctx) {
         Math.sin(t + index) * 1.8
       );
 
-      const s = flame.userData.size + Math.sin(t * 1.8 + index) * 0.42 + touchPower * 0.58;
+      const s =
+        flame.userData.size +
+        Math.sin(t * 1.8 + index) * 0.42 +
+        touchPower * 0.58;
+
       flame.scale.set(s * 1.45, s, 1);
 
       flame.material.opacity =
@@ -721,7 +767,9 @@ export function createPortalEngine(ctx) {
 
       ring.material.opacity = Math.max(
         0.02,
-        ring.userData.baseOpacity + Math.sin(t * 1.7 + index) * 0.04 + touchPower * 0.04
+        ring.userData.baseOpacity +
+          Math.sin(t * 1.7 + index) * 0.04 +
+          touchPower * 0.04
       );
     });
 
@@ -750,7 +798,9 @@ export function createPortalEngine(ctx) {
       );
 
       spark.scale.setScalar(
-        spark.userData.size + Math.sin(t * 2 + index) * 0.16 + touchPower * 0.25
+        spark.userData.size +
+          Math.sin(t * 2 + index) * 0.16 +
+          touchPower * 0.25
       );
 
       spark.material.opacity =
@@ -774,14 +824,13 @@ export function createPortalEngine(ctx) {
         touchPower * 0.035;
     });
 
-    lightning.forEach((bolt, index) => {
+    lightning.forEach((bolt) => {
       bolt.userData.life -= 0.04;
 
       if (bolt.userData.life <= 0 && Math.random() < 0.024 + touchPower * 0.04) {
         bolt.userData.life = 1;
 
         const pts = [];
-
         const start = Math.random() * Math.PI * 2;
 
         for (let p = 0; p < 8; p += 1) {
@@ -827,16 +876,23 @@ export function createPortalEngine(ctx) {
 
     if (lens) {
       lens.rotation.z += 0.0013;
-      lens.material.opacity = 0.025 + Math.sin(t * 1.6) * 0.014 + touchPower * 0.03;
+      lens.material.opacity =
+        0.025 +
+        Math.sin(t * 1.6) * 0.014 +
+        touchPower * 0.03;
     }
   }
 
   function onActivityUpdate(state) {
-    if (state.liveActive) targetTouchPower = Math.max(targetTouchPower, 0.7);
+    if (state.liveActive) {
+      targetTouchPower = Math.max(targetTouchPower, 0.7);
+    }
   }
 
   function onPresenceUpdate(state) {
-    if (state.onlineCount > 0) targetTouchPower = Math.max(targetTouchPower, 0.35);
+    if (state.onlineCount > 0) {
+      targetTouchPower = Math.max(targetTouchPower, 0.35);
+    }
   }
 
   function resize() {
@@ -856,12 +912,22 @@ export function createPortalEngine(ctx) {
   function destroy() {
     if (!portal) return;
 
+    unbindTouch();
+
     scene.remove(portal);
 
     portal.traverse((obj) => {
       obj.geometry?.dispose?.();
-      obj.material?.dispose?.();
+
+      if (Array.isArray(obj.material)) {
+        obj.material.forEach((material) => material.dispose?.());
+      } else {
+        obj.material?.dispose?.();
+      }
     });
+
+    textures.forEach((texture) => texture.dispose?.());
+    textures.clear();
 
     rings.length = 0;
     streams.length = 0;
@@ -872,7 +938,18 @@ export function createPortalEngine(ctx) {
     touchBursts.length = 0;
 
     portal = null;
+    mist = null;
+    storm = null;
+    blackVoid = null;
+    whiteCore = null;
+    eventHorizon = null;
+    mouth = null;
+    lens = null;
+    tunnel = null;
+
     mounted = false;
+    touchPower = 0;
+    targetTouchPower = 0;
   }
 
   return {
@@ -881,13 +958,16 @@ export function createPortalEngine(ctx) {
     resize,
     destroy,
     pulseTouch,
+
     setTheme(themeName) {
-      const found = themes.findIndex((t) => t.name === themeName);
+      const found = findThemeIndex(themeName);
+
       if (found >= 0) {
         themeIndex = found;
         applyTheme();
       }
     },
+
     onActivityUpdate,
     onPresenceUpdate
   };
