@@ -28,19 +28,35 @@ import {
   syncProfileBalance
 } from "/core/shared/rb-economy.js";
 
+function firstRow(result) {
+  if (Array.isArray(result)) return result[0] || null;
+  if (Array.isArray(result?.data)) return result.data[0] || null;
+  return result || null;
+}
+
 function cleanKey(value = "activity") {
   return String(value || "activity")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9_:-]+/g, "_")
-    .slice(0, 80);
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80) || "activity";
 }
 
 function safeCents(value, fallback = 0) {
   const number = Number(value);
+
   return Number.isFinite(number) && number >= 0
     ? Math.floor(number)
     : fallback;
+}
+
+function safeIdentity() {
+  try {
+    return getProfileIdentity?.() || {};
+  } catch {
+    return {};
+  }
 }
 
 async function logAnalytics({
@@ -52,9 +68,13 @@ async function logAnalytics({
   valueCents = 0,
   metadata = {}
 }) {
+  const table = RB_TABLES.platformAnalyticsEvents;
+
+  if (!table) return null;
+
   try {
     const rows = await rbInsert({
-      table: RB_TABLES.platformAnalyticsEvents,
+      table,
       values: {
         user_id: userId || null,
         event_name: eventKey,
@@ -69,7 +89,7 @@ async function logAnalytics({
       }
     });
 
-    return rows?.[0] || null;
+    return firstRow(rows);
   } catch (error) {
     console.warn("[RB ACTION ANALYTICS SKIPPED]", error?.message || error);
     return null;
@@ -90,11 +110,13 @@ async function notifyUser({
   priority = "normal",
   metadata = {}
 }) {
-  if (!userId || !RB_TABLES.richNotifications) return null;
+  const table = RB_TABLES.richNotifications || RB_TABLES.notifications;
+
+  if (!userId || !table) return null;
 
   try {
     const rows = await rbInsert({
-      table: RB_TABLES.richNotifications,
+      table,
       values: {
         user_id: userId,
         actor_id: actorId,
@@ -117,11 +139,21 @@ async function notifyUser({
       }
     });
 
-    return rows?.[0] || null;
+    return firstRow(rows);
   } catch (error) {
     console.warn("[RB ACTION NOTIFICATION SKIPPED]", error?.message || error);
     return null;
   }
+}
+
+function dispatchRichAction(result) {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent("rb:rich-action", {
+      detail: result
+    })
+  );
 }
 
 export async function runRichAction({
@@ -150,8 +182,8 @@ export async function runRichAction({
   emoji = "💨",
   metadata = {}
 } = {}) {
-  const user = getUser();
-  const identity = getProfileIdentity();
+  const user = getUser?.() || null;
+  const identity = safeIdentity();
 
   const eventKey = cleanKey(action || `${section}_activity`);
   const userId = actorId || user?.id || null;
@@ -164,7 +196,8 @@ export async function runRichAction({
     xp: null,
     economy: null,
     analytics: null,
-    notification: null
+    notification: null,
+    warnings: []
   };
 
   result.analytics = await logAnalytics({
@@ -179,8 +212,8 @@ export async function runRichAction({
       body,
       target_type: targetType,
       target_url: targetUrl,
-      username: identity.username,
-      display_name: identity.display_name,
+      username: identity.username || null,
+      display_name: identity.display_name || null,
       ...metadata
     }
   });
@@ -204,6 +237,7 @@ export async function runRichAction({
         }
       });
     } catch (error) {
+      result.warnings.push("xp_skipped");
       console.warn("[RB ACTION XP SKIPPED]", error?.message || error);
     }
   }
@@ -226,7 +260,7 @@ export async function runRichAction({
     if (eventKey === "live_access_paid" && creatorId) {
       result.economy = await recordLivePurchaseCredit({
         creatorId,
-        streamId: metadata.stream_id || null,
+        streamId: metadata.stream_id || targetId || null,
         purchaseId: targetId,
         amountCents,
         platformFeeCents,
@@ -252,6 +286,7 @@ export async function runRichAction({
       await syncProfileBalance(receiverId);
     }
   } catch (error) {
+    result.warnings.push("economy_skipped");
     console.warn("[RB ACTION ECONOMY SKIPPED]", error?.message || error);
   }
 
@@ -271,11 +306,7 @@ export async function runRichAction({
     });
   }
 
-  window.dispatchEvent(
-    new CustomEvent("rb:rich-action", {
-      detail: result
-    })
-  );
+  dispatchRichAction(result);
 
   return result;
 }
@@ -289,7 +320,7 @@ export async function actionUploadCreated({
   return await runRichAction({
     action: "upload_created",
     section,
-    targetTable: RB_TABLES.uploads,
+    targetTable: RB_TABLES.uploads || "uploads",
     targetType: "upload",
     targetId: uploadId,
     title,
@@ -309,8 +340,8 @@ export async function actionFeedPostCreated({
     targetTable: RB_TABLES.feedPosts,
     targetType: "feed_post",
     targetId: postId,
-    title,
     targetUrl: "/feed",
+    title,
     emoji: "🔥",
     metadata
   });
@@ -324,11 +355,11 @@ export async function actionMusicUploaded({
   return await runRichAction({
     action: "music_uploaded",
     section: "music",
-    targetTable: RB_TABLES.musicTracks,
+    targetTable: RB_TABLES.musicTracks || RB_TABLES.tracks,
     targetType: "music_track",
     targetId: trackId,
-    title,
     targetUrl: "/music",
+    title,
     emoji: "🎵",
     metadata
   });
@@ -339,13 +370,15 @@ export async function actionLiveStarted({
   title = "",
   metadata = {}
 } = {}) {
+  const streamKey = metadata.slug || streamId || "";
+
   return await runRichAction({
     action: "live_started",
     section: "live",
     targetTable: RB_TABLES.liveStreams,
     targetType: "live",
     targetId: streamId,
-    targetUrl: metadata.slug ? `/watch?stream=${metadata.slug}` : "/live",
+    targetUrl: streamKey ? `/watch?stream=${encodeURIComponent(streamKey)}` : "/live",
     title,
     emoji: "📺",
     metadata
@@ -403,6 +436,104 @@ export async function actionProductCreated({
     title,
     emoji: "🛒",
     metadata
+  });
+}
+
+export async function actionProductSold({
+  orderId,
+  sellerId,
+  productId = null,
+  title = "",
+  amountCents = 0,
+  platformFeeCents = null,
+  currency = "usd",
+  metadata = {}
+} = {}) {
+  return await runRichAction({
+    action: "product_sold",
+    section: "store",
+    sellerId,
+    targetTable: RB_TABLES.storeOrders,
+    targetType: "store_order",
+    targetId: orderId,
+    title,
+    amountCents,
+    platformFeeCents,
+    currency,
+    notifyUserId: sellerId,
+    notifyTitle: "Product sold",
+    notifyBody: title || "You made a store sale.",
+    emoji: "💸",
+    metadata: {
+      product_id: productId,
+      ...metadata
+    }
+  });
+}
+
+export async function actionLiveAccessPaid({
+  purchaseId,
+  creatorId,
+  streamId,
+  title = "",
+  amountCents = 0,
+  platformFeeCents = null,
+  currency = "usd",
+  metadata = {}
+} = {}) {
+  return await runRichAction({
+    action: "live_access_paid",
+    section: "live",
+    creatorId,
+    targetTable: RB_TABLES.liveStreamPurchases,
+    targetType: "live_purchase",
+    targetId: purchaseId,
+    targetUrl: streamId ? `/watch?stream=${encodeURIComponent(streamId)}` : "/watch",
+    title,
+    amountCents,
+    platformFeeCents,
+    currency,
+    notifyUserId: creatorId,
+    notifyTitle: "Live access purchased",
+    notifyBody: title || "Someone unlocked your live stream.",
+    emoji: "📺",
+    metadata: {
+      stream_id: streamId,
+      ...metadata
+    }
+  });
+}
+
+export async function actionTipPaid({
+  tipId = null,
+  receiverId,
+  streamId = null,
+  title = "",
+  body = "",
+  amountCents = 0,
+  currency = "usd",
+  metadata = {}
+} = {}) {
+  return await runRichAction({
+    action: "tip_paid",
+    section: "live",
+    receiverId,
+    targetTable: RB_TABLES.liveTips,
+    targetType: "tip",
+    targetId: tipId,
+    targetUrl: streamId ? `/watch?stream=${encodeURIComponent(streamId)}` : "/watch",
+    title,
+    body,
+    amountCents,
+    currency,
+    notifyUserId: receiverId,
+    notifyTitle: "New tip received",
+    notifyBody: body || "Someone sent you a tip.",
+    emoji: "💸",
+    metadata: {
+      stream_id: streamId,
+      ...metadata
+    }
   });
 }
 
