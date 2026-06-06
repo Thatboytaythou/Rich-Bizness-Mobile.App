@@ -5,6 +5,7 @@
    REALTIME CHANNEL ENGINE
    Synced To rb-config.js
    Table Channels + Presence + Broadcast
+   Uses locked rb-supabase.js client only
 ========================= */
 
 import {
@@ -24,6 +25,10 @@ const supabase = getSupabase();
 
 const activeChannels = new Map();
 
+/* =========================
+   HELPERS
+========================= */
+
 export function rbChannelName(...parts) {
   return parts
     .filter(Boolean)
@@ -37,14 +42,49 @@ export function getActiveRealtimeChannels() {
   return Array.from(activeChannels.keys());
 }
 
+export function getActiveRealtimeChannel(key) {
+  return activeChannels.get(key) || null;
+}
+
 export function hasActiveChannel(key) {
   return activeChannels.has(key);
+}
+
+export function isRealtimeEnabled() {
+  return RB_REALTIME?.enabled !== false;
 }
 
 export function isRealtimeTable(table) {
   if (!RB_REALTIME?.tables?.length) return true;
   return RB_REALTIME.tables.includes(table);
 }
+
+function safeStatusLog(type, key, status) {
+  console.log(`[RB ${type}] ${key}: ${status}`);
+}
+
+function buildPostgresConfig({
+  event = "*",
+  schema = "public",
+  table,
+  filter = null
+}) {
+  const config = {
+    event,
+    schema,
+    table
+  };
+
+  if (filter) {
+    config.filter = filter;
+  }
+
+  return config;
+}
+
+/* =========================
+   TABLE SUBSCRIPTIONS
+========================= */
 
 export function subscribeToTable({
   key,
@@ -59,7 +99,7 @@ export function subscribeToTable({
     throw new Error("Missing realtime subscription info.");
   }
 
-  if (RB_REALTIME?.enabled === false) {
+  if (!isRealtimeEnabled()) {
     console.warn("[RB REALTIME DISABLED]");
     return null;
   }
@@ -72,21 +112,29 @@ export function subscribeToTable({
 
   const channel = createRealtimeChannel(key);
 
-  const config = {
-    event,
-    schema,
-    table
-  };
-
-  if (filter) config.filter = filter;
-
-  channel.on("postgres_changes", config, (payload) => {
-    onChange(payload);
-  });
+  channel.on(
+    "postgres_changes",
+    buildPostgresConfig({
+      event,
+      schema,
+      table,
+      filter
+    }),
+    (payload) => {
+      try {
+        onChange(payload);
+      } catch (error) {
+        console.warn(`[RB REALTIME HANDLER ERROR: ${key}]`, error);
+      }
+    }
+  );
 
   channel.subscribe((status) => {
-    console.log(`[RB REALTIME] ${key}: ${status}`);
-    if (typeof onStatus === "function") onStatus(status);
+    safeStatusLog("REALTIME", key, status);
+
+    if (typeof onStatus === "function") {
+      onStatus(status);
+    }
   });
 
   activeChannels.set(key, channel);
@@ -139,6 +187,10 @@ export function subscribeToUserRows({
     onStatus
   });
 }
+
+/* =========================
+   FEATURE CHANNELS
+========================= */
 
 export function subscribeToStream({
   streamId,
@@ -250,6 +302,10 @@ export function subscribeToProfile({
 }) {
   const activeUserId = userId || getUser()?.id;
 
+  if (!activeUserId) {
+    throw new Error("Missing realtime profile id.");
+  }
+
   return subscribeToTableById({
     key: rbChannelName("profile", activeUserId),
     table: RB_TABLES.profiles,
@@ -275,6 +331,10 @@ export function subscribeToUploads({
   });
 }
 
+/* =========================
+   PRESENCE
+========================= */
+
 export function subscribeToPresence({
   key,
   user = null,
@@ -291,30 +351,45 @@ export function subscribeToPresence({
   const activeUser = user || getUser();
   const profile = getProfile();
 
+  const presenceKey =
+    activeUser?.id ||
+    globalThis.crypto?.randomUUID?.() ||
+    `guest-${Date.now()}`;
+
   const channel = supabase.channel(key, {
     config: {
       presence: {
-        key: activeUser?.id || crypto.randomUUID()
+        key: presenceKey
       }
     }
   });
 
   channel.on("presence", { event: "sync" }, () => {
     const state = channel.presenceState();
-    if (typeof onSync === "function") onSync(state);
+
+    if (typeof onSync === "function") {
+      onSync(state);
+    }
   });
 
   channel.on("presence", { event: "join" }, ({ key, newPresences }) => {
-    if (typeof onJoin === "function") onJoin({ key, newPresences });
+    if (typeof onJoin === "function") {
+      onJoin({ key, newPresences });
+    }
   });
 
   channel.on("presence", { event: "leave" }, ({ key, leftPresences }) => {
-    if (typeof onLeave === "function") onLeave({ key, leftPresences });
+    if (typeof onLeave === "function") {
+      onLeave({ key, leftPresences });
+    }
   });
 
   channel.subscribe(async (status) => {
-    console.log(`[RB PRESENCE] ${key}: ${status}`);
-    if (typeof onStatus === "function") onStatus(status);
+    safeStatusLog("PRESENCE", key, status);
+
+    if (typeof onStatus === "function") {
+      onStatus(status);
+    }
 
     if (status === "SUBSCRIBED") {
       await channel.track({
@@ -334,6 +409,10 @@ export function subscribeToPresence({
   return channel;
 }
 
+/* =========================
+   BROADCAST
+========================= */
+
 export function subscribeToBroadcast({
   key,
   event = "message",
@@ -346,15 +425,22 @@ export function subscribeToBroadcast({
 
   unsubscribeChannel(key);
 
-  const channel = supabase.channel(key);
+  const channel = createRealtimeChannel(key);
 
   channel.on("broadcast", { event }, (payload) => {
-    onMessage(payload);
+    try {
+      onMessage(payload);
+    } catch (error) {
+      console.warn(`[RB BROADCAST HANDLER ERROR: ${key}]`, error);
+    }
   });
 
   channel.subscribe((status) => {
-    console.log(`[RB BROADCAST] ${key}: ${status}`);
-    if (typeof onStatus === "function") onStatus(status);
+    safeStatusLog("BROADCAST", key, status);
+
+    if (typeof onStatus === "function") {
+      onStatus(status);
+    }
   });
 
   activeChannels.set(key, channel);
@@ -380,18 +466,20 @@ export async function sendBroadcast({
   });
 }
 
+/* =========================
+   UNSUBSCRIBE
+========================= */
+
 export async function unsubscribeChannel(key) {
   const channel = activeChannels.get(key);
 
   if (!channel) return;
 
-  if (typeof removeRealtimeChannel === "function") {
+  try {
     await removeRealtimeChannel(channel);
-  } else {
-    await supabase.removeChannel(channel);
+  } finally {
+    activeChannels.delete(key);
   }
-
-  activeChannels.delete(key);
 }
 
 export async function unsubscribeAllChannels() {
@@ -400,11 +488,7 @@ export async function unsubscribeAllChannels() {
   await Promise.allSettled(
     channels.map(async ([key, channel]) => {
       try {
-        if (typeof removeRealtimeChannel === "function") {
-          await removeRealtimeChannel(channel);
-        } else {
-          await supabase.removeChannel(channel);
-        }
+        await removeRealtimeChannel(channel);
       } finally {
         activeChannels.delete(key);
       }
@@ -413,6 +497,20 @@ export async function unsubscribeAllChannels() {
 
   activeChannels.clear();
 }
+
+window.RBRealtime = {
+  rbChannelName,
+  getActiveRealtimeChannels,
+  hasActiveChannel,
+  subscribeToTable,
+  subscribeToTableById,
+  subscribeToUserRows,
+  subscribeToPresence,
+  subscribeToBroadcast,
+  sendBroadcast,
+  unsubscribeChannel,
+  unsubscribeAllChannels
+};
 
 window.addEventListener("beforeunload", () => {
   unsubscribeAllChannels();
