@@ -2,13 +2,16 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
 
   <title>Rich Bizness • Universe</title>
+
   <meta name="theme-color" content="#050805" />
+
   <meta
     name="description"
     content="Rich Bizness Mobile — cinematic universe portal hub."
@@ -29,7 +32,8 @@
   <link rel="stylesheet" href="/styles/omni-dial.css" />
 </head>
 
-<body class="rb-index-page" data-page="index">
+<body class="rb-index-page" data-page="index" data-rb-route="home">
+
   <div id="canvas-container" aria-hidden="true"></div>
 
   <div class="rb-fx-smoke" aria-hidden="true"></div>
@@ -38,18 +42,32 @@
   <div class="rb-bg-noise" aria-hidden="true"></div>
 
   <header class="rb-brand-header">
-    <h1>RICH <span>BIZNESS</span></h1>
-    <p>LLC • SMOKE &amp; EMPIRE</p>
+    <h1>
+      RICH <span>BIZNESS</span>
+    </h1>
+
+    <p>
+      LLC • SMOKE &amp; EMPIRE
+    </p>
   </header>
 
   <button
+    id="rbProfileChip"
     class="rb-profile-chip"
     data-route="profile"
     type="button"
     aria-label="Open profile"
   >
-    <img src="/images/brand/Avatar-hero-Banner.png.jpeg" alt="Profile" />
-    <span>Tap In</span>
+    <img
+      src="/images/brand/Avatar-hero-Banner.png.jpeg"
+      alt="Profile"
+      data-rb-avatar
+      data-rb-profile-avatar
+    />
+
+    <span data-rb-name>
+      Tap In
+    </span>
   </button>
 
   <button
@@ -57,11 +75,17 @@
     id="tabDropper"
     type="button"
     aria-label="Open quick tabs"
+    aria-controls="slideTabs"
+    aria-expanded="false"
   >
     ☰
   </button>
 
-  <nav class="rb-side-tabs rb-slide-tabs" id="slideTabs" aria-label="Quick actions">
+  <nav
+    class="rb-side-tabs rb-slide-tabs"
+    id="slideTabs"
+    aria-label="Quick actions"
+  >
     <button data-route="auth" type="button" aria-label="Auth">🔑</button>
     <button data-route="profile" type="button" aria-label="Profile">👤</button>
     <button data-route="avatar" type="button" aria-label="Avatar">🧍</button>
@@ -78,8 +102,15 @@
   </nav>
 
   <main class="rb-universe-shell">
-    <section class="rb-universe-stage" aria-label="Rich Bizness Universe Hub">
-      <div id="module-label" class="rb-module-label active">
+    <section
+      class="rb-universe-stage"
+      aria-label="Rich Bizness Universe Hub"
+    >
+      <div
+        id="module-label"
+        class="rb-module-label active"
+        aria-live="polite"
+      >
         RICH BIZNESS ONLINE
       </div>
     </section>
@@ -119,13 +150,32 @@
   <script type="module" src="/core/pages/realtime-notifications.js"></script>
   <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
 
-  <script>
+  <script type="module">
+    import {
+      bindGlobalNavigation
+    } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+
     const dropper = document.getElementById("tabDropper");
     const tabs = document.getElementById("slideTabs");
 
-    dropper?.addEventListener("click", () => {
-      dropper.classList.toggle("is-open");
-      tabs?.classList.toggle("is-open");
+    function closeTabs() {
+      dropper?.classList.remove("is-open");
+      tabs?.classList.remove("is-open");
+      dropper?.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleTabs() {
+      const isOpen = dropper?.classList.toggle("is-open");
+      tabs?.classList.toggle("is-open", Boolean(isOpen));
+      dropper?.setAttribute("aria-expanded", String(Boolean(isOpen)));
+    }
+
+    dropper?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleTabs();
     });
 
     document.addEventListener("click", (event) => {
@@ -133,12 +183,18 @@
       const clickedDropper = event.target.closest("#tabDropper");
 
       if (!clickedInsideMenu && !clickedDropper) {
-        dropper?.classList.remove("is-open");
-        tabs?.classList.remove("is-open");
+        closeTabs();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeTabs();
       }
     });
   </script>
 
   <script type="module" src="/core/pages/index.js"></script>
+
 </body>
 </html>
