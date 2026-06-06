@@ -5,14 +5,23 @@
    DOM + UI HELPERS
 ========================= */
 
+const hasDOM = () =>
+  typeof window !== "undefined" && typeof document !== "undefined";
+
+const resolve = (target, root = document) => {
+  if (!hasDOM()) return null;
+  if (!target) return null;
+  return typeof target === "string" ? root.querySelector(target) : target;
+};
+
 export const $ = (selector, root = document) =>
-  root.querySelector(selector);
+  hasDOM() && selector ? root.querySelector(selector) : null;
 
 export const $$ = (selector, root = document) =>
-  Array.from(root.querySelectorAll(selector));
+  hasDOM() && selector ? Array.from(root.querySelectorAll(selector)) : [];
 
 export const byId = (id) =>
-  document.getElementById(id);
+  hasDOM() && id ? document.getElementById(id) : null;
 
 export function exists(selector, root = document) {
   return !!$(selector, root);
@@ -28,36 +37,36 @@ export function escapeHtml(value = "") {
 }
 
 export function setText(target, value = "") {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
   el.textContent = value ?? "";
 }
 
 export function setHTML(target, value = "") {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
   el.innerHTML = value ?? "";
 }
 
 export function setSafeHTML(target, value = "") {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
   el.innerHTML = escapeHtml(value);
 }
 
 export function setValue(target, value = "") {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
   el.value = value ?? "";
 }
 
 export function getValue(target, fallback = "") {
-  const el = typeof target === "string" ? $(target) : target;
-  return el?.value?.trim() || fallback;
+  const el = resolve(target);
+  return el?.value?.trim?.() || fallback;
 }
 
 export function setAttr(target, key, value) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !key) return;
 
   if (value === null || value === undefined) {
@@ -65,17 +74,17 @@ export function setAttr(target, key, value) {
     return;
   }
 
-  el.setAttribute(key, value);
+  el.setAttribute(key, String(value));
 }
 
 export function getAttr(target, key, fallback = "") {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !key) return fallback;
   return el.getAttribute(key) || fallback;
 }
 
 export function setData(target, key, value) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !key) return;
 
   if (value === null || value === undefined) {
@@ -83,17 +92,17 @@ export function setData(target, key, value) {
     return;
   }
 
-  el.dataset[key] = value;
+  el.dataset[key] = String(value);
 }
 
 export function getData(target, key, fallback = "") {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !key) return fallback;
   return el.dataset[key] || fallback;
 }
 
 export function show(target) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
 
   el.hidden = false;
@@ -102,7 +111,7 @@ export function show(target) {
 }
 
 export function hide(target) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
 
   el.hidden = true;
@@ -111,31 +120,31 @@ export function hide(target) {
 }
 
 export function toggle(target, force) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
   el.classList.toggle("is-active", force);
 }
 
 export function addClass(target, className) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !className) return;
-  el.classList.add(className);
+  el.classList.add(...String(className).split(" ").filter(Boolean));
 }
 
 export function removeClass(target, className) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !className) return;
-  el.classList.remove(className);
+  el.classList.remove(...String(className).split(" ").filter(Boolean));
 }
 
 export function toggleClass(target, className, force) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !className) return;
   el.classList.toggle(className, force);
 }
 
 export function on(target, event, handler, options = {}) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || !event || typeof handler !== "function") return null;
 
   el.addEventListener(event, handler, options);
@@ -145,6 +154,7 @@ export function on(target, event, handler, options = {}) {
 
 export function onAll(selector, event, handler, options = {}) {
   const els = $$(selector);
+
   const cleanups = els
     .map((el) => on(el, event, handler, options))
     .filter(Boolean);
@@ -153,12 +163,15 @@ export function onAll(selector, event, handler, options = {}) {
 }
 
 export function delegate(root, selector, event, handler, options = {}) {
-  const base = typeof root === "string" ? $(root) : root;
+  const base = resolve(root);
   if (!base || !selector || !event || typeof handler !== "function") return null;
 
   const listener = (e) => {
-    const target = e.target.closest(selector);
+    const source = e.target?.nodeType === 1 ? e.target : e.target?.parentElement;
+    const target = source?.closest?.(selector);
+
     if (!target || !base.contains(target)) return;
+
     handler(e, target);
   };
 
@@ -168,21 +181,37 @@ export function delegate(root, selector, event, handler, options = {}) {
 }
 
 export function createElement(tag = "div", options = {}) {
+  if (!hasDOM()) return null;
+
   const el = document.createElement(tag);
 
-  if (options.className) el.className = options.className;
-  if (options.text != null) el.textContent = options.text;
-  if (options.html != null) el.innerHTML = options.html;
+  if (options.className) {
+    el.className = options.className;
+  }
+
+  if (options.text != null) {
+    el.textContent = options.text;
+  }
+
+  if (options.html != null) {
+    el.innerHTML = options.html;
+  }
 
   if (options.attrs) {
     Object.entries(options.attrs).forEach(([key, value]) => {
-      if (value != null) el.setAttribute(key, value);
+      if (value != null) el.setAttribute(key, String(value));
     });
   }
 
   if (options.dataset) {
     Object.entries(options.dataset).forEach(([key, value]) => {
-      if (value != null) el.dataset[key] = value;
+      if (value != null) el.dataset[key] = String(value);
+    });
+  }
+
+  if (options.children) {
+    options.children.filter(Boolean).forEach((child) => {
+      el.appendChild(child);
     });
   }
 
@@ -190,21 +219,23 @@ export function createElement(tag = "div", options = {}) {
 }
 
 export function clearChildren(target) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el) return;
-  while (el.firstChild) el.removeChild(el.firstChild);
+  el.replaceChildren();
 }
 
 export function renderList(target, items = [], renderer) {
-  const el = typeof target === "string" ? $(target) : target;
+  const el = resolve(target);
   if (!el || typeof renderer !== "function") return;
 
-  clearChildren(el);
+  const fragment = document.createDocumentFragment();
 
   items.forEach((item, index) => {
     const node = renderer(item, index);
-    if (node) el.appendChild(node);
+    if (node) fragment.appendChild(node);
   });
+
+  el.replaceChildren(fragment);
 }
 
 export function safeImage(
@@ -215,36 +246,50 @@ export function safeImage(
 }
 
 export function lockBodyScroll() {
+  if (!hasDOM()) return;
+
   document.documentElement.classList.add("rb-scroll-lock");
   document.body.classList.add("rb-scroll-lock");
 }
 
 export function unlockBodyScroll() {
+  if (!hasDOM()) return;
+
   document.documentElement.classList.remove("rb-scroll-lock");
   document.body.classList.remove("rb-scroll-lock");
 }
 
 export function setPageReady() {
+  if (!hasDOM()) return;
+
   document.documentElement.classList.add("rb-ready");
   document.body.classList.add("rb-ready");
 }
 
 export function setPageLoading() {
+  if (!hasDOM()) return;
+
   document.documentElement.classList.add("rb-loading");
   document.body.classList.add("rb-loading");
 }
 
 export function clearPageLoading() {
+  if (!hasDOM()) return;
+
   document.documentElement.classList.remove("rb-loading");
   document.body.classList.remove("rb-loading");
 }
 
 export function setPageError() {
+  if (!hasDOM()) return;
+
   document.documentElement.classList.add("rb-error");
   document.body.classList.add("rb-error");
 }
 
 export function clearPageError() {
+  if (!hasDOM()) return;
+
   document.documentElement.classList.remove("rb-error");
   document.body.classList.remove("rb-error");
 }
