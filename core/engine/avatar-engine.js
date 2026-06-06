@@ -4,15 +4,17 @@
 
    CINEMATIC 3D AVATAR ENGINE
    Boy/Girl • Portal Roam • Controllable • Living Motion
+   Safer cleanup + mobile scale lock + pointer control cleanup
 ========================= */
 
 export function createAvatarEngine(ctx) {
-  const { THREE, scene, camera, activityState } = ctx;
+  const { THREE, scene, activityState } = ctx;
 
-  let avatarRoot;
-  let avatar;
+  let avatarRoot = null;
+  let avatar = null;
   let parts = {};
   let mounted = false;
+  let controlsBound = false;
   let avatarType = "boy";
   let mode = "roam";
 
@@ -35,12 +37,16 @@ export function createAvatarEngine(ctx) {
   let walkTime = 0;
   let lastRoamPick = 0;
 
+  function baseScale() {
+    return window.innerWidth <= 720 ? 0.28 : 0.32;
+  }
+
   function mount() {
     if (mounted) return;
 
     avatarRoot = new THREE.Group();
     avatarRoot.position.copy(target);
-    avatarRoot.scale.setScalar(0.32);
+    avatarRoot.scale.setScalar(baseScale());
     avatarRoot.renderOrder = 90;
     scene.add(avatarRoot);
 
@@ -74,19 +80,57 @@ export function createAvatarEngine(ctx) {
 
   function part(name, geometry, material, position, scale = null) {
     const mesh = new THREE.Mesh(geometry, material);
+
     mesh.name = name;
     mesh.position.set(position.x, position.y, position.z);
-    if (scale) mesh.scale.set(scale.x, scale.y, scale.z);
+
+    if (scale) {
+      mesh.scale.set(scale.x, scale.y, scale.z);
+    }
+
     avatar.add(mesh);
     parts[name] = mesh;
+
     return mesh;
   }
 
+  function disposeMaterial(material) {
+    if (!material) return;
+
+    if (Array.isArray(material)) {
+      material.forEach(disposeMaterial);
+      return;
+    }
+
+    material.dispose?.();
+  }
+
+  function disposeObject(obj) {
+    obj?.traverse?.((child) => {
+      child.geometry?.dispose?.();
+      disposeMaterial(child.material);
+    });
+
+    obj?.geometry?.dispose?.();
+    disposeMaterial(obj?.material);
+  }
+
+  function clearAvatar() {
+    if (!avatar || !avatarRoot) return;
+
+    avatarRoot.remove(avatar);
+    disposeObject(avatar);
+
+    avatar = null;
+    parts = {};
+  }
+
   function makeAvatar(type = "boy") {
-    if (avatar) avatarRoot.remove(avatar);
+    clearAvatar();
 
     avatarType = type;
     parts = {};
+
     avatar = new THREE.Group();
     avatar.userData.type = type;
     avatarRoot.add(avatar);
@@ -203,6 +247,9 @@ export function createAvatarEngine(ctx) {
   }
 
   function bindControls() {
+    if (controlsBound) return;
+    controlsBound = true;
+
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
@@ -210,6 +257,19 @@ export function createAvatarEngine(ctx) {
     window.RB_AVATAR_MODE = setMode;
     window.RB_AVATAR_EMOTE = setEmotion;
     window.RB_AVATAR_PORTAL = portalJump;
+  }
+
+  function unbindControls() {
+    if (!controlsBound) return;
+    controlsBound = false;
+
+    window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keyup", onKeyUp);
+
+    if (window.RB_SWAP_AVATAR === swapAvatar) delete window.RB_SWAP_AVATAR;
+    if (window.RB_AVATAR_MODE === setMode) delete window.RB_AVATAR_MODE;
+    if (window.RB_AVATAR_EMOTE === setEmotion) delete window.RB_AVATAR_EMOTE;
+    if (window.RB_AVATAR_PORTAL === portalJump) delete window.RB_AVATAR_PORTAL;
   }
 
   function onKeyDown(event) {
@@ -249,6 +309,7 @@ export function createAvatarEngine(ctx) {
   }
 
   function swapAvatar() {
+    if (!avatarRoot) return;
     makeAvatar(avatarType === "boy" ? "girl" : "boy");
   }
 
@@ -305,7 +366,7 @@ export function createAvatarEngine(ctx) {
     updateMotion(t);
     updateBodyAnimation(t);
     updateEmotion(t);
-    updatePortalDive(t);
+    updatePortalDive();
   }
 
   function updateMotion(t) {
@@ -386,17 +447,20 @@ export function createAvatarEngine(ctx) {
 
     if (parts.bodyGlow?.material) {
       parts.bodyGlow.material.opacity =
-        0.055 + Math.abs(Math.sin(t * 1.8)) * 0.07 + (activityState.liveActive ? 0.03 : 0);
+        0.055 +
+        Math.abs(Math.sin(t * 1.8)) * 0.07 +
+        (activityState.liveActive ? 0.03 : 0);
     }
 
     if (parts.chatgptCore) {
-      parts.chatgptCore.scale.setScalar(1 + Math.sin(t * 4.4) * 0.18);
+      const corePulse = 1 + Math.sin(t * 4.4) * 0.18;
+      parts.chatgptCore.scale.set(corePulse, corePulse, 0.28);
       parts.chatgptCore.material.opacity = 0.68 + Math.sin(t * 3.8) * 0.16;
     }
   }
 
   function updateEmotion(t) {
-    if (!parts.mouth || !parts.shades) return;
+    if (!parts.mouth || !parts.shades || !parts.head) return;
 
     if (emotion === "happy") {
       parts.mouth.scale.x = 1.25 + Math.sin(t * 5) * 0.08;
@@ -411,11 +475,13 @@ export function createAvatarEngine(ctx) {
 
     if (emotion === "boss") {
       parts.mouth.scale.x = 1;
+      parts.mouth.position.y = 4.78;
+      parts.head.rotation.z = 0;
       parts.shades.material.emissiveIntensity = 0.55 + Math.sin(t * 2) * 0.08;
     }
   }
 
-  function updatePortalDive(t) {
+  function updatePortalDive() {
     portalDive += (portalDiveTarget - portalDive) * 0.045;
 
     if (portalDive > 0.01) {
@@ -423,42 +489,47 @@ export function createAvatarEngine(ctx) {
       avatarRoot.position.z += (2.1 - avatarRoot.position.z) * 0.06;
       avatarRoot.position.y += (-1.65 - avatarRoot.position.y) * 0.04;
 
-      avatarRoot.scale.setScalar(0.32 * (1 - portalDive * 0.72));
+      avatarRoot.scale.setScalar(baseScale() * (1 - portalDive * 0.72));
       avatarRoot.rotation.y += 0.16;
 
       if (portalDive > 0.92) {
         portalDiveTarget = 0;
+        portalDive = 0;
         mode = "roam";
+
         avatarRoot.position.set(
           THREE.MathUtils.randFloat(-6, 6),
           -2.55,
           9.4
         );
-        avatarRoot.scale.setScalar(0.32);
+
+        avatarRoot.scale.setScalar(baseScale());
       }
     } else {
-      avatarRoot.scale.lerp(new THREE.Vector3(0.32, 0.32, 0.32), 0.08);
+      const next = baseScale();
+      avatarRoot.scale.lerp(new THREE.Vector3(next, next, next), 0.08);
     }
   }
 
   function resize() {
-    if (!avatarRoot) return;
-
-    const isMobile = window.innerWidth <= 720;
-    avatarRoot.scale.setScalar(isMobile ? 0.28 : 0.32);
+    if (!avatarRoot || portalDive > 0.01) return;
+    avatarRoot.scale.setScalar(baseScale());
   }
 
   function destroy() {
-    window.removeEventListener("keydown", onKeyDown);
-    window.removeEventListener("keyup", onKeyUp);
+    unbindControls();
+
+    keys.forward = false;
+    keys.back = false;
+    keys.left = false;
+    keys.right = false;
+    keys.run = false;
+
+    movePadActive = false;
 
     if (avatarRoot) {
       scene.remove(avatarRoot);
-
-      avatarRoot.traverse((obj) => {
-        obj.geometry?.dispose?.();
-        obj.material?.dispose?.();
-      });
+      disposeObject(avatarRoot);
     }
 
     mounted = false;
