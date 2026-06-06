@@ -1,17 +1,31 @@
-import RB_CONFIG from "/core/shared/rb-config.js";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+/* =========================
+   RICH BIZNESS MOBILE
+   /core/pages/bottom-dock-realtime.js
 
-const supabase = createClient(
-  RB_CONFIG.supabase.url,
-  RB_CONFIG.supabase.publishableKey
-);
+   BOTTOM DOCK REALTIME ENGINE
+   Uses locked rb-supabase.js client
+   No duplicate Supabase client
+========================= */
+
+import {
+  RB_TABLES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase,
+  bootAuth,
+  createRealtimeChannel,
+  removeRealtimeChannel
+} from "/core/shared/rb-supabase.js";
+
+const supabase = getSupabase();
 
 const TABLES = {
-  live: RB_CONFIG.tables.liveStreams || "live_streams",
-  feed: RB_CONFIG.tables.feedPosts || "feed_posts",
-  music: RB_CONFIG.tables.musicTracks || "music_tracks",
-  gaming: RB_CONFIG.tables.gameScores || "game_scores",
-  upload: RB_CONFIG.tables.uploads || "uploads",
+  live: RB_TABLES.liveStreams || "live_streams",
+  feed: RB_TABLES.feedPosts || "feed_posts",
+  music: RB_TABLES.musicTracks || "music_tracks",
+  gaming: RB_TABLES.gameScores || "game_scores",
+  upload: RB_TABLES.uploads || "uploads"
 };
 
 const state = {
@@ -19,8 +33,12 @@ const state = {
   live: 0,
   music: 0,
   gaming: 0,
-  upload: 0,
+  upload: 0
 };
+
+const channels = [];
+let booted = false;
+let loadingCounts = false;
 
 function getDockButton(key) {
   return document.querySelector(`.rb-bottom-nav [data-route="${key}"]`);
@@ -30,9 +48,23 @@ function setDockState(key, count) {
   const button = getDockButton(key);
   if (!button) return;
 
-  button.dataset.count = count > 0 ? String(count) : "";
-  button.classList.toggle("rb-dock-active", count > 0);
-  button.classList.toggle("rb-live-active", key === "live" && count > 0);
+  const safeCount = Number(count || 0);
+
+  button.dataset.count = safeCount > 0 ? String(safeCount) : "";
+  button.classList.toggle("rb-dock-active", safeCount > 0);
+  button.classList.toggle("rb-live-active", key === "live" && safeCount > 0);
+
+  let badge = button.querySelector("[data-rb-dock-count]");
+
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "rb-dock-count";
+    badge.dataset.rbDockCount = "";
+    button.appendChild(badge);
+  }
+
+  badge.textContent = safeCount > 99 ? "99+" : String(safeCount);
+  badge.hidden = safeCount <= 0;
 }
 
 function renderDock() {
@@ -42,65 +74,107 @@ function renderDock() {
 
   window.dispatchEvent(
     new CustomEvent("rb:dock-update", {
-      detail: { ...state },
+      detail: { ...state }
     })
   );
 }
 
-async function countTable(key, table, query) {
+async function countTable(key, table, query = null) {
+  if (!table) return;
+
   let req = supabase.from(table).select("id", {
     count: "exact",
-    head: true,
+    head: true
   });
 
   if (query) {
     Object.entries(query).forEach(([col, value]) => {
-      req = req.eq(col, value);
+      if (value !== undefined && value !== null) {
+        req = req.eq(col, value);
+      }
     });
   }
 
   const { count, error } = await req;
 
-  if (!error) {
-    state[key] = count || 0;
+  if (error) {
+    console.warn(`[RB DOCK COUNT WARNING: ${key}]`, error.message);
+    return;
   }
+
+  state[key] = count || 0;
 }
 
 async function loadDockCounts() {
-  await Promise.all([
-    countTable("feed", TABLES.feed),
-    countTable("live", TABLES.live, { status: "live" }),
-    countTable("music", TABLES.music),
-    countTable("gaming", TABLES.gaming),
-    countTable("upload", TABLES.upload),
-  ]);
+  if (loadingCounts) return;
 
-  renderDock();
+  loadingCounts = true;
+
+  try {
+    await Promise.allSettled([
+      countTable("feed", TABLES.feed),
+      countTable("live", TABLES.live, { status: "live" }),
+      countTable("music", TABLES.music),
+      countTable("gaming", TABLES.gaming),
+      countTable("upload", TABLES.upload)
+    ]);
+
+    renderDock();
+  } finally {
+    loadingCounts = false;
+  }
 }
 
-function watchDockTable(table) {
-  supabase
-    .channel(`rb-dock-${table}`)
+function watchDockTable(key, table) {
+  if (!table) return;
+
+  const channel = createRealtimeChannel(`rb-dock-${key}-${table}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table,
+        table
       },
       () => loadDockCounts()
     )
     .subscribe();
+
+  channels.push(channel);
 }
 
-function bootBottomDock() {
-  loadDockCounts();
+export async function bootBottomDock() {
+  if (booted) return;
 
-  Object.values(TABLES).forEach((table) => {
-    watchDockTable(table);
+  booted = true;
+
+  await bootAuth();
+  await loadDockCounts();
+
+  Object.entries(TABLES).forEach(([key, table]) => {
+    watchDockTable(key, table);
   });
+
+  document.body.classList.add("rb-bottom-dock-ready");
+
+  console.log("RB BOTTOM DOCK REALTIME READY");
 }
 
-bootBottomDock();
+export async function destroyBottomDock() {
+  await Promise.allSettled(
+    channels.map((channel) => removeRealtimeChannel(channel))
+  );
 
-console.log("RB BOTTOM DOCK REALTIME READY");
+  channels.length = 0;
+  booted = false;
+}
+
+window.RBRefreshBottomDock = loadDockCounts;
+
+window.addEventListener("beforeunload", destroyBottomDock);
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootBottomDock);
+} else {
+  bootBottomDock();
+}
