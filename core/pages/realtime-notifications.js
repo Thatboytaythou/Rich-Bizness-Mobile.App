@@ -1,17 +1,53 @@
-import RB_CONFIG from "/core/shared/rb-config.js";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
 /* =========================
    RICH BIZNESS MOBILE
+   /core/pages/realtime-notifications.js
+
    REALTIME NOTIFICATION ENGINE
+   Uses locked rb-supabase.js client
+   No duplicate Supabase client
 ========================= */
 
-const supabase = createClient(
-  RB_CONFIG.supabase.url,
-  RB_CONFIG.supabase.publishableKey
-);
+import {
+  RB_TABLES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase,
+  bootAuth,
+  getUser,
+  createRealtimeChannel,
+  removeRealtimeChannel
+} from "/core/shared/rb-supabase.js";
+
+import {
+  notificationIcon,
+  renderNotificationText,
+  countUnreadNotifications
+} from "/core/shared/rb-notifications.js";
+
+const supabase = getSupabase();
 
 const queue = [];
+const channels = [];
+
+let booted = false;
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function notifyTable() {
+  return (
+    RB_TABLES.richNotifications ||
+    RB_TABLES.notifications ||
+    "rich_notifications"
+  );
+}
 
 function ensureNotificationRoot() {
   let root = document.getElementById("rb-notify-root");
@@ -20,30 +56,44 @@ function ensureNotificationRoot() {
 
   root = document.createElement("div");
   root.id = "rb-notify-root";
+  root.setAttribute("aria-live", "polite");
+  root.setAttribute("aria-label", "Rich Bizness notifications");
 
   document.body.appendChild(root);
 
   return root;
 }
 
-function createToast(payload) {
+function createToast(payload = {}) {
   const root = ensureNotificationRoot();
 
-  const toast = document.createElement("div");
+  const toast = document.createElement("button");
   toast.className = "rb-notify-toast";
+  toast.type = "button";
+
+  const icon = payload.icon || "⚡";
+  const title = payload.title || "Rich Bizness Alert";
+  const message = payload.message || payload.body || "";
+  const url = payload.url || null;
 
   toast.innerHTML = `
     <div class="rb-notify-glow"></div>
 
     <div class="rb-notify-icon">
-      ${payload.icon || "⚡"}
+      ${escapeHtml(icon)}
     </div>
 
     <div class="rb-notify-copy">
-      <strong>${payload.title}</strong>
-      <span>${payload.message}</span>
+      <strong>${escapeHtml(title)}</strong>
+      <span>${escapeHtml(message)}</span>
     </div>
   `;
+
+  if (url) {
+    toast.addEventListener("click", () => {
+      window.location.href = url;
+    });
+  }
 
   root.appendChild(toast);
 
@@ -51,16 +101,16 @@ function createToast(payload) {
     toast.classList.add("is-visible");
   });
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     toast.classList.remove("is-visible");
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       toast.remove();
     }, 400);
   }, 4200);
 }
 
-function pushNotification(payload) {
+function pushNotification(payload = {}) {
   queue.push(payload);
 
   if (queue.length > 12) {
@@ -68,18 +118,81 @@ function pushNotification(payload) {
   }
 
   createToast(payload);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:toast-notification", {
+      detail: payload
+    })
+  );
 }
 
-function bindRealtimeNotifications() {
-  supabase
-    .channel("rb-global-notifications")
+async function updateUnreadBadge() {
+  try {
+    const count = await countUnreadNotifications();
 
+    document.querySelectorAll("[data-rb-notification-count]").forEach((el) => {
+      el.textContent = count > 99 ? "99+" : String(count);
+      el.hidden = count <= 0;
+    });
+
+    document.body.dataset.rbUnreadNotifications = String(count);
+  } catch (error) {
+    console.warn("[RB NOTIFICATION COUNT WARNING]", error?.message || error);
+  }
+}
+
+function bindRichNotifications() {
+  const user = getUser();
+  if (!user?.id) return;
+
+  const channel = createRealtimeChannel(`rb-user-notifications-${user.id}`)
     .on(
       "postgres_changes",
       {
         event: "INSERT",
         schema: "public",
-        table: "live_streams",
+        table: notifyTable(),
+        filter: `user_id=eq.${user.id}`
+      },
+      async (payload) => {
+        const notification = payload.new || {};
+        const rendered = renderNotificationText(notification);
+
+        pushNotification({
+          id: notification.id,
+          icon: rendered.icon,
+          title: rendered.title,
+          message: rendered.body,
+          url: rendered.url,
+          raw: notification
+        });
+
+        await updateUnreadBadge();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: notifyTable(),
+        filter: `user_id=eq.${user.id}`
+      },
+      updateUnreadBadge
+    )
+    .subscribe();
+
+  channels.push(channel);
+}
+
+function bindGlobalActivityNotifications() {
+  const liveChannel = createRealtimeChannel("rb-global-live-notifications")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: RB_TABLES.liveStreams
       },
       (payload) => {
         pushNotification({
@@ -88,45 +201,98 @@ function bindRealtimeNotifications() {
           message:
             payload.new?.title ||
             "A creator just started streaming",
+          url: "/watch"
         });
       }
     )
+    .subscribe();
 
+  const uploadChannel = createRealtimeChannel("rb-global-upload-notifications")
     .on(
       "postgres_changes",
       {
         event: "INSERT",
         schema: "public",
-        table: "uploads",
+        table: RB_TABLES.uploads
       },
       () => {
         pushNotification({
           icon: "⬆️",
           title: "NEW UPLOAD",
           message: "Fresh content was uploaded",
+          url: "/feed"
         });
       }
     )
+    .subscribe();
 
+  channels.push(liveChannel, uploadChannel);
+}
+
+function bindDirectMessageNotifications() {
+  const user = getUser();
+  if (!user?.id) return;
+
+  const dmChannel = createRealtimeChannel(`rb-dm-notifications-${user.id}`)
     .on(
       "postgres_changes",
       {
         event: "INSERT",
         schema: "public",
-        table: "dm_messages",
+        table: RB_TABLES.dmMessages
       },
-      () => {
+      (payload) => {
+        const message = payload.new || {};
+
+        if (message.sender_id === user.id) return;
+
         pushNotification({
-          icon: "💬",
+          icon: notificationIcon("dm_message"),
           title: "NEW MESSAGE",
-          message: "You received a new message",
+          message: "You received a new Rich DM.",
+          url: "/messages"
         });
       }
     )
-
     .subscribe();
+
+  channels.push(dmChannel);
 }
 
-bindRealtimeNotifications();
+export async function bootRealtimeNotifications() {
+  if (booted) return;
+
+  booted = true;
+
+  await bootAuth();
+
+  bindRichNotifications();
+  bindDirectMessageNotifications();
+  bindGlobalActivityNotifications();
+
+  await updateUnreadBadge();
+
+  document.body.classList.add("rb-realtime-notifications-ready");
+
+  console.log("RB REALTIME NOTIFICATIONS READY");
+}
+
+export async function destroyRealtimeNotifications() {
+  await Promise.allSettled(
+    channels.map((channel) => removeRealtimeChannel(channel))
+  );
+
+  channels.length = 0;
+  booted = false;
+}
 
 window.RBNotify = pushNotification;
+window.RBUpdateNotificationBadge = updateUnreadBadge;
+
+window.addEventListener("beforeunload", destroyRealtimeNotifications);
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootRealtimeNotifications);
+} else {
+  bootRealtimeNotifications();
+}
