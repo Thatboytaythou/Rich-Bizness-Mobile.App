@@ -12,47 +12,54 @@
    Status System
 ========================= */
 
-import {
-  RB_VISUALS
-} from "/core/shared/rb-config.js";
-
-/* =========================
-   INTERNAL STATE
-========================= */
+import { RB_VISUALS } from "/core/shared/rb-config.js";
 
 let toastRoot = null;
 let modalRoot = null;
 let drawerRoot = null;
 let loaderRoot = null;
 
-/* =========================
-   ROOTS
-========================= */
+function hasDOM() {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function safeType(type = "default") {
+  return String(type || "default")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "")
+    .slice(0, 32) || "default";
+}
+
+function getOrCreateRoot(id) {
+  if (!hasDOM()) return null;
+
+  let root = document.getElementById(id);
+
+  if (!root) {
+    root = document.createElement("div");
+    root.id = id;
+    document.body.appendChild(root);
+  }
+
+  return root;
+}
 
 function ensureRoots() {
-  if (!toastRoot) {
-    toastRoot = document.createElement("div");
-    toastRoot.id = "rb-toast-root";
-    document.body.appendChild(toastRoot);
-  }
+  if (!hasDOM()) return;
 
-  if (!modalRoot) {
-    modalRoot = document.createElement("div");
-    modalRoot.id = "rb-modal-root";
-    document.body.appendChild(modalRoot);
-  }
-
-  if (!drawerRoot) {
-    drawerRoot = document.createElement("div");
-    drawerRoot.id = "rb-drawer-root";
-    document.body.appendChild(drawerRoot);
-  }
-
-  if (!loaderRoot) {
-    loaderRoot = document.createElement("div");
-    loaderRoot.id = "rb-loader-root";
-    document.body.appendChild(loaderRoot);
-  }
+  toastRoot = toastRoot || getOrCreateRoot("rb-toast-root");
+  modalRoot = modalRoot || getOrCreateRoot("rb-modal-root");
+  drawerRoot = drawerRoot || getOrCreateRoot("rb-drawer-root");
+  loaderRoot = loaderRoot || getOrCreateRoot("rb-loader-root");
 }
 
 /* =========================
@@ -68,34 +75,37 @@ export function toast(
   } = {}
 ) {
   ensureRoots();
+  if (!toastRoot) return null;
 
-  const toast = document.createElement("div");
+  const node = document.createElement("div");
+  const cleanType = safeType(type);
 
-  toast.className = `
-    rb-toast
-    rb-toast-${type}
+  node.className = `rb-toast rb-toast-${cleanType}`;
+  node.setAttribute("role", cleanType === "error" ? "alert" : "status");
+  node.setAttribute("aria-live", cleanType === "error" ? "assertive" : "polite");
+
+  node.innerHTML = `
+    <span class="rb-toast-icon">${escapeHtml(icon)}</span>
+    <span class="rb-toast-message">${escapeHtml(message)}</span>
   `;
 
-  toast.innerHTML = `
-    <span>${icon}</span>
-    <span>${message}</span>
-  `;
-
-  toastRoot.appendChild(toast);
+  toastRoot.appendChild(node);
 
   requestAnimationFrame(() => {
-    toast.classList.add("show");
+    node.classList.add("show", "is-visible");
   });
 
+  const timeout = Math.max(800, Number(duration || 3500));
+
   setTimeout(() => {
-    toast.classList.remove("show");
+    node.classList.remove("show", "is-visible");
 
     setTimeout(() => {
-      toast.remove();
+      node.remove();
     }, 250);
-  }, duration);
+  }, timeout);
 
-  return toast;
+  return node;
 }
 
 export function success(message) {
@@ -130,30 +140,32 @@ export function info(message) {
    LOADER
 ========================= */
 
-export function showLoader(
-  text = "Loading..."
-) {
+export function showLoader(text = "Loading...") {
   ensureRoots();
+  if (!loaderRoot) return;
 
   loaderRoot.innerHTML = `
     <div class="rb-loader-backdrop">
-      <div class="rb-loader-card">
-        <div class="rb-loader-spinner"></div>
-        <div class="rb-loader-text">
-          ${text}
-        </div>
+      <div class="rb-loader-card" role="status" aria-live="polite">
+        <div class="rb-loader-spinner" aria-hidden="true"></div>
+        <div class="rb-loader-text">${escapeHtml(text)}</div>
       </div>
     </div>
   `;
 
-  loaderRoot.classList.add("active");
+  loaderRoot.classList.add("active", "is-active");
+  document.body.classList.add("rb-loader-open");
 }
 
 export function hideLoader() {
   if (!loaderRoot) return;
 
-  loaderRoot.classList.remove("active");
+  loaderRoot.classList.remove("active", "is-active");
   loaderRoot.innerHTML = "";
+
+  if (hasDOM()) {
+    document.body.classList.remove("rb-loader-open");
+  }
 }
 
 /* =========================
@@ -163,31 +175,49 @@ export function hideLoader() {
 export function openModal({
   title = "",
   content = "",
-  footer = ""
+  footer = "",
+  unsafeHtml = false,
+  closeOnBackdrop = true
 } = {}) {
   ensureRoots();
+  if (!modalRoot) return null;
+
+  const safeTitle = unsafeHtml ? title : escapeHtml(title);
+  const safeContent = unsafeHtml ? content : escapeHtml(content);
+  const safeFooter = unsafeHtml ? footer : footer;
 
   modalRoot.innerHTML = `
-    <div class="rb-modal-backdrop">
-      <div class="rb-modal-card">
+    <div class="rb-modal-backdrop" data-rb-modal-backdrop>
+      <div class="rb-modal-card" role="dialog" aria-modal="true">
+        <button class="rb-modal-close" type="button" data-rb-modal-close aria-label="Close">×</button>
 
         <div class="rb-modal-header">
-          ${title}
+          ${safeTitle}
         </div>
 
         <div class="rb-modal-body">
-          ${content}
+          ${safeContent}
         </div>
 
         <div class="rb-modal-footer">
-          ${footer}
+          ${safeFooter}
         </div>
-
       </div>
     </div>
   `;
 
-  modalRoot.classList.add("active");
+  modalRoot.classList.add("active", "is-active");
+  document.body.classList.add("rb-modal-open");
+
+  modalRoot.querySelector("[data-rb-modal-close]")?.addEventListener("click", closeModal);
+
+  if (closeOnBackdrop) {
+    modalRoot.querySelector("[data-rb-modal-backdrop]")?.addEventListener("click", (event) => {
+      if (event.target?.dataset?.rbModalBackdrop !== undefined) {
+        closeModal();
+      }
+    });
+  }
 
   return modalRoot;
 }
@@ -195,8 +225,12 @@ export function openModal({
 export function closeModal() {
   if (!modalRoot) return;
 
-  modalRoot.classList.remove("active");
+  modalRoot.classList.remove("active", "is-active");
   modalRoot.innerHTML = "";
+
+  if (hasDOM()) {
+    document.body.classList.remove("rb-modal-open");
+  }
 }
 
 /* =========================
@@ -210,27 +244,20 @@ export function alertModal({
   return new Promise((resolve) => {
     openModal({
       title,
-      content: `
-        <p>${message}</p>
-      `,
+      content: `<p>${escapeHtml(message)}</p>`,
       footer: `
-        <button id="rb-alert-ok">
+        <button id="rb-alert-ok" class="rb-main-launch" type="button">
           OK
         </button>
-      `
+      `,
+      unsafeHtml: true,
+      closeOnBackdrop: false
     });
 
-    setTimeout(() => {
-      document
-        .getElementById("rb-alert-ok")
-        ?.addEventListener(
-          "click",
-          () => {
-            closeModal();
-            resolve(true);
-          }
-        );
-    }, 25);
+    document.getElementById("rb-alert-ok")?.addEventListener("click", () => {
+      closeModal();
+      resolve(true);
+    });
   });
 }
 
@@ -240,46 +267,36 @@ export function alertModal({
 
 export function confirmModal({
   title = "Confirm",
-  message = ""
+  message = "",
+  confirmText = "Confirm",
+  cancelText = "Cancel"
 } = {}) {
   return new Promise((resolve) => {
     openModal({
       title,
-      content: `
-        <p>${message}</p>
-      `,
+      content: `<p>${escapeHtml(message)}</p>`,
       footer: `
-        <button id="rb-confirm-no">
-          Cancel
+        <button id="rb-confirm-no" class="rb-btn ghost" type="button">
+          ${escapeHtml(cancelText)}
         </button>
 
-        <button id="rb-confirm-yes">
-          Confirm
+        <button id="rb-confirm-yes" class="rb-main-launch" type="button">
+          ${escapeHtml(confirmText)}
         </button>
-      `
+      `,
+      unsafeHtml: true,
+      closeOnBackdrop: false
     });
 
-    setTimeout(() => {
-      document
-        .getElementById("rb-confirm-no")
-        ?.addEventListener(
-          "click",
-          () => {
-            closeModal();
-            resolve(false);
-          }
-        );
+    document.getElementById("rb-confirm-no")?.addEventListener("click", () => {
+      closeModal();
+      resolve(false);
+    });
 
-      document
-        .getElementById("rb-confirm-yes")
-        ?.addEventListener(
-          "click",
-          () => {
-            closeModal();
-            resolve(true);
-          }
-        );
-    }, 25);
+    document.getElementById("rb-confirm-yes")?.addEventListener("click", () => {
+      closeModal();
+      resolve(true);
+    });
   });
 }
 
@@ -288,26 +305,47 @@ export function confirmModal({
 ========================= */
 
 export function openDrawer({
-  content = ""
+  content = "",
+  unsafeHtml = false,
+  closeOnBackdrop = true
 } = {}) {
   ensureRoots();
+  if (!drawerRoot) return null;
 
   drawerRoot.innerHTML = `
-    <div class="rb-drawer-backdrop">
-      <div class="rb-drawer">
-        ${content}
-      </div>
+    <div class="rb-drawer-backdrop" data-rb-drawer-backdrop>
+      <aside class="rb-drawer" role="dialog" aria-modal="true">
+        <button class="rb-drawer-close" type="button" data-rb-drawer-close aria-label="Close">×</button>
+        ${unsafeHtml ? content : escapeHtml(content)}
+      </aside>
     </div>
   `;
 
-  drawerRoot.classList.add("active");
+  drawerRoot.classList.add("active", "is-active");
+  document.body.classList.add("rb-drawer-open");
+
+  drawerRoot.querySelector("[data-rb-drawer-close]")?.addEventListener("click", closeDrawer);
+
+  if (closeOnBackdrop) {
+    drawerRoot.querySelector("[data-rb-drawer-backdrop]")?.addEventListener("click", (event) => {
+      if (event.target?.dataset?.rbDrawerBackdrop !== undefined) {
+        closeDrawer();
+      }
+    });
+  }
+
+  return drawerRoot;
 }
 
 export function closeDrawer() {
   if (!drawerRoot) return;
 
-  drawerRoot.classList.remove("active");
+  drawerRoot.classList.remove("active", "is-active");
   drawerRoot.innerHTML = "";
+
+  if (hasDOM()) {
+    document.body.classList.remove("rb-drawer-open");
+  }
 }
 
 /* =========================
@@ -326,13 +364,9 @@ export function setEmptyState(
 
   element.innerHTML = `
     <div class="rb-empty-state">
-      <div class="rb-empty-icon">
-        ${icon}
-      </div>
-
-      <h3>${title}</h3>
-
-      <p>${message}</p>
+      <div class="rb-empty-icon">${escapeHtml(icon)}</div>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(message)}</p>
     </div>
   `;
 }
@@ -346,7 +380,7 @@ export function setErrorState(
   element.innerHTML = `
     <div class="rb-error-state">
       <div>❌</div>
-      <p>${message}</p>
+      <p>${escapeHtml(message)}</p>
     </div>
   `;
 }
@@ -359,8 +393,8 @@ export function setLoadingState(
 
   element.innerHTML = `
     <div class="rb-loading-state">
-      <div class="rb-loader-spinner"></div>
-      <p>${message}</p>
+      <div class="rb-loader-spinner" aria-hidden="true"></div>
+      <p>${escapeHtml(message)}</p>
     </div>
   `;
 }
@@ -369,16 +403,12 @@ export function setLoadingState(
    STATUS BADGES
 ========================= */
 
-export function statusBadge(
-  text = "",
-  type = "default"
-) {
+export function statusBadge(text = "", type = "default") {
+  const cleanType = safeType(type);
+
   return `
-    <span class="
-      rb-status-badge
-      rb-status-${type}
-    ">
-      ${text}
+    <span class="rb-status-badge rb-status-${cleanType}">
+      ${escapeHtml(text)}
     </span>
   `;
 }
@@ -387,14 +417,30 @@ export function statusBadge(
    COPY
 ========================= */
 
-export async function copyText(
-  text = ""
-) {
-  await navigator.clipboard.writeText(
-    String(text || "")
-  );
+export async function copyText(text = "") {
+  const value = String(text || "");
 
-  success("Copied");
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+    } else {
+      const input = document.createElement("textarea");
+      input.value = value;
+      input.setAttribute("readonly", "true");
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+    }
+
+    success("Copied");
+    return true;
+  } catch {
+    error("Copy failed");
+    return false;
+  }
 }
 
 /* =========================
@@ -404,17 +450,18 @@ export async function copyText(
 export async function share({
   title = "",
   text = "",
-  url = window.location.href
-}) {
-  if (navigator.share) {
-    return navigator.share({
-      title,
-      text,
-      url
-    });
-  }
+  url = hasDOM() ? window.location.href : ""
+} = {}) {
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text, url });
+      return true;
+    }
 
-  await copyText(url);
+    return await copyText(url);
+  } catch {
+    return false;
+  }
 }
 
 /* =========================
@@ -422,33 +469,26 @@ export async function share({
 ========================= */
 
 export function playClick() {
-  document.dispatchEvent(
-    new CustomEvent("rb-click")
-  );
+  if (!hasDOM()) return;
+  document.dispatchEvent(new CustomEvent("rb-click"));
 }
 
 export function playSuccess() {
-  document.dispatchEvent(
-    new CustomEvent("rb-success")
-  );
+  if (!hasDOM()) return;
+  document.dispatchEvent(new CustomEvent("rb-success"));
 }
 
 export function playError() {
-  document.dispatchEvent(
-    new CustomEvent("rb-error")
-  );
+  if (!hasDOM()) return;
+  document.dispatchEvent(new CustomEvent("rb-error"));
 }
 
 /* =========================
    BOOT
 ========================= */
 
-window.addEventListener(
-  "DOMContentLoaded",
-  ensureRoots
-);
+if (hasDOM()) {
+  window.addEventListener("DOMContentLoaded", ensureRoots);
+}
 
-console.log(
-  "RB UI READY",
-  RB_VISUALS?.brandMood || ""
-);
+console.log("RB UI READY", RB_VISUALS?.brandMood || "");
