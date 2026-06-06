@@ -1,1 +1,430 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /games/rich-chess/board.css
 
+   RICH CHESS BOARD
+   Mobile-safe chess arena + neon pieces
+========================= */
+
+.rich-chess-page {
+  min-height: 100svh;
+  overflow-x: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 157, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(250, 204, 21, 0.16), transparent 30%),
+    linear-gradient(180deg, #03140b 0%, #010604 48%, #000 100%);
+}
+
+.rich-chess-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.92)),
+    url("/images/brand/gaming-hero.png.jpeg") center / cover no-repeat;
+  opacity: 0.22;
+  filter: saturate(1.18) contrast(1.08);
+}
+
+.rich-chess-shell {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, 94vw);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding:
+    calc(22px + env(safe-area-inset-top))
+    0
+    calc(34px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 18px;
+}
+
+.rich-chess-hero {
+  min-height: 230px;
+  padding: clamp(22px, 4vw, 34px);
+  display: grid;
+  align-content: end;
+  gap: 12px;
+  border-radius: 34px;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  background:
+    radial-gradient(circle at 18% 20%, rgba(0, 255, 157, 0.18), transparent 34%),
+    radial-gradient(circle at 80% 78%, rgba(250, 204, 21, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.84), rgba(0, 0, 0, 0.8));
+  box-shadow:
+    0 32px 90px rgba(0, 0, 0, 0.52),
+    0 0 52px rgba(0, 255, 157, 0.12);
+  overflow: hidden;
+}
+
+.rich-chess-kicker {
+  margin: 0;
+  color: #7cffaa;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.rich-chess-hero h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(3rem, 10vw, 7rem);
+  line-height: 0.82;
+  letter-spacing: -0.08em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 30px rgba(0, 255, 157, 0.18),
+    0 0 52px rgba(250, 204, 21, 0.12);
+}
+
+.rich-chess-status {
+  margin: 0;
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.55;
+  font-weight: 800;
+}
+
+.rich-chess-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.rich-chess-arena,
+.rich-chess-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at top, rgba(0, 255, 157, 0.1), transparent 48%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.86), rgba(0, 0, 0, 0.82));
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.5),
+    inset 0 0 28px rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.rich-chess-arena {
+  padding: clamp(12px, 2vw, 20px);
+  display: grid;
+  place-items: center;
+}
+
+.rich-chess-board {
+  width: min(78svh, 100%, 720px);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  overflow: hidden;
+  border-radius: 26px;
+  border: 2px solid rgba(250, 204, 21, 0.32);
+  background: #030603;
+  box-shadow:
+    0 0 30px rgba(0, 255, 157, 0.18),
+    0 0 70px rgba(0, 0, 0, 0.66),
+    inset 0 0 32px rgba(255, 255, 255, 0.03);
+}
+
+.rich-chess-square {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    filter 0.16s ease,
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.rich-chess-square.is-light {
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.08), transparent 42%),
+    linear-gradient(135deg, rgba(27, 77, 45, 0.95), rgba(7, 34, 19, 0.95));
+}
+
+.rich-chess-square.is-dark {
+  background:
+    radial-gradient(circle at 70% 80%, rgba(250, 204, 21, 0.08), transparent 42%),
+    linear-gradient(135deg, rgba(3, 10, 5, 0.98), rgba(0, 0, 0, 0.98));
+}
+
+.rich-chess-square:hover {
+  filter: brightness(1.12);
+  z-index: 2;
+}
+
+.rich-chess-square.is-selected {
+  z-index: 4;
+  box-shadow:
+    inset 0 0 0 4px rgba(250, 204, 21, 0.76),
+    inset 0 0 30px rgba(250, 204, 21, 0.18),
+    0 0 24px rgba(250, 204, 21, 0.2);
+}
+
+.rich-chess-square.is-legal::after {
+  content: "";
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: rgba(124, 255, 170, 0.78);
+  box-shadow:
+    0 0 14px rgba(124, 255, 170, 0.55),
+    0 0 28px rgba(0, 255, 157, 0.25);
+  pointer-events: none;
+}
+
+.rich-chess-square.is-capture::after {
+  width: 76%;
+  height: 76%;
+  background: transparent;
+  border: 3px solid rgba(255, 87, 87, 0.82);
+  box-shadow:
+    0 0 18px rgba(255, 87, 87, 0.5),
+    inset 0 0 18px rgba(255, 87, 87, 0.16);
+}
+
+.rich-chess-piece {
+  position: relative;
+  z-index: 3;
+  display: block;
+  font-size: clamp(1.8rem, 6vw, 4.4rem);
+  line-height: 1;
+  transform: translateY(-1px);
+  user-select: none;
+  -webkit-user-select: none;
+  filter:
+    drop-shadow(0 4px 4px rgba(0, 0, 0, 0.62))
+    drop-shadow(0 0 12px rgba(0, 255, 157, 0.12));
+}
+
+.rich-chess-piece.white {
+  color: #fffbea;
+  text-shadow:
+    0 0 14px rgba(255, 255, 255, 0.28),
+    0 0 22px rgba(250, 204, 21, 0.2);
+}
+
+.rich-chess-piece.black {
+  color: #09130d;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.45),
+    0 0 16px rgba(0, 255, 157, 0.24);
+  -webkit-text-stroke: 1px rgba(124, 255, 170, 0.52);
+}
+
+.rich-chess-panel {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.rich-chess-panel h2 {
+  margin: 0;
+  color: #facc15;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.rich-chess-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rich-chess-stat {
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(250, 204, 21, 0.14);
+  background: rgba(0, 0, 0, 0.42);
+  text-align: center;
+}
+
+.rich-chess-stat span {
+  display: block;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rich-chess-stat strong {
+  display: block;
+  margin-top: 6px;
+  color: #7cffaa;
+  font-size: 1.5rem;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.rich-chess-captured {
+  min-height: 84px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px dashed rgba(250, 204, 21, 0.22);
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.rich-chess-captured span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.rich-chess-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.rich-chess-actions button,
+.rich-chess-actions a {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  background: rgba(255, 255, 255, 0.055);
+  color: #fff;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.rich-chess-actions button:first-child,
+.rich-chess-actions .primary {
+  border: 0;
+  color: #031006;
+  background: linear-gradient(135deg, #7cffaa, #ffd76b);
+  box-shadow: 0 0 24px rgba(0, 255, 157, 0.22);
+}
+
+.rich-chess-actions button:hover,
+.rich-chess-actions a:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.rich-chess-actions button:disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rich-chess-note {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 920px) {
+  .rich-chess-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rich-chess-board {
+    width: min(92vw, 680px);
+  }
+
+  .rich-chess-panel {
+    order: -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .rich-chess-shell {
+    width: min(100%, calc(100vw - 18px));
+    padding-top: calc(14px + env(safe-area-inset-top));
+    gap: 12px;
+  }
+
+  .rich-chess-hero {
+    min-height: 190px;
+    border-radius: 26px;
+    padding: 20px;
+  }
+
+  .rich-chess-hero h1 {
+    font-size: clamp(2.6rem, 16vw, 4.3rem);
+  }
+
+  .rich-chess-arena,
+  .rich-chess-panel {
+    border-radius: 24px;
+  }
+
+  .rich-chess-arena {
+    padding: 8px;
+  }
+
+  .rich-chess-board {
+    width: calc(100vw - 34px);
+    border-radius: 18px;
+  }
+
+  .rich-chess-piece {
+    font-size: clamp(1.7rem, 9.5vw, 3rem);
+  }
+
+  .rich-chess-square.is-selected {
+    box-shadow:
+      inset 0 0 0 3px rgba(250, 204, 21, 0.78),
+      inset 0 0 24px rgba(250, 204, 21, 0.16);
+  }
+
+  .rich-chess-stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rich-chess-actions button,
+  .rich-chess-actions a {
+    min-height: 46px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .rich-chess-board {
+    width: calc(100vw - 26px);
+  }
+
+  .rich-chess-piece {
+    font-size: 1.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rich-chess-square,
+  .rich-chess-actions button,
+  .rich-chess-actions a {
+    transition: none !important;
+  }
+}
