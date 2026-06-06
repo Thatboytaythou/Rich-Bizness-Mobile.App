@@ -98,7 +98,6 @@ const RB_CONFIG = Object.freeze({
     { key: "upload", label: "UPLOAD", icon: "⬆️", route: "/upload", color: "#00ffaa" },
     { key: "meta", label: "META", icon: "🌌", route: "/meta", color: "#9d4dff" },
     { key: "avatar", label: "AVATAR", icon: "🧍", route: "/avatar", color: "#00ffae" },
-    { key: "profile", label: "PROFILE", icon: "👤", route: "/profile", color: "#ffe066" },
   ],
 
   routes: {
