@@ -4,12 +4,15 @@
 
    UPLOAD UI ENGINE
    Preview + Form Binding
+   DOM only, no Supabase
 ========================= */
 
 import {
   setUploadFile,
+  setUploadRoute,
   setUploadProgress,
   resetUploadState,
+  clearUploadFile,
   onUploadState
 } from "/core/features/upload/upload-state.js";
 
@@ -17,26 +20,146 @@ import {
   detectMediaType
 } from "/core/features/upload/upload-storage.js";
 
+function $(target) {
+  return typeof target === "string"
+    ? document.querySelector(target)
+    : target;
+}
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+export function formatFileSize(bytes = 0) {
+  const size = Number(bytes || 0);
+
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function createPreviewUrl(file) {
+  if (!file) return null;
+  return URL.createObjectURL(file);
+}
+
+/* =========================
+   PREVIEW
+========================= */
+
+export function renderUploadPreview({
+  target,
+  file = null,
+  previewUrl = "",
+  mediaType = "file"
+} = {}) {
+  const el = $(target);
+  if (!el) return;
+
+  if (!file || !previewUrl) {
+    el.innerHTML = `
+      <div class="upload-preview-empty">
+        <strong>No file selected</strong>
+        <span>Drop media here or tap to choose.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const name = escapeHtml(file.name || "Upload preview");
+  const size = escapeHtml(formatFileSize(file.size || 0));
+
+  if (mediaType === "image") {
+    el.innerHTML = `
+      <figure class="upload-preview-card">
+        <img
+          class="upload-preview-media"
+          src="${escapeHtml(previewUrl)}"
+          alt="${name}"
+        />
+        <figcaption>
+          <strong>${name}</strong>
+          <span>${size}</span>
+        </figcaption>
+      </figure>
+    `;
+    return;
+  }
+
+  if (mediaType === "video") {
+    el.innerHTML = `
+      <figure class="upload-preview-card">
+        <video
+          class="upload-preview-media"
+          src="${escapeHtml(previewUrl)}"
+          controls
+          playsinline
+          preload="metadata"
+        ></video>
+        <figcaption>
+          <strong>${name}</strong>
+          <span>${size}</span>
+        </figcaption>
+      </figure>
+    `;
+    return;
+  }
+
+  if (mediaType === "audio") {
+    el.innerHTML = `
+      <div class="upload-preview-file upload-preview-audio-card">
+        <strong>${name}</strong>
+        <span>${size}</span>
+        <audio
+          class="upload-preview-audio"
+          src="${escapeHtml(previewUrl)}"
+          controls
+          preload="metadata"
+        ></audio>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="upload-preview-file">
+      <strong>${name}</strong>
+      <span>${size}</span>
+    </div>
+  `;
+}
+
+/* =========================
+   DROPZONE
+========================= */
+
 export function bindUploadDropzone({
   dropzone,
   fileInput,
   preview,
   onFile
 } = {}) {
-  const zone = typeof dropzone === "string"
-    ? document.querySelector(dropzone)
-    : dropzone;
-
-  const input = typeof fileInput === "string"
-    ? document.querySelector(fileInput)
-    : fileInput;
+  const zone = $(dropzone);
+  const input = $(fileInput);
 
   if (!zone || !input) return () => {};
+
+  if (zone.dataset.rbUploadDropzoneBound === "true") {
+    return () => {};
+  }
+
+  zone.dataset.rbUploadDropzoneBound = "true";
 
   const pickFile = (file) => {
     if (!file) return;
 
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = createPreviewUrl(file);
     const mediaType = detectMediaType(file);
 
     setUploadFile({
@@ -65,7 +188,8 @@ export function bindUploadDropzone({
     pickFile(input.files?.[0]);
   };
 
-  const onClick = () => {
+  const onClick = (event) => {
+    if (event.target === input) return;
     input.click();
   };
 
@@ -74,7 +198,8 @@ export function bindUploadDropzone({
     zone.classList.add("is-dragging");
   };
 
-  const onDragLeave = () => {
+  const onDragLeave = (event) => {
+    event.preventDefault();
     zone.classList.remove("is-dragging");
   };
 
@@ -97,105 +222,73 @@ export function bindUploadDropzone({
     zone.removeEventListener("dragover", onDragOver);
     zone.removeEventListener("dragleave", onDragLeave);
     zone.removeEventListener("drop", onDrop);
+
+    zone.dataset.rbUploadDropzoneBound = "false";
   };
 }
 
-export function renderUploadPreview({
-  target,
-  file = null,
-  previewUrl = "",
-  mediaType = "file"
+/* =========================
+   ROUTE / STATUS UI
+========================= */
+
+export function bindUploadRouteSelect({
+  select,
+  routeLabel = null,
+  sectionLabel = null,
+  bucketLabel = null,
+  tableLabel = null,
+  routes = {}
 } = {}) {
-  const el = typeof target === "string"
-    ? document.querySelector(target)
-    : target;
+  const selectEl = $(select);
+  const routeEl = $(routeLabel);
+  const sectionEl = $(sectionLabel);
+  const bucketEl = $(bucketLabel);
+  const tableEl = $(tableLabel);
 
-  if (!el) return;
+  if (!selectEl) return () => {};
 
-  if (!file || !previewUrl) {
-    el.innerHTML = `
-      <div class="upload-preview-empty">
-        <strong>No file selected</strong>
-        <span>Drop media here or tap to choose.</span>
-      </div>
-    `;
-    return;
-  }
+  const paint = () => {
+    const routeKey = selectEl.value || "feedPost";
+    const route = routes?.[routeKey] || {};
+    const section = route.section || routeKey || "feed";
 
-  if (mediaType === "image") {
-    el.innerHTML = `
-      <img
-        class="upload-preview-media"
-        src="${previewUrl}"
-        alt="${file.name || "Upload preview"}"
-      />
-    `;
-    return;
-  }
+    setUploadRoute({
+      routeKey,
+      section
+    });
 
-  if (mediaType === "video") {
-    el.innerHTML = `
-      <video
-        class="upload-preview-media"
-        src="${previewUrl}"
-        controls
-        playsinline
-      ></video>
-    `;
-    return;
-  }
+    if (routeEl) routeEl.textContent = routeKey;
+    if (sectionEl) sectionEl.textContent = section;
+    if (bucketEl) bucketEl.textContent = route.bucket || "auto";
+    if (tableEl) tableEl.textContent = route.table || "auto";
+  };
 
-  if (mediaType === "audio") {
-    el.innerHTML = `
-      <audio
-        class="upload-preview-audio"
-        src="${previewUrl}"
-        controls
-      ></audio>
-    `;
-    return;
-  }
+  selectEl.addEventListener("change", paint);
+  paint();
 
-  el.innerHTML = `
-    <div class="upload-preview-file">
-      <strong>${file.name || "File selected"}</strong>
-      <span>${formatFileSize(file.size || 0)}</span>
-    </div>
-  `;
-}
-
-export function formatFileSize(bytes = 0) {
-  const size = Number(bytes || 0);
-
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  return () => selectEl.removeEventListener("change", paint);
 }
 
 export function bindUploadProgress({
   bar,
   label
 } = {}) {
-  const barEl = typeof bar === "string"
-    ? document.querySelector(bar)
-    : bar;
-
-  const labelEl = typeof label === "string"
-    ? document.querySelector(label)
-    : label;
+  const barEl = $(bar);
+  const labelEl = $(label);
 
   return onUploadState((state) => {
+    const progress = Number(state.progress || 0);
+
     if (barEl) {
-      barEl.style.width = `${state.progress || 0}%`;
-      barEl.setAttribute("aria-valuenow", String(state.progress || 0));
+      barEl.style.width = `${progress}%`;
+      barEl.setAttribute("aria-valuenow", String(progress));
     }
 
     if (labelEl) {
       if (state.uploading) {
-        labelEl.textContent = `Uploading ${state.progress || 0}%`;
+        labelEl.textContent = `Uploading ${progress}%`;
       } else if (state.error) {
-        labelEl.textContent = String(state.error?.message || state.error);
+        labelEl.textContent = state.error?.message || "Upload failed.";
       } else if (state.result) {
         labelEl.textContent = "Upload complete.";
       } else {
@@ -205,31 +298,71 @@ export function bindUploadProgress({
   });
 }
 
+export function bindUploadStatusLabel({
+  target
+} = {}) {
+  const el = $(target);
+
+  if (!el) return () => {};
+
+  return onUploadState((state) => {
+    if (state.uploading) {
+      el.textContent = `UPLOADING ${state.progress || 0}%`;
+      return;
+    }
+
+    if (state.error) {
+      el.textContent = "ERROR";
+      return;
+    }
+
+    if (state.result) {
+      el.textContent = "COMPLETE";
+      return;
+    }
+
+    el.textContent = "READY";
+  });
+}
+
+/* =========================
+   FORM
+========================= */
+
+function numberOrNull(value) {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : null;
+}
+
 export function readUploadForm(form) {
-  const el = typeof form === "string"
-    ? document.querySelector(form)
-    : form;
+  const el = $(form);
 
   if (!el) return {};
 
   const data = new FormData(el);
 
   return {
+    route_key: String(data.get("route_key") || "").trim(),
     title: String(data.get("title") || "").trim(),
     description: String(data.get("description") || "").trim(),
     body: String(data.get("body") || data.get("description") || "").trim(),
     category: String(data.get("category") || "").trim(),
+    tag: String(data.get("tag") || "").trim(),
     section: String(data.get("section") || "").trim(),
     visibility: String(data.get("visibility") || "public").trim(),
+
     price_cents: Number(data.get("price_cents") || 0),
     currency: String(data.get("currency") || "usd").trim(),
+
     genre: String(data.get("genre") || "").trim(),
     sport_name: String(data.get("sport_name") || "").trim(),
     game_slug: String(data.get("game_slug") || "").trim(),
     product_type: String(data.get("product_type") || "").trim(),
-    episode_number: Number(data.get("episode_number") || 0) || null,
+
+    episode_number: numberOrNull(data.get("episode_number")),
     show_id: String(data.get("show_id") || "").trim() || null,
     id: String(data.get("id") || "").trim() || null,
+
     metadata: {
       source_form: "upload-ui.js"
     }
@@ -241,57 +374,23 @@ export function resetUploadUI({
   preview,
   input
 } = {}) {
-  const formEl = typeof form === "string"
-    ? document.querySelector(form)
-    : form;
-
-  const previewEl = typeof preview === "string"
-    ? document.querySelector(preview)
-    : preview;
-
-  const inputEl = typeof input === "string"
-    ? document.querySelector(input)
-    : input;
+  const formEl = $(form);
+  const previewEl = $(preview);
+  const inputEl = $(input);
 
   formEl?.reset?.();
 
-  if (inputEl) inputEl.value = "";
+  if (inputEl) {
+    inputEl.value = "";
+  }
 
   renderUploadPreview({
     target: previewEl
   });
 
   setUploadProgress(0);
+  clearUploadFile();
   resetUploadState();
-}
-
-export function bindUploadStatusLabel({
-  target
-} = {}) {
-  const el = typeof target === "string"
-    ? document.querySelector(target)
-    : target;
-
-  if (!el) return () => {};
-
-  return onUploadState((state) => {
-    if (state.uploading) {
-      el.textContent = `Uploading ${state.progress || 0}%`;
-      return;
-    }
-
-    if (state.error) {
-      el.textContent = String(state.error?.message || state.error);
-      return;
-    }
-
-    if (state.result) {
-      el.textContent = "Upload routed successfully.";
-      return;
-    }
-
-    el.textContent = "Choose a section and upload media.";
-  });
 }
 
 console.log("RB UPLOAD UI READY");
