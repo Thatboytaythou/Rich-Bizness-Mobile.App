@@ -3,6 +3,11 @@
    styles/mobile.css
    LAYER 3 / 22
    RESPONSIVE MAP ONLY
+
+   Safe mobile layer:
+   - Keeps index/portal fullscreen locked
+   - Keeps other pages scrollable
+   - Fixes bottom nav centering conflict with main.css
 ========================================= */
 
 @media (max-width: 720px) {
@@ -27,12 +32,19 @@
     padding: 0;
   }
 
-  body:not(.rb-index-page) {
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) {
     overflow-y: auto;
   }
 
-  body.rb-index-page {
+  body.rb-index-page,
+  body.rb-avatar-page,
+  body.rb-base-test-page {
+    width: 100vw;
+    height: 100vh;
+    height: 100svh;
+    height: 100dvh;
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .rb-home-shell,
@@ -59,8 +71,24 @@
     align-items: stretch;
     gap: 12px;
 
-    padding: 0;
+    padding-left: var(--rb-mobile-pad);
+    padding-right: var(--rb-mobile-pad);
     margin-bottom: 8px;
+  }
+
+  .rb-topbar {
+    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-bottom: 10px;
+  }
+
+  .rb-topnav {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .rb-topnav::-webkit-scrollbar {
+    display: none;
   }
 
   .rb-brand-lock h1,
@@ -118,6 +146,12 @@
     border-radius: 26px;
   }
 
+  .rb-index-page .rb-universe-stage,
+  .rb-index-page .rb-portal-stage {
+    min-height: 100%;
+    border-radius: 0;
+  }
+
   /* ORBIT DIAL FALLBACK CLASSES */
 
   .rb-dial-orbit {
@@ -150,31 +184,37 @@
   /* ACTION ROW */
 
   .rb-action-row {
-    grid-template-columns: 1fr;
     gap: 12px;
   }
 
   .rb-main-action,
   .rb-main-launch {
     min-height: 52px;
-    min-width: 100%;
 
     padding: 0 18px;
 
     font-size: 0.78rem;
   }
 
+  .rb-form-actions .rb-main-launch {
+    width: 100%;
+  }
+
   /* BOTTOM NAV */
 
   .rb-bottom-nav {
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
+    left: 50%;
+    right: auto;
     bottom: max(8px, env(safe-area-inset-bottom));
 
+    width: calc(100vw - 18px);
     height: 82px;
+    min-height: 82px;
     padding: 9px;
 
     border-radius: 24px;
+
+    transform: translateX(-50%);
   }
 
   .rb-bottom-nav button {
@@ -200,6 +240,12 @@
   .rb-panel,
   .rb-glass-card {
     border-radius: 24px;
+  }
+
+  img,
+  video,
+  canvas {
+    max-width: 100%;
   }
 }
 
@@ -240,6 +286,11 @@
     min-height: clamp(415px, 52svh, 510px);
   }
 
+  .rb-index-page .rb-universe-stage,
+  .rb-index-page .rb-portal-stage {
+    min-height: 100%;
+  }
+
   .rb-dial-orbit {
     width: min(86vw, 340px);
     height: min(86vw, 340px);
@@ -266,6 +317,7 @@
 
   .rb-bottom-nav {
     height: 80px;
+    min-height: 80px;
   }
 
   .rb-bottom-nav button {
@@ -294,6 +346,11 @@
   .rb-universe-stage,
   .rb-portal-stage {
     min-height: 400px;
+  }
+
+  .rb-index-page .rb-universe-stage,
+  .rb-index-page .rb-portal-stage {
+    min-height: 100%;
   }
 
   .rb-portal-core {
