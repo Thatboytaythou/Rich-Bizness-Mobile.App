@@ -7,6 +7,12 @@
    Profile Upsert Locked
    Auto Profile Ensure Enabled
    Profile Keys Locked
+
+   Identity Rules:
+   - profiles = account identity
+   - profile avatar = profiles.avatar_url
+   - profile banner = profiles.banner_url
+   - meta_avatars = synced starting avatar row only
 ========================= */
 
 import {
@@ -27,13 +33,19 @@ import {
 import {
   RB_ROUTES,
   RB_TABLES,
-  RB_PROFILE_KEYS
+  RB_PROFILE_KEYS,
+  RB_BRAND_ASSETS
 } from "/core/shared/rb-config.js";
 
 const supabase = getSupabase();
 
-const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
-const DEFAULT_BANNER = "/images/brand/hero-banner.png";
+const DEFAULT_AVATAR =
+  RB_BRAND_ASSETS?.defaultProfileAvatar ||
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+const DEFAULT_BANNER =
+  RB_BRAND_ASSETS?.defaultProfileBanner ||
+  "/images/brand/hero-banner.png";
 
 export {
   getSupabase,
@@ -48,11 +60,17 @@ export {
 };
 
 export function getAuthState() {
+  const user = getUser();
+  const profile = getProfile();
+
   return {
     session: getSession(),
-    user: getUser(),
-    profile: getProfile(),
-    authed: isAuthed()
+    user,
+    profile,
+    authed: isAuthed(),
+    isAuthed: isAuthed(),
+    id: profile?.id || user?.id || null,
+    user_id: profile?.id || user?.id || null
   };
 }
 
@@ -78,10 +96,11 @@ function getMetadata(user) {
   return user?.user_metadata || {};
 }
 
-function getAvatarFromUser(user) {
+function getAvatarFromUser(user, existingProfile = null) {
   const metadata = getMetadata(user);
 
   return (
+    existingProfile?.avatar_url ||
     metadata.avatar_url ||
     metadata.picture ||
     metadata.avatar ||
@@ -89,10 +108,11 @@ function getAvatarFromUser(user) {
   );
 }
 
-function getBannerFromUser(user) {
+function getBannerFromUser(user, existingProfile = null) {
   const metadata = getMetadata(user);
 
   return (
+    existingProfile?.banner_url ||
     metadata.banner_url ||
     metadata.cover_url ||
     DEFAULT_BANNER
@@ -114,6 +134,28 @@ async function getExistingProfile(userId) {
   }
 
   return data || null;
+}
+
+async function safeUpsert(table, payload, onConflict = "user_id") {
+  if (!table || !payload) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from(table)
+      .upsert(payload, { onConflict })
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      console.warn(`[RB IDENTITY UPSERT SKIPPED: ${table}]`, error.message);
+      return null;
+    }
+
+    return data || null;
+  } catch (error) {
+    console.warn(`[RB IDENTITY UPSERT FAILED: ${table}]`, error?.message || error);
+    return null;
+  }
 }
 
 async function ensureProfileExtensionTables(profile) {
@@ -164,7 +206,8 @@ async function ensureProfileExtensionTables(profile) {
         updated_at: now,
         metadata: {
           source: "rb-auth.js",
-          profile_locked: true
+          profile_locked: true,
+          synced_from_profile: true
         }
       }
     },
@@ -203,11 +246,7 @@ async function ensureProfileExtensionTables(profile) {
   await Promise.allSettled(
     jobs
       .filter((job) => job.table)
-      .map((job) =>
-        supabase.from(job.table).upsert(job.payload, {
-          onConflict: "user_id"
-        })
-      )
+      .map((job) => safeUpsert(job.table, job.payload, "user_id"))
   );
 }
 
@@ -236,13 +275,8 @@ async function upsertProfileFromAuth({
     metadata.full_name ||
     fallbackName(email || user.email);
 
-  const finalAvatar =
-    existingProfile?.avatar_url ||
-    getAvatarFromUser(user);
-
-  const finalBanner =
-    existingProfile?.banner_url ||
-    getBannerFromUser(user);
+  const finalAvatar = getAvatarFromUser(user, existingProfile);
+  const finalBanner = getBannerFromUser(user, existingProfile);
 
   const finalRole =
     existingProfile?.role ||
@@ -283,7 +317,7 @@ async function upsertProfileFromAuth({
 
   if (error) {
     console.warn("[RB PROFILE UPSERT WARNING]", error.message);
-    return null;
+    return existingProfile || null;
   }
 
   await ensureProfileExtensionTables(data);
@@ -303,7 +337,7 @@ export async function ensureMyProfile() {
   if (existingProfile) {
     const now = new Date().toISOString();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from(RB_TABLES.profiles)
       .update({
         online_status: "online",
@@ -318,6 +352,10 @@ export async function ensureMyProfile() {
       .eq("id", user.id)
       .select("*")
       .maybeSingle();
+
+    if (error) {
+      console.warn("[RB ENSURE PROFILE UPDATE WARNING]", error.message);
+    }
 
     const profile = data || existingProfile;
 
@@ -432,9 +470,11 @@ export async function rbSignOut({
 }
 
 export async function sendPasswordReset(email) {
+  const redirectTo = `${window.location.origin}${RB_ROUTES.settings}`;
+
   const { data, error } =
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}${RB_ROUTES.settings}`
+      redirectTo
     });
 
   if (error) throw error;
@@ -528,27 +568,35 @@ export function protectRoute(routeKey = "") {
   return true;
 }
 
-window.addEventListener("focus", async () => {
-  if (getUser()?.id) {
-    await ensureMyProfile();
-    await refreshProfile();
-  }
-});
+if (!window.__RB_AUTH_FOCUS_BOUND__) {
+  window.__RB_AUTH_FOCUS_BOUND__ = true;
 
-window.addEventListener("beforeunload", () => {
-  const user = getUser();
+  window.addEventListener("focus", async () => {
+    if (getUser()?.id) {
+      await ensureMyProfile();
+      await refreshProfile();
+    }
+  });
+}
 
-  if (user?.id) {
-    supabase
-      .from(RB_TABLES.profiles)
-      .update({
-        online_status: "away",
-        last_seen_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", user.id);
-  }
-});
+if (!window.__RB_AUTH_UNLOAD_BOUND__) {
+  window.__RB_AUTH_UNLOAD_BOUND__ = true;
+
+  window.addEventListener("beforeunload", () => {
+    const user = getUser();
+
+    if (user?.id) {
+      supabase
+        .from(RB_TABLES.profiles)
+        .update({
+          online_status: "away",
+          last_seen_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", user.id);
+    }
+  });
+}
 
 if (document.body) {
   document.body.classList.add("rb-auth-loaded");
