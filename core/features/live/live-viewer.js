@@ -4,6 +4,7 @@
 
    LIVE VIEWER ENGINE
    Viewer join/leave + LiveKit watch room
+   Presence + Access + Track Events
 ========================= */
 
 import {
@@ -12,7 +13,9 @@ import {
   Track
 } from "https://esm.sh/livekit-client@2";
 
-import { RB_ROUTES } from "/core/shared/rb-config.js";
+import {
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
 
 import {
   initLiveAccess,
@@ -34,6 +37,8 @@ const VIEWER = {
 
   joined: false,
   connecting: false,
+  ready: false,
+  error: null,
 
   tracks: [],
   listeners: new Set()
@@ -55,6 +60,12 @@ function emitViewer() {
       detail: state
     })
   );
+
+  window.dispatchEvent(
+    new CustomEvent("rb:live-viewer-state", {
+      detail: state
+    })
+  );
 }
 
 function displayName() {
@@ -64,6 +75,21 @@ function displayName() {
     VIEWER.profile?.username ||
     VIEWER.user?.email?.split("@")[0] ||
     "Rich Viewer"
+  );
+}
+
+function username() {
+  return (
+    VIEWER.profile?.username ||
+    VIEWER.user?.email?.split("@")[0] ||
+    "guest"
+  );
+}
+
+function avatarUrl() {
+  return (
+    VIEWER.profile?.avatar_url ||
+    "/images/brand/Avatar-hero-Banner.png.jpeg"
   );
 }
 
@@ -83,8 +109,24 @@ function watchUrl(stream = VIEWER.stream) {
   if (!stream) return RB_ROUTES.watch || "/watch";
 
   return `${RB_ROUTES.watch || "/watch"}?stream=${encodeURIComponent(
-    stream.slug || stream.id
+    stream.slug || stream.display_slug || stream.id
   )}`;
+}
+
+function setViewerError(error = null) {
+  VIEWER.error = error;
+  emitViewer();
+}
+
+function clearDetachedTracks() {
+  VIEWER.tracks.forEach((item) => {
+    try {
+      item.track?.detach?.().forEach((el) => el.remove());
+      item.element?.remove?.();
+    } catch {}
+  });
+
+  VIEWER.tracks = [];
 }
 
 export function getLiveViewerState() {
@@ -98,6 +140,8 @@ export function getLiveViewerState() {
 
     joined: VIEWER.joined,
     connecting: VIEWER.connecting,
+    ready: VIEWER.ready,
+    error: VIEWER.error,
 
     tracks: [...VIEWER.tracks]
   };
@@ -107,7 +151,12 @@ export function onLiveViewer(listener) {
   if (typeof listener !== "function") return () => {};
 
   VIEWER.listeners.add(listener);
-  listener(getLiveViewerState());
+
+  try {
+    listener(getLiveViewerState());
+  } catch (error) {
+    console.warn("[RB LIVE VIEWER LISTENER]", error);
+  }
 
   return () => {
     VIEWER.listeners.delete(listener);
@@ -123,7 +172,7 @@ async function getLivekitViewerToken() {
     VIEWER.stream.livekit_room_name ||
     `rb-live-${VIEWER.stream.id}`;
 
-  const res = await fetch("/api/livekit-token", {
+  const response = await fetch("/api/livekit-token", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -134,11 +183,15 @@ async function getLivekitViewerToken() {
       identity: VIEWER.user?.id || anonymousId(),
       userId: VIEWER.user?.id || null,
       name: displayName(),
+      participantName: displayName(),
       role: "viewer",
       metadata: {
         stream_id: VIEWER.stream.id,
-        stream_slug: VIEWER.stream.slug,
+        stream_slug: VIEWER.stream.slug || null,
         user_id: VIEWER.user?.id || null,
+        username: username(),
+        display_name: displayName(),
+        avatar_url: avatarUrl(),
         role: "viewer",
         anonymous: !VIEWER.user?.id,
         source: "live-viewer.js"
@@ -146,11 +199,11 @@ async function getLivekitViewerToken() {
     })
   });
 
-  if (!res.ok) {
-    throw new Error("LiveKit token request failed.");
-  }
+  const data = await response.json().catch(() => ({}));
 
-  const data = await res.json();
+  if (!response.ok) {
+    throw new Error(data?.error || "LiveKit token request failed.");
+  }
 
   return {
     token: data.token || data.accessToken,
@@ -158,13 +211,15 @@ async function getLivekitViewerToken() {
   };
 }
 
-function attachTrack(track, participant) {
+function attachTrack(track, publication, participant) {
   const media = track.attach();
 
   media.autoplay = true;
   media.playsInline = true;
   media.dataset.participant =
     participant?.identity || "host";
+
+  media.dataset.trackKind = track.kind;
 
   media.className =
     track.kind === Track.Kind.Video
@@ -173,6 +228,7 @@ function attachTrack(track, participant) {
 
   VIEWER.tracks.push({
     track,
+    publication,
     participant,
     element: media,
     kind: track.kind
@@ -184,6 +240,7 @@ function attachTrack(track, participant) {
     new CustomEvent("rb-live-track-attached", {
       detail: {
         track,
+        publication,
         participant,
         element: media,
         kind: track.kind
@@ -209,9 +266,23 @@ function detachTrack(track) {
 
   window.dispatchEvent(
     new CustomEvent("rb-live-track-detached", {
-      detail: { track }
+      detail: {
+        track
+      }
     })
   );
+}
+
+async function safeLeavePresence() {
+  if (!VIEWER.viewSession?.id) return;
+
+  try {
+    await leaveLivePresence({
+      sessionId: VIEWER.viewSession.id
+    });
+  } catch (error) {
+    console.warn("[RB LIVE VIEWER PRESENCE LEAVE SKIPPED]", error?.message || error);
+  }
 }
 
 export async function joinLiveViewer() {
@@ -228,6 +299,7 @@ export async function joinLiveViewer() {
   }
 
   VIEWER.connecting = true;
+  VIEWER.error = null;
   emitViewer();
 
   try {
@@ -239,18 +311,21 @@ export async function joinLiveViewer() {
 
     const allowed = await canWatchLiveStream();
 
-    if (!allowed.allowed) {
+    if (!allowed?.allowed) {
       throw new Error(
-        allowed.reason || "Unlock required before watching."
+        allowed?.reason || "Unlock required before watching."
       );
     }
 
     const presence = await joinLivePresence({
+      stream: VIEWER.stream,
+      user: VIEWER.user,
+      profile: VIEWER.profile,
       role: "viewer",
       anonymousId: VIEWER.user?.id ? null : anonymousId()
     });
 
-    VIEWER.viewSession = presence.session || null;
+    VIEWER.viewSession = presence?.session || presence || null;
 
     const tokenData = await getLivekitViewerToken();
 
@@ -268,15 +343,40 @@ export async function joinLiveViewer() {
     room.on(RoomEvent.TrackSubscribed, attachTrack);
     room.on(RoomEvent.TrackUnsubscribed, detachTrack);
 
+    room.on(RoomEvent.ParticipantConnected, (participant) => {
+      window.dispatchEvent(
+        new CustomEvent("rb-live-participant-connected", {
+          detail: {
+            participant
+          }
+        })
+      );
+
+      emitViewer();
+    });
+
+    room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+      window.dispatchEvent(
+        new CustomEvent("rb-live-participant-disconnected", {
+          detail: {
+            participant
+          }
+        })
+      );
+
+      emitViewer();
+    });
+
     room.on(RoomEvent.Disconnected, async () => {
       VIEWER.joined = false;
       VIEWER.connecting = false;
 
-      await leaveLivePresence({
-        sessionId: VIEWER.viewSession?.id || null
-      });
+      await safeLeavePresence();
 
       VIEWER.viewSession = null;
+      VIEWER.room = null;
+
+      clearDetachedTracks();
       emitViewer();
     });
 
@@ -284,6 +384,8 @@ export async function joinLiveViewer() {
 
     VIEWER.joined = true;
     VIEWER.connecting = false;
+    VIEWER.ready = true;
+    VIEWER.error = null;
 
     emitViewer();
 
@@ -291,15 +393,20 @@ export async function joinLiveViewer() {
   } catch (error) {
     VIEWER.connecting = false;
     VIEWER.joined = false;
+    VIEWER.error = error;
 
-    if (VIEWER.viewSession?.id) {
-      await leaveLivePresence({
-        sessionId: VIEWER.viewSession.id
-      });
-    }
+    await safeLeavePresence();
 
     VIEWER.viewSession = null;
 
+    if (VIEWER.room) {
+      try {
+        VIEWER.room.disconnect();
+      } catch {}
+      VIEWER.room = null;
+    }
+
+    clearDetachedTracks();
     emitViewer();
 
     throw error;
@@ -308,23 +415,15 @@ export async function joinLiveViewer() {
 
 export async function leaveLiveViewer() {
   if (VIEWER.room) {
-    VIEWER.room.disconnect();
+    try {
+      VIEWER.room.disconnect();
+    } catch {}
     VIEWER.room = null;
   }
 
-  VIEWER.tracks.forEach((item) => {
-    try {
-      item.track.detach().forEach((el) => el.remove());
-    } catch {}
-  });
+  clearDetachedTracks();
 
-  VIEWER.tracks = [];
-
-  if (VIEWER.viewSession?.id) {
-    await leaveLivePresence({
-      sessionId: VIEWER.viewSession.id
-    });
-  }
+  await safeLeavePresence();
 
   VIEWER.viewSession = null;
   VIEWER.joined = false;
@@ -342,19 +441,40 @@ export function goToWatchPage(stream = VIEWER.stream) {
 export async function initLiveViewer({
   stream,
   user = null,
-  profile = null
+  profile = null,
+  autoJoin = false
 } = {}) {
+  await leaveLiveViewer().catch(() => {});
+
   VIEWER.stream = stream || null;
   VIEWER.user = user || null;
   VIEWER.profile = profile || null;
 
   VIEWER.joined = false;
   VIEWER.connecting = false;
+  VIEWER.ready = true;
+  VIEWER.error = null;
   VIEWER.tracks = [];
 
   emitViewer();
 
+  if (autoJoin && VIEWER.stream?.status === "live") {
+    await joinLiveViewer();
+  }
+
   return getLiveViewerState();
+}
+
+export function resetLiveViewer() {
+  leaveLiveViewer().catch(() => {});
+
+  VIEWER.stream = null;
+  VIEWER.user = null;
+  VIEWER.profile = null;
+  VIEWER.ready = false;
+  VIEWER.error = null;
+
+  emitViewer();
 }
 
 window.addEventListener("beforeunload", () => {
