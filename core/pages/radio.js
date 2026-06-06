@@ -5,6 +5,7 @@
    RADIO PAGE CONTROLLER
    Stations + Sessions + Likes
    Profile Keys Locked
+   Safe Loader + Realtime Enabled
 ========================= */
 
 import {
@@ -14,7 +15,7 @@ import {
   markPageError
 } from "/core/app.js";
 
-import { RB_TABLES } from "/core/shared/rb-config.js";
+import { RB_TABLES, RB_ROUTES } from "/core/shared/rb-config.js";
 import { getSupabase } from "/core/shared/rb-supabase.js";
 
 import {
@@ -24,7 +25,7 @@ import {
 } from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
-const $$ = (selector) => document.querySelectorAll(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
 
@@ -52,6 +53,88 @@ let currentProfile = null;
 let profileIdentity = null;
 let activeStation = null;
 let activeSessionId = null;
+let booted = false;
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function safe(value, fallback = "") {
+  return String(value || fallback || "").trim();
+}
+
+function setEmpty(target, text) {
+  if (!target) return;
+  target.innerHTML = `<p class="rb-empty">${escapeHtml(text)}</p>`;
+}
+
+function setCount(target, count = 0) {
+  if (target) target.textContent = String(count || 0);
+}
+
+function niceDate(date) {
+  if (!date) return "Just now";
+
+  const stamp = new Date(date).getTime();
+  if (!Number.isFinite(stamp)) return "Just now";
+
+  return new Date(date).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function creatorLine(item = {}) {
+  return (
+    item.display_name ||
+    item.creator_name ||
+    item.username ||
+    item.artist_name ||
+    "Rich Bizness Radio"
+  );
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function stationTitle(item = {}) {
+  return item.station_name || item.title || item.name || "Untitled Station";
+}
+
+function stationCover(item = {}) {
+  return item.cover_url || item.image_url || item.thumbnail_url || FALLBACK_COVER;
+}
+
+function stationStream(item = {}) {
+  return item.stream_url || item.audio_url || item.url || "";
+}
+
+function stationListeners(item = {}) {
+  return Number(item.listener_count || item.listeners || item.active_listeners || 0);
+}
+
+function stationLikes(item = {}) {
+  return Number(item.like_count || item.likes || 0);
+}
+
+function stationPlays(item = {}) {
+  return Number(item.play_count || item.plays || 0);
+}
+
+function isStationLive(item = {}) {
+  return Boolean(item.is_live || item.status === "live");
+}
+
+function isStationFeatured(item = {}) {
+  return Boolean(item.is_featured || item.featured);
+}
 
 function syncProfileKeys() {
   const state = getCurrentUserState?.() || {};
@@ -65,38 +148,11 @@ function syncProfileKeys() {
   document.body.dataset.rbProfileId = profileIdentity?.id || "";
   document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
 
-  bindProfileShell();
+  bindProfileShell?.();
 
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
-}
-
-function safe(value, fallback = "") {
-  return value || fallback;
-}
-
-function setEmpty(target, text) {
-  if (!target) return;
-  target.innerHTML = `<p class="rb-empty">${text}</p>`;
-}
-
-function niceDate(date) {
-  if (!date) return "Just now";
-
-  return new Date(date).toLocaleDateString([], {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
-}
-
-function creatorLine(item) {
-  return item?.display_name || item?.username || "Rich Bizness Radio";
-}
-
-function formatNumber(value) {
-  return Number(value || 0).toLocaleString();
 }
 
 function deviceInfo() {
@@ -105,31 +161,70 @@ function deviceInfo() {
     app: "Rich Bizness Mobile",
     userAgent: navigator.userAgent,
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
+    path: window.location.pathname
   };
 }
 
-async function startRadioSession(station) {
-  if (!station?.id) return null;
+async function safeLoadTable({
+  table,
+  limit = 40,
+  orderBy = "created_at",
+  attempts = []
+}) {
+  let lastError = null;
 
-  if (!currentUser?.id) return null;
+  for (const attempt of attempts) {
+    try {
+      let query = supabase
+        .from(table)
+        .select("*")
+        .limit(limit);
+
+      if (attempt.filter) {
+        query = attempt.filter(query);
+      }
+
+      if (attempt.order) {
+        query = attempt.order(query);
+      } else if (orderBy) {
+        query = query.order(orderBy, { ascending: false });
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      lastError = error;
+      console.warn(`[RB RADIO SAFE QUERY FAILED] ${table}: ${attempt.name}`, error?.message || error);
+    }
+  }
+
+  throw lastError || new Error(`Failed to load ${table}.`);
+}
+
+async function startRadioSession(station) {
+  if (!station?.id || !currentUser?.id || !RB_TABLES.radioSessions) return null;
+
+  const payload = {
+    station_id: station.id,
+    user_id: currentUser.id,
+    device_info: deviceInfo(),
+    metadata: {
+      station_name: stationTitle(station),
+      source: "radio_page_play"
+    }
+  };
 
   const { data, error } = await supabase
     .from(RB_TABLES.radioSessions)
-    .insert({
-      station_id: station.id,
-      user_id: currentUser.id,
-      device_info: deviceInfo(),
-      metadata: {
-        station_name: station.station_name || "",
-        source: "radio_page_play"
-      }
-    })
-    .select()
+    .insert(payload)
+    .select("*")
     .maybeSingle();
 
   if (error) {
-    console.warn("[radio session start]", error.message);
+    console.warn("[RB RADIO SESSION START SKIPPED]", error.message);
     return null;
   }
 
@@ -138,7 +233,7 @@ async function startRadioSession(station) {
 }
 
 async function endRadioSession() {
-  if (!activeSessionId) return;
+  if (!activeSessionId || !RB_TABLES.radioSessions) return;
 
   const { error } = await supabase
     .from(RB_TABLES.radioSessions)
@@ -151,7 +246,7 @@ async function endRadioSession() {
     .eq("id", activeSessionId);
 
   if (error) {
-    console.warn("[radio session end]", error.message);
+    console.warn("[RB RADIO SESSION END SKIPPED]", error.message);
   }
 
   activeSessionId = null;
@@ -160,43 +255,57 @@ async function endRadioSession() {
 async function playStation(station) {
   activeStation = station;
 
-  if (els.nowCover) els.nowCover.src = station.cover_url || FALLBACK_COVER;
-  if (els.nowType) els.nowType.textContent = station.is_live ? "LIVE RADIO" : "RADIO";
-  if (els.nowTitle) els.nowTitle.textContent = station.station_name || "Untitled Station";
+  const title = stationTitle(station);
+  const coverUrl = stationCover(station);
+  const streamUrl = stationStream(station);
+
+  if (els.nowCover) els.nowCover.src = coverUrl;
+  if (els.nowType) els.nowType.textContent = isStationLive(station) ? "LIVE RADIO" : "RADIO";
+  if (els.nowTitle) els.nowTitle.textContent = title;
 
   if (els.nowMeta) {
     els.nowMeta.textContent = [
       creatorLine(station),
-      station.genre,
-      station.mood,
-      `${formatNumber(station.listener_count)} listening`
+      station.genre || station.category || "",
+      station.mood || station.station_tag || "",
+      `${formatNumber(stationListeners(station))} listening`
     ].filter(Boolean).join(" • ");
   }
 
   await endRadioSession();
   await startRadioSession(station);
 
-  if (els.audioPlayer && station.stream_url) {
-    els.audioPlayer.src = station.stream_url;
+  if (els.audioPlayer && streamUrl) {
+    els.audioPlayer.src = streamUrl;
     els.audioPlayer.play().catch(() => {});
   }
 }
 
 async function likeStation(station) {
   if (!currentUser?.id) {
-    window.location.href = "/auth";
+    window.location.href = `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(
+      window.location.pathname + window.location.search
+    )}`;
     return;
   }
 
+  if (!station?.id || !RB_TABLES.radioLikes) return;
+
   const { error } = await supabase
     .from(RB_TABLES.radioLikes)
-    .insert({
-      station_id: station.id,
-      user_id: currentUser.id
-    });
+    .upsert(
+      {
+        station_id: station.id,
+        user_id: currentUser.id,
+        created_at: new Date().toISOString()
+      },
+      {
+        onConflict: "station_id,user_id"
+      }
+    );
 
-  if (error && !String(error.message || "").toLowerCase().includes("duplicate")) {
-    console.warn("[radio like]", error.message);
+  if (error) {
+    console.warn("[RB RADIO LIKE SKIPPED]", error.message);
   }
 
   await loadRadioPage();
@@ -204,6 +313,9 @@ async function likeStation(station) {
 
 function bindTabs() {
   $$("[data-radio-tab]").forEach((button) => {
+    if (button.dataset.rbRadioTabBound === "true") return;
+    button.dataset.rbRadioTabBound = "true";
+
     button.addEventListener("click", () => {
       const tab = button.dataset.radioTab;
 
@@ -221,40 +333,57 @@ function bindTabs() {
   });
 }
 
-function renderStationCard(item) {
+function renderStationCard(item = {}) {
+  const title = stationTitle(item);
+  const coverUrl = stationCover(item);
+  const streamUrl = stationStream(item);
+
   const card = document.createElement("article");
   card.className = "rb-content-card rb-radio-card";
-  card.dataset.creatorId = item.user_id || "";
-  card.dataset.profileLocked = item.user_id ? "true" : "false";
+  card.dataset.creatorId = item.user_id || item.creator_id || "";
+  card.dataset.profileLocked = card.dataset.creatorId ? "true" : "false";
+  card.dataset.stationId = item.id || "";
 
   card.innerHTML = `
     <img
       class="rb-card-cover"
-      src="${item.cover_url || FALLBACK_COVER}"
-      alt="${safe(item.station_name, "Radio station")}"
+      src="${escapeHtml(coverUrl)}"
+      alt="${escapeHtml(title)}"
       loading="lazy"
     />
 
     <div class="rb-card-body">
-      <p class="rb-kicker">${item.is_live ? "LIVE RADIO" : "RADIO STATION"}</p>
-      <h3>${safe(item.station_name, "Untitled Station")}</h3>
-      <p>${safe(item.description || item.station_tag, "Rich Bizness radio stream.")}</p>
+      <p class="rb-kicker">${isStationLive(item) ? "LIVE RADIO" : "RADIO STATION"}</p>
+
+      <h3>${escapeHtml(title)}</h3>
+
+      <p>${escapeHtml(safe(item.description || item.station_tag, "Rich Bizness radio stream."))}</p>
 
       <div class="rb-card-meta">
-        <span>${creatorLine(item)}</span>
-        <span>${niceDate(item.created_at)}</span>
+        <span>${escapeHtml(creatorLine(item))}</span>
+        <span>${escapeHtml(niceDate(item.created_at))}</span>
       </div>
 
       <div class="rb-chip-row">
-        <span class="rb-chip">${safe(item.genre, "genre")}</span>
-        <span class="rb-chip">${formatNumber(item.listener_count)} listeners</span>
-        <span class="rb-chip">${formatNumber(item.like_count)} likes</span>
-        <span class="rb-chip">${formatNumber(item.play_count)} plays</span>
+        <span class="rb-chip">${escapeHtml(safe(item.genre || item.category, "genre"))}</span>
+        <span class="rb-chip">${formatNumber(stationListeners(item))} listeners</span>
+        <span class="rb-chip">${formatNumber(stationLikes(item))} likes</span>
+        <span class="rb-chip">${formatNumber(stationPlays(item))} plays</span>
       </div>
 
       <div class="rb-action-row">
-        <button type="button" class="rb-main-launch" data-radio-play>PLAY</button>
-        <button type="button" class="rb-ghost-btn" data-radio-like>LIKE</button>
+        <button
+          type="button"
+          class="rb-main-launch"
+          data-radio-play
+          ${streamUrl ? "" : "disabled"}
+        >
+          PLAY
+        </button>
+
+        <button type="button" class="rb-ghost-btn" data-radio-like>
+          LIKE
+        </button>
       </div>
     </div>
   `;
@@ -270,16 +399,23 @@ function renderStationCard(item) {
   return card;
 }
 
-function renderSessionCard(item) {
+function renderSessionCard(item = {}) {
   const card = document.createElement("article");
   card.className = "rb-list-row rb-radio-session";
+
+  const listener =
+    item.display_name ||
+    item.username ||
+    item.anonymous_id ||
+    item.user_id ||
+    "Radio Listener";
 
   card.innerHTML = `
     <strong>📻</strong>
 
     <div>
-      <h3>${safe(item.anonymous_id || item.user_id, "Radio Listener")}</h3>
-      <p>${niceDate(item.joined_at)} • ${item.listen_seconds || 0}s listened</p>
+      <h3>${escapeHtml(listener)}</h3>
+      <p>${escapeHtml(niceDate(item.joined_at || item.created_at))} • ${Number(item.listen_seconds || 0)}s listened</p>
     </div>
 
     <b>${item.left_at ? "ENDED" : "LIVE"}</b>
@@ -289,72 +425,134 @@ function renderSessionCard(item) {
 }
 
 async function loadStations() {
-  const { data, error } = await supabase
-    .from(RB_TABLES.radioStations)
-    .select("*")
-    .eq("is_public", true)
-    .order("is_featured", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(50);
+  try {
+    const stations = await safeLoadTable({
+      table: RB_TABLES.radioStations,
+      limit: 50,
+      attempts: [
+        {
+          name: "is_public_featured_created",
+          filter: (q) => q.eq("is_public", true),
+          order: (q) =>
+            q
+              .order("is_featured", { ascending: false })
+              .order("created_at", { ascending: false })
+        },
+        {
+          name: "status_active",
+          filter: (q) => q.in("status", ["active", "published", "live"])
+        },
+        {
+          name: "visibility_public",
+          filter: (q) => q.in("visibility", ["public", "published"])
+        },
+        {
+          name: "created_no_filter",
+          filter: null
+        }
+      ]
+    });
 
-  if (error) throw error;
+    const liveStations = stations.filter(isStationLive);
 
-  const stations = data || [];
-  const liveStations = stations.filter((item) => item.is_live);
-  const totalListeners = stations.reduce(
-    (sum, item) => sum + Number(item.listener_count || 0),
-    0
-  );
-  const totalLikes = stations.reduce(
-    (sum, item) => sum + Number(item.like_count || 0),
-    0
-  );
+    const totalListeners = stations.reduce(
+      (sum, item) => sum + stationListeners(item),
+      0
+    );
 
-  if (els.stationCount) els.stationCount.textContent = stations.length;
-  if (els.liveCount) els.liveCount.textContent = liveStations.length;
-  if (els.listenerCount) els.listenerCount.textContent = formatNumber(totalListeners);
-  if (els.likeCount) els.likeCount.textContent = formatNumber(totalLikes);
+    const totalLikes = stations.reduce(
+      (sum, item) => sum + stationLikes(item),
+      0
+    );
 
-  if (!stations.length) {
-    setEmpty(els.stationsList, "No radio stations yet.");
-    setEmpty(els.featuredList, "No featured radio stations yet.");
-    return;
+    setCount(els.stationCount, stations.length);
+    setCount(els.liveCount, liveStations.length);
+
+    if (els.listenerCount) {
+      els.listenerCount.textContent = formatNumber(totalListeners);
+    }
+
+    if (els.likeCount) {
+      els.likeCount.textContent = formatNumber(totalLikes);
+    }
+
+    if (!stations.length) {
+      setEmpty(els.stationsList, "No radio stations yet.");
+      setEmpty(els.featuredList, "No featured radio stations yet.");
+      return;
+    }
+
+    if (els.stationsList) {
+      els.stationsList.innerHTML = "";
+      stations.forEach((item) => {
+        els.stationsList.appendChild(renderStationCard(item));
+      });
+    }
+
+    const featured = stations.filter(isStationFeatured).slice(0, 12);
+    const finalFeatured = featured.length ? featured : stations.slice(0, 8);
+
+    if (els.featuredList) {
+      els.featuredList.innerHTML = "";
+      finalFeatured.forEach((item) => {
+        els.featuredList.appendChild(renderStationCard(item));
+      });
+    }
+  } catch (error) {
+    console.error("[RB RADIO STATIONS FAILED]", error);
+    setCount(els.stationCount, 0);
+    setCount(els.liveCount, 0);
+    setCount(els.listenerCount, 0);
+    setCount(els.likeCount, 0);
+    setEmpty(els.stationsList, error?.message || "Radio stations failed to load.");
+    setEmpty(els.featuredList, error?.message || "Featured radio stations failed to load.");
   }
-
-  els.stationsList.innerHTML = "";
-  stations.forEach((item) => els.stationsList.appendChild(renderStationCard(item)));
-
-  const featured = stations.filter((item) => item.is_featured).slice(0, 12);
-  const finalFeatured = featured.length ? featured : stations.slice(0, 8);
-
-  els.featuredList.innerHTML = "";
-  finalFeatured.forEach((item) => els.featuredList.appendChild(renderStationCard(item)));
 }
 
 async function loadSessions() {
-  if (!els.sessionsList) return;
+  if (!els.sessionsList || !RB_TABLES.radioSessions) return;
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.radioSessions)
-    .select("*")
-    .order("joined_at", { ascending: false })
-    .limit(40);
+  try {
+    const sessions = await safeLoadTable({
+      table: RB_TABLES.radioSessions,
+      limit: 40,
+      attempts: [
+        {
+          name: "joined_at",
+          filter: null,
+          order: (q) => q.order("joined_at", { ascending: false })
+        },
+        {
+          name: "created_at",
+          filter: null,
+          order: (q) => q.order("created_at", { ascending: false })
+        },
+        {
+          name: "no_order",
+          filter: null,
+          order: (q) => q
+        }
+      ]
+    });
 
-  if (error) throw error;
+    if (!sessions.length) {
+      setEmpty(els.sessionsList, "No radio sessions yet.");
+      return;
+    }
 
-  const sessions = data || [];
+    els.sessionsList.innerHTML = "";
 
-  if (!sessions.length) {
-    setEmpty(els.sessionsList, "No radio sessions yet.");
-    return;
+    sessions.forEach((item) => {
+      els.sessionsList.appendChild(renderSessionCard(item));
+    });
+  } catch (error) {
+    console.error("[RB RADIO SESSIONS FAILED]", error);
+    setEmpty(els.sessionsList, error?.message || "Radio sessions failed to load.");
   }
-
-  els.sessionsList.innerHTML = "";
-  sessions.forEach((item) => els.sessionsList.appendChild(renderSessionCard(item)));
 }
 
 async function loadRadioPage() {
-  await Promise.all([
+  await Promise.allSettled([
     loadStations(),
     loadSessions()
   ]);
@@ -368,32 +566,37 @@ function clearRealtime() {
   channels = [];
 }
 
-function bindRealtime() {
-  const reload = () => loadRadioPage().catch(console.error);
+function watchTable(table) {
+  if (!table) return null;
 
+  return supabase
+    .channel(`rb-radio-${table}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table
+      },
+      () => loadRadioPage().catch(console.error)
+    )
+    .subscribe();
+}
+
+function bindRealtime() {
   clearRealtime();
 
   channels = [
-    RB_TABLES.radioStations,
-    RB_TABLES.radioLikes,
-    RB_TABLES.radioSessions
-  ].map((table) =>
-    supabase
-      .channel(`rb-radio-${table}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table
-        },
-        reload
-      )
-      .subscribe()
-  );
+    watchTable(RB_TABLES.radioStations),
+    watchTable(RB_TABLES.radioLikes),
+    watchTable(RB_TABLES.radioSessions)
+  ].filter(Boolean);
 }
 
 async function bootRadioPage() {
+  if (booted) return;
+  booted = true;
+
   try {
     await initApp({
       guard: false,
@@ -424,11 +627,11 @@ async function bootRadioPage() {
       route: "radio"
     });
   } catch (error) {
-    console.error("[radio.js]", error);
+    console.error("[RB RADIO BOOT FAILED]", error);
 
-    setEmpty(els.stationsList, "Radio stations failed to load.");
-    setEmpty(els.featuredList, "Featured radio stations failed to load.");
-    setEmpty(els.sessionsList, "Radio sessions failed to load.");
+    setEmpty(els.stationsList, error?.message || "Radio stations failed to load.");
+    setEmpty(els.featuredList, error?.message || "Featured radio stations failed to load.");
+    setEmpty(els.sessionsList, error?.message || "Radio sessions failed to load.");
 
     markPageError(error);
   }
