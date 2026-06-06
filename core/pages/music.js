@@ -2,7 +2,8 @@
    RICH BIZNESS MOBILE
    /core/pages/music.js
 
-   Music Page
+   MUSIC PAGE CONTROLLER
+   Tracks + Podcast + Radio + Playlists
    Profile Keys Locked
    Realtime Enabled
 ========================= */
@@ -14,19 +15,60 @@ import {
   markPageError
 } from "/core/app.js";
 
-import { RB_TABLES } from "/core/shared/rb-config.js";
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  RB_TABLES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   getProfileIdentity,
   bindProfileShell,
-  buildProfileUrl,
-  profileAvatar,
-  profileName
+  buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
+import {
+  setActiveMusicTab,
+  bindMusicShell,
+  setMusicError
+} from "/core/features/music/music-state.js";
+
+import {
+  bindMusicRealtime,
+  loadMusicCollections,
+  clearMusicRealtime
+} from "/core/features/music/music-realtime.js";
+
+import {
+  mountTrackPlayer,
+  bindTrackPlayerControls,
+  playTrack
+} from "/core/features/music/track-player.js";
+
+import {
+  initPodcastEngine,
+  playPodcastEpisode
+} from "/core/features/music/podcast-engine.js";
+
+import {
+  initRadioEngine,
+  playRadioStation
+} from "/core/features/music/radio-engine.js";
+
+import {
+  loadPublicPlaylists,
+  loadPlaylistTracks
+} from "/core/features/music/playlist-engine.js";
+
+import {
+  initMusicUnlocks,
+  canPlayMusicTrack
+} from "/core/features/music/music-unlocked.js";
+
 const $ = (id) => document.getElementById(id);
-const $$ = (selector) => document.querySelectorAll(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
 
@@ -48,10 +90,76 @@ const els = {
 };
 
 let supabase = null;
-let channels = [];
+let pageBooted = false;
 let currentUser = null;
 let currentProfile = null;
 let profileIdentity = null;
+let cleanupMusicShell = null;
+let cleanupPlayerShell = null;
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function safe(value, fallback = "") {
+  return String(value || fallback || "").trim();
+}
+
+function setEmpty(target, text) {
+  if (!target) return;
+  target.innerHTML = `<p class="rb-empty">${escapeHtml(text)}</p>`;
+}
+
+function moneyDate(date) {
+  if (!date) return "Just dropped";
+
+  return new Date(date).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function creatorLine(item = {}) {
+  return (
+    item.artist ||
+    item.artist_name ||
+    item.creator_name ||
+    item.display_name ||
+    item.username ||
+    "Rich Bizness Creator"
+  );
+}
+
+function coverOf(item = {}) {
+  return (
+    item.cover_url ||
+    item.image_url ||
+    item.thumbnail_url ||
+    item.show?.cover_url ||
+    FALLBACK_COVER
+  );
+}
+
+function audioOf(item = {}) {
+  return (
+    item.audio_url ||
+    item.stream_url ||
+    item.file_url ||
+    item.media_url ||
+    item.url ||
+    ""
+  );
+}
+
+function titleOf(item = {}, fallback = "Untitled") {
+  return item.title || item.name || item.station_name || fallback;
+}
 
 function syncProfileKeys() {
   const state = getCurrentUserState?.() || {};
@@ -72,51 +180,15 @@ function syncProfileKeys() {
   });
 }
 
-function safe(value, fallback = "") {
-  return value || fallback;
-}
-
-function setEmpty(target, text) {
-  if (!target) return;
-  target.innerHTML = `<p class="rb-empty">${text}</p>`;
-}
-
-function moneyDate(date) {
-  if (!date) return "Just dropped";
-
-  return new Date(date).toLocaleDateString([], {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
-}
-
-function creatorLine(item) {
-  return item?.display_name || item?.username || "Rich Bizness Creator";
-}
-
-function playAudio({
-  type = "TRACK",
-  title = "Untitled",
-  meta = "",
-  audioUrl = "",
-  coverUrl = FALLBACK_COVER
-}) {
-  if (els.nowCover) els.nowCover.src = coverUrl || FALLBACK_COVER;
-  if (els.nowType) els.nowType.textContent = type;
-  if (els.nowTitle) els.nowTitle.textContent = title;
-  if (els.nowMeta) els.nowMeta.textContent = meta;
-
-  if (els.audioPlayer && audioUrl) {
-    els.audioPlayer.src = audioUrl;
-    els.audioPlayer.play().catch(() => {});
-  }
-}
-
 function bindTabs() {
   $$("[data-music-tab]").forEach((button) => {
+    if (button.dataset.rbMusicTabBound === "true") return;
+    button.dataset.rbMusicTabBound = "true";
+
     button.addEventListener("click", () => {
-      const tab = button.dataset.musicTab;
+      const tab = button.dataset.musicTab || "tracks";
+
+      setActiveMusicTab(tab);
 
       $$("[data-music-tab]").forEach((btn) => {
         btn.classList.toggle("is-active", btn === button);
@@ -132,10 +204,64 @@ function bindTabs() {
   });
 }
 
-function renderAudioCard(item, type) {
-  const title = item.title || item.station_name || "Untitled";
-  const audioUrl = item.audio_url || item.stream_url || "";
-  const coverUrl = item.cover_url || FALLBACK_COVER;
+function updateNowType(type = "TRACK") {
+  if (els.nowType) {
+    els.nowType.textContent = type;
+  }
+}
+
+async function playMusicItem(item = {}, type = "track") {
+  const audioUrl = audioOf(item);
+
+  if (!audioUrl) {
+    throw new Error("This item has no audio URL.");
+  }
+
+  if (type === "track") {
+    const access = await canPlayMusicTrack(item);
+
+    if (!access.ok) {
+      if (access.redirectTo) {
+        window.location.href = access.redirectTo;
+      }
+
+      return;
+    }
+
+    updateNowType("TRACK");
+
+    await playTrack(item, {
+      type: "track",
+      autoplay: true
+    });
+
+    return;
+  }
+
+  if (type === "podcast") {
+    updateNowType("PODCAST");
+    await playPodcastEpisode(item);
+    return;
+  }
+
+  if (type === "radio") {
+    updateNowType("RADIO");
+    await playRadioStation(item);
+    return;
+  }
+}
+
+function renderAudioCard(item, type = "track") {
+  const title = titleOf(item);
+  const audioUrl = audioOf(item);
+  const coverUrl = coverOf(item);
+
+  const label =
+    type === "podcast"
+      ? "PODCAST"
+      : type === "radio"
+        ? "RADIO"
+        : "TRACK";
 
   const meta = [
     creatorLine(item),
@@ -144,203 +270,264 @@ function renderAudioCard(item, type) {
   ].filter(Boolean).join(" • ");
 
   const card = document.createElement("article");
+
   card.className = "rb-music-card";
-  card.dataset.creatorId = item.user_id || "";
-  card.dataset.profileLocked = item.user_id ? "true" : "false";
+  card.dataset.musicItemId = item.id || "";
+  card.dataset.musicType = type;
+  card.dataset.musicTrackId = type === "track" ? item.id || "" : "";
+  card.dataset.creatorId = item.user_id || item.creator_id || item.artist_user_id || "";
+  card.dataset.profileLocked = card.dataset.creatorId ? "true" : "false";
 
   card.innerHTML = `
     <img
       class="rb-music-card-cover"
-      src="${coverUrl}"
-      alt="${title}"
+      src="${escapeHtml(coverUrl)}"
+      alt="${escapeHtml(title)}"
       loading="lazy"
     />
 
     <div class="rb-music-card-body">
-      <p class="rb-kicker">${type}</p>
-      <h3>${title}</h3>
-      <p>${safe(item.description || item.station_tag, meta)}</p>
+      <p class="rb-kicker">${escapeHtml(label)}</p>
+
+      <h3>${escapeHtml(title)}</h3>
+
+      <p>
+        ${escapeHtml(safe(item.description || item.station_tag, meta))}
+      </p>
 
       <div class="rb-music-card-meta">
-        <span>${meta}</span>
+        <span>${escapeHtml(meta)}</span>
       </div>
 
       <div class="rb-music-card-actions">
-        <button type="button" class="rb-main-launch">PLAY</button>
+        <button
+          type="button"
+          class="rb-main-launch"
+          data-music-action="play"
+          ${audioUrl ? "" : "disabled"}
+        >
+          PLAY
+        </button>
       </div>
     </div>
   `;
 
-  card.querySelector("button")?.addEventListener("click", () => {
-    playAudio({ type, title, meta, audioUrl, coverUrl });
-  });
+  card
+    .querySelector("[data-music-action='play']")
+    ?.addEventListener("click", async () => {
+      try {
+        await playMusicItem(item, type);
+      } catch (error) {
+        console.warn("[RB MUSIC PLAY FAILED]", error?.message || error);
+        setMusicError(error);
+      }
+    });
 
   return card;
 }
 
-function renderPlaylistCard(item) {
-  const title = item.title || "Untitled Playlist";
-  const coverUrl = item.cover_url || FALLBACK_COVER;
+function renderPlaylistCard(item = {}) {
+  const title = titleOf(item, "Untitled Playlist");
+  const coverUrl = coverOf(item);
 
   const card = document.createElement("article");
+
   card.className = "rb-music-card";
-  card.dataset.creatorId = item.user_id || "";
-  card.dataset.profileLocked = item.user_id ? "true" : "false";
+  card.dataset.playlistId = item.id || "";
+  card.dataset.creatorId = item.user_id || item.creator_id || "";
+  card.dataset.profileLocked = card.dataset.creatorId ? "true" : "false";
 
   card.innerHTML = `
     <img
       class="rb-music-card-cover"
-      src="${coverUrl}"
-      alt="${title}"
+      src="${escapeHtml(coverUrl)}"
+      alt="${escapeHtml(title)}"
       loading="lazy"
     />
 
     <div class="rb-music-card-body">
       <p class="rb-kicker">PLAYLIST</p>
-      <h3>${title}</h3>
-      <p>${safe(item.description, "Rich Bizness playlist collection.")}</p>
+
+      <h3>${escapeHtml(title)}</h3>
+
+      <p>
+        ${escapeHtml(safe(item.description, "Rich Bizness playlist collection."))}
+      </p>
 
       <div class="rb-music-card-meta">
-        <span>${creatorLine(item)} • ${item.track_count || 0} tracks • ${moneyDate(item.created_at)}</span>
+        <span>
+          ${escapeHtml(creatorLine(item))} • ${Number(item.track_count || 0)} tracks • ${escapeHtml(moneyDate(item.created_at))}
+        </span>
+      </div>
+
+      <div class="rb-music-card-actions">
+        <button
+          type="button"
+          class="rb-main-launch"
+          data-playlist-action="open"
+        >
+          OPEN
+        </button>
       </div>
     </div>
   `;
 
+  card
+    .querySelector("[data-playlist-action='open']")
+    ?.addEventListener("click", async () => {
+      try {
+        const tracks = await loadPlaylistTracks(item.id);
+
+        if (!tracks.length) return;
+
+        const first =
+          tracks[0]?.track ||
+          tracks[0]?.music_track ||
+          tracks[0];
+
+        await playMusicItem(first, "track");
+      } catch (error) {
+        console.warn("[RB PLAYLIST OPEN FAILED]", error?.message || error);
+      }
+    });
+
   return card;
 }
 
-async function loadTracks() {
-  const { data, error } = await supabase
-    .from(RB_TABLES.musicTracks)
-    .select("*")
-    .eq("is_published", true)
-    .order("created_at", { ascending: false })
-    .limit(30);
+function renderList(target, items = [], type = "track", emptyText = "Nothing here yet.") {
+  if (!target) return;
 
-  if (error) throw error;
-
-  if (els.trackCount) els.trackCount.textContent = data?.length || 0;
-
-  if (!data?.length) {
-    setEmpty(els.tracksList, "No tracks yet.");
+  if (!items.length) {
+    setEmpty(target, emptyText);
     return;
   }
 
-  els.tracksList.innerHTML = "";
-  data.forEach((item) => {
-    els.tracksList.appendChild(renderAudioCard(item, "TRACK"));
+  target.innerHTML = "";
+
+  items.forEach((item) => {
+    target.appendChild(renderAudioCard(item, type));
   });
 }
 
-async function loadPodcasts() {
-  const { data, error } = await supabase
-    .from(RB_TABLES.podcastEpisodes)
-    .select("*")
-    .eq("is_published", true)
-    .order("created_at", { ascending: false })
-    .limit(30);
+function renderPlaylists(items = []) {
+  if (!els.playlistsList) return;
 
-  if (error) throw error;
-
-  if (els.podcastCount) els.podcastCount.textContent = data?.length || 0;
-
-  if (!data?.length) {
-    setEmpty(els.podcastsList, "No podcast episodes yet.");
-    return;
-  }
-
-  els.podcastsList.innerHTML = "";
-  data.forEach((item) => {
-    els.podcastsList.appendChild(renderAudioCard(item, "PODCAST"));
-  });
-}
-
-async function loadRadio() {
-  const { data, error } = await supabase
-    .from(RB_TABLES.radioStations)
-    .select("*")
-    .eq("is_public", true)
-    .order("created_at", { ascending: false })
-    .limit(30);
-
-  if (error) throw error;
-
-  if (els.radioCount) els.radioCount.textContent = data?.length || 0;
-
-  if (!data?.length) {
-    setEmpty(els.radioList, "No radio stations yet.");
-    return;
-  }
-
-  els.radioList.innerHTML = "";
-  data.forEach((item) => {
-    els.radioList.appendChild(renderAudioCard(item, "RADIO"));
-  });
-}
-
-async function loadPlaylists() {
-  const { data, error } = await supabase
-    .from(RB_TABLES.playlists)
-    .select("*")
-    .eq("visibility", "public")
-    .order("created_at", { ascending: false })
-    .limit(30);
-
-  if (error) throw error;
-
-  if (!data?.length) {
+  if (!items.length) {
     setEmpty(els.playlistsList, "No playlists yet.");
     return;
   }
 
   els.playlistsList.innerHTML = "";
-  data.forEach((item) => {
+
+  items.forEach((item) => {
     els.playlistsList.appendChild(renderPlaylistCard(item));
   });
 }
 
-async function loadMusicPage() {
-  await Promise.all([
-    loadTracks(),
-    loadPodcasts(),
-    loadRadio(),
-    loadPlaylists()
-  ]);
+function updateCounts(collections = {}) {
+  if (els.trackCount) {
+    els.trackCount.textContent = String(collections.tracks?.length || 0);
+  }
+
+  if (els.podcastCount) {
+    els.podcastCount.textContent = String(collections.podcasts?.length || 0);
+  }
+
+  if (els.radioCount) {
+    els.radioCount.textContent = String(collections.radioStations?.length || 0);
+  }
 }
 
-function clearRealtime() {
-  channels.forEach((channel) => {
-    supabase?.removeChannel(channel);
+async function loadPlaylists() {
+  const playlists = await loadPublicPlaylists({
+    limit: 30
   });
 
-  channels = [];
+  renderPlaylists(playlists);
+
+  return playlists;
+}
+
+async function loadMusicPage() {
+  const collections = await loadMusicCollections({
+    limit: 30,
+    publicOnly: true
+  });
+
+  const finalCollections = collections || {
+    tracks: [],
+    podcasts: [],
+    radioStations: []
+  };
+
+  updateCounts(finalCollections);
+
+  renderList(
+    els.tracksList,
+    finalCollections.tracks,
+    "track",
+    "No tracks yet."
+  );
+
+  renderList(
+    els.podcastsList,
+    finalCollections.podcasts,
+    "podcast",
+    "No podcast episodes yet."
+  );
+
+  renderList(
+    els.radioList,
+    finalCollections.radioStations,
+    "radio",
+    "No radio stations yet."
+  );
+
+  await loadPlaylists();
+
+  return finalCollections;
 }
 
 function bindRealtime() {
-  const reload = () => loadMusicPage().catch(console.error);
+  bindMusicRealtime({
+    channelName: "rb-music-page",
+    autoLoad: false,
+    onRefresh: async () => {
+      await loadMusicPage();
+    }
+  });
 
-  clearRealtime();
+  const reloadPlaylists = () => loadPlaylists().catch(console.warn);
 
-  channels = [
-    supabase.channel("rb-music-tracks")
-      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.musicTracks }, reload)
-      .subscribe(),
+  const playlistChannel = supabase
+    .channel("rb-music-page-playlists")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: RB_TABLES.playlists
+      },
+      reloadPlaylists
+    )
+    .subscribe();
 
-    supabase.channel("rb-podcast-episodes")
-      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.podcastEpisodes }, reload)
-      .subscribe(),
+  window.__RB_MUSIC_PLAYLIST_CHANNEL__ = playlistChannel;
+}
 
-    supabase.channel("rb-radio-stations")
-      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.radioStations }, reload)
-      .subscribe(),
+function clearPageRealtime() {
+  clearMusicRealtime();
 
-    supabase.channel("rb-playlists")
-      .on("postgres_changes", { event: "*", schema: "public", table: RB_TABLES.playlists }, reload)
-      .subscribe()
-  ];
+  if (window.__RB_MUSIC_PLAYLIST_CHANNEL__) {
+    supabase?.removeChannel(window.__RB_MUSIC_PLAYLIST_CHANNEL__);
+    window.__RB_MUSIC_PLAYLIST_CHANNEL__ = null;
+  }
 }
 
 async function bootMusicPage() {
+  if (pageBooted) return;
+  pageBooted = true;
+
   try {
     await initApp({
       guard: false,
@@ -353,11 +540,32 @@ async function bootMusicPage() {
     syncProfileKeys();
     bindTabs();
 
+    mountTrackPlayer({
+      audio: els.audioPlayer || "#music-audio-player"
+    });
+
+    cleanupMusicShell = bindMusicShell({
+      tabSelector: "[data-music-tab]",
+      sectionTitleSelector: "[data-music-section-title]",
+      countSelector: "[data-music-count]",
+      nowTitleSelector: "[data-music-now-title], #music-now-title",
+      nowMetaSelector: "[data-music-now-meta], #music-now-meta",
+      nowCoverSelector: "[data-music-now-cover], #music-now-cover"
+    });
+
+    cleanupPlayerShell = bindTrackPlayerControls();
+
+    await Promise.allSettled([
+      initPodcastEngine(),
+      initRadioEngine(),
+      initMusicUnlocks()
+    ]);
+
     await loadMusicPage();
 
     bindRealtime();
 
-    window.addEventListener("beforeunload", clearRealtime);
+    window.addEventListener("beforeunload", clearPageRealtime);
 
     document.body.classList.add("rb-music-ready");
 
@@ -368,7 +576,7 @@ async function bootMusicPage() {
       route: "music"
     });
   } catch (error) {
-    console.error("[music.js]", error);
+    console.error("[RB MUSIC PAGE FAILED]", error);
 
     setEmpty(els.tracksList, "Music failed to load.");
     setEmpty(els.podcastsList, "Podcasts failed to load.");
@@ -378,6 +586,12 @@ async function bootMusicPage() {
     markPageError(error);
   }
 }
+
+window.addEventListener("beforeunload", () => {
+  cleanupMusicShell?.();
+  cleanupPlayerShell?.();
+  clearPageRealtime();
+});
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootMusicPage);
