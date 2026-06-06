@@ -5,6 +5,12 @@
    SUPABASE ENGINE
    Auth + Profile State + Storage + Realtime
    Locked App URL Redirects
+
+   Identity Rules:
+   - profiles = account identity
+   - profiles.avatar_url = profile image
+   - profiles.banner_url = profile banner
+   - meta_avatars = synced avatar row, not profile chip source
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -13,11 +19,17 @@ import {
   RB_APP,
   RB_AUTH,
   RB_SUPABASE,
-  RB_TABLES
+  RB_TABLES,
+  RB_BRAND_ASSETS
 } from "/core/shared/rb-config.js";
 
-const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
-const DEFAULT_BANNER = "/images/brand/hero-banner.png";
+const DEFAULT_AVATAR =
+  RB_BRAND_ASSETS?.defaultProfileAvatar ||
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+const DEFAULT_BANNER =
+  RB_BRAND_ASSETS?.defaultProfileBanner ||
+  "/images/brand/hero-banner.png";
 
 const APP_URL =
   RB_APP?.appUrl ||
@@ -52,51 +64,152 @@ let currentProfile = null;
 let authBooted = false;
 let authBooting = null;
 
+function nowIso() {
+  return new Date().toISOString();
+}
+
 function cleanText(value, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
-function usernameFromUser(user) {
-  const raw =
-    user?.user_metadata?.username ||
-    user?.user_metadata?.name ||
-    user?.user_metadata?.display_name ||
-    user?.email?.split("@")?.[0] ||
-    "rich_user";
-
-  return cleanText(raw, "rich_user")
+function cleanUsername(value = "") {
+  return String(value || "")
+    .trim()
     .toLowerCase()
+    .replace("@", "")
     .replace(/[^a-z0-9._-]/g, "_")
     .slice(0, 32);
 }
 
+function userMetadata(user) {
+  return user?.user_metadata || {};
+}
+
+function usernameFromUser(user) {
+  const metadata = userMetadata(user);
+
+  return (
+    cleanUsername(metadata.username) ||
+    cleanUsername(metadata.name) ||
+    cleanUsername(metadata.display_name) ||
+    cleanUsername(user?.email?.split("@")?.[0]) ||
+    "rich_user"
+  );
+}
+
 function displayNameFromUser(user) {
+  const metadata = userMetadata(user);
+
   return cleanText(
-    user?.user_metadata?.display_name ||
-      user?.user_metadata?.full_name ||
-      user?.user_metadata?.name ||
+    metadata.display_name ||
+      metadata.full_name ||
+      metadata.name ||
       usernameFromUser(user),
     "Rich User"
   );
 }
 
-function profilePayloadFromUser(user) {
+function avatarFromUser(user, existingProfile = null) {
+  const metadata = userMetadata(user);
+
+  return (
+    existingProfile?.avatar_url ||
+    cleanText(metadata.avatar_url, "") ||
+    cleanText(metadata.picture, "") ||
+    cleanText(metadata.avatar, "") ||
+    DEFAULT_AVATAR
+  );
+}
+
+function bannerFromUser(user, existingProfile = null) {
+  const metadata = userMetadata(user);
+
+  return (
+    existingProfile?.banner_url ||
+    cleanText(metadata.banner_url, "") ||
+    cleanText(metadata.cover_url, "") ||
+    DEFAULT_BANNER
+  );
+}
+
+async function getExistingProfile(userId) {
+  if (!userId) return null;
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.profiles)
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB EXISTING PROFILE WARNING]", error.message);
+    return null;
+  }
+
+  return data || null;
+}
+
+async function safeUpsert(table, payload, onConflict = "user_id") {
+  if (!table || !payload) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from(table)
+      .upsert(payload, { onConflict })
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      console.warn(`[RB IDENTITY SYNC SKIPPED: ${table}]`, error.message);
+      return null;
+    }
+
+    return data || null;
+  } catch (error) {
+    console.warn(`[RB IDENTITY SYNC FAILED: ${table}]`, error?.message || error);
+    return null;
+  }
+}
+
+function profilePayloadFromUser(user, existingProfile = null) {
+  const metadata = userMetadata(user);
+  const now = nowIso();
+
   return {
     id: user.id,
-    username: usernameFromUser(user),
-    display_name: displayNameFromUser(user),
-    full_name: cleanText(user?.user_metadata?.full_name, null),
-    avatar_url: cleanText(user?.user_metadata?.avatar_url, DEFAULT_AVATAR),
-    banner_url: cleanText(user?.user_metadata?.banner_url, DEFAULT_BANNER),
+
+    username:
+      existingProfile?.username ||
+      usernameFromUser(user),
+
+    display_name:
+      existingProfile?.display_name ||
+      displayNameFromUser(user),
+
+    full_name:
+      existingProfile?.full_name ||
+      cleanText(metadata.full_name, displayNameFromUser(user)),
+
+    avatar_url: avatarFromUser(user, existingProfile),
+    banner_url: bannerFromUser(user, existingProfile),
+
+    role:
+      existingProfile?.role ||
+      metadata.role ||
+      "user",
+
     online_status: "online",
-    last_seen_at: new Date().toISOString(),
+    last_seen_at: now,
+    updated_at: now,
+
     metadata: {
+      ...(existingProfile?.metadata || {}),
       source: "rb-supabase.js",
       auth_email: user.email || null,
       auth_origin: window.location.origin,
-      locked_app_url: APP_URL
-    },
-    updated_at: new Date().toISOString()
+      locked_app_url: APP_URL,
+      profile_lock: true
+    }
   };
 }
 
@@ -121,7 +234,8 @@ export function getCurrentUserState() {
     session: currentSession,
     user: currentUser,
     profile: currentProfile,
-    authed: !!currentUser
+    authed: !!currentUser,
+    isAuthed: !!currentUser
   };
 }
 
@@ -134,36 +248,78 @@ export function getProfileKey() {
 }
 
 export function getProfileIdentity() {
+  const id = currentProfile?.id || currentUser?.id || null;
+
   return {
-    user_id: currentProfile?.id || currentUser?.id || null,
-    username: currentProfile?.username || usernameFromUser(currentUser),
-    display_name: currentProfile?.display_name || displayNameFromUser(currentUser),
-    avatar_url: currentProfile?.avatar_url || DEFAULT_AVATAR,
-    banner_url: currentProfile?.banner_url || DEFAULT_BANNER
+    id,
+    user_id: id,
+    profile_id: id,
+
+    username:
+      currentProfile?.username ||
+      usernameFromUser(currentUser),
+
+    display_name:
+      currentProfile?.display_name ||
+      displayNameFromUser(currentUser),
+
+    avatar_url:
+      currentProfile?.avatar_url ||
+      DEFAULT_AVATAR,
+
+    banner_url:
+      currentProfile?.banner_url ||
+      DEFAULT_BANNER,
+
+    role:
+      currentProfile?.role ||
+      "user"
   };
 }
 
 export async function ensureProfile(user = currentUser) {
   if (!user?.id) return null;
 
+  const existingProfile = await getExistingProfile(user.id);
+  const payload = profilePayloadFromUser(user, existingProfile);
+
   const { data, error } = await supabase
     .from(RB_TABLES.profiles)
-    .upsert(profilePayloadFromUser(user), { onConflict: "id" })
+    .upsert(payload, { onConflict: "id" })
     .select("*")
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    console.warn("[RB ENSURE PROFILE FAILED]", error.message);
 
-  currentProfile = data;
-  await ensureProfileIdentityRows(data);
+    if (existingProfile) {
+      currentProfile = existingProfile;
+      return existingProfile;
+    }
 
-  return data;
+    throw error;
+  }
+
+  currentProfile = data || existingProfile || null;
+
+  if (currentProfile?.id) {
+    await ensureProfileIdentityRows(currentProfile);
+  }
+
+  return currentProfile;
 }
 
 export async function ensureProfileIdentityRows(profile = currentProfile) {
   if (!profile?.id) return;
 
-  const now = new Date().toISOString();
+  const now = nowIso();
+
+  const baseIdentity = {
+    user_id: profile.id,
+    username: profile.username || null,
+    display_name: profile.display_name || profile.username || "Rich User",
+    updated_at: now
+  };
 
   const jobs = [
     {
@@ -191,41 +347,34 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     {
       table: RB_TABLES.metaAvatars,
       payload: {
-        user_id: profile.id,
-        display_name: profile.display_name || profile.username || "Rich User",
+        ...baseIdentity,
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        updated_at: now
+        metadata: {
+          source: "rb-supabase.js",
+          synced_from_profile: true
+        }
       }
     },
     {
       table: RB_TABLES.gamerProfiles,
       payload: {
-        user_id: profile.id,
-        username: profile.username || null,
-        display_name: profile.display_name || profile.username || "Rich User",
+        ...baseIdentity,
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        banner_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
+        banner_url: profile.banner_url || DEFAULT_BANNER
       }
     },
     {
       table: RB_TABLES.sportsProfiles,
       payload: {
-        user_id: profile.id,
-        username: profile.username || null,
-        display_name: profile.display_name || profile.username || "Rich User",
-        updated_at: now
+        ...baseIdentity
       }
     },
     {
       table: RB_TABLES.storeSellerProfiles,
       payload: {
-        user_id: profile.id,
-        username: profile.username || null,
-        display_name: profile.display_name || profile.username || "Rich User",
+        ...baseIdentity,
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        banner_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
+        banner_url: profile.banner_url || DEFAULT_BANNER
       }
     },
     {
@@ -238,17 +387,11 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     }
   ];
 
-  for (const job of jobs) {
-    if (!job.table) continue;
-
-    try {
-      await supabase.from(job.table).upsert(job.payload, {
-        onConflict: "user_id"
-      });
-    } catch (error) {
-      console.warn(`[RB IDENTITY SYNC SKIPPED: ${job.table}]`, error?.message || error);
-    }
-  }
+  await Promise.allSettled(
+    jobs
+      .filter((job) => Boolean(job.table))
+      .map((job) => safeUpsert(job.table, job.payload, "user_id"))
+  );
 }
 
 export async function bootAuth() {
@@ -343,7 +486,11 @@ export async function signUp({ email, password, metadata = {} }) {
     email,
     password,
     options: {
-      data: metadata,
+      data: {
+        ...metadata,
+        avatar_url: metadata.avatar_url || DEFAULT_AVATAR,
+        banner_url: metadata.banner_url || DEFAULT_BANNER
+      },
       emailRedirectTo: AUTH_REDIRECT_URL
     }
   });
@@ -386,8 +533,8 @@ export async function signOut() {
       .from(RB_TABLES.profiles)
       .update({
         online_status: "offline",
-        last_seen_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        last_seen_at: nowIso(),
+        updated_at: nowIso()
       })
       .eq("id", currentUser.id);
   }
@@ -406,9 +553,9 @@ supabase.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user || null;
 
   if (currentUser?.id) {
-    setTimeout(() => {
+    window.setTimeout(() => {
       ensureProfile(currentUser).catch((error) => {
-        console.warn("[RB PROFILE STATE WARNING]", error.message);
+        console.warn("[RB PROFILE STATE WARNING]", error?.message || error);
       });
     }, 0);
   } else {
@@ -416,6 +563,12 @@ supabase.auth.onAuthStateChange((_event, session) => {
   }
 
   authBooted = true;
+
+  window.dispatchEvent(
+    new CustomEvent("rb:supabase-auth-state", {
+      detail: getCurrentUserState()
+    })
+  );
 });
 
 export function getPublicFileUrl(bucket, path) {
@@ -467,7 +620,9 @@ export async function rbSelect({
   let query = supabase.from(table).select(select);
 
   Object.entries(match).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) query = query.eq(key, value);
+    if (value !== undefined && value !== null) {
+      query = query.eq(key, value);
+    }
   });
 
   if (orderBy) query = query.order(orderBy, { ascending });
@@ -482,7 +637,10 @@ export async function rbSelect({
 }
 
 export async function rbInsert({ table, values }) {
-  const { data, error } = await supabase.from(table).insert(values).select();
+  const { data, error } = await supabase
+    .from(table)
+    .insert(values)
+    .select();
 
   if (error) throw error;
   return data;
@@ -492,7 +650,9 @@ export async function rbUpdate({ table, match = {}, values = {} }) {
   let query = supabase.from(table).update(values);
 
   Object.entries(match).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) query = query.eq(key, value);
+    if (value !== undefined && value !== null) {
+      query = query.eq(key, value);
+    }
   });
 
   const { data, error } = await query.select();
@@ -515,7 +675,9 @@ export async function rbDelete({ table, match = {} }) {
   let query = supabase.from(table).delete();
 
   Object.entries(match).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) query = query.eq(key, value);
+    if (value !== undefined && value !== null) {
+      query = query.eq(key, value);
+    }
   });
 
   const { data, error } = await query.select();
@@ -561,8 +723,8 @@ export async function rbTouchOnline() {
     .from(RB_TABLES.profiles)
     .update({
       online_status: "online",
-      last_seen_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      last_seen_at: nowIso(),
+      updated_at: nowIso()
     })
     .eq("id", currentUser.id)
     .select("*")
