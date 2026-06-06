@@ -5,11 +5,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-  if (req.method !== "GET" && req.method !== "HEAD") {
+  if (!["GET", "HEAD"].includes(req.method)) {
     return res.status(405).json({
       ok: false,
       error: "Method not allowed"
@@ -17,26 +15,33 @@ export default async function handler(req, res) {
   }
 
   const env = {
-    APP_URL: Boolean(process.env.APP_URL),
-    PUBLIC_SITE_URL: Boolean(process.env.PUBLIC_SITE_URL),
+    app: {
+      APP_URL: Boolean(process.env.APP_URL),
+      PUBLIC_SITE_URL: Boolean(process.env.PUBLIC_SITE_URL)
+    },
 
-    SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
-    SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-    NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+    supabase: {
+      SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
+      SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    },
 
-    LIVEKIT_URL: Boolean(process.env.LIVEKIT_URL),
-    LIVEKIT_API_KEY: Boolean(process.env.LIVEKIT_API_KEY),
-    LIVEKIT_API_SECRET: Boolean(process.env.LIVEKIT_API_SECRET),
+    livekit: {
+      LIVEKIT_URL: Boolean(process.env.LIVEKIT_URL),
+      LIVEKIT_API_KEY: Boolean(process.env.LIVEKIT_API_KEY),
+      LIVEKIT_API_SECRET: Boolean(process.env.LIVEKIT_API_SECRET)
+    },
 
-    STRIPE_SECRET_KEY: Boolean(process.env.STRIPE_SECRET_KEY),
-    STRIPE_WEBHOOK_SECRET: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
-    STRIPE_CLIENT_ID: Boolean(process.env.STRIPE_CLIENT_ID),
-    STRIPE_PUBLISHABLE_KEY: Boolean(process.env.STRIPE_PUBLISHABLE_KEY),
-
-    STRIPE_PLATFORM_COUNTRY: Boolean(process.env.STRIPE_PLATFORM_COUNTRY),
-    STRIPE_PLATFORM_FEE_BPS: Boolean(process.env.STRIPE_PLATFORM_FEE_BPS),
-    AUTO_APPROVE_PAYOUTS: Boolean(process.env.AUTO_APPROVE_PAYOUTS)
+    stripe: {
+      STRIPE_SECRET_KEY: Boolean(process.env.STRIPE_SECRET_KEY),
+      STRIPE_WEBHOOK_SECRET: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      STRIPE_CLIENT_ID: Boolean(process.env.STRIPE_CLIENT_ID),
+      STRIPE_PUBLISHABLE_KEY: Boolean(process.env.STRIPE_PUBLISHABLE_KEY),
+      STRIPE_PLATFORM_COUNTRY: Boolean(process.env.STRIPE_PLATFORM_COUNTRY),
+      STRIPE_PLATFORM_FEE_BPS: Boolean(process.env.STRIPE_PLATFORM_FEE_BPS),
+      AUTO_APPROVE_PAYOUTS: Boolean(process.env.AUTO_APPROVE_PAYOUTS)
+    }
   };
 
   const supabaseUrl =
@@ -49,29 +54,50 @@ export default async function handler(req, res) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     "";
 
+  const missingRequired = [];
+
+  if (!supabaseUrl) missingRequired.push("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL");
+  if (!supabaseKey) missingRequired.push("SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+
   const checks = {
     api: {
       ok: true,
       message: "Rich Bizness API is online"
     },
+
     env,
+
     supabase: {
       ok: false,
       checked: false,
+      status: null,
       message: "Supabase not checked"
     },
+
     livekit: {
       ok: Boolean(
         process.env.LIVEKIT_URL &&
         process.env.LIVEKIT_API_KEY &&
         process.env.LIVEKIT_API_SECRET
-      )
+      ),
+      message:
+        process.env.LIVEKIT_URL &&
+        process.env.LIVEKIT_API_KEY &&
+        process.env.LIVEKIT_API_SECRET
+          ? "LiveKit env ready"
+          : "LiveKit env incomplete"
     },
+
     stripe: {
       ok: Boolean(
         process.env.STRIPE_SECRET_KEY &&
         process.env.STRIPE_WEBHOOK_SECRET
-      )
+      ),
+      message:
+        process.env.STRIPE_SECRET_KEY &&
+        process.env.STRIPE_WEBHOOK_SECRET
+          ? "Stripe env ready"
+          : "Stripe env incomplete"
     }
   };
 
@@ -92,9 +118,13 @@ export default async function handler(req, res) {
 
       checks.supabase.ok = response.ok;
       checks.supabase.status = response.status;
-      checks.supabase.message = response.ok
-        ? "Supabase connected"
-        : "Supabase responded with an error";
+
+      if (response.ok) {
+        checks.supabase.message = "Supabase connected";
+      } else {
+        const text = await response.text().catch(() => "");
+        checks.supabase.message = text || "Supabase responded with an error";
+      }
     } catch (error) {
       checks.supabase.ok = false;
       checks.supabase.message = error?.message || "Supabase connection failed";
@@ -102,13 +132,6 @@ export default async function handler(req, res) {
   } else {
     checks.supabase.message = "Missing Supabase environment variables";
   }
-
-  const missingRequired = Object.entries({
-    SUPABASE_URL: env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_KEY: env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  })
-    .filter(([, value]) => !value)
-    .map(([key]) => key);
 
   const ok =
     checks.api.ok &&
