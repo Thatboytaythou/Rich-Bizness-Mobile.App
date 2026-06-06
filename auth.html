@@ -1,1 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Rich Bizness • Auth</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile identity login and signup."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-auth-page" data-page="auth" data-auth-mode="signin">
+
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <main class="rb-auth-shell">
+
+    <section class="rb-auth-hero" aria-label="Rich Bizness Identity">
+      <p class="rb-kicker">
+        RICH BIZNESS IDENTITY
+      </p>
+
+      <h1>
+        Enter The Universe
+      </h1>
+
+      <p>
+        One identity. All platforms.<br />
+        Live • Music • Gaming • Store • Meta • Creator Economy
+      </p>
+    </section>
+
+    <section
+      id="rb-auth-panel"
+      class="rb-auth-panel is-signin"
+      aria-label="Authentication panel"
+    >
+
+      <div class="rb-auth-tabs" role="tablist" aria-label="Auth mode">
+        <button
+          id="rb-auth-signin-tab"
+          class="is-active"
+          type="button"
+          data-auth-mode="signin"
+          role="tab"
+          aria-selected="true"
+          aria-controls="rb-signin-form"
+        >
+          TAP IN 💰
+        </button>
+
+        <button
+          id="rb-auth-signup-tab"
+          type="button"
+          data-auth-mode="signup"
+          role="tab"
+          aria-selected="false"
+          aria-controls="rb-signup-form"
+        >
+          CREATE ID ✨
+        </button>
+      </div>
+
+      <form
+        id="rb-signin-form"
+        class="rb-auth-form"
+        autocomplete="on"
+        data-auth-form="signin"
+      >
+        <h2>
+          Welcome Back
+        </h2>
+
+        <label for="signin-email">
+          Email
+          <input
+            id="signin-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            placeholder="you@richbizness.com"
+            required
+          />
+        </label>
+
+        <label for="signin-password">
+          Password
+          <input
+            id="signin-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          />
+        </label>
+
+        <button
+          id="signin-submit"
+          class="rb-main-launch"
+          type="submit"
+        >
+          TAP IN 💰
+        </button>
+
+        <button
+          id="forgot-password-btn"
+          class="rb-btn ghost"
+          type="button"
+          data-auth-action="forgot-password"
+        >
+          Forgot Password?
+        </button>
+      </form>
+
+      <form
+        id="rb-signup-form"
+        class="rb-auth-form"
+        autocomplete="on"
+        data-auth-form="signup"
+      >
+        <h2>
+          Create Your Identity
+        </h2>
+
+        <label for="signup-display-name">
+          Display Name
+          <input
+            id="signup-display-name"
+            name="display_name"
+            type="text"
+            autocomplete="name"
+            placeholder="ThatboyTayThou"
+          />
+        </label>
+
+        <label for="signup-username">
+          Username
+          <input
+            id="signup-username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="thatboytaythou"
+          />
+        </label>
+
+        <label for="signup-email">
+          Email
+          <input
+            id="signup-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            placeholder="you@richbizness.com"
+            required
+          />
+        </label>
+
+        <label for="signup-password">
+          Password
+          <input
+            id="signup-password"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Create strong password"
+            minlength="6"
+            required
+          />
+        </label>
+
+        <button
+          id="signup-submit"
+          class="rb-main-launch"
+          type="submit"
+        >
+          CREATE ID ✨
+        </button>
+      </form>
+
+      <p
+        id="rb-auth-message"
+        class="rb-auth-message"
+        aria-live="polite"
+      ></p>
+
+    </section>
+
+    <a href="/" class="rb-auth-home" data-route="home">
+      ← Back To Portal
+    </a>
+
+  </main>
+
+  <script type="module">
+    import {
+      bindGlobalNavigation
+    } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/auth.js"></script>
+
+</body>
+</html>
