@@ -4,27 +4,27 @@
    LAYER 6 / 22
 
    PORTAL ATMOSPHERE FX
+   Safe shared FX layer
 ========================= */
 
 .rb-fx-smoke {
   position: fixed;
   inset: -22%;
-
   z-index: 0;
 
   pointer-events: none;
 
   background:
-    radial-gradient(circle at 18% 34%, rgba(0,255,157,.18), transparent 32%),
-    radial-gradient(circle at 78% 28%, rgba(250,204,21,.11), transparent 30%),
-    radial-gradient(circle at 50% 78%, rgba(16,185,129,.14), transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(168,85,247,.08), transparent 48%);
+    radial-gradient(circle at 18% 34%, rgba(0, 255, 157, 0.18), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(250, 204, 21, 0.11), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(16, 185, 129, 0.14), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.08), transparent 48%);
 
   filter:
     blur(54px)
     saturate(1.18);
 
-  opacity: .52;
+  opacity: 0.52;
 
   mix-blend-mode: screen;
 
@@ -47,7 +47,6 @@
 .rb-bg-noise {
   position: fixed;
   inset: 0;
-
   z-index: 0;
 
   pointer-events: none;
@@ -58,11 +57,11 @@
 ========================= */
 
 .rb-bg-grid {
-  opacity: .042;
+  opacity: 0.042;
 
   background-image:
-    linear-gradient(rgba(0,255,157,.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(250,204,21,.09) 1px, transparent 1px);
+    linear-gradient(rgba(0, 255, 157, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250, 204, 21, 0.09) 1px, transparent 1px);
 
   background-size: 58px 58px;
 
@@ -74,8 +73,7 @@
 
   transform-origin: center;
 
-  animation:
-    rbGridDrift 24s linear infinite;
+  animation: rbGridDrift 24s linear infinite;
 }
 
 /* =========================
@@ -87,17 +85,17 @@
     radial-gradient(
       circle at center,
       transparent 18%,
-      rgba(0,0,0,.06) 52%,
-      rgba(0,0,0,.38) 100%
+      rgba(0, 0, 0, 0.06) 52%,
+      rgba(0, 0, 0, 0.38) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(0,0,0,.16),
+      rgba(0, 0, 0, 0.16),
       transparent 32%,
-      rgba(0,0,0,.28)
+      rgba(0, 0, 0, 0.28)
     );
 
-  opacity: .78;
+  opacity: 0.78;
 }
 
 /* =========================
@@ -105,21 +103,20 @@
 ========================= */
 
 .rb-bg-noise {
-  opacity: .018;
+  opacity: 0.018;
 
   mix-blend-mode: soft-light;
 
   background-image:
     repeating-radial-gradient(
       circle at 20% 30%,
-      rgba(255,255,255,.42) 0 1px,
+      rgba(255, 255, 255, 0.42) 0 1px,
       transparent 1px 4px
     );
 
   background-size: 96px 96px;
 
-  animation:
-    rbNoiseShift 1.8s steps(2) infinite;
+  animation: rbNoiseShift 1.8s steps(2) infinite;
 }
 
 /* =========================
@@ -129,24 +126,45 @@
 .rb-space-haze {
   position: fixed;
   inset: -16%;
-
   z-index: 0;
 
   pointer-events: none;
 
   background:
-    radial-gradient(circle at 50% 45%, rgba(0,255,157,.10), transparent 36%),
-    radial-gradient(circle at 36% 68%, rgba(250,204,21,.07), transparent 34%),
-    radial-gradient(circle at 70% 26%, rgba(34,211,238,.07), transparent 28%);
+    radial-gradient(circle at 50% 45%, rgba(0, 255, 157, 0.1), transparent 36%),
+    radial-gradient(circle at 36% 68%, rgba(250, 204, 21, 0.07), transparent 34%),
+    radial-gradient(circle at 70% 26%, rgba(34, 211, 238, 0.07), transparent 28%);
 
   filter: blur(46px);
-
-  opacity: .44;
+  opacity: 0.44;
 
   mix-blend-mode: screen;
 
-  animation:
-    rbHazeFloat 16s ease-in-out infinite alternate;
+  animation: rbHazeFloat 16s ease-in-out infinite alternate;
+}
+
+/* =========================
+   INDEX CANVAS STACK SAFETY
+========================= */
+
+.rb-index-page .rb-fx-smoke,
+.rb-index-page .rb-bg-grid,
+.rb-index-page .rb-bg-vignette,
+.rb-index-page .rb-bg-noise,
+.rb-index-page .rb-space-haze {
+  z-index: 0;
+}
+
+/* =========================
+   SECTION PAGE STACK SAFETY
+========================= */
+
+body:not(.rb-index-page) .rb-fx-smoke,
+body:not(.rb-index-page) .rb-bg-grid,
+body:not(.rb-index-page) .rb-bg-vignette,
+body:not(.rb-index-page) .rb-bg-noise,
+body:not(.rb-index-page) .rb-space-haze {
+  z-index: 0;
 }
 
 /* =========================
@@ -154,29 +172,29 @@
 ========================= */
 
 .rb-orbit-live-energy .rb-fx-smoke {
-  opacity: .72;
+  opacity: 0.72;
 
   filter:
     blur(60px)
     saturate(1.35);
 
   background:
-    radial-gradient(circle at 18% 34%, rgba(0,255,157,.26), transparent 32%),
-    radial-gradient(circle at 78% 28%, rgba(250,204,21,.16), transparent 30%),
-    radial-gradient(circle at 50% 78%, rgba(16,185,129,.22), transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(168,85,247,.12), transparent 48%);
+    radial-gradient(circle at 18% 34%, rgba(0, 255, 157, 0.26), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(250, 204, 21, 0.16), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(16, 185, 129, 0.22), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.12), transparent 48%);
 }
 
 .rb-orbit-live-energy .rb-bg-vignette {
-  opacity: .68;
+  opacity: 0.68;
 }
 
 .rb-orbit-presence-energy .rb-bg-grid {
-  opacity: .064;
+  opacity: 0.064;
 }
 
 .rb-orbit-presence-energy .rb-bg-noise {
-  opacity: .024;
+  opacity: 0.024;
 }
 
 /* =========================
@@ -185,24 +203,24 @@
 
 .rb-theme-blue .rb-fx-smoke {
   background:
-    radial-gradient(circle at 18% 34%, rgba(34,211,238,.18), transparent 32%),
-    radial-gradient(circle at 78% 28%, rgba(147,197,253,.12), transparent 30%),
-    radial-gradient(circle at 50% 78%, rgba(59,130,246,.12), transparent 40%);
+    radial-gradient(circle at 18% 34%, rgba(34, 211, 238, 0.18), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(147, 197, 253, 0.12), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(59, 130, 246, 0.12), transparent 40%);
 }
 
 .rb-theme-purple .rb-fx-smoke {
   background:
-    radial-gradient(circle at 18% 34%, rgba(168,85,247,.18), transparent 32%),
-    radial-gradient(circle at 78% 28%, rgba(244,114,182,.12), transparent 30%),
-    radial-gradient(circle at 50% 78%, rgba(192,132,252,.12), transparent 40%);
+    radial-gradient(circle at 18% 34%, rgba(168, 85, 247, 0.18), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(244, 114, 182, 0.12), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(192, 132, 252, 0.12), transparent 40%);
 }
 
 .rb-theme-gold .rb-fx-smoke,
 .rb-theme-black-gold .rb-fx-smoke {
   background:
-    radial-gradient(circle at 18% 34%, rgba(250,204,21,.16), transparent 32%),
-    radial-gradient(circle at 78% 28%, rgba(255,226,122,.12), transparent 30%),
-    radial-gradient(circle at 50% 78%, rgba(0,255,157,.08), transparent 40%);
+    radial-gradient(circle at 18% 34%, rgba(250, 204, 21, 0.16), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(255, 226, 122, 0.12), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(0, 255, 157, 0.08), transparent 40%);
 }
 
 /* =========================
@@ -226,39 +244,39 @@
 @keyframes rbSmokeBreathe {
   0%,
   100% {
-    opacity: .44;
+    opacity: 0.44;
   }
 
   50% {
-    opacity: .66;
+    opacity: 0.66;
   }
 }
 
 @keyframes rbGridDrift {
   0% {
     transform:
-      translate3d(0,0,0)
+      translate3d(0, 0, 0)
       scale(1);
   }
 
   100% {
     transform:
-      translate3d(-58px,58px,0)
+      translate3d(-58px, 58px, 0)
       scale(1.02);
   }
 }
 
 @keyframes rbNoiseShift {
   0% {
-    transform: translate3d(0,0,0);
+    transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translate3d(2px,-2px,0);
+    transform: translate3d(2px, -2px, 0);
   }
 
   100% {
-    transform: translate3d(-2px,2px,0);
+    transform: translate3d(-2px, 2px, 0);
   }
 }
 
@@ -288,25 +306,25 @@
       blur(42px)
       saturate(1.12);
 
-    opacity: .42;
+    opacity: 0.42;
   }
 
   .rb-bg-grid {
-    opacity: .032;
+    opacity: 0.032;
     background-size: 52px 52px;
   }
 
   .rb-bg-vignette {
-    opacity: .8;
+    opacity: 0.8;
   }
 
   .rb-bg-noise {
-    opacity: .012;
+    opacity: 0.012;
   }
 
   .rb-space-haze {
     filter: blur(34px);
-    opacity: .34;
+    opacity: 0.34;
   }
 }
 
@@ -317,11 +335,11 @@
 @media (max-width: 420px) {
   .rb-fx-smoke {
     filter: blur(36px);
-    opacity: .38;
+    opacity: 0.38;
   }
 
   .rb-bg-grid {
-    opacity: .026;
+    opacity: 0.026;
   }
 }
 
