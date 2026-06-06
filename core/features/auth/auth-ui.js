@@ -1,10 +1,16 @@
 /* =========================================
    RICH BIZNESS LLC
    /core/features/auth/auth-ui.js
+
    CINEMATIC AUTH UI BINDINGS
+   UI only: auth mode, auth identity paint,
+   OAuth buttons, signout buttons
 ========================================= */
 
-import { RB_ROUTES } from "/core/shared/rb-config.js";
+import {
+  RB_ROUTES,
+  RB_BRAND_ASSETS
+} from "/core/shared/rb-config.js";
 
 import {
   rbSignOut,
@@ -28,35 +34,69 @@ import {
   toastInfo
 } from "/core/shared/rb-toast.js";
 
-const DEFAULT_AVATAR = "/images/brand/project-avatar.png.jpeg";
+const DEFAULT_AVATAR =
+  RB_BRAND_ASSETS?.defaultProfileAvatar ||
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
+let authUiBooted = false;
+
 function bindOnce(el, key) {
   if (!el) return false;
+
   const flag = `rbBound${key}`;
-  if (el.dataset[flag] === "true") return false;
+
+  if (el.dataset[flag] === "true") {
+    return false;
+  }
+
   el.dataset[flag] = "true";
   return true;
 }
+
+function setSelectedTab(mode = "signin") {
+  $$("[data-auth-mode]").forEach((btn) => {
+    const active = btn.dataset.authMode === mode;
+
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-selected", String(active));
+  });
+}
+
+/* =========================
+   MODE SWITCH
+========================= */
 
 export function switchMode(mode = "signin") {
   const nextMode = mode === "signup" ? "signup" : "signin";
 
   document.body.dataset.authMode = nextMode;
 
-  const panel = $(".rb-auth-panel");
+  const panel = $(".rb-auth-panel") || $("#rb-auth-panel");
 
   if (panel) {
     panel.classList.remove("is-signin", "is-signup");
     panel.classList.add(nextMode === "signup" ? "is-signup" : "is-signin");
   }
 
-  $$("[data-auth-mode]").forEach((btn) => {
-    btn.classList.toggle("is-active", btn.dataset.authMode === nextMode);
-  });
+  setSelectedTab(nextMode);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:auth-mode-change", {
+      detail: {
+        mode: nextMode
+      }
+    })
+  );
+
+  return nextMode;
 }
+
+/* =========================
+   IDENTITY PAINT
+========================= */
 
 export function paintAuthIdentity(state = {}) {
   const user = state?.user || null;
@@ -94,6 +134,10 @@ export function paintAuthIdentity(state = {}) {
   });
 }
 
+/* =========================
+   BUTTONS
+========================= */
+
 export function bindOAuthButtons() {
   $$("[data-oauth-provider]").forEach((btn) => {
     if (!bindOnce(btn, "OAuth")) return;
@@ -106,7 +150,7 @@ export function bindOAuthButtons() {
         btn.disabled = true;
         await signInWithProvider(provider);
       } catch (error) {
-        console.error(error);
+        console.error("[RB OAUTH FAILED]", error);
         toastError(error?.message || "OAuth sign in failed.");
       } finally {
         btn.disabled = false;
@@ -122,9 +166,12 @@ export function bindSignOutButtons(selector = "[data-rb-signout]") {
     btn.addEventListener("click", async () => {
       try {
         btn.disabled = true;
-        await rbSignOut({ redirectTo: RB_ROUTES.auth || "/" });
+
+        await rbSignOut({
+          redirectTo: RB_ROUTES.auth || "/auth"
+        });
       } catch (error) {
-        console.error(error);
+        console.error("[RB SIGNOUT FAILED]", error);
         toastError(error?.message || "Sign out failed.");
       } finally {
         btn.disabled = false;
@@ -143,8 +190,34 @@ export function bindAuthModeToggles() {
   });
 }
 
+export function bindForgotPasswordButtons(
+  selector = "[data-auth-action='forgot-password']"
+) {
+  $$(selector).forEach((btn) => {
+    if (!bindOnce(btn, "Forgot")) return;
+
+    btn.addEventListener("click", () => {
+      const email =
+        document.querySelector("#signin-email")?.value ||
+        document.querySelector("#rb-signin-form input[name='email']")?.value ||
+        "";
+
+      const url = `${RB_ROUTES.auth || "/auth"}?mode=signin&reset=1${
+        email ? `&email=${encodeURIComponent(email)}` : ""
+      }`;
+
+      window.location.href = url;
+    });
+  });
+}
+
+/* =========================
+   STATE BINDING
+========================= */
+
 export function bindAuthStatus() {
   if (document.body.dataset.rbAuthStatusBound === "true") return;
+
   document.body.dataset.rbAuthStatusBound = "true";
 
   onAuthState((state) => {
@@ -152,7 +225,19 @@ export function bindAuthStatus() {
   });
 }
 
-export async function initAuthUI({ showBootToast = false } = {}) {
+/* =========================
+   INIT
+========================= */
+
+export async function initAuthUI({
+  showBootToast = false
+} = {}) {
+  if (authUiBooted) {
+    return null;
+  }
+
+  authUiBooted = true;
+
   try {
     const state = await initAuthState();
 
@@ -160,21 +245,38 @@ export async function initAuthUI({ showBootToast = false } = {}) {
     bindOAuthButtons();
     bindSignOutButtons();
     bindAuthModeToggles();
+    bindForgotPasswordButtons();
     bindAuthStatus();
 
     switchMode(document.body.dataset.authMode || "signin");
+
+    document.body.classList.add("rb-auth-ui-ready");
 
     if (showBootToast) {
       toastInfo("Identity system online.");
     }
 
     console.log("RB AUTH UI INITIALIZED");
+
     return state;
   } catch (error) {
-    console.error("Auth UI init failed:", error);
-    toastError("Failed to initialize auth system.");
+    authUiBooted = false;
+
+    console.error("[RB AUTH UI INIT FAILED]", error);
+    toastError(error?.message || "Failed to initialize auth system.");
+
     return null;
   }
+}
+
+export function resetAuthUIBoot() {
+  authUiBooted = false;
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => initAuthUI());
+} else {
+  initAuthUI();
 }
 
 console.log("RB AUTH UI MODULE LOADED");
