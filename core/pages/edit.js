@@ -1,6 +1,9 @@
 /* =========================================
    RICH BIZNESS LLC
    /core/pages/edit.js
+
+   EDIT PROFILE PAGE CONTROLLER
+   Locked to shared auth/profile/upload identity chain
 ========================================= */
 
 import {
@@ -53,7 +56,9 @@ const els = {
   bio: $("edit-bio"),
   avatarFile: $("edit-avatar-file"),
   bannerFile: $("edit-banner-file"),
-  backBtn: $("edit-back-btn")
+  backBtn: $("edit-back-btn"),
+  saveBtn: $("edit-save-btn"),
+  status: $("edit-status")
 };
 
 let isSubmitting = false;
@@ -69,6 +74,13 @@ function cleanUsername(username = "") {
 
 function currentProfile() {
   return getCurrentUserState()?.profile || {};
+}
+
+function setStatus(message = "", type = "info") {
+  if (!els.status) return;
+
+  els.status.textContent = message;
+  els.status.dataset.type = type;
 }
 
 function fillForm() {
@@ -90,6 +102,8 @@ function fillForm() {
 }
 
 function setLoading(isLoading) {
+  isSubmitting = isLoading;
+
   if (!els.form) return;
 
   els.form.classList.toggle("is-loading", isLoading);
@@ -99,6 +113,16 @@ function setLoading(isLoading) {
     .forEach((el) => {
       el.disabled = isLoading;
     });
+
+  if (els.saveBtn) {
+    if (!els.saveBtn.dataset.originalText) {
+      els.saveBtn.dataset.originalText = els.saveBtn.textContent.trim();
+    }
+
+    els.saveBtn.textContent = isLoading
+      ? "SAVING..."
+      : els.saveBtn.dataset.originalText;
+  }
 }
 
 async function uploadOneProfileFile({ file, type, purpose }) {
@@ -120,6 +144,7 @@ async function uploadOneProfileFile({ file, type, purpose }) {
   return (
     result?.uploaded?.publicUrl ||
     result?.uploaded?.public_url ||
+    result?.uploaded?.url ||
     result?.publicUrl ||
     result?.public_url ||
     result?.url ||
@@ -136,7 +161,9 @@ async function uploadProfileMedia() {
     purpose: "profile_avatar"
   });
 
-  if (avatarUrl) updates.avatar_url = avatarUrl;
+  if (avatarUrl) {
+    updates.avatar_url = avatarUrl;
+  }
 
   const bannerUrl = await uploadOneProfileFile({
     file: els.bannerFile?.files?.[0],
@@ -144,9 +171,25 @@ async function uploadProfileMedia() {
     purpose: "profile_banner"
   });
 
-  if (bannerUrl) updates.banner_url = bannerUrl;
+  if (bannerUrl) {
+    updates.banner_url = bannerUrl;
+  }
 
   return updates;
+}
+
+function validateProfilePayload({ displayName, username }) {
+  if (!displayName) {
+    throw new Error("Display name is required.");
+  }
+
+  if (!username) {
+    throw new Error("Username is required.");
+  }
+
+  if (username.length < 3) {
+    throw new Error("Username must be at least 3 characters.");
+  }
 }
 
 async function saveProfile(event) {
@@ -162,8 +205,8 @@ async function saveProfile(event) {
     return;
   }
 
-  isSubmitting = true;
   setLoading(true);
+  setStatus("Saving profile...", "info");
 
   try {
     await ensureMyProfile();
@@ -171,6 +214,11 @@ async function saveProfile(event) {
     const displayName = els.displayName?.value?.trim() || "";
     const username = cleanUsername(els.username?.value || "");
     const bio = els.bio?.value?.trim() || "";
+
+    validateProfilePayload({
+      displayName,
+      username
+    });
 
     const mediaUpdates = await uploadProfileMedia();
 
@@ -192,14 +240,15 @@ async function saveProfile(event) {
 
     bindProfileShell?.();
 
+    setStatus("Profile updated.", "success");
     toastSuccess("Profile updated successfully.", "Rich Bizness");
 
     window.location.href = RB_ROUTES.profile || "/profile";
   } catch (error) {
     console.error("[RB EDIT SAVE FAILED]", error);
+    setStatus(error?.message || "Failed to update profile.", "error");
     toastError(error?.message || "Failed to update profile.");
   } finally {
-    isSubmitting = false;
     setLoading(false);
   }
 }
@@ -217,7 +266,9 @@ async function bootEditPage() {
     await initApp({
       guard: true,
       bindProfile: true,
-      toast: false
+      toast: false,
+      ensureProfile: true,
+      profileState: true
     });
 
     await ensureMyProfile();
