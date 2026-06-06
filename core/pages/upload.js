@@ -4,6 +4,7 @@
 
    UPLOAD PAGE CONTROLLER
    Signed-in upload router
+   Connects upload UI -> storage -> section router
 ========================= */
 
 import {
@@ -12,6 +13,10 @@ import {
   markPageError,
   refreshAppIdentity
 } from "/core/app.js";
+
+import {
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
 
 import {
   getUser,
@@ -60,19 +65,27 @@ const $ = (id) => document.getElementById(id);
 const els = {
   form: $("rb-upload-form"),
   routeKey: $("routeKey"),
+
+  title: $("uploadTitle"),
+  description: $("uploadDescription"),
   category: $("uploadCategory"),
   tag: $("uploadTag"),
+
   file: $("uploadFile"),
   preview: $("uploadPreview"),
   dropzone: $("uploadDropzone") || $("uploadPreview"),
+
   progressBar: $("uploadProgressBar"),
   progressLabel: $("uploadProgressLabel"),
+
   statusLabel: $("upload-status-label"),
   routeLabel: $("upload-route-label"),
   bucketLabel: $("upload-bucket-label"),
   tableLabel: $("upload-table-label"),
+
   message: $("uploadMessage"),
-  submit: $("uploadSubmitBtn")
+  submit: $("uploadSubmitBtn"),
+  reset: $("uploadResetBtn")
 };
 
 let booted = false;
@@ -80,25 +93,48 @@ let cleanupDropzone = null;
 let cleanupProgress = null;
 let cleanupStatus = null;
 
-function setStatus(text) {
-  if (els.statusLabel) els.statusLabel.textContent = text;
-  if (els.message) els.message.textContent = text;
-}
+/* =========================
+   ROUTE NORMALIZER
+========================= */
 
 function normalizeRouteKey(value = "feed") {
+  const raw = String(value || "feed").trim();
+
   const map = {
-    general: "feed",
-    feed: "feed",
-    gallery: "gallery",
-    music: "music",
-    podcast: "podcast",
-    radio: "radio",
-    sports: "sports",
-    gaming: "gaming",
+    general: "generalUpload",
+    "general-upload": "generalUpload",
+
+    feed: "feedPost",
+    "feed-post": "feedPost",
+
+    gallery: "galleryMedia",
+    "gallery-media": "galleryMedia",
+
+    music: "musicTrack",
+    "music-track": "musicTrack",
+    "music-cover": "musicCover",
+
+    podcast: "podcastAudio",
+    "podcast-audio": "podcastAudio",
+    "podcast-cover": "podcastCover",
+
+    radio: "radioCover",
+    "radio-cover": "radioCover",
+
+    sports: "sportsClip",
+    "sports-media": "sportsMedia",
+    "sports-clip": "sportsClip",
+    "sports-cover": "sportsCover",
+
+    gaming: "gameClip",
+    "game-clip": "gameClip",
+    "game-asset": "gameAsset",
+    "game-cover": "gameCover",
 
     "store-product": "storeProduct",
     "store-digital": "storeDigital",
-    "store-seller": "storeSeller",
+    "store-seller": "storeSellerMedia",
+    "store-seller-media": "storeSellerMedia",
 
     "live-thumbnail": "liveThumbnail",
     "live-recording": "liveRecording",
@@ -107,14 +143,60 @@ function normalizeRouteKey(value = "feed") {
     "profile-banner": "profileBanner",
 
     "meta-avatar": "metaAvatar",
-    meta: "meta"
+    meta: "metaWorld",
+    "meta-world": "metaWorld"
   };
 
-  return map[value] || value || "feed";
+  return map[raw] || raw || "feedPost";
 }
 
 function getSelectedRouteKey() {
   return normalizeRouteKey(els.routeKey?.value || "feed");
+}
+
+/* =========================
+   UI HELPERS
+========================= */
+
+function setStatus(text = "") {
+  if (els.statusLabel) {
+    els.statusLabel.textContent = text;
+  }
+
+  if (els.message) {
+    els.message.textContent = text;
+  }
+}
+
+function setLoading(active = false) {
+  els.form?.classList.toggle("is-loading", active);
+
+  els.form
+    ?.querySelectorAll("button,input,textarea,select")
+    .forEach((el) => {
+      el.disabled = active;
+    });
+
+  if (els.submit) {
+    els.submit.disabled = active;
+  }
+}
+
+function applyQuerySection() {
+  const params = new URLSearchParams(window.location.search);
+  const section = params.get("section") || params.get("route");
+
+  if (!section || !els.routeKey) return;
+
+  const wantedRoute = normalizeRouteKey(section);
+
+  const option = Array.from(els.routeKey.options).find((item) => {
+    return normalizeRouteKey(item.value) === wantedRoute;
+  });
+
+  if (option) {
+    els.routeKey.value = option.value;
+  }
 }
 
 function syncRouteLabel() {
@@ -123,11 +205,11 @@ function syncRouteLabel() {
 
   setUploadRoute({
     routeKey,
-    section: route.section
+    section: route.section || "feed"
   });
 
   if (els.routeLabel) {
-    els.routeLabel.textContent = route.section || "feed";
+    els.routeLabel.textContent = routeKey;
   }
 
   if (els.bucketLabel) {
@@ -139,21 +221,56 @@ function syncRouteLabel() {
   }
 
   if (els.category && !els.category.value) {
-    els.category.value = route.section;
+    els.category.value = route.section || "";
   }
+
+  return {
+    routeKey,
+    route
+  };
 }
 
-function setLoading(active) {
-  els.form?.classList.toggle("is-loading", active);
+function buildRouteValues({
+  formValues,
+  route,
+  routeKey,
+  uploaded
+}) {
+  const mediaType = uploaded.mediaType || uploaded.media_type || "file";
 
-  els.form
-    ?.querySelectorAll("button,input,textarea,select")
-    .forEach((el) => {
-      el.disabled = active;
-    });
+  return {
+    ...formValues,
 
-  if (els.submit) els.submit.disabled = active;
+    route_key: routeKey,
+    upload_route: routeKey,
+
+    tag: els.tag?.value?.trim() || formValues.tag || "",
+    category: formValues.category || route.section || "",
+    section: route.section || formValues.section || "feed",
+
+    media_type: mediaType,
+    file_url: uploaded.publicUrl || uploaded.public_url || uploaded.path || "",
+    media_url: uploaded.publicUrl || uploaded.public_url || "",
+    public_url: uploaded.publicUrl || uploaded.public_url || "",
+    storage_path: uploaded.path || "",
+    bucket: uploaded.bucket || route.bucket || "",
+
+    metadata: {
+      ...(formValues.metadata || {}),
+      source: "upload.js",
+      route_key: routeKey,
+      section: route.section || "",
+      bucket: uploaded.bucket || route.bucket || "",
+      storage_path: uploaded.path || "",
+      media_type: mediaType,
+      original_file_name: uploaded.fileName || uploaded.file_name || ""
+    }
+  };
 }
+
+/* =========================
+   SUBMIT
+========================= */
 
 async function handleUpload(event) {
   event.preventDefault();
@@ -163,7 +280,9 @@ async function handleUpload(event) {
 
   if (!user?.id) {
     setStatus("SIGN IN REQUIRED");
-    window.location.href = "/auth?next=/upload";
+    window.location.href = `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(
+      window.location.pathname
+    )}`;
     return;
   }
 
@@ -172,8 +291,7 @@ async function handleUpload(event) {
     return;
   }
 
-  const routeKey = getSelectedRouteKey();
-  const route = getUploadSectionRoute(routeKey);
+  const { routeKey, route } = syncRouteLabel();
   const formValues = readUploadForm(els.form);
 
   try {
@@ -190,28 +308,37 @@ async function handleUpload(event) {
       bucket: route.bucket,
       file: state.file,
       userId: user.id,
-      folder: route.section,
-      upsert: false
+      folder: route.folder || route.section || routeKey,
+      upsert: false,
+      metadata: {
+        route_key: routeKey,
+        section: route.section || "",
+        table: route.table || "",
+        column: route.column || ""
+      }
     });
 
     uploaded.mediaType = detectMediaType(state.file);
+    uploaded.media_type = uploaded.mediaType;
 
     setUploadProgress(82);
     setStatus("ROUTING TO SECTION");
 
+    const values = buildRouteValues({
+      formValues,
+      route,
+      routeKey,
+      uploaded
+    });
+
     const routed = await routeUploadedFile({
       section: routeKey,
       uploaded,
-      values: {
-        ...formValues,
-        tag: els.tag?.value?.trim() || formValues.tag || "",
-        category: formValues.category || route.section,
-        section: route.section,
-        media_type: uploaded.mediaType
-      }
+      values
     });
 
     setUploadProgress(95);
+    setStatus("SYNCING PROFILE");
 
     await refreshProfileState();
     await refreshAppIdentity();
@@ -222,13 +349,14 @@ async function handleUpload(event) {
       await syncAvatarToUniverse();
     }
 
-    setUploadResult({
+    const result = {
       uploaded,
       routed,
       routeKey,
-      section: route.section
-    });
+      section: route.section || "feed"
+    };
 
+    setUploadResult(result);
     setUploadProgress(100);
     setStatus("DROP LIVE");
 
@@ -239,6 +367,12 @@ async function handleUpload(event) {
     });
 
     syncRouteLabel();
+
+    window.dispatchEvent(
+      new CustomEvent("rb:upload-complete", {
+        detail: result
+      })
+    );
   } catch (error) {
     console.error("[RB UPLOAD FAILED]", error);
     setUploadError(error);
@@ -248,9 +382,28 @@ async function handleUpload(event) {
   }
 }
 
+/* =========================
+   BIND
+========================= */
+
 function bindUI() {
+  if (els.form?.dataset.rbUploadPageBound === "true") return;
+
+  els.form.dataset.rbUploadPageBound = "true";
+
   els.routeKey?.addEventListener("change", syncRouteLabel);
   els.form?.addEventListener("submit", handleUpload);
+
+  els.reset?.addEventListener("click", () => {
+    resetUploadUI({
+      form: els.form,
+      preview: els.preview,
+      input: els.file
+    });
+
+    syncRouteLabel();
+    setStatus("READY");
+  });
 
   cleanupDropzone = bindUploadDropzone({
     dropzone: els.dropzone,
@@ -268,8 +421,13 @@ function bindUI() {
   });
 }
 
+/* =========================
+   BOOT
+========================= */
+
 async function bootUploadPage() {
   if (booted) return;
+
   booted = true;
 
   try {
@@ -283,26 +441,26 @@ async function bootUploadPage() {
     await refreshProfileState();
     await refreshAppIdentity();
 
-    const params = new URLSearchParams(window.location.search);
-    const section = params.get("section");
-
-    if (section && els.routeKey) {
-      els.routeKey.value = section;
-    }
-
+    applyQuerySection();
     bindUI();
     syncRouteLabel();
 
     resetUploadState();
     setUploadReady(true);
+    setStatus("READY");
 
+    document.body.dataset.rbPage = "upload";
+    document.body.dataset.rbRoute = "upload";
+    document.body.dataset.rbProfileLock = "true";
     document.body.classList.add("rb-upload-ready");
+
     markPageReady("upload");
 
     console.log("RB UPLOAD READY");
   } catch (error) {
     console.error("[RB UPLOAD BOOT FAILED]", error);
     markPageError(error);
+    setUploadError(error);
     setStatus(error?.message || "UPLOAD FAILED TO BOOT");
   }
 }
