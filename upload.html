@@ -18,6 +18,7 @@
   />
 
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/cards.css" />
@@ -26,8 +27,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-upload-page" data-section="upload">
-
+<body
+  class="rb-body rb-upload-page"
+  data-page="upload"
+  data-section="upload"
+  data-rb-route="upload"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -35,26 +40,26 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/">
+    <a class="rb-brand" href="/" data-route="home" aria-label="Rich Bizness Home">
       <span>UPLOAD CORE</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
     <nav class="rb-topnav" aria-label="Upload navigation">
-      <a href="/feed">Feed</a>
-      <a href="/music">Music</a>
-      <a href="/gaming">Gaming</a>
-      <a href="/sports">Sports</a>
-      <a href="/gallery">Gallery</a>
-      <a href="/store">Store</a>
-      <a class="is-active" href="/upload">Upload</a>
-      <a href="/profile">Profile</a>
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/gaming" data-route="gaming">Gaming</a>
+      <a href="/sports" data-route="sports">Sports</a>
+      <a href="/gallery" data-route="gallery">Gallery</a>
+      <a href="/store" data-route="store">Store</a>
+      <a class="is-active" href="/upload" data-route="upload">Upload</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
     </nav>
   </header>
 
   <main class="rb-section-shell rb-upload-shell">
-
     <section class="rb-section-hero rb-upload-hero">
       <div class="rb-section-hero-copy">
         <p class="rb-kicker">RICH BIZNESS UPLOAD CORE</p>
@@ -67,13 +72,18 @@
         </p>
 
         <div class="rb-form-actions">
-          <a class="rb-btn ghost" href="/">← Back To Portal</a>
-          <a class="rb-btn ghost" href="/profile">Profile</a>
+          <a class="rb-btn ghost" href="/" data-route="home">
+            ← Back To Portal
+          </a>
+
+          <a class="rb-btn ghost" href="/profile" data-route="profile" data-rb-profile-link>
+            Profile
+          </a>
         </div>
       </div>
     </section>
 
-    <section class="rb-profile-grid">
+    <section class="rb-profile-grid" aria-label="Upload route status">
       <article class="rb-mini-card">
         <strong id="upload-status-label">READY</strong>
         <span>Status</span>
@@ -104,7 +114,6 @@
       </div>
 
       <form id="rb-upload-form" class="rb-form" enctype="multipart/form-data">
-
         <label for="routeKey">
           Upload Route
           <select name="route_key" id="routeKey">
@@ -302,10 +311,7 @@
           class="rb-upload-dropzone"
           aria-live="polite"
         >
-          <div
-            id="uploadPreview"
-            class="rb-upload-preview"
-          >
+          <div id="uploadPreview" class="rb-upload-preview">
             <div class="upload-preview-empty">
               <strong>No file selected</strong>
               <span>Drop media here or tap to choose.</span>
@@ -322,7 +328,7 @@
               aria-valuemin="0"
               aria-valuemax="100"
               aria-valuenow="0"
-              style="width:0%;"
+              style="width: 0%;"
             ></div>
           </div>
 
@@ -352,15 +358,51 @@
           class="rb-form-note"
           aria-live="polite"
         ></p>
-
       </form>
     </section>
-
   </main>
+
+  <nav class="rb-bottom-nav" aria-label="Primary navigation">
+    <button data-route="feed" type="button" aria-label="Feed">
+      <span class="rb-nav-icon">🔥</span>
+      <span>Feed</span>
+    </button>
+
+    <button data-route="live" type="button" aria-label="Live">
+      <span class="rb-nav-icon">📡</span>
+      <span>Live</span>
+    </button>
+
+    <button data-route="music" type="button" aria-label="Music">
+      <span class="rb-nav-icon">🎵</span>
+      <span>Music</span>
+    </button>
+
+    <button data-route="gaming" type="button" aria-label="Gaming">
+      <span class="rb-nav-icon">🎮</span>
+      <span>Gaming</span>
+    </button>
+
+    <button data-route="upload" class="is-active" type="button" aria-label="Upload">
+      <span class="rb-nav-icon">⬆️</span>
+      <span>Upload</span>
+    </button>
+  </nav>
 
   <footer class="rb-footer">
     <span>© 2026 Rich Bizness LLC</span>
   </footer>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/live-activity.js"></script>
+  <script type="module" src="/core/pages/online-presence.js"></script>
+  <script type="module" src="/core/pages/realtime-notifications.js"></script>
+  <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
 
   <script type="module" src="/core/pages/upload.js"></script>
 </body>
