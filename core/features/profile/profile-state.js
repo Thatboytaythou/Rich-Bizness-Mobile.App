@@ -7,6 +7,11 @@
    Auto profile ensure
    Public profile loading
    Realtime profile refresh
+
+   Identity Rules:
+   - activeProfile = profiles row
+   - activeIdentity = rb-profile identity shape
+   - meta/avatar visuals stay outside this file
 ========================= */
 
 import { RB_TABLES } from "/core/shared/rb-config.js";
@@ -39,6 +44,7 @@ let activeProfileMode = "guest";
 let profileChannel = null;
 let profileLoading = false;
 let profileRefreshingFromRealtime = false;
+let profileBooting = null;
 
 const listeners = new Set();
 
@@ -48,32 +54,47 @@ export async function initProfileState({
   username = null,
   realtime = true
 } = {}) {
-  await initAuthState();
-
-  const authState = getAuthState();
-
-  activeProfileMode = resolveProfileMode({
-    mode,
-    userId,
-    username,
-    authState
-  });
-
-  activeProfile = await loadActiveProfile({
-    mode: activeProfileMode,
-    userId,
-    username
-  });
-
-  activeIdentity = getProfileIdentity(activeProfile);
-  profileReady = true;
-
-  if (realtime) {
-    bindProfileRealtime(activeProfile?.id || authState.user?.id);
+  if (profileBooting) {
+    await profileBooting;
+    return getProfileState();
   }
 
-  notifyProfileListeners();
-  return getProfileState();
+  profileBooting = (async () => {
+    await initAuthState();
+
+    const authState = getAuthState();
+
+    activeProfileMode = resolveProfileMode({
+      mode,
+      userId,
+      username,
+      authState
+    });
+
+    activeProfile = await loadActiveProfile({
+      mode: activeProfileMode,
+      userId,
+      username
+    });
+
+    activeIdentity = getProfileIdentity(activeProfile);
+    profileReady = true;
+
+    if (realtime) {
+      bindProfileRealtime(activeProfile?.id || authState.user?.id);
+    }
+
+    notifyProfileListeners();
+
+    return getProfileState();
+  })();
+
+  try {
+    await profileBooting;
+    return getProfileState();
+  } finally {
+    profileBooting = null;
+  }
 }
 
 export function getProfileState() {
@@ -83,7 +104,7 @@ export function getProfileState() {
     mode: activeProfileMode,
     auth: getAuthState(),
     profile: activeProfile,
-    identity: activeIdentity,
+    identity: activeIdentity || getProfileIdentity(activeProfile),
     isMine: isMyProfile(activeProfile)
   };
 }
@@ -108,11 +129,12 @@ export async function refreshProfileState() {
     }
 
     activeIdentity = getProfileIdentity(activeProfile);
-    notifyProfileListeners();
+    profileReady = true;
 
+    notifyProfileListeners();
     return getProfileState();
   } catch (error) {
-    console.warn("[RB PROFILE REFRESH WARNING]", error);
+    console.warn("[RB PROFILE REFRESH WARNING]", error?.message || error);
     return getProfileState();
   } finally {
     profileLoading = false;
@@ -123,8 +145,13 @@ export async function refreshProfileState() {
 export async function loadProfileByRoute() {
   const params = new URLSearchParams(window.location.search);
 
-  const username = params.get("u") || params.get("username");
-  const userId = params.get("id") || params.get("user");
+  const username =
+    params.get("u") ||
+    params.get("username");
+
+  const userId =
+    params.get("id") ||
+    params.get("user");
 
   return await initProfileState({
     mode: username || userId ? "public" : "me",
@@ -137,7 +164,8 @@ export async function loadProfileByRoute() {
 export async function setActiveProfile(profile) {
   activeProfile = profile || null;
   activeIdentity = getProfileIdentity(activeProfile);
-  activeProfileMode = isMyProfile(activeProfile) ? "me" : "public";
+  activeProfileMode = isMyProfile(activeProfile) ? "me" : activeProfile ? "public" : "guest";
+  profileReady = true;
 
   bindProfileRealtime(activeProfile?.id);
   notifyProfileListeners();
@@ -153,7 +181,7 @@ export function onProfileState(callback) {
   try {
     callback(getProfileState());
   } catch (error) {
-    console.warn("[RB PROFILE LISTENER ERROR]", error);
+    console.warn("[RB PROFILE LISTENER ERROR]", error?.message || error);
   }
 
   return () => listeners.delete(callback);
@@ -166,7 +194,7 @@ export function notifyProfileListeners() {
     try {
       callback(state);
     } catch (error) {
-      console.warn("[RB PROFILE LISTENER ERROR]", error);
+      console.warn("[RB PROFILE LISTENER ERROR]", error?.message || error);
     }
   });
 
@@ -187,7 +215,7 @@ export function getActiveProfile() {
 }
 
 export function getActiveIdentity() {
-  return activeIdentity;
+  return activeIdentity || getProfileIdentity(activeProfile);
 }
 
 export function profileStateIsReady() {
@@ -253,10 +281,7 @@ async function loadActiveProfile({
 function bindProfileRealtime(profileId) {
   if (!profileId) return;
 
-  if (profileChannel) {
-    supabase.removeChannel(profileChannel);
-    profileChannel = null;
-  }
+  clearProfileRealtime();
 
   profileChannel = supabase
     .channel(`rb-profile-${profileId}`)
@@ -307,6 +332,7 @@ onAuthState(async (authState) => {
     activeProfile = null;
     activeIdentity = getProfileIdentity(null);
     activeProfileMode = "guest";
+    profileReady = true;
     clearProfileRealtime();
     notifyProfileListeners();
   }
