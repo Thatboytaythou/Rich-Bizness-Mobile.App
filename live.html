@@ -2,101 +2,227 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
   <title>Live Studio • Rich Bizness Mobile</title>
+
   <meta name="theme-color" content="#050805" />
 
+  <meta
+    name="description"
+    content="Rich Bizness Mobile live studio for creating, starting, chatting, reacting, and broadcasting realtime streams."
+  />
+
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
   <link rel="stylesheet" href="/styles/live.css" />
 </head>
 
-<body class="rb-live-page live-body rb-live-hologram-page">
+<body
+  class="rb-body rb-live-page live-body rb-live-hologram-page"
+  data-page="live"
+  data-rb-route="live"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
   <div class="rb-bg-noise" aria-hidden="true"></div>
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <main class="live-holo-shell">
+  <main class="live-holo-shell" aria-label="Rich Bizness Live Studio">
     <header class="live-holo-top">
-      <a class="live-brand" href="/">
+      <a class="live-brand" href="/" data-route="home">
         <span>LIVE STUDIO</span>
         <strong>RICH BIZNESS</strong>
         <small>LLC</small>
       </a>
 
-      <a id="watchLink" class="live-watch-link" href="/watch">WATCH</a>
+      <nav class="live-top-actions" aria-label="Live studio navigation">
+        <a id="watchLink" class="live-watch-link" href="/watch" data-route="watch">
+          WATCH
+        </a>
+
+        <a class="live-watch-link ghost" href="/profile" data-route="profile">
+          PROFILE
+        </a>
+      </nav>
     </header>
 
-    <section class="holo-tv-wrap">
-      <div class="holo-tv">
-        <div class="holo-tv-glass"></div>
+    <section class="holo-tv-wrap" aria-label="Live broadcast stage">
+      <div id="videoStage" class="holo-tv" data-watch-stage>
+        <div class="holo-tv-glass" aria-hidden="true"></div>
 
-        <video id="localVideo" autoplay muted playsinline></video>
-        <div id="remoteVideos" class="remote-videos cohost-hologram"></div>
+        <video
+          id="localVideo"
+          class="local-video"
+          autoplay
+          muted
+          playsinline
+        ></video>
+
+        <div
+          id="remoteVideos"
+          class="remote-videos cohost-hologram"
+          aria-label="Remote cohost videos"
+        ></div>
 
         <div id="stageEmpty" class="stage-empty holo-empty">
           Create a stream, then press WE LIT 🔥.
         </div>
 
-        <div id="reactionLayer" class="reaction-layer"></div>
+        <div
+          id="reactionLayer"
+          class="reaction-layer"
+          data-reaction-layer
+          aria-hidden="true"
+        ></div>
 
-        <div class="we-lit-float">
+        <div class="we-lit-float" aria-hidden="true">
           WE🔥📺
         </div>
 
         <div class="holo-room-info">
           <p>WE 🎥</p>
-          <h1 id="stageTitle">No stream created</h1>
-          <div id="liveBadge" class="live-badge off">OFF AIR</div>
+
+          <h1 id="stageTitle">
+            No stream created
+          </h1>
+
+          <div id="liveBadge" class="live-badge off">
+            OFF AIR
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="live-control-dock">
-      <button id="createStreamBtn" type="button">Create</button>
-      <button id="startLiveBtn" type="button" disabled>WE LIT 🔥</button>
-      <button id="endLiveBtn" type="button" disabled>End</button>
-      <button id="toggleMicBtn" type="button" disabled>Mic On</button>
-      <button id="toggleCamBtn" type="button" disabled>Cam On</button>
-      <button id="copyWatchBtn" type="button" disabled>Copy</button>
+    <section class="live-control-dock" aria-label="Live controls">
+      <button id="createStreamBtn" type="button">
+        Create
+      </button>
+
+      <button id="startLiveBtn" type="button" disabled>
+        WE LIT 🔥
+      </button>
+
+      <button id="endLiveBtn" type="button" disabled>
+        End
+      </button>
+
+      <button id="toggleMicBtn" type="button" disabled>
+        Mic On
+      </button>
+
+      <button id="toggleCamBtn" type="button" disabled>
+        Cam On
+      </button>
+
+      <button id="copyWatchBtn" type="button" disabled>
+        Copy
+      </button>
     </section>
 
     <section class="live-hidden-setup" aria-label="Live setup">
-      <input id="streamTitle" type="text" value="Family Bizness" />
-      <textarea id="streamDescription" rows="3" placeholder="Tell viewers what this live is about..."></textarea>
+      <label for="streamTitle">
+        Stream Title
+        <input
+          id="streamTitle"
+          type="text"
+          value="Family Bizness"
+          autocomplete="off"
+        />
+      </label>
 
-      <select id="streamCategory">
-        <option value="general">General</option>
-        <option value="music">Music</option>
-        <option value="gaming">Gaming</option>
-        <option value="sports">Sports</option>
-        <option value="store">Store</option>
-        <option value="meta">Meta</option>
-        <option value="gallery">Gallery</option>
-        <option value="podcast">Podcast</option>
-      </select>
+      <label for="streamDescription">
+        Stream Description
+        <textarea
+          id="streamDescription"
+          rows="3"
+          placeholder="Tell viewers what this live is about..."
+        ></textarea>
+      </label>
 
-      <select id="streamAccess">
-        <option value="free">Free</option>
-        <option value="paid">Paid</option>
-        <option value="vip">VIP</option>
-        <option value="subscriber">Subscriber</option>
-        <option value="private">Private</option>
-      </select>
+      <label for="streamCategory">
+        Category
+        <select id="streamCategory">
+          <option value="general">General</option>
+          <option value="music">Music</option>
+          <option value="gaming">Gaming</option>
+          <option value="sports">Sports</option>
+          <option value="store">Store</option>
+          <option value="meta">Meta</option>
+          <option value="gallery">Gallery</option>
+          <option value="podcast">Podcast</option>
+        </select>
+      </label>
 
-      <input id="streamPrice" type="number" min="0" step="1" value="0" />
-      <input id="streamThumbnail" type="url" placeholder="/images/brand/omni-watch.png.jpeg" />
-      <input id="streamCover" type="url" placeholder="/images/brand/hero-banner.png" />
+      <label for="streamAccess">
+        Access
+        <select id="streamAccess">
+          <option value="free">Free</option>
+          <option value="paid">Paid</option>
+          <option value="vip">VIP</option>
+          <option value="subscriber">Subscriber</option>
+          <option value="private">Private</option>
+        </select>
+      </label>
 
-      <input id="chatEnabled" type="checkbox" checked />
-      <input id="cohostEnabled" type="checkbox" checked />
-      <input id="vipEnabled" type="checkbox" checked />
+      <label for="streamPrice">
+        Price
+        <input
+          id="streamPrice"
+          type="number"
+          min="0"
+          step="1"
+          value="0"
+          inputmode="decimal"
+        />
+      </label>
+
+      <label for="streamThumbnail">
+        Thumbnail URL
+        <input
+          id="streamThumbnail"
+          type="url"
+          placeholder="/images/brand/omni-watch.png.jpeg"
+          autocomplete="off"
+        />
+      </label>
+
+      <label for="streamCover">
+        Cover URL
+        <input
+          id="streamCover"
+          type="url"
+          placeholder="/images/brand/hero-banner.png"
+          autocomplete="off"
+        />
+      </label>
+
+      <label class="live-check">
+        <input id="chatEnabled" type="checkbox" checked />
+        <span>Chat Enabled</span>
+      </label>
+
+      <label class="live-check">
+        <input id="cohostEnabled" type="checkbox" checked />
+        <span>Cohost Enabled</span>
+      </label>
+
+      <label class="live-check">
+        <input id="vipEnabled" type="checkbox" checked />
+        <span>VIP Enabled</span>
+      </label>
     </section>
 
-    <aside class="live-overlay-stats">
+    <aside class="live-overlay-stats" aria-label="Live stats">
       <span>Status <strong id="statStatus">off air</strong></span>
       <span>Viewers <strong id="statViewers">0</strong></span>
       <span>Peak <strong id="statPeak">0</strong></span>
@@ -105,19 +231,48 @@
       <span>Revenue <strong id="statRevenue">$0.00</strong></span>
     </aside>
 
-    <aside class="live-overlay-chat">
-      <p id="liveStatus" class="live-status" aria-live="polite">Checking auth...</p>
+    <aside class="live-overlay-chat" aria-label="Live chat and activity">
+      <p id="liveStatus" class="live-status" aria-live="polite">
+        Checking auth...
+      </p>
 
-      <ul id="participantList" class="mini-list"></ul>
-      <ul id="tipList" class="mini-list"></ul>
-      <ul id="chatList" class="chat-list"></ul>
+      <div class="live-mini-lists">
+        <section aria-label="Participants">
+          <strong>Participants</strong>
+          <ul id="participantList" class="mini-list">
+            <li>No participants yet.</li>
+          </ul>
+        </section>
+
+        <section aria-label="Tips">
+          <strong>Tips</strong>
+          <ul id="tipList" class="mini-list">
+            <li>No tips yet.</li>
+          </ul>
+        </section>
+      </div>
+
+      <ul id="chatList" class="chat-list" aria-live="polite">
+        <li>No chat yet.</li>
+      </ul>
 
       <form id="chatForm" class="chat-form">
-        <input id="chatInput" type="text" placeholder="Say something live..." maxlength="300" />
-        <button type="submit">Send</button>
+        <input
+          id="chatInput"
+          type="text"
+          placeholder="Say something live..."
+          maxlength="300"
+          autocomplete="off"
+        />
+
+        <button type="submit">
+          Send
+        </button>
       </form>
 
-      <button id="sendReactionBtn" class="reaction-btn" type="button">🔥</button>
+      <button id="sendReactionBtn" class="reaction-btn" type="button">
+        🔥
+      </button>
     </aside>
   </main>
 
