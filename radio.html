@@ -1,1 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Radio • Rich Bizness LLC</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile radio universe with live stations, featured radio, listener sessions, realtime likes, and creator sync."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/music.css" />
+</head>
+
+<body class="rb-body rb-radio-page rb-music-page" data-page="radio" data-rb-route="radio">
+
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/" data-route="home">
+      <span>RICH</span>
+      <strong>BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Main navigation">
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/watch" data-route="watch">Watch</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/radio" data-route="radio" class="is-active">Radio</a>
+      <a href="/upload" data-route="upload">Upload</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
+    </nav>
+  </header>
+
+  <main class="rb-section-shell rb-music-shell rb-radio-shell">
+
+    <section class="rb-section-hero rb-music-hero rb-radio-hero">
+      <div class="rb-section-copy">
+        <p class="rb-kicker">RICH BIZNESS RADIO</p>
+
+        <h1>
+          Radio Universe
+        </h1>
+
+        <p>
+          Live radio stations, featured streams, listener sessions, likes, and realtime playback synced to the Rich Bizness identity system.
+        </p>
+
+        <div class="rb-section-actions">
+          <a class="rb-btn primary" href="/upload?section=radio" data-route="/upload?section=radio">
+            Add Radio
+          </a>
+
+          <a class="rb-btn ghost" href="/music" data-route="music">
+            Music Universe
+          </a>
+
+          <a class="rb-btn ghost" href="/profile" data-route="profile" data-rb-profile-link>
+            My Profile
+          </a>
+        </div>
+      </div>
+
+      <aside class="rb-music-now rb-radio-now rb-panel" aria-label="Now playing radio">
+        <div class="rb-music-now-cover-wrap">
+          <img
+            id="radio-now-cover"
+            data-radio-now-cover
+            src="/images/brand/hero-banner.png"
+            alt="Now Playing Radio Cover"
+          />
+        </div>
+
+        <div class="rb-music-now-copy">
+          <p id="radio-now-type" class="rb-kicker">
+            RADIO
+          </p>
+
+          <h2 id="radio-now-title" data-radio-now-title>
+            Nothing Playing
+          </h2>
+
+          <p id="radio-now-meta" data-radio-now-meta>
+            Rich Bizness Radio
+          </p>
+        </div>
+
+        <audio
+          id="radio-audio-player"
+          controls
+          preload="metadata"
+          playsinline
+        ></audio>
+      </aside>
+    </section>
+
+    <section class="rb-panel rb-music-stats rb-radio-stats">
+      <div class="rb-stat-grid">
+        <article>
+          <strong id="radio-station-count">0</strong>
+          <span>Stations</span>
+        </article>
+
+        <article>
+          <strong id="radio-live-count">0</strong>
+          <span>Live</span>
+        </article>
+
+        <article>
+          <strong id="radio-listener-count">0</strong>
+          <span>Listeners</span>
+        </article>
+
+        <article>
+          <strong id="radio-like-count">0</strong>
+          <span>Likes</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="rb-tabs rb-music-tabs rb-radio-tabs" aria-label="Radio sections">
+      <button class="is-active" type="button" data-radio-tab="stations">
+        Stations
+      </button>
+
+      <button type="button" data-radio-tab="featured">
+        Featured
+      </button>
+
+      <button type="button" data-radio-tab="sessions">
+        Sessions
+      </button>
+    </section>
+
+    <section class="rb-music-panels rb-radio-panels">
+
+      <section class="rb-music-panel rb-radio-panel is-active" data-radio-panel="stations">
+        <div class="rb-module-head">
+          <div>
+            <p class="rb-kicker">STATIONS</p>
+            <h2>Radio Stations</h2>
+          </div>
+
+          <a class="rb-btn ghost" href="/upload?section=radio">
+            Add Radio
+          </a>
+        </div>
+
+        <div id="radio-stations-list" class="rb-music-grid rb-radio-grid">
+          <p class="rb-empty">Loading radio stations...</p>
+        </div>
+      </section>
+
+      <section class="rb-music-panel rb-radio-panel" data-radio-panel="featured">
+        <div class="rb-module-head">
+          <div>
+            <p class="rb-kicker">FEATURED</p>
+            <h2>Featured Radio</h2>
+          </div>
+
+          <a class="rb-btn ghost" href="/upload?section=radio">
+            Feature Station
+          </a>
+        </div>
+
+        <div id="radio-featured-list" class="rb-music-grid rb-radio-grid">
+          <p class="rb-empty">Loading featured radio...</p>
+        </div>
+      </section>
+
+      <section class="rb-music-panel rb-radio-panel" data-radio-panel="sessions">
+        <div class="rb-module-head">
+          <div>
+            <p class="rb-kicker">SESSIONS</p>
+            <h2>Listener Sessions</h2>
+          </div>
+
+          <a class="rb-btn ghost" href="/music">
+            Back To Music
+          </a>
+        </div>
+
+        <div id="radio-sessions-list" class="rb-list-stack rb-radio-sessions-list">
+          <p class="rb-empty">Loading radio sessions...</p>
+        </div>
+      </section>
+
+    </section>
+
+  </main>
+
+  <nav class="rb-bottom-nav" aria-label="Primary navigation">
+    <button data-route="feed" type="button" aria-label="Feed">
+      <span class="rb-nav-icon">🔥</span>
+      <span>Feed</span>
+    </button>
+
+    <button data-route="live" type="button" aria-label="Live">
+      <span class="rb-nav-icon">📡</span>
+      <span>Live</span>
+    </button>
+
+    <button data-route="music" type="button" aria-label="Music">
+      <span class="rb-nav-icon">🎵</span>
+      <span>Music</span>
+    </button>
+
+    <button data-route="radio" class="is-active" type="button" aria-label="Radio">
+      <span class="rb-nav-icon">📻</span>
+      <span>Radio</span>
+    </button>
+
+    <button data-route="upload" type="button" aria-label="Upload">
+      <span class="rb-nav-icon">⬆️</span>
+      <span>Upload</span>
+    </button>
+  </nav>
+
+  <footer class="rb-footer">
+    <span>© 2026 Rich Bizness LLC</span>
+  </footer>
+
+  <script type="module">
+    import {
+      bindGlobalNavigation
+    } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/live-activity.js"></script>
+  <script type="module" src="/core/pages/online-presence.js"></script>
+  <script type="module" src="/core/pages/realtime-notifications.js"></script>
+  <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
+
+  <script type="module" src="/core/pages/radio.js"></script>
+</body>
+</html>
