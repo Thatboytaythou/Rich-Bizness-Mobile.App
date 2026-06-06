@@ -4,6 +4,7 @@
 
    MASTER UPLOAD ROUTER
    Buckets + Tables + Columns Locked
+   Uses rb-storage.js + rb-supabase.js only
 ========================= */
 
 import {
@@ -18,14 +19,17 @@ import {
 } from "/core/shared/rb-storage.js";
 
 import {
-  getSupabase,
   getUser,
   getProfileIdentity,
   rbInsert,
-  rbUpdate
+  rbUpdate,
+  rbUpsert
 } from "/core/shared/rb-supabase.js";
 
-const supabase = getSupabase();
+const PRIVATE_BUCKETS = new Set([
+  RB_BUCKETS.storeDigital,
+  RB_BUCKETS.liveRecordings
+]);
 
 export const RB_UPLOAD_ROUTES = Object.freeze({
   profileAvatar: {
@@ -64,8 +68,8 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
     section: "meta",
     visibility: "public",
     table: RB_TABLES.metaWorlds,
-    column: "world_url",
-    mode: "attach"
+    column: "cover_url",
+    mode: "insert"
   },
 
   feedPost: {
@@ -249,6 +253,10 @@ export const RB_UPLOAD_ROUTES = Object.freeze({
   }
 });
 
+function now() {
+  return new Date().toISOString();
+}
+
 function routeFromConfig(type) {
   const route = CONFIG_UPLOAD_ROUTES?.[type];
   if (!route) return null;
@@ -257,11 +265,7 @@ function routeFromConfig(type) {
     bucket: route.bucket,
     folder: type,
     section: type,
-    visibility:
-      route.bucket === RB_BUCKETS.storeDigital ||
-      route.bucket === RB_BUCKETS.liveRecordings
-        ? "private"
-        : "public",
+    visibility: PRIVATE_BUCKETS.has(route.bucket) ? "private" : "public",
     table: route.table,
     column: route.column,
     mode: "attach"
@@ -293,10 +297,23 @@ export function listUploadRoutesBySection(section) {
 
 function uploadedValue(uploaded, route) {
   if (route.visibility === "public") {
-    return uploaded?.publicUrl || uploaded?.public_url || "";
+    return (
+      uploaded?.publicUrl ||
+      uploaded?.public_url ||
+      uploaded?.url ||
+      uploaded?.upload?.public_url ||
+      uploaded?.upload?.publicUrl ||
+      ""
+    );
   }
 
-  return uploaded?.path || uploaded?.file_path || "";
+  return (
+    uploaded?.path ||
+    uploaded?.file_path ||
+    uploaded?.upload?.path ||
+    uploaded?.upload?.file_path ||
+    ""
+  );
 }
 
 function cleanMetadata(metadata = {}) {
@@ -309,12 +326,31 @@ function cleanMetadata(metadata = {}) {
 function identityPayload(extra = {}) {
   const user = getUser();
   const identity = getProfileIdentity?.() || {};
+  const userId = user?.id || identity?.user_id || identity?.id || null;
 
   return {
-    user_id: user?.id || identity?.user_id || null,
+    user_id: userId,
     username: identity?.username || null,
     display_name: identity?.display_name || null,
+    avatar_url: identity?.avatar_url || null,
     ...extra
+  };
+}
+
+function insertPayload({ route, values, urlValue, metadata, mediaType }) {
+  return {
+    ...identityPayload(),
+    ...values,
+    section: values.section || route.section,
+    visibility: values.visibility || route.visibility || "public",
+    media_type: values.media_type || mediaType || null,
+    [route.column]: urlValue,
+    metadata: {
+      ...cleanMetadata(metadata),
+      ...(values.metadata || {})
+    },
+    created_at: values.created_at || now(),
+    updated_at: now()
   };
 }
 
@@ -324,10 +360,14 @@ export async function uploadByRoute({
   metadata = {},
   upsert = false
 }) {
+  if (!file) {
+    throw new Error("Missing upload file.");
+  }
+
   const route = getUploadRoute(type);
   const mediaType = detectMediaType(file);
 
-  return await rbUpload({
+  const uploaded = await rbUpload({
     bucket: route.bucket,
     file,
     folder: route.folder,
@@ -343,6 +383,12 @@ export async function uploadByRoute({
     },
     upsert
   });
+
+  return {
+    ...uploaded,
+    route,
+    mediaType
+  };
 }
 
 export async function createContentWithUpload({
@@ -374,47 +420,44 @@ export async function createContentWithUpload({
   }
 
   if (route.mode === "update-profile") {
-    const data = await rbUpdate({
+    const rows = await rbUpdate({
       table: route.table,
       match: { id: user.id },
       values: {
         [route.column]: urlValue,
-        updated_at: new Date().toISOString()
+        updated_at: now()
       }
     });
 
     return {
       uploaded,
-      record: data?.[0] || null,
-      route
+      record: rows?.[0] || null,
+      route,
+      url: urlValue
     };
   }
 
   if (route.mode === "upsert-user") {
-    const { data, error } = await supabase
-      .from(route.table)
-      .upsert(
-        {
-          ...identityPayload(),
-          ...values,
-          [route.column]: urlValue,
-          metadata: {
-            ...cleanMetadata(metadata),
-            ...(values.metadata || {})
-          },
-          updated_at: new Date().toISOString()
+    const rows = await rbUpsert({
+      table: route.table,
+      values: {
+        ...identityPayload(),
+        ...values,
+        [route.column]: urlValue,
+        metadata: {
+          ...cleanMetadata(metadata),
+          ...(values.metadata || {})
         },
-        { onConflict: "user_id" }
-      )
-      .select("*")
-      .maybeSingle();
-
-    if (error) throw error;
+        updated_at: now()
+      },
+      onConflict: "user_id"
+    });
 
     return {
       uploaded,
-      record: data || null,
-      route
+      record: rows?.[0] || null,
+      route,
+      url: urlValue
     };
   }
 
@@ -426,23 +469,25 @@ export async function createContentWithUpload({
         uploaded,
         record: null,
         needsTarget: true,
-        route
+        route,
+        url: urlValue
       };
     }
 
-    const data = await rbUpdate({
+    const rows = await rbUpdate({
       table: route.table,
       match: finalMatch,
       values: {
         [route.column]: urlValue,
-        updated_at: new Date().toISOString()
+        updated_at: now()
       }
     });
 
     return {
       uploaded,
-      record: data?.[0] || null,
-      route
+      record: rows?.[0] || null,
+      route,
+      url: urlValue
     };
   }
 
@@ -450,29 +495,27 @@ export async function createContentWithUpload({
     return {
       uploaded,
       record: uploaded.upload || null,
-      route
+      route,
+      url: urlValue
     };
   }
 
-  const record = {
-    ...identityPayload(),
-    ...values,
-    [route.column]: urlValue,
-    metadata: {
-      ...cleanMetadata(metadata),
-      ...(values.metadata || {})
-    }
-  };
-
-  const data = await rbInsert({
+  const rows = await rbInsert({
     table: route.table,
-    values: record
+    values: insertPayload({
+      route,
+      values,
+      urlValue,
+      metadata,
+      mediaType: uploaded.mediaType
+    })
   });
 
   return {
     uploaded,
-    record: data?.[0] || null,
-    route
+    record: rows?.[0] || null,
+    route,
+    url: urlValue
   };
 }
 
@@ -500,14 +543,33 @@ export async function attachUploadToRecord({
 export async function profileAvatarUpload(file) {
   return await createContentWithUpload({
     type: "profileAvatar",
-    file
+    file,
+    upsert: true
   });
 }
 
 export async function profileBannerUpload(file) {
   return await createContentWithUpload({
     type: "profileBanner",
-    file
+    file,
+    upsert: true
+  });
+}
+
+export async function metaAvatarUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "metaAvatar",
+    file,
+    values,
+    upsert: true
+  });
+}
+
+export async function metaWorldUpload(file, values = {}) {
+  return await createContentWithUpload({
+    type: "metaWorld",
+    file,
+    values
   });
 }
 
