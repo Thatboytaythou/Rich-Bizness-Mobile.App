@@ -4,9 +4,12 @@
 
    LIVE MODERATION ENGINE
    Ban / unban / delete chat / pin chat / report
+   Safe Tables + Realtime + Permission Lock
 ========================= */
 
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   RB_TABLES
@@ -24,6 +27,10 @@ const MODERATION = {
   banChannel: null,
   reportChannel: null,
   reviewChannel: null,
+
+  ready: false,
+  loading: false,
+  error: null,
 
   listeners: new Set()
 };
@@ -44,13 +51,25 @@ function emitModeration() {
       detail: state
     })
   );
+
+  window.dispatchEvent(
+    new CustomEvent("rb:live-moderation-state", {
+      detail: state
+    })
+  );
+}
+
+function roleKey() {
+  return String(
+    MODERATION.profile?.role ||
+      MODERATION.user?.role ||
+      MODERATION.profile?.role_key ||
+      ""
+  ).toLowerCase();
 }
 
 function isHostOrMod() {
-  const role =
-    MODERATION.profile?.role ||
-    MODERATION.user?.role ||
-    "";
+  const role = roleKey();
 
   return Boolean(
     MODERATION.stream?.creator_id === MODERATION.user?.id ||
@@ -60,8 +79,28 @@ function isHostOrMod() {
         "elite_mod",
         "admin",
         "moderator",
-        "support"
+        "support",
+        "owner",
+        "super_admin"
       ].includes(role)
+  );
+}
+
+function displayName() {
+  return (
+    MODERATION.profile?.display_name ||
+    MODERATION.profile?.full_name ||
+    MODERATION.profile?.username ||
+    MODERATION.user?.email?.split("@")[0] ||
+    "Rich Moderator"
+  );
+}
+
+function username() {
+  return (
+    MODERATION.profile?.username ||
+    MODERATION.user?.email?.split("@")[0] ||
+    "moderator"
   );
 }
 
@@ -72,8 +111,93 @@ function metadataWithPatch(existing = {}, patch = {}) {
   };
 }
 
+function notifyTable() {
+  return RB_TABLES.richNotifications || RB_TABLES.notifications;
+}
+
+function reportsTable() {
+  return RB_TABLES.moderationReports || RB_TABLES.contentReviewQueue;
+}
+
+function normalizeBan(row = {}) {
+  return {
+    ...row,
+    reason: row.reason || row.metadata?.reason || "Live moderation",
+    banned_user_id: row.banned_user_id || row.user_id || null
+  };
+}
+
+function normalizeReport(row = {}) {
+  return {
+    ...row,
+    reason: row.reason || row.flagged_reason || "Live report",
+    details: row.details || row.description || ""
+  };
+}
+
+function requireStream() {
+  if (!MODERATION.stream?.id) {
+    throw new Error("No live stream selected.");
+  }
+
+  return MODERATION.stream;
+}
+
+function requireModerator() {
+  if (!isHostOrMod()) {
+    throw new Error("You do not have permission to moderate this live.");
+  }
+
+  return true;
+}
+
+async function safeInsert(table, payload) {
+  if (!table) return null;
+
+  try {
+    const { data, error } = await getSupabase()
+      .from(table)
+      .insert(payload)
+      .select("*")
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return data || null;
+  } catch (error) {
+    console.warn(`[RB LIVE MOD INSERT SKIPPED: ${table}]`, error?.message || error);
+    return null;
+  }
+}
+
+async function safeUpdate(table, match = {}, values = {}) {
+  if (!table) return null;
+
+  try {
+    let query = getSupabase().from(table).update(values);
+
+    Object.entries(match).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        query = query.eq(key, value);
+      }
+    });
+
+    const { data, error } = await query.select("*").maybeSingle();
+
+    if (error) throw error;
+
+    return data || null;
+  } catch (error) {
+    console.warn(`[RB LIVE MOD UPDATE SKIPPED: ${table}]`, error?.message || error);
+    return null;
+  }
+}
+
 export function getLiveModerationState() {
   return {
+    ready: MODERATION.ready,
+    loading: MODERATION.loading,
+    error: MODERATION.error,
     stream: MODERATION.stream,
     user: MODERATION.user,
     profile: MODERATION.profile,
@@ -88,7 +212,12 @@ export function onLiveModeration(listener) {
   if (typeof listener !== "function") return () => {};
 
   MODERATION.listeners.add(listener);
-  listener(getLiveModerationState());
+
+  try {
+    listener(getLiveModerationState());
+  } catch (error) {
+    console.warn("[RB LIVE MODERATION LISTENER]", error);
+  }
 
   return () => {
     MODERATION.listeners.delete(listener);
@@ -96,50 +225,60 @@ export function onLiveModeration(listener) {
 }
 
 export async function loadLiveBans(streamId = MODERATION.stream?.id) {
-  if (!streamId) return [];
-
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase
-    .from(RB_TABLES.liveStreamBans)
-    .select("*")
-    .eq("stream_id", streamId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.warn("[RB LIVE BANS LOAD]", error);
+  if (!streamId || !RB_TABLES.liveStreamBans) {
+    MODERATION.bans = [];
+    emitModeration();
     return [];
   }
 
-  MODERATION.bans = data || [];
-  emitModeration();
+  const supabase = getSupabase();
 
-  return MODERATION.bans;
+  try {
+    const { data, error } = await supabase
+      .from(RB_TABLES.liveStreamBans)
+      .select("*")
+      .eq("stream_id", streamId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    MODERATION.bans = (data || []).map(normalizeBan);
+    emitModeration();
+
+    return MODERATION.bans;
+  } catch (error) {
+    console.warn("[RB LIVE BANS LOAD]", error?.message || error);
+    MODERATION.bans = [];
+    emitModeration();
+    return [];
+  }
 }
 
 export async function isUserBanned({
   streamId = MODERATION.stream?.id,
   userId = MODERATION.user?.id
 } = {}) {
-  if (!streamId || !userId) return false;
+  if (!streamId || !userId || !RB_TABLES.liveStreamBans) return false;
 
   const supabase = getSupabase();
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.liveStreamBans)
-    .select("id,expires_at")
-    .eq("stream_id", streamId)
-    .eq("banned_user_id", userId)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-    .limit(1)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from(RB_TABLES.liveStreamBans)
+      .select("id,expires_at")
+      .eq("stream_id", streamId)
+      .eq("banned_user_id", userId)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+      .limit(1)
+      .maybeSingle();
 
-  if (error) {
-    console.warn("[RB LIVE BAN CHECK]", error);
+    if (error) throw error;
+
+    return Boolean(data?.id);
+  } catch (error) {
+    console.warn("[RB LIVE BAN CHECK]", error?.message || error);
     return false;
   }
-
-  return Boolean(data?.id);
 }
 
 export async function banLiveUser({
@@ -147,82 +286,86 @@ export async function banLiveUser({
   reason = "Live moderation",
   expiresAt = null
 } = {}) {
-  if (!MODERATION.stream?.id) {
-    throw new Error("No live stream selected.");
-  }
+  requireStream();
+  requireModerator();
 
   if (!bannedUserId) {
     throw new Error("Missing banned user id.");
   }
 
-  if (!isHostOrMod()) {
-    throw new Error("You do not have permission to ban users.");
+  if (!RB_TABLES.liveStreamBans) {
+    throw new Error("Live bans table not configured.");
   }
 
   const supabase = getSupabase();
+  const now = new Date().toISOString();
+
+  const payload = {
+    stream_id: MODERATION.stream.id,
+    banned_user_id: bannedUserId,
+    banned_by: MODERATION.user?.id || null,
+    reason,
+    expires_at: expiresAt,
+    metadata: {
+      source: "live-moderation.js",
+      moderator_username: username(),
+      moderator_display_name: displayName()
+    }
+  };
 
   const { data, error } = await supabase
     .from(RB_TABLES.liveStreamBans)
-    .insert({
-      stream_id: MODERATION.stream.id,
-      banned_user_id: bannedUserId,
-      banned_by: MODERATION.user?.id || null,
-      reason,
-      expires_at: expiresAt,
-      metadata: {
-        source: "live-moderation.js"
-      }
-    })
+    .insert(payload)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
 
-  await supabase
-    .from(RB_TABLES.liveStreamMembers)
-    .update({
+  await safeUpdate(
+    RB_TABLES.liveStreamMembers,
+    {
+      stream_id: MODERATION.stream.id,
+      user_id: bannedUserId
+    },
+    {
       status: "blocked",
-      left_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
-    .eq("stream_id", MODERATION.stream.id)
-    .eq("user_id", bannedUserId);
+      left_at: now,
+      updated_at: now
+    }
+  );
 
-  if (RB_TABLES.richNotifications) {
-    await supabase
-      .from(RB_TABLES.richNotifications)
-      .insert({
-        user_id: bannedUserId,
-        actor_id: MODERATION.user?.id || null,
-        type: "live_banned",
-        title: "Live access removed",
-        body: reason,
-        target_table: RB_TABLES.liveStreams,
-        target_type: "live",
-        target_id: MODERATION.stream.id,
-        emoji: "🛡️",
-        priority: "high",
-        metadata: {
-          source: "live-moderation.js"
-        }
-      });
-  }
+  await safeInsert(notifyTable(), {
+    user_id: bannedUserId,
+    actor_id: MODERATION.user?.id || null,
+    type: "live_banned",
+    title: "Live access removed",
+    body: reason,
+    target_table: RB_TABLES.liveStreams,
+    target_type: "live",
+    target_id: MODERATION.stream.id,
+    emoji: "🛡️",
+    priority: "high",
+    metadata: {
+      source: "live-moderation.js",
+      stream_id: MODERATION.stream.id,
+      moderator_username: username()
+    }
+  });
 
   await loadLiveBans(MODERATION.stream.id);
 
-  return data;
+  return normalizeBan(data || payload);
 }
 
 export async function unbanLiveUser({
   bannedUserId,
   banId = null
 } = {}) {
-  if (!MODERATION.stream?.id) {
-    throw new Error("No live stream selected.");
-  }
+  requireStream();
+  requireModerator();
 
-  if (!isHostOrMod()) {
-    throw new Error("You do not have permission to unban users.");
+  if (!RB_TABLES.liveStreamBans) {
+    throw new Error("Live bans table not configured.");
   }
 
   const supabase = getSupabase();
@@ -245,14 +388,17 @@ export async function unbanLiveUser({
   if (error) throw error;
 
   if (bannedUserId) {
-    await supabase
-      .from(RB_TABLES.liveStreamMembers)
-      .update({
+    await safeUpdate(
+      RB_TABLES.liveStreamMembers,
+      {
+        stream_id: MODERATION.stream.id,
+        user_id: bannedUserId
+      },
+      {
         status: "left",
         updated_at: new Date().toISOString()
-      })
-      .eq("stream_id", MODERATION.stream.id)
-      .eq("user_id", bannedUserId);
+      }
+    );
   }
 
   await loadLiveBans(MODERATION.stream.id);
@@ -261,12 +407,14 @@ export async function unbanLiveUser({
 }
 
 export async function deleteLiveChatMessage(messageId) {
+  requireModerator();
+
   if (!messageId) {
     throw new Error("Missing message id.");
   }
 
-  if (!isHostOrMod()) {
-    throw new Error("You do not have permission to delete chat.");
+  if (!RB_TABLES.liveChatMessages) {
+    throw new Error("Live chat table not configured.");
   }
 
   const supabase = getSupabase();
@@ -281,44 +429,48 @@ export async function deleteLiveChatMessage(messageId) {
     .from(RB_TABLES.liveChatMessages)
     .update({
       is_deleted: true,
+      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       metadata: metadataWithPatch(existing?.metadata, {
         moderated_by: MODERATION.user?.id || null,
+        moderator_username: username(),
         moderated_at: new Date().toISOString(),
         source: "live-moderation.js"
       })
     })
     .eq("id", messageId)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
 
-  return data;
+  return data || null;
 }
 
 export async function pinLiveChatMessage(messageId, pinned = true) {
+  requireModerator();
+
   if (!messageId) {
     throw new Error("Missing message id.");
   }
 
-  if (!isHostOrMod()) {
-    throw new Error("You do not have permission to pin chat.");
+  if (!RB_TABLES.liveChatMessages) {
+    throw new Error("Live chat table not configured.");
   }
 
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from(RB_TABLES.liveChatMessages)
     .update({
-      is_pinned: Boolean(pinned)
+      is_pinned: Boolean(pinned),
+      updated_at: new Date().toISOString()
     })
     .eq("id", messageId)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
 
-  return data;
+  return data || null;
 }
 
 export async function reportLiveContent({
@@ -332,28 +484,44 @@ export async function reportLiveContent({
     throw new Error("Missing report target.");
   }
 
-  const supabase = getSupabase();
+  const table = reportsTable();
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.moderationReports)
-    .insert({
-      reporter_id: MODERATION.user?.id || null,
-      reported_user_id: reportedUserId,
-      target_table: targetTable,
-      target_id: targetId,
-      reason,
-      details,
-      status: "open",
-      priority: "normal",
-      metadata: {
-        source: "live-moderation.js",
-        stream_id: MODERATION.stream?.id || null
-      }
-    })
-    .select("*")
-    .single();
+  if (!table) {
+    throw new Error("Moderation reports table not configured.");
+  }
 
-  if (error) throw error;
+  const payload =
+    table === RB_TABLES.contentReviewQueue
+      ? {
+          target_table: targetTable,
+          target_id: targetId,
+          creator_id: reportedUserId || MODERATION.stream?.creator_id || null,
+          review_type: "live",
+          status: "pending",
+          flagged_reason: reason,
+          metadata: {
+            source: "live-moderation.js",
+            stream_id: MODERATION.stream?.id || null,
+            reporter_id: MODERATION.user?.id || null,
+            details
+          }
+        }
+      : {
+          reporter_id: MODERATION.user?.id || null,
+          reported_user_id: reportedUserId,
+          target_table: targetTable,
+          target_id: targetId,
+          reason,
+          details,
+          status: "open",
+          priority: "normal",
+          metadata: {
+            source: "live-moderation.js",
+            stream_id: MODERATION.stream?.id || null
+          }
+        };
+
+  const data = await safeInsert(table, payload);
 
   await loadLiveReports();
 
@@ -367,34 +535,30 @@ export async function addLiveReviewQueueItem({
   flaggedReason = "Live review",
   reviewType = "live"
 } = {}) {
-  if (!isHostOrMod()) {
-    throw new Error("You do not have permission to add review items.");
-  }
+  requireModerator();
 
   if (!targetTable || !targetId) {
     throw new Error("Missing review target.");
   }
 
-  const supabase = getSupabase();
+  if (!RB_TABLES.contentReviewQueue) {
+    throw new Error("Content review queue table not configured.");
+  }
 
-  const { data, error } = await supabase
-    .from(RB_TABLES.contentReviewQueue)
-    .insert({
-      target_table: targetTable,
-      target_id: targetId,
-      creator_id: creatorId,
-      review_type: reviewType,
-      status: "pending",
-      flagged_reason: flaggedReason,
-      metadata: {
-        source: "live-moderation.js",
-        stream_id: MODERATION.stream?.id || null
-      }
-    })
-    .select("*")
-    .single();
-
-  if (error) throw error;
+  const data = await safeInsert(RB_TABLES.contentReviewQueue, {
+    target_table: targetTable,
+    target_id: targetId,
+    creator_id: creatorId,
+    reviewed_by: MODERATION.user?.id || null,
+    review_type: reviewType,
+    status: "pending",
+    flagged_reason: flaggedReason,
+    metadata: {
+      source: "live-moderation.js",
+      stream_id: MODERATION.stream?.id || null,
+      moderator_username: username()
+    }
+  });
 
   await loadLiveReviewQueue();
 
@@ -402,70 +566,95 @@ export async function addLiveReviewQueueItem({
 }
 
 export async function loadLiveReports() {
-  const supabase = getSupabase();
+  const table = reportsTable();
 
-  let query = supabase
-    .from(RB_TABLES.moderationReports)
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (MODERATION.stream?.id) {
-    query = query.eq("target_id", MODERATION.stream.id);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.warn("[RB LIVE REPORTS LOAD]", error);
+  if (!table) {
+    MODERATION.reports = [];
+    emitModeration();
     return [];
   }
 
-  MODERATION.reports = data || [];
-  emitModeration();
+  const supabase = getSupabase();
 
-  return MODERATION.reports;
+  try {
+    let query = supabase
+      .from(table)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (MODERATION.stream?.id) {
+      query =
+        table === RB_TABLES.contentReviewQueue
+          ? query.eq("target_id", MODERATION.stream.id)
+          : query.eq("target_id", MODERATION.stream.id);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    MODERATION.reports = (data || []).map(normalizeReport);
+    emitModeration();
+
+    return MODERATION.reports;
+  } catch (error) {
+    console.warn("[RB LIVE REPORTS LOAD]", error?.message || error);
+    MODERATION.reports = [];
+    emitModeration();
+    return [];
+  }
 }
 
 export async function loadLiveReviewQueue() {
-  const supabase = getSupabase();
-
-  let query = supabase
-    .from(RB_TABLES.contentReviewQueue)
-    .select("*")
-    .eq("review_type", "live")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (MODERATION.stream?.id) {
-    query = query.eq("target_id", MODERATION.stream.id);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.warn("[RB LIVE REVIEW QUEUE LOAD]", error);
+  if (!RB_TABLES.contentReviewQueue) {
+    MODERATION.reviewQueue = [];
+    emitModeration();
     return [];
   }
 
-  MODERATION.reviewQueue = data || [];
-  emitModeration();
+  const supabase = getSupabase();
 
-  return MODERATION.reviewQueue;
+  try {
+    let query = supabase
+      .from(RB_TABLES.contentReviewQueue)
+      .select("*")
+      .eq("review_type", "live")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (MODERATION.stream?.id) {
+      query = query.eq("target_id", MODERATION.stream.id);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    MODERATION.reviewQueue = data || [];
+    emitModeration();
+
+    return MODERATION.reviewQueue;
+  } catch (error) {
+    console.warn("[RB LIVE REVIEW QUEUE LOAD]", error?.message || error);
+    MODERATION.reviewQueue = [];
+    emitModeration();
+    return [];
+  }
 }
 
 export function clearLiveModerationRealtime() {
   const supabase = getSupabase();
 
-  if (MODERATION.banChannel) {
+  if (MODERATION.banChannel && supabase) {
     supabase.removeChannel(MODERATION.banChannel);
   }
 
-  if (MODERATION.reportChannel) {
+  if (MODERATION.reportChannel && supabase) {
     supabase.removeChannel(MODERATION.reportChannel);
   }
 
-  if (MODERATION.reviewChannel) {
+  if (MODERATION.reviewChannel && supabase) {
     supabase.removeChannel(MODERATION.reviewChannel);
   }
 
@@ -481,47 +670,55 @@ export function bindLiveModerationRealtime(streamId = MODERATION.stream?.id) {
 
   clearLiveModerationRealtime();
 
-  MODERATION.banChannel = supabase
-    .channel(`rb-live-bans-${streamId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: RB_TABLES.liveStreamBans,
-        filter: `stream_id=eq.${streamId}`
-      },
-      () => loadLiveBans(streamId)
-    )
-    .subscribe();
+  if (RB_TABLES.liveStreamBans) {
+    MODERATION.banChannel = supabase
+      .channel(`rb-live-bans-${streamId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: RB_TABLES.liveStreamBans,
+          filter: `stream_id=eq.${streamId}`
+        },
+        () => loadLiveBans(streamId)
+      )
+      .subscribe();
+  }
 
-  MODERATION.reportChannel = supabase
-    .channel(`rb-live-reports-${streamId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: RB_TABLES.moderationReports,
-        filter: `target_id=eq.${streamId}`
-      },
-      () => loadLiveReports()
-    )
-    .subscribe();
+  const table = reportsTable();
 
-  MODERATION.reviewChannel = supabase
-    .channel(`rb-live-review-${streamId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: RB_TABLES.contentReviewQueue,
-        filter: `target_id=eq.${streamId}`
-      },
-      () => loadLiveReviewQueue()
-    )
-    .subscribe();
+  if (table) {
+    MODERATION.reportChannel = supabase
+      .channel(`rb-live-reports-${streamId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table,
+          filter: `target_id=eq.${streamId}`
+        },
+        () => loadLiveReports()
+      )
+      .subscribe();
+  }
+
+  if (RB_TABLES.contentReviewQueue) {
+    MODERATION.reviewChannel = supabase
+      .channel(`rb-live-review-${streamId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: RB_TABLES.contentReviewQueue,
+          filter: `target_id=eq.${streamId}`
+        },
+        () => loadLiveReviewQueue()
+      )
+      .subscribe();
+  }
 
   return {
     banChannel: MODERATION.banChannel,
@@ -536,6 +733,8 @@ export async function initLiveModeration({
   profile = null,
   realtime = true
 } = {}) {
+  clearLiveModerationRealtime();
+
   MODERATION.stream = stream || null;
   MODERATION.user = user || null;
   MODERATION.profile = profile || null;
@@ -543,23 +742,57 @@ export async function initLiveModeration({
   MODERATION.bans = [];
   MODERATION.reports = [];
   MODERATION.reviewQueue = [];
+  MODERATION.ready = false;
+  MODERATION.loading = false;
+  MODERATION.error = null;
 
   if (!MODERATION.stream?.id) {
+    MODERATION.ready = true;
     emitModeration();
     return getLiveModerationState();
   }
 
-  await Promise.all([
-    loadLiveBans(MODERATION.stream.id),
-    loadLiveReports(),
-    loadLiveReviewQueue()
-  ]);
+  MODERATION.loading = true;
+  emitModeration();
 
-  if (realtime) {
-    bindLiveModerationRealtime(MODERATION.stream.id);
+  try {
+    await Promise.allSettled([
+      loadLiveBans(MODERATION.stream.id),
+      loadLiveReports(),
+      loadLiveReviewQueue()
+    ]);
+
+    if (realtime) {
+      bindLiveModerationRealtime(MODERATION.stream.id);
+    }
+
+    MODERATION.ready = true;
+    MODERATION.error = null;
+  } catch (error) {
+    MODERATION.error = error;
+    console.warn("[RB LIVE MODERATION INIT FAILED]", error?.message || error);
+  } finally {
+    MODERATION.loading = false;
+    emitModeration();
   }
 
   return getLiveModerationState();
+}
+
+export function resetLiveModeration() {
+  clearLiveModerationRealtime();
+
+  MODERATION.stream = null;
+  MODERATION.user = null;
+  MODERATION.profile = null;
+  MODERATION.bans = [];
+  MODERATION.reports = [];
+  MODERATION.reviewQueue = [];
+  MODERATION.ready = false;
+  MODERATION.loading = false;
+  MODERATION.error = null;
+
+  emitModeration();
 }
 
 window.addEventListener("beforeunload", clearLiveModerationRealtime);
