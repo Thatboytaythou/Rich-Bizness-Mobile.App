@@ -6,10 +6,18 @@
    Route Lock
    Secret Routes
    Active Module Tracking
+
    Supports:
    - data-route="profile"
    - data-route="/profile"
    - href="/profile"
+
+   Does not hijack:
+   - external links
+   - hash links
+   - mail/tel links
+   - target="_blank"
+   - data-nav-ignore="true"
 ========================= */
 
 import {
@@ -34,6 +42,7 @@ export function normalizePath(path = "") {
 
   const clean = String(path).trim();
 
+  if (!clean) return "/";
   if (clean === "/index.html") return "/";
 
   return (
@@ -42,6 +51,25 @@ export function normalizePath(path = "") {
       .replace(/\/index\.html$/, "/")
       .replace(/\.html$/, "")
       .replace(/\/$/, "") || "/"
+  );
+}
+
+export function shouldIgnoreNavigation(value = "", element = null) {
+  const raw = String(value || "").trim();
+
+  if (!raw) return true;
+
+  if (element?.dataset?.navIgnore === "true") return true;
+  if (element?.getAttribute?.("target") === "_blank") return true;
+  if (element?.hasAttribute?.("download")) return true;
+
+  return (
+    raw.startsWith("#") ||
+    raw.startsWith("mailto:") ||
+    raw.startsWith("tel:") ||
+    raw.startsWith("sms:") ||
+    raw.startsWith("http://") ||
+    raw.startsWith("https://")
   );
 }
 
@@ -55,7 +83,8 @@ export function resolveRoute(value = "") {
     raw.startsWith("https://") ||
     raw.startsWith("#") ||
     raw.startsWith("mailto:") ||
-    raw.startsWith("tel:")
+    raw.startsWith("tel:") ||
+    raw.startsWith("sms:")
   ) {
     return raw;
   }
@@ -65,16 +94,20 @@ export function resolveRoute(value = "") {
   }
 
   if (RB_ROUTES?.[raw]) {
-    return normalizePath(RB_ROUTES[raw]);
+    const route = RB_ROUTES[raw];
+
+    if (typeof route === "string") {
+      return normalizePath(route);
+    }
   }
 
   const module = getModule(raw);
+
   if (module?.route) {
     return normalizePath(module.route);
   }
 
-  const secretRoute =
-    RB_PROFILE_KEYS?.secretRoutes?.[raw];
+  const secretRoute = RB_PROFILE_KEYS?.secretRoutes?.[raw];
 
   if (secretRoute) {
     return normalizePath(secretRoute);
@@ -103,7 +136,7 @@ export function routeExists(route = "") {
       return normalizePath(value) === resolved;
     }
 
-    if (typeof value === "object") {
+    if (value && typeof value === "object") {
       return Object.values(value).some(
         (nested) => normalizePath(nested) === resolved
       );
@@ -122,10 +155,7 @@ export function moduleExists(key = "") {
 ========================= */
 
 export function getModule(key = "") {
-  return (
-    RB_MODULES.find((module) => module.key === key) ||
-    null
-  );
+  return RB_MODULES.find((module) => module.key === key) || null;
 }
 
 export function getModuleByRoute(route = "") {
@@ -185,6 +215,15 @@ export function go(route = "/") {
     console.warn("[RB NAV] Secret route blocked:", resolved);
     return false;
   }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:route-before-change", {
+      detail: {
+        from: normalizePath(window.location.pathname),
+        to: resolved
+      }
+    })
+  );
 
   window.location.href = resolved;
   return true;
@@ -263,6 +302,9 @@ export function setQueryParam(key, value, replaceState = true) {
     window.history.pushState({}, "", url.toString());
   }
 
+  updateActiveRoute();
+  bindActiveNavigation();
+
   return url.toString();
 }
 
@@ -273,6 +315,15 @@ export function setQueryParam(key, value, replaceState = true) {
 export function updateActiveRoute() {
   activeRoute = normalizePath(window.location.pathname || "/");
   activeModule = getModuleByRoute(activeRoute);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:route-change", {
+      detail: {
+        route: activeRoute,
+        module: activeModule
+      }
+    })
+  );
 
   return {
     route: activeRoute,
@@ -303,27 +354,18 @@ export function bindNavigation({
       element.getAttribute("href") ||
       "";
 
-    if (!rawRoute) return;
-
-    if (
-      rawRoute.startsWith("#") ||
-      rawRoute.startsWith("mailto:") ||
-      rawRoute.startsWith("tel:") ||
-      rawRoute.startsWith("http://") ||
-      rawRoute.startsWith("https://")
-    ) {
-      return;
-    }
+    if (shouldIgnoreNavigation(rawRoute, element)) return;
 
     element.dataset.rbNavBound = "true";
 
     element.addEventListener("click", (event) => {
-      event.preventDefault();
-
       const route =
         element.dataset.route ||
         element.getAttribute("href");
 
+      if (shouldIgnoreNavigation(route, element)) return;
+
+      event.preventDefault();
       go(route);
     });
   });
@@ -341,25 +383,27 @@ export function bindActiveNavigation({
       element.getAttribute("href") ||
       "";
 
-    if (!rawRoute) return;
+    if (shouldIgnoreNavigation(rawRoute, element)) return;
 
     const resolved = resolveRoute(rawRoute);
+    const active = resolved === current;
 
-    element.classList.toggle(
-      activeClass,
-      resolved === current
-    );
+    element.classList.toggle(activeClass, active);
+    element.classList.toggle("active", active);
 
-    element.classList.toggle(
-      "active",
-      resolved === current
-    );
+    if (active) {
+      element.setAttribute("aria-current", "page");
+    } else {
+      element.removeAttribute("aria-current");
+    }
   });
 }
 
 export function bindGlobalNavigation(options = {}) {
   bindNavigation(options);
   bindActiveNavigation(options);
+
+  document.body?.classList.add("rb-navigation-bound");
 }
 
 /* =========================
@@ -383,7 +427,10 @@ export function buildModuleMenu() {
    STARTUP
 ========================= */
 
-window.addEventListener("popstate", updateActiveRoute);
+window.addEventListener("popstate", () => {
+  updateActiveRoute();
+  bindActiveNavigation();
+});
 
 updateActiveRoute();
 
