@@ -1,1 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
+  <title>Rich Chess • Rich Bizness Mobile</title>
+  <meta name="theme-color" content="#050805" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/games/rich-chess/board.css" />
+</head>
+
+<body class="rich-chess-page rb-gaming-page">
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <main class="rich-chess-shell">
+    <header class="rich-chess-hero">
+      <a class="rb-back" href="/gaming.html">← Gaming</a>
+
+      <section>
+        <p class="rich-chess-kicker">RICH BIZNESS ARCADE</p>
+        <h1>Rich Chess</h1>
+        <p id="chessStatus" class="rich-chess-status" aria-live="polite">
+          Loading Rich Chess arena...
+        </p>
+      </section>
+    </header>
+
+    <section class="rich-chess-layout">
+      <section class="rich-chess-arena" aria-label="Rich Chess board">
+        <div
+          id="chessBoard"
+          class="rich-chess-board"
+          role="grid"
+          aria-label="Chess board"
+        ></div>
+      </section>
+
+      <aside class="rich-chess-panel" aria-label="Rich Chess controls">
+        <h2>Match Control</h2>
+
+        <section class="rich-chess-stat-grid">
+          <article class="rich-chess-stat">
+            <span>Turn</span>
+            <strong id="chessTurn">White</strong>
+          </article>
+
+          <article class="rich-chess-stat">
+            <span>Moves</span>
+            <strong id="chessMoves">0</strong>
+          </article>
+
+          <article class="rich-chess-stat">
+            <span>Room</span>
+            <strong id="chessRoom">Local</strong>
+          </article>
+
+          <article class="rich-chess-stat">
+            <span>Player</span>
+            <strong id="chessPlayer">Guest</strong>
+          </article>
+        </section>
+
+        <section>
+          <h2>Captured</h2>
+          <div id="chessCaptured" class="rich-chess-captured">
+            <span>No captures yet.</span>
+          </div>
+        </section>
+
+        <section class="rich-chess-actions">
+          <button id="newChessRoomBtn" type="button" class="primary">
+            New Room
+          </button>
+
+          <button id="joinChessRoomBtn" type="button">
+            Join Room
+          </button>
+
+          <button id="resetChessBtn" type="button">
+            Reset Board
+          </button>
+
+          <button id="resignChessBtn" type="button">
+            Resign
+          </button>
+
+          <a id="copyChessLinkBtn" href="#" role="button">
+            Copy Link
+          </a>
+        </section>
+
+        <p class="rich-chess-note">
+          Tap a piece, then tap a legal square. Realtime sync connects when a room is created or joined.
+        </p>
+      </aside>
+    </section>
+  </main>
+
+  <script type="module" src="/games/rich-chess/game.js"></script>
+</body>
+</html>
