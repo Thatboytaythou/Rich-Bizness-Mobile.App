@@ -1,6 +1,6 @@
 /* =========================
    RICH BIZNESS MOBILE
-   styles/three.css
+   /styles/three.css
    LAYER 4 / 22
 
    THREE.JS UNIVERSE CANVAS
@@ -51,12 +51,12 @@
   pointer-events: none;
 
   background:
-    radial-gradient(circle at 50% 46%, rgba(0,255,157,.22), transparent 20%),
-    radial-gradient(circle at 50% 52%, rgba(250,204,21,.14), transparent 34%),
-    radial-gradient(circle at 50% 50%, rgba(168,85,247,.10), transparent 44%),
-    radial-gradient(circle at 18% 20%, rgba(34,211,238,.10), transparent 26%),
-    radial-gradient(circle at 82% 76%, rgba(250,204,21,.08), transparent 24%),
-    radial-gradient(circle at center, rgba(255,255,255,.03), transparent 62%);
+    radial-gradient(circle at 50% 46%, rgba(0, 255, 157, 0.22), transparent 20%),
+    radial-gradient(circle at 50% 52%, rgba(250, 204, 21, 0.14), transparent 34%),
+    radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.1), transparent 44%),
+    radial-gradient(circle at 18% 20%, rgba(34, 211, 238, 0.1), transparent 26%),
+    radial-gradient(circle at 82% 76%, rgba(250, 204, 21, 0.08), transparent 24%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 62%);
 
   filter:
     blur(48px)
@@ -64,7 +64,7 @@
 
   mix-blend-mode: screen;
 
-  opacity: .88;
+  opacity: 0.88;
 
   animation:
     rbCanvasAuraDrift 16s ease-in-out infinite alternate,
@@ -89,19 +89,18 @@
       circle at center,
       transparent 0%,
       transparent 42%,
-      rgba(0,0,0,.14) 68%,
-      rgba(0,0,0,.72) 100%
+      rgba(0, 0, 0, 0.14) 68%,
+      rgba(0, 0, 0, 0.72) 100%
     ),
-
     linear-gradient(
       180deg,
-      rgba(0,0,0,.22),
+      rgba(0, 0, 0, 0.22),
       transparent 26%,
       transparent 70%,
-      rgba(0,0,0,.3)
+      rgba(0, 0, 0, 0.3)
     );
 
-  opacity: .88;
+  opacity: 0.88;
 }
 
 /* =========================
@@ -161,8 +160,6 @@
   z-index: 1;
 }
 
-/* FX */
-
 .rb-index-page .rb-fx-smoke,
 .rb-index-page .rb-bg-grid,
 .rb-index-page .rb-bg-vignette,
@@ -170,8 +167,6 @@
   pointer-events: none;
   z-index: 0;
 }
-
-/* UI OVERLAY */
 
 .rb-index-page .rb-brand-header,
 .rb-index-page .rb-profile-chip,
@@ -184,8 +179,6 @@
   z-index: 20;
 }
 
-/* NOTIFY */
-
 .rb-index-page #rb-notify-root {
   z-index: 40;
 }
@@ -195,7 +188,7 @@
 ========================= */
 
 .rb-portal-backdrop #canvas-container {
-  opacity: .18;
+  opacity: 0.18;
 
   filter:
     blur(1.2px)
@@ -205,7 +198,7 @@
 }
 
 .rb-portal-backdrop #canvas-container::after {
-  opacity: .94;
+  opacity: 0.94;
 }
 
 /* =========================
@@ -223,14 +216,13 @@
     linear-gradient(
       130deg,
       transparent 0%,
-      rgba(0,255,157,.04) 24%,
+      rgba(0, 255, 157, 0.04) 24%,
       transparent 44%
     ),
-
     linear-gradient(
       35deg,
       transparent 0%,
-      rgba(250,204,21,.05) 34%,
+      rgba(250, 204, 21, 0.05) 34%,
       transparent 56%
     );
 
@@ -238,8 +230,7 @@
 
   filter: blur(10px);
 
-  animation:
-    rbLightSweep 18s linear infinite;
+  animation: rbLightSweep 18s linear infinite;
 }
 
 /* =========================
@@ -254,9 +245,9 @@
   pointer-events: none;
 
   background:
-    radial-gradient(circle at center, rgba(255,255,255,.03), transparent 58%);
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 58%);
 
-  opacity: .7;
+  opacity: 0.7;
 
   mix-blend-mode: screen;
 }
@@ -285,7 +276,7 @@
       rotate(0deg)
       scale(1);
 
-    opacity: .62;
+    opacity: 0.62;
   }
 
   100% {
@@ -294,7 +285,7 @@
       rotate(8deg)
       scale(1.12);
 
-    opacity: .96;
+    opacity: 0.96;
   }
 }
 
@@ -305,7 +296,7 @@
       blur(48px)
       saturate(1.2);
 
-    opacity: .72;
+    opacity: 0.72;
   }
 
   50% {
@@ -313,7 +304,7 @@
       blur(58px)
       saturate(1.5);
 
-    opacity: .96;
+    opacity: 0.96;
   }
 }
 
@@ -343,7 +334,6 @@
     height: 100vh !important;
     height: 100svh !important;
     height: 100dvh !important;
-
     height: calc(var(--rb-vh, 1vh) * 100) !important;
   }
 
@@ -354,11 +344,11 @@
       blur(38px)
       saturate(1.25);
 
-    opacity: .82;
+    opacity: 0.82;
   }
 
   #canvas-container::after {
-    opacity: .92;
+    opacity: 0.92;
   }
 
   #canvas-container canvas {
@@ -387,7 +377,7 @@
 @media (prefers-reduced-motion: reduce) {
   #canvas-container::before,
   .rb-index-page #canvas-container .rb-light-rays {
-    animation: none;
+    animation: none !important;
   }
 
   #canvas-container canvas {
