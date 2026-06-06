@@ -1,7 +1,9 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/live.css
-   LIVE HOLOGRAM TV EXPERIENCE
+
+   LIVE + WATCH HOLOGRAM TV EXPERIENCE
+   Live Studio + Watch Room Shared Styles
 ========================================= */
 
 .live-body {
@@ -19,7 +21,12 @@
 .rb-live-hologram-page .rb-bg-grid,
 .rb-live-hologram-page .rb-bg-vignette,
 .rb-live-hologram-page .rb-bg-noise,
-.rb-live-hologram-page .rb-fx-smoke {
+.rb-live-hologram-page .rb-fx-smoke,
+.rb-watch-hologram-page .rb-bg-layer,
+.rb-watch-hologram-page .rb-bg-grid,
+.rb-watch-hologram-page .rb-bg-vignette,
+.rb-watch-hologram-page .rb-bg-noise,
+.rb-watch-hologram-page .rb-fx-smoke {
   pointer-events: none;
 }
 
@@ -36,7 +43,7 @@
 
 .live-holo-top {
   position: relative;
-  z-index: 60;
+  z-index: 90;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -44,10 +51,19 @@
   pointer-events: auto;
 }
 
+.live-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .live-brand {
   display: grid;
   text-transform: uppercase;
   line-height: 0.82;
+  text-decoration: none;
   filter: drop-shadow(0 0 18px rgba(0, 255, 157, 0.25));
 }
 
@@ -75,7 +91,8 @@
 .live-watch-link,
 .live-control-dock button,
 .chat-form button,
-.reaction-btn {
+.reaction-btn,
+.watch-tip-box button {
   min-height: 46px;
   border: 1px solid rgba(250, 204, 21, 0.22);
   border-radius: 999px;
@@ -85,10 +102,21 @@
   font-weight: 1000;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-decoration: none;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.live-watch-link {
+  display: inline-grid;
+  place-items: center;
+}
+
+.live-watch-link.ghost {
+  color: #7cffaa;
+  border-color: rgba(124, 255, 170, 0.22);
 }
 
 .holo-tv-wrap {
@@ -164,6 +192,7 @@
   mix-blend-mode: screen;
 }
 
+.local-video,
 #localVideo {
   position: absolute;
   inset: 0;
@@ -172,6 +201,49 @@
   height: 100%;
   object-fit: cover;
   background: #000;
+}
+
+.watch-video-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.watch-video-tile {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.watch-video-tile span {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 7;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #fefce8;
+  background: rgba(0, 0, 0, 0.58);
+  border: 1px solid rgba(124, 255, 170, 0.22);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.watch-video,
+.watch-video-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.watch-audio {
+  display: none;
 }
 
 .cohost-hologram,
@@ -235,6 +307,7 @@
   font-size: 0.78rem;
   font-weight: 1000;
   letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 .holo-room-info h1 {
@@ -243,6 +316,22 @@
   font-size: clamp(1.6rem, 5vw, 4rem);
   line-height: 0.9;
   letter-spacing: -0.06em;
+}
+
+.watch-description {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.78) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-size: 0.92rem !important;
+  line-height: 1.35 !important;
+}
+
+.watch-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .live-badge {
@@ -266,6 +355,13 @@
   background: linear-gradient(135deg, #ff3b3b, #ffd76b);
   color: #130000;
   box-shadow: 0 0 28px rgba(255, 59, 59, 0.42);
+}
+
+.live-badge.access,
+#watchAccess {
+  background: rgba(0, 0, 0, 0.56);
+  color: #7cffaa;
+  border: 1px solid rgba(124, 255, 170, 0.24);
 }
 
 .holo-empty {
@@ -294,7 +390,7 @@
   position: absolute;
   left: 50%;
   bottom: calc(18px + env(safe-area-inset-bottom));
-  z-index: 80;
+  z-index: 100;
   width: min(760px, calc(100vw - 24px));
   transform: translateX(-50%);
   display: grid;
@@ -312,6 +408,10 @@
   pointer-events: auto;
 }
 
+.watch-control-dock {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .live-control-dock button {
   min-width: 0;
   padding: 0 10px;
@@ -325,6 +425,18 @@
 }
 
 .live-control-dock button:nth-child(3) {
+  color: #200000;
+  background: linear-gradient(135deg, #ff5757, #ffb36b);
+  border: 0;
+}
+
+.watch-control-dock button:nth-child(1) {
+  color: #041006;
+  background: linear-gradient(135deg, #7cffaa, #ffd76b);
+  border: 0;
+}
+
+.watch-control-dock button:nth-child(2) {
   color: #200000;
   background: linear-gradient(135deg, #ff5757, #ffb36b);
   border: 0;
@@ -363,17 +475,36 @@ button:disabled {
 }
 
 .live-hidden-setup.is-open,
-.live-hidden-setup:focus-within {
+.live-hidden-setup:focus-within,
+.rb-live-page.rb-page-ready .live-hidden-setup:hover {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
 }
 
+.live-hidden-setup label,
+.watch-tip-box label {
+  display: grid;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.live-check {
+  display: flex !important;
+  align-items: center;
+  grid-template-columns: auto 1fr;
+}
+
 .live-hidden-setup input,
 .live-hidden-setup textarea,
 .live-hidden-setup select,
-.chat-form input {
+.chat-form input,
+.watch-tip-box input {
   width: 100%;
   border: 1px solid rgba(255,255,255,.13);
   border-radius: 16px;
@@ -435,11 +566,20 @@ button:disabled {
 }
 
 .live-overlay-chat.is-open,
-.live-overlay-chat:focus-within {
+.live-overlay-chat:focus-within,
+.rb-live-page.rb-page-ready .live-overlay-chat:hover,
+.rb-watch-page.rb-page-ready .live-overlay-chat:hover {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
+}
+
+.watch-overlay-chat {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
 }
 
 .live-status {
@@ -482,7 +622,8 @@ button:disabled {
 .tip-list li,
 .mini-list li,
 .chat-line,
-.tip-line {
+.tip-line,
+.rb-empty {
   padding: 10px 12px;
   border-radius: 16px;
   background: rgba(0,0,0,.5);
@@ -492,8 +633,20 @@ button:disabled {
 
 .chat-list strong,
 .tip-list strong,
-.mini-list strong {
+.mini-list strong,
+.chat-line b,
+.tip-line b {
   color: #facc15;
+}
+
+.chat-line {
+  display: grid;
+  gap: 4px;
+}
+
+.chat-line.pinned {
+  border-color: rgba(250, 204, 21, 0.42);
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.12);
 }
 
 .chat-form {
@@ -524,6 +677,134 @@ button:disabled {
   bottom: 8%;
   font-size: 2.8rem;
   animation: rbReaction 1.35s ease forwards;
+}
+
+.watch-tip-box,
+.watch-tips-panel,
+.live-mini-lists {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 20px;
+  background: rgba(0,0,0,.38);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.watch-tip-box .rb-form-grid {
+  display: grid;
+  grid-template-columns: 0.6fr 1fr;
+  gap: 8px;
+}
+
+.watch-tips-panel > strong,
+.live-mini-lists strong {
+  color: #7cffaa;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.watch-stream-rail {
+  position: absolute;
+  left: 18px;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 75;
+  width: min(390px, calc(100vw - 36px));
+  max-height: 36dvh;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 24px;
+  border: 1px solid rgba(124, 255, 170, 0.18);
+  background: rgba(0,0,0,.58);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.rb-module-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rb-module-head h2,
+.rb-module-head p {
+  margin: 0;
+}
+
+.rb-kicker {
+  color: #7cffaa;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.rb-btn {
+  min-height: 38px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  padding: 0 14px;
+  text-decoration: none;
+  color: #fefce8;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.1);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.watch-stream-list {
+  display: grid;
+  gap: 8px;
+}
+
+.watch-card {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.watch-card-img {
+  width: 58px;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  background: #000 center / cover no-repeat;
+}
+
+.watch-card b,
+.watch-card span,
+.watch-card small {
+  display: block;
+}
+
+.watch-card b {
+  color: #fff;
+  font-size: 0.86rem;
+}
+
+.watch-card span,
+.watch-card small {
+  color: rgba(255,255,255,.62);
+  font-size: 0.68rem;
+}
+
+.watch-card a {
+  color: #7cffaa;
+  font-size: 0.7rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+  text-decoration: none;
 }
 
 @keyframes rbReaction {
@@ -589,11 +870,15 @@ button:disabled {
   .holo-room-info {
     left: 16px;
     bottom: 18px;
-    max-width: 70%;
+    max-width: 76%;
   }
 
   .holo-room-info h1 {
     font-size: 1.8rem;
+  }
+
+  .watch-description {
+    display: none;
   }
 
   .cohost-hologram,
@@ -602,6 +887,12 @@ button:disabled {
     bottom: 12px;
     width: 34%;
     min-height: 110px;
+  }
+
+  .watch-video-grid.remote-videos {
+    inset: 0;
+    width: 100%;
+    min-height: 100%;
   }
 
   .live-overlay-stats {
@@ -623,6 +914,25 @@ button:disabled {
     width: calc(100vw - 24px);
   }
 
+  .watch-overlay-chat {
+    max-height: 32dvh;
+    overflow: auto;
+  }
+
+  .watch-stream-rail {
+    left: 12px;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    width: calc(100vw - 24px);
+    max-height: 28dvh;
+    transform: translateY(calc(100% - 58px));
+    transition: transform 180ms ease;
+  }
+
+  .watch-stream-rail:hover,
+  .watch-stream-rail:focus-within {
+    transform: translateY(0);
+  }
+
   .chat-list,
   .tip-list,
   .mini-list {
@@ -635,6 +945,10 @@ button:disabled {
     border-radius: 24px;
   }
 
+  .watch-control-dock {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .live-control-dock button {
     min-height: 44px;
     font-size: 0.62rem;
@@ -644,5 +958,17 @@ button:disabled {
     bottom: calc(96px + env(safe-area-inset-bottom));
     font-size: 0.72rem;
     padding: 9px 12px;
+  }
+
+  .watch-tip-box .rb-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .watch-card {
+    grid-template-columns: 50px 1fr auto;
+  }
+
+  .watch-card-img {
+    width: 50px;
   }
 }
