@@ -3,22 +3,36 @@
    /core/shared/rb-format.js
 ========================= */
 
+function toNumber(value = 0, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function validDate(dateValue) {
+  if (!dateValue) return null;
+
+  const date = new Date(dateValue);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /* =========================
    NUMBER FORMAT
 ========================= */
 export function formatNumber(value = 0) {
-  const num = Number(value || 0);
+  const num = toNumber(value, 0);
+  const abs = Math.abs(num);
+  const sign = num < 0 ? "-" : "";
 
-  if (num >= 1000000000) {
-    return `${(num / 1000000000).toFixed(1)}B`;
+  if (abs >= 1000000000) {
+    return `${sign}${(abs / 1000000000).toFixed(1).replace(/\.0$/, "")}B`;
   }
 
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
+  if (abs >= 1000000) {
+    return `${sign}${(abs / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
   }
 
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`;
+  if (abs >= 1000) {
+    return `${sign}${(abs / 1000).toFixed(1).replace(/\.0$/, "")}K`;
   }
 
   return String(num);
@@ -26,24 +40,28 @@ export function formatNumber(value = 0) {
 
 /* =========================
    CURRENCY
+   amount is cents by default
 ========================= */
-export function formatCurrency(
-  amount = 0,
-  currency = "USD"
-) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency
-  }).format((amount || 0) / 100);
+export function formatCurrency(amount = 0, currency = "USD") {
+  const cents = toNumber(amount, 0);
+  const code = String(currency || "USD").toUpperCase();
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code
+    }).format(cents / 100);
+  } catch {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
 }
 
 /* =========================
    DATE
 ========================= */
 export function formatDate(dateValue) {
-  if (!dateValue) return "";
-
-  const date = new Date(dateValue);
+  const date = validDate(dateValue);
+  if (!date) return "";
 
   return date.toLocaleDateString("en-US", {
     month: "short",
@@ -56,36 +74,23 @@ export function formatDate(dateValue) {
    TIME AGO
 ========================= */
 export function timeAgo(dateValue) {
-  if (!dateValue) return "Now";
+  const then = validDate(dateValue);
+  if (!then) return "Now";
 
   const now = new Date();
-  const then = new Date(dateValue);
+  const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
 
-  const seconds = Math.floor(
-    (now - then) / 1000
-  );
-
-  if (seconds < 60) {
-    return "Just now";
-  }
+  if (seconds < 0) return "Just now";
+  if (seconds < 60) return "Just now";
 
   const minutes = Math.floor(seconds / 60);
-
-  if (minutes < 60) {
-    return `${minutes}m ago`;
-  }
+  if (minutes < 60) return `${minutes}m ago`;
 
   const hours = Math.floor(minutes / 60);
-
-  if (hours < 24) {
-    return `${hours}h ago`;
-  }
+  if (hours < 24) return `${hours}h ago`;
 
   const days = Math.floor(hours / 24);
-
-  if (days < 7) {
-    return `${days}d ago`;
-  }
+  if (days < 7) return `${days}d ago`;
 
   return formatDate(dateValue);
 }
@@ -94,9 +99,11 @@ export function timeAgo(dateValue) {
    DURATION
 ========================= */
 export function formatDuration(seconds = 0) {
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
+  const total = Math.max(0, Math.floor(toNumber(seconds, 0)));
+
+  const hrs = Math.floor(total / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
 
   if (hrs > 0) {
     return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
@@ -109,56 +116,52 @@ export function formatDuration(seconds = 0) {
    FILE SIZE
 ========================= */
 export function formatFileSize(bytes = 0) {
-  if (!bytes) return "0 B";
+  const value = Math.max(0, toNumber(bytes, 0));
 
-  const sizes = [
-    "B",
-    "KB",
-    "MB",
-    "GB",
-    "TB"
-  ];
+  if (!value) return "0 B";
 
-  const i = Math.floor(
-    Math.log(bytes) / Math.log(1024)
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const index = Math.min(
+    Math.floor(Math.log(value) / Math.log(1024)),
+    sizes.length - 1
   );
 
-  return `${(
-    bytes / Math.pow(1024, i)
-  ).toFixed(1)} ${sizes[i]}`;
+  return `${(value / Math.pow(1024, index)).toFixed(1)} ${sizes[index]}`;
 }
 
 /* =========================
    USERNAME
 ========================= */
 export function formatUsername(username = "") {
-  if (!username) return "@richbizness";
+  const clean = String(username || "").trim();
 
-  if (username.startsWith("@")) {
-    return username;
-  }
+  if (!clean) return "@richbizness";
+  if (clean.startsWith("@")) return clean;
 
-  return `@${username}`;
+  return `@${clean}`;
 }
 
 /* =========================
    SLUG
 ========================= */
 export function slugify(text = "") {
-  return text
+  return String(text || "")
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 /* =========================
    CAPITALIZE
 ========================= */
 export function capitalize(text = "") {
-  if (!text) return "";
+  const clean = String(text || "").trim();
+  if (!clean) return "";
 
-  return text.charAt(0).toUpperCase() +
-    text.slice(1);
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
+
+console.log("RB FORMAT CORE READY");
