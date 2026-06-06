@@ -5,6 +5,7 @@
 
    CINEMATIC PROFILE EXPERIENCE
    Profile + Messages + Notifications + Creator/Admin Panels
+   Avatar + Banner Sync Ready
 ========================================= */
 
 .rb-profile-page,
@@ -15,129 +16,116 @@
 .rb-settings-page,
 .rb-edit-page {
   position: relative;
-
   min-height: 100svh;
   overflow-x: hidden;
-
   color: var(--rb-white, #ffffff);
-
   background:
-    radial-gradient(circle at 18% 8%, rgba(16,185,129,.16), transparent 34%),
-    radial-gradient(circle at 86% 12%, rgba(250,204,21,.13), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(16,185,129,.1), transparent 44%),
+    radial-gradient(circle at 18% 8%, rgba(16, 185, 129, 0.16), transparent 34%),
+    radial-gradient(circle at 86% 12%, rgba(250, 204, 21, 0.13), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.1), transparent 44%),
     var(--rb-black, #020302);
+}
+
+/* SHELL */
+
+.rb-profile-shell,
+.rb-profile-page .rb-section-shell,
+.rb-edit-page .rb-section-shell,
+.rb-settings-page .rb-section-shell,
+.rb-messages-page .rb-section-shell,
+.rb-notifications-page .rb-section-shell {
+  position: relative;
+  z-index: 3;
+  width: min(1180px, calc(100% - 28px));
+  margin: 0 auto;
+  padding:
+    calc(18px + env(safe-area-inset-top))
+    0
+    calc(96px + env(safe-area-inset-bottom));
 }
 
 /* HERO */
 
 .rb-profile-hero {
   position: relative;
-
   min-height: 420px;
-
   overflow: hidden;
   isolation: isolate;
-
   border-radius: 38px;
-  border: 1px solid rgba(250,204,21,.16);
-
+  border: 1px solid rgba(250, 204, 21, 0.16);
   background:
-    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.88));
-
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.88));
   box-shadow:
-    0 40px 120px rgba(0,0,0,.52),
-    0 0 60px rgba(16,185,129,.12),
-    inset 0 0 90px rgba(250,204,21,.04);
+    0 40px 120px rgba(0, 0, 0, 0.52),
+    0 0 60px rgba(16, 185, 129, 0.12),
+    inset 0 0 90px rgba(250, 204, 21, 0.04);
 }
 
-.rb-profile-banner {
+.rb-profile-banner,
+[data-rb-banner] {
   position: absolute;
   inset: 0;
   z-index: 0;
-
   background-image: url("/images/brand/Avatar-hero-Banner.png.jpeg");
   background-size: cover;
   background-position: center;
-
   transform: scale(1.06);
-
-  filter:
-    saturate(1.18)
-    contrast(1.08)
-    brightness(.88);
+  filter: saturate(1.18) contrast(1.08) brightness(0.88);
 }
 
-.rb-profile-banner::after {
+.rb-profile-banner::after,
+[data-rb-banner]::after {
   content: "";
-
   position: absolute;
   inset: 0;
-
   background:
-    radial-gradient(circle at 22% 28%, rgba(16,185,129,.2), transparent 36%),
-    radial-gradient(circle at 78% 34%, rgba(250,204,21,.16), transparent 34%),
-    linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.38) 32%, rgba(0,0,0,.94) 82%);
+    radial-gradient(circle at 22% 28%, rgba(16, 185, 129, 0.2), transparent 36%),
+    radial-gradient(circle at 78% 34%, rgba(250, 204, 21, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.38) 32%, rgba(0, 0, 0, 0.94) 82%);
 }
 
 .rb-profile-hero::before {
   content: "";
-
   position: absolute;
   left: 50%;
   bottom: -160px;
-
   width: 720px;
   height: 720px;
-
   transform: translateX(-50%);
-
   border-radius: 50%;
-
   background:
-    radial-gradient(circle, rgba(16,185,129,.28) 0%, rgba(250,204,21,.13) 28%, transparent 68%);
-
+    radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(250, 204, 21, 0.13) 28%, transparent 68%);
   filter: blur(30px);
-
-  opacity: .88;
-
+  opacity: 0.88;
   pointer-events: none;
-
-  animation:
-    rbProfileAura 9s ease-in-out infinite;
+  animation: rbProfileAura 9s ease-in-out infinite;
 }
 
 .rb-profile-hero::after {
   content: "";
-
   position: absolute;
   inset: 0;
   z-index: 2;
-
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255,255,255,.018) 0,
-      rgba(255,255,255,.018) 1px,
+      rgba(255, 255, 255, 0.018) 0,
+      rgba(255, 255, 255, 0.018) 1px,
       transparent 1px,
       transparent 9px
     );
-
   mix-blend-mode: soft-light;
-  opacity: .4;
-
+  opacity: 0.4;
   pointer-events: none;
 }
 
 .rb-profile-inner {
   position: relative;
   z-index: 4;
-
   min-height: 420px;
-
   display: flex;
   align-items: flex-end;
   gap: 34px;
-
   padding: clamp(24px, 4vw, 48px);
 }
 
@@ -150,68 +138,54 @@
 
 .rb-profile-avatar-wrap::before {
   content: "";
-
   position: absolute;
   inset: -14px;
-
   border-radius: 50%;
-
   background:
     conic-gradient(
       from 0deg,
-      rgba(16,185,129,.88),
-      rgba(250,204,21,.72),
-      rgba(168,85,247,.46),
-      rgba(16,185,129,.88)
+      rgba(16, 185, 129, 0.88),
+      rgba(250, 204, 21, 0.72),
+      rgba(168, 85, 247, 0.46),
+      rgba(16, 185, 129, 0.88)
     );
-
   filter: blur(14px);
-
-  opacity: .66;
-
-  animation:
-    rbProfileSpin 14s linear infinite;
+  opacity: 0.66;
+  animation: rbProfileSpin 14s linear infinite;
 }
 
 .rb-profile-avatar-wrap::after {
   content: "";
-
   position: absolute;
   inset: -22px;
-
   border-radius: 50%;
-  border: 1px solid rgba(250,204,21,.18);
-
+  border: 1px solid rgba(250, 204, 21, 0.18);
   box-shadow:
-    0 0 42px rgba(16,185,129,.18),
-    inset 0 0 28px rgba(250,204,21,.08);
-
+    0 0 42px rgba(16, 185, 129, 0.18),
+    inset 0 0 28px rgba(250, 204, 21, 0.08);
   pointer-events: none;
 }
 
 .rb-profile-avatar,
+[data-rb-avatar],
+[data-rb-auth-avatar],
 #messages-user-avatar,
 #creator-user-avatar {
   position: relative;
   z-index: 2;
-
   width: clamp(130px, 20vw, 190px);
   height: clamp(130px, 20vw, 190px);
-
   object-fit: cover;
-
   border-radius: 50%;
-  border: 4px solid rgba(255,255,255,.2);
-
+  border: 4px solid rgba(255, 255, 255, 0.2);
   background:
     #050505
     url("/images/brand/Avatar-hero-Banner.png.jpeg")
     center / cover no-repeat;
-
   box-shadow:
-    0 0 0 10px rgba(16,185,129,.1),
-    0 30px 70px rgba(0,0,0,.62),
-    0 0 65px rgba(16,185,129,.24);
+    0 0 0 10px rgba(16, 185, 129, 0.1),
+    0 30px 70px rgba(0, 0, 0, 0.62),
+    0 0 65px rgba(16, 185, 129, 0.24);
 }
 
 .rb-profile-online {
@@ -219,21 +193,15 @@
   right: 12px;
   bottom: 12px;
   z-index: 4;
-
   width: 26px;
   height: 26px;
-
   border-radius: 50%;
   border: 3px solid #041008;
-
   background: #66ff99;
-
   box-shadow:
-    0 0 22px rgba(102,255,153,.9),
-    0 0 44px rgba(16,185,129,.35);
-
-  animation:
-    rbOnlinePulse 1.8s ease-in-out infinite;
+    0 0 22px rgba(102, 255, 153, 0.9),
+    0 0 44px rgba(16, 185, 129, 0.35);
+  animation: rbOnlinePulse 1.8s ease-in-out infinite;
 }
 
 /* COPY */
@@ -246,51 +214,42 @@
 .rb-profile-kicker,
 .rb-kicker {
   margin: 0 0 10px;
-
   color: #8effcb;
-
-  font-size: .72rem;
+  font-size: 0.72rem;
   font-weight: 1000;
-  letter-spacing: .22em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-
-  text-shadow:
-    0 0 16px rgba(16,185,129,.42);
+  text-shadow: 0 0 16px rgba(16, 185, 129, 0.42);
 }
 
 .rb-profile-copy h1,
 .rb-profile-card h1 {
   margin: 0;
-
   color: #ffffff;
-
   font-size: clamp(2.4rem, 6vw, 5rem);
-  line-height: .88;
-  letter-spacing: -.06em;
-
+  line-height: 0.88;
+  letter-spacing: -0.06em;
   text-shadow:
-    0 0 24px rgba(255,255,255,.1),
-    0 0 50px rgba(16,185,129,.12);
+    0 0 24px rgba(255, 255, 255, 0.1),
+    0 0 50px rgba(16, 185, 129, 0.12);
 }
 
 .rb-profile-username,
-.rb-profile-handle {
+.rb-profile-handle,
+[data-rb-profile-handle] {
   margin-top: 12px;
-
   color: #8effcb;
-
-  font-size: .95rem;
+  font-size: 0.95rem;
   font-weight: 900;
-  letter-spacing: .16em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.rb-profile-bio {
+.rb-profile-bio,
+[data-rb-profile-bio] {
   margin-top: 18px;
   max-width: 760px;
-
-  color: rgba(255,255,255,.85);
-
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.75;
   font-size: 1rem;
 }
@@ -299,70 +258,58 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-
   margin-top: 18px;
   padding: 10px 16px;
-
   border-radius: 999px;
-  border: 1px solid rgba(102,255,153,.18);
-
+  border: 1px solid rgba(102, 255, 153, 0.18);
   background:
-    linear-gradient(135deg, rgba(16,185,129,.12), rgba(0,0,0,.34));
-
+    linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(0, 0, 0, 0.34));
   color: #8effcb;
-
-  font-size: .82rem;
+  font-size: 0.82rem;
   font-weight: 900;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-
-  box-shadow:
-    0 0 18px rgba(16,185,129,.14);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.14);
 }
 
 .rb-profile-status::before {
   content: "";
-
   width: 10px;
   height: 10px;
-
   border-radius: 50%;
-
   background: #66ff99;
-
-  box-shadow:
-    0 0 18px rgba(102,255,153,.9);
+  box-shadow: 0 0 18px rgba(102, 255, 153, 0.9);
 }
 
 /* CARD BLOCKS */
 
-.rb-profile-card {
+.rb-profile-card,
+.rb-settings-card,
+.rb-edit-card,
+.rb-message-card,
+.rb-admin-card,
+.rb-creator-card {
   position: relative;
-
   overflow: hidden;
   isolation: isolate;
-
   padding: clamp(22px, 4vw, 34px);
-
   border-radius: 34px;
-  border: 1px solid rgba(250,204,21,.16);
-
+  border: 1px solid rgba(250, 204, 21, 0.16);
   background:
-    radial-gradient(circle at 20% 12%, rgba(16,185,129,.16), transparent 34%),
-    radial-gradient(circle at 82% 88%, rgba(250,204,21,.11), transparent 34%),
-    linear-gradient(145deg, rgba(5,8,5,.88), rgba(0,0,0,.78));
-
+    radial-gradient(circle at 20% 12%, rgba(16, 185, 129, 0.16), transparent 34%),
+    radial-gradient(circle at 82% 88%, rgba(250, 204, 21, 0.11), transparent 34%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.88), rgba(0, 0, 0, 0.78));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-
   box-shadow:
-    0 32px 90px rgba(0,0,0,.48),
-    0 0 44px rgba(16,185,129,.11),
-    inset 0 0 54px rgba(255,255,255,.018);
+    0 32px 90px rgba(0, 0, 0, 0.48),
+    0 0 44px rgba(16, 185, 129, 0.11),
+    inset 0 0 54px rgba(255, 255, 255, 0.018);
+}
 
+.rb-profile-card {
   text-align: center;
 }
 
@@ -400,115 +347,72 @@
 
 .rb-meta-pill {
   padding: 11px 18px;
-
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.1);
-
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background:
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
-
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
   color: #ffffff;
-
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 900;
-  letter-spacing: .08em;
-
+  letter-spacing: 0.08em;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-
-  box-shadow:
-    0 0 18px rgba(16,185,129,.07);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.07);
 }
 
 .rb-profile-actions .rb-btn,
 .rb-profile-actions button,
-.rb-profile-actions a {
+.rb-profile-actions a,
+.rb-profile-socials a,
+#profileWebsite,
+.rb-profile-editor-actions button,
+.rb-profile-editor-actions a {
   min-height: 48px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   padding: 0 18px;
-
   border-radius: 999px;
-  border: 1px solid rgba(250,204,21,.22);
-
+  border: 1px solid rgba(250, 204, 21, 0.22);
   background:
-    linear-gradient(135deg, rgba(16,185,129,.16), rgba(250,204,21,.08));
-
+    linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(250, 204, 21, 0.08));
   color: #fefce8;
-
   font-weight: 1000;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-decoration: none;
   text-transform: uppercase;
-
   cursor: pointer;
-
   transition:
-    transform .22s ease,
-    box-shadow .22s ease,
-    border-color .22s ease,
-    background .22s ease;
-}
-
-.rb-profile-actions .rb-btn:hover,
-.rb-profile-actions button:hover,
-.rb-profile-actions a:hover,
-.rb-profile-actions .is-active {
-  transform: translateY(-2px);
-
-  border-color: rgba(16,185,129,.52);
-
-  background:
-    linear-gradient(135deg, rgba(16,185,129,.26), rgba(250,204,21,.16));
-
-  box-shadow:
-    0 0 22px rgba(16,185,129,.2),
-    0 0 42px rgba(250,204,21,.1);
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease;
 }
 
 .rb-profile-socials a,
 #profileWebsite {
   min-height: 44px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0 18px;
-
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.1);
-
-  background: rgba(255,255,255,.04);
-
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   color: #ffffff;
-
-  font-size: .78rem;
-  font-weight: 900;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  text-decoration: none;
-
-  transition:
-    transform .22s ease,
-    border-color .22s ease,
-    background .22s ease,
-    box-shadow .22s ease;
+  font-size: 0.78rem;
 }
 
+.rb-profile-actions .rb-btn:hover,
+.rb-profile-actions button:hover,
+.rb-profile-actions a:hover,
+.rb-profile-actions .is-active,
 .rb-profile-socials a:hover,
-#profileWebsite:hover {
+#profileWebsite:hover,
+.rb-profile-editor-actions button:hover,
+.rb-profile-editor-actions a:hover {
   transform: translateY(-2px);
-
-  border-color: rgba(102,255,153,.28);
-
-  background: rgba(16,185,129,.1);
-
+  border-color: rgba(16, 185, 129, 0.52);
+  background:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.26), rgba(250, 204, 21, 0.16));
   box-shadow:
-    0 0 18px rgba(16,185,129,.16);
+    0 0 22px rgba(16, 185, 129, 0.2),
+    0 0 42px rgba(250, 204, 21, 0.1);
 }
 
 /* TABS */
@@ -517,52 +421,44 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-
   margin: 22px 0;
 }
 
 .rb-profile-tabs button,
 [data-profile-tab] {
   min-height: 44px;
-
   padding: 0 16px;
-
   border-radius: 999px;
-  border: 1px solid rgba(250,204,21,.16);
-
-  background: rgba(255,255,255,.04);
-
-  color: rgba(255,255,255,.76);
-
+  border: 1px solid rgba(250, 204, 21, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.76);
   font-weight: 900;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-
   cursor: pointer;
-
   transition:
-    transform .22s ease,
-    border-color .22s ease,
-    color .22s ease,
-    background .22s ease;
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease,
+    background 0.22s ease;
 }
 
 .rb-profile-tabs button:hover,
 [data-profile-tab]:hover,
 [data-profile-tab].is-active {
   color: #ffffff;
-
-  border-color: rgba(16,185,129,.46);
-
+  border-color: rgba(16, 185, 129, 0.46);
   background:
-    linear-gradient(135deg, rgba(16,185,129,.18), rgba(250,204,21,.08));
-
+    linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(250, 204, 21, 0.08));
   transform: translateY(-2px);
 }
 
 [data-profile-panel] {
-  animation:
-    rbProfilePanelIn .28s ease both;
+  animation: rbProfilePanelIn 0.28s ease both;
+}
+
+[data-profile-panel][hidden] {
+  display: none !important;
 }
 
 /* FEED + PANELS */
@@ -580,17 +476,14 @@
 #profileEmpty,
 .rb-notification-card {
   border-radius: 24px;
-  border: 1px solid rgba(250,204,21,.14);
-
+  border: 1px solid rgba(250, 204, 21, 0.14);
   background:
-    linear-gradient(145deg, rgba(5,8,5,.84), rgba(0,0,0,.72));
-
+    linear-gradient(145deg, rgba(5, 8, 5, 0.84), rgba(0, 0, 0, 0.72));
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-
   box-shadow:
-    0 0 28px rgba(0,0,0,.28),
-    inset 0 0 20px rgba(255,255,255,.02);
+    0 0 28px rgba(0, 0, 0, 0.28),
+    inset 0 0 20px rgba(255, 255, 255, 0.02);
 }
 
 .rb-feed-card {
@@ -605,18 +498,15 @@
 
 .rb-feed-card p {
   margin: 0;
-
-  color: rgba(255,255,255,.86);
+  color: rgba(255, 255, 255, 0.86);
   line-height: 1.5;
 }
 
 .rb-feed-card img,
 .rb-feed-card video {
   width: 100%;
-
   border-radius: 18px;
   object-fit: cover;
-
   background: #000;
 }
 
@@ -629,37 +519,119 @@
 #profileEmpty,
 .rb-notification-card {
   padding: 18px;
-  color: rgba(255,255,255,.74);
+  color: rgba(255, 255, 255, 0.74);
 }
 
 .rb-mini-card h3,
 .rb-notification-card strong {
   display: block;
   margin: 0 0 8px;
-
   color: #facc15;
 }
 
 .rb-notification-card.is-unread {
-  border-color: rgba(102,255,153,.34);
-
+  border-color: rgba(102, 255, 153, 0.34);
   box-shadow:
-    0 0 28px rgba(16,185,129,.14),
-    inset 0 0 22px rgba(16,185,129,.05);
+    0 0 28px rgba(16, 185, 129, 0.14),
+    inset 0 0 22px rgba(16, 185, 129, 0.05);
+}
+
+/* EDITOR + FORMS */
+
+#rb-profile-editor-form,
+.rb-profile-editor-form,
+.rb-settings-form {
+  display: grid;
+  gap: 14px;
+}
+
+#rb-profile-editor-form label,
+.rb-profile-editor-form label,
+.rb-settings-form label {
+  display: grid;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+#rb-profile-editor-form input,
+#rb-profile-editor-form textarea,
+#rb-profile-editor-form select,
+.rb-profile-editor-form input,
+.rb-profile-editor-form textarea,
+.rb-profile-editor-form select,
+.rb-settings-form input,
+.rb-settings-form textarea,
+.rb-settings-form select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.42);
+  color: #fff;
+  padding: 12px 14px;
+}
+
+#rb-profile-editor-form textarea,
+.rb-profile-editor-form textarea,
+.rb-settings-form textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.rb-profile-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rb-profile-message,
+[data-rb-profile-message],
+#rb-profile-message {
+  min-height: 42px;
+  display: grid;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+[data-rb-profile-message][data-type="success"],
+#rb-profile-message[data-type="success"] {
+  color: #8effcb;
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+[data-rb-profile-message][data-type="error"],
+#rb-profile-message[data-type="error"] {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.is-loading {
+  opacity: 0.72;
+  pointer-events: none;
 }
 
 /* STATES */
 
 .rb-profile-page:not(.rb-profile-ready) .rb-profile-hero {
-  opacity: .94;
+  opacity: 0.94;
 }
 
 .rb-page-error .rb-profile-status,
 .rb-page-error #profileStatus {
   color: #fca5a5;
-
-  border-color: rgba(239,68,68,.28);
-  background: rgba(239,68,68,.12);
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 /* ANIMATIONS */
@@ -667,18 +639,12 @@
 @keyframes rbProfileAura {
   0%,
   100% {
-    transform:
-      translateX(-50%)
-      scale(1);
-
-    opacity: .75;
+    transform: translateX(-50%) scale(1);
+    opacity: 0.75;
   }
 
   50% {
-    transform:
-      translateX(-50%)
-      scale(1.1);
-
+    transform: translateX(-50%) scale(1.1);
     opacity: 1;
   }
 }
@@ -696,8 +662,8 @@
 @keyframes rbOnlinePulse {
   0%,
   100% {
-    transform: scale(.92);
-    opacity: .78;
+    transform: scale(0.92);
+    opacity: 0.78;
   }
 
   50% {
@@ -735,7 +701,8 @@
   .rb-profile-meta,
   .rb-profile-actions,
   .rb-profile-socials,
-  .rb-profile-tabs {
+  .rb-profile-tabs,
+  .rb-profile-editor-actions {
     justify-content: center;
   }
 
@@ -746,6 +713,16 @@
 }
 
 @media (max-width: 640px) {
+  .rb-profile-shell,
+  .rb-profile-page .rb-section-shell,
+  .rb-edit-page .rb-section-shell,
+  .rb-settings-page .rb-section-shell,
+  .rb-messages-page .rb-section-shell,
+  .rb-notifications-page .rb-section-shell {
+    width: min(100% - 20px, 1180px);
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+
   .rb-profile-hero {
     min-height: unset;
     border-radius: 30px;
@@ -757,6 +734,8 @@
   }
 
   .rb-profile-avatar,
+  [data-rb-avatar],
+  [data-rb-auth-avatar],
   #messages-user-avatar,
   #creator-user-avatar {
     width: 124px;
@@ -769,12 +748,14 @@
   }
 
   .rb-profile-bio {
-    font-size: .94rem;
+    font-size: 0.94rem;
   }
 
   .rb-profile-actions .rb-btn,
   .rb-profile-actions button,
-  .rb-profile-actions a {
+  .rb-profile-actions a,
+  .rb-profile-editor-actions button,
+  .rb-profile-editor-actions a {
     flex: 1;
     min-width: 0;
   }
