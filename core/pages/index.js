@@ -3,7 +3,7 @@
    /core/pages/index.js
 
    INDEX CONTROL + AUTH PROFILE CHIP
-   Locked to 1-8 Hub Stack
+   One Identity Image Source Only
 ========================= */
 
 import RB_CONFIG from "/core/shared/rb-config.js";
@@ -16,28 +16,44 @@ import {
   rbSignOut
 } from "/core/shared/rb-auth.js";
 
-const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_PROFILE_AVATAR =
+  RB_CONFIG.brandAssets?.defaultProfileAvatar ||
+  "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 let indexBooted = false;
+let profileChipPainted = false;
 
 const quickRoutes = {
-  profile: RB_CONFIG.routes.profile,
-  admin: RB_CONFIG.routes.admin || "/admin",
-  creator: RB_CONFIG.routes.creator || "/creator",
+  home: RB_CONFIG.routes.home || "/",
+  auth: RB_CONFIG.routes.auth || "/auth",
 
+  feed: RB_CONFIG.routes.feed,
   watch: RB_CONFIG.routes.watch,
-  alerts: RB_CONFIG.routes.notifications,
-  notifications: RB_CONFIG.routes.notifications,
+  live: RB_CONFIG.routes.live,
+  music: RB_CONFIG.routes.music,
+  podcast: RB_CONFIG.routes.podcast,
+  radio: RB_CONFIG.routes.radio,
+  gaming: RB_CONFIG.routes.gaming,
+  sports: RB_CONFIG.routes.sports,
+  gallery: RB_CONFIG.routes.gallery,
+  store: RB_CONFIG.routes.store,
+  upload: RB_CONFIG.routes.upload,
+  meta: RB_CONFIG.routes.meta,
+  avatar: RB_CONFIG.routes.avatar,
 
-  settings: RB_CONFIG.routes.settings,
+  profile: RB_CONFIG.routes.profile,
   edit: RB_CONFIG.routes.edit,
+  settings: RB_CONFIG.routes.settings,
   messages: RB_CONFIG.routes.messages,
+  notifications: RB_CONFIG.routes.notifications,
+  alerts: RB_CONFIG.routes.notifications,
+
+  creator: RB_CONFIG.routes.creator || "/creator",
+  admin: RB_CONFIG.routes.admin || "/admin",
 
   secretDoor: RB_CONFIG.routes.secretDoor,
   secretMeta2: RB_CONFIG.routes.secretMeta2,
-  secretMeta3: RB_CONFIG.routes.secretMeta3,
-
-  auth: RB_CONFIG.routes.auth || "/auth"
+  secretMeta3: RB_CONFIG.routes.secretMeta3
 };
 
 function cleanRoute(route) {
@@ -84,8 +100,18 @@ function getProfileAvatar(profile, user) {
     profile?.avatar_url ||
     user?.user_metadata?.avatar_url ||
     user?.user_metadata?.picture ||
-    DEFAULT_AVATAR
+    DEFAULT_PROFILE_AVATAR
   );
+}
+
+function setChipImage(img, src, alt) {
+  if (!img || !src) return;
+
+  if (img.dataset.lockedProfileSrc === src) return;
+
+  img.dataset.lockedProfileSrc = src;
+  img.src = src;
+  img.alt = alt || "Profile";
 }
 
 function updateProfileChip() {
@@ -102,29 +128,29 @@ function updateProfileChip() {
     chip.dataset.route = "auth";
     chip.classList.remove("rb-profile-authed");
 
-    if (img) {
-      img.src = DEFAULT_AVATAR;
-      img.alt = "Sign in";
-    }
+    setChipImage(img, DEFAULT_PROFILE_AVATAR, "Sign in");
 
     if (label) {
-      label.textContent = "Sign In";
+      label.textContent = "Tap In";
     }
 
+    profileChipPainted = true;
     return;
   }
+
+  const name = getProfileName(profile, user);
+  const avatar = getProfileAvatar(profile, user);
 
   chip.dataset.route = "profile";
   chip.classList.add("rb-profile-authed");
 
-  if (img) {
-    img.src = getProfileAvatar(profile, user);
-    img.alt = getProfileName(profile, user);
-  }
+  setChipImage(img, avatar, name);
 
   if (label) {
-    label.textContent = getProfileName(profile, user);
+    label.textContent = name;
   }
+
+  profileChipPainted = true;
 }
 
 async function bootIndexAuth() {
@@ -138,7 +164,10 @@ async function bootIndexAuth() {
     updateProfileChip();
   } catch (error) {
     console.warn("[RB INDEX AUTH WARNING]", error?.message || error);
-    updateProfileChip();
+
+    if (!profileChipPainted) {
+      updateProfileChip();
+    }
   }
 }
 
@@ -187,7 +216,14 @@ function bindUniverseEvents() {
   });
 
   window.addEventListener("rb:profile-updated", updateProfileChip);
-  window.addEventListener("focus", updateProfileChip);
+
+  window.addEventListener("focus", async () => {
+    if (getUser()?.id) {
+      await refreshProfile();
+    }
+
+    updateProfileChip();
+  });
 }
 
 function revealHubUI() {
