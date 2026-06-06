@@ -3,7 +3,9 @@
    /core/pages/podcast.js
 
    PODCAST PAGE CONTROLLER
+   Shows + Episodes + Featured
    Profile Keys Locked
+   Safe Loader + Realtime Enabled
 ========================= */
 
 import {
@@ -13,8 +15,14 @@ import {
   markPageError
 } from "/core/app.js";
 
-import { RB_TABLES } from "/core/shared/rb-config.js";
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  RB_TABLES,
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   getProfileIdentity,
@@ -23,7 +31,7 @@ import {
 } from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
-const $$ = (selector) => document.querySelectorAll(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
 
@@ -48,6 +56,85 @@ let channels = [];
 let currentUser = null;
 let currentProfile = null;
 let profileIdentity = null;
+let booted = false;
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function safe(value, fallback = "") {
+  return String(value || fallback || "").trim();
+}
+
+function setEmpty(target, text) {
+  if (!target) return;
+  target.innerHTML = `<p class="rb-empty">${escapeHtml(text)}</p>`;
+}
+
+function setCount(target, count = 0) {
+  if (target) target.textContent = String(count || 0);
+}
+
+function niceDate(date) {
+  if (!date) return "Just dropped";
+
+  const stamp = new Date(date).getTime();
+  if (!Number.isFinite(stamp)) return "Just dropped";
+
+  return new Date(date).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function creatorLine(item = {}) {
+  return (
+    item.display_name ||
+    item.creator_name ||
+    item.username ||
+    item.host_name ||
+    "Rich Bizness Podcast"
+  );
+}
+
+function titleOf(item = {}, fallback = "Untitled") {
+  return item.title || item.name || item.show_title || fallback;
+}
+
+function coverOf(item = {}) {
+  return (
+    item.cover_url ||
+    item.image_url ||
+    item.thumbnail_url ||
+    item.show_cover_url ||
+    FALLBACK_COVER
+  );
+}
+
+function audioOf(item = {}) {
+  return (
+    item.audio_url ||
+    item.file_url ||
+    item.media_url ||
+    item.url ||
+    ""
+  );
+}
+
+function numberOf(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function isFeatured(item = {}) {
+  return Boolean(item.is_featured || item.featured);
+}
 
 function syncProfileKeys() {
   const state = getCurrentUserState?.() || {};
@@ -61,57 +148,45 @@ function syncProfileKeys() {
   document.body.dataset.rbProfileId = profileIdentity?.id || "";
   document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
 
-  bindProfileShell();
+  bindProfileShell?.();
 
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
 }
 
-function safe(value, fallback = "") {
-  return value || fallback;
-}
+function playEpisode(item = {}) {
+  const title = titleOf(item, "Untitled Episode");
+  const coverUrl = coverOf(item);
+  const audioUrl = audioOf(item);
 
-function setEmpty(target, text) {
-  if (!target) return;
-  target.innerHTML = `<p class="rb-empty">${text}</p>`;
-}
-
-function niceDate(date) {
-  if (!date) return "Just dropped";
-
-  return new Date(date).toLocaleDateString([], {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
-}
-
-function creatorLine(item) {
-  return item?.display_name || item?.username || "Rich Bizness Podcast";
-}
-
-function playEpisode(item) {
   if (els.nowCover) {
-    els.nowCover.src = item.cover_url || FALLBACK_COVER;
+    els.nowCover.src = coverUrl;
   }
 
   if (els.nowTitle) {
-    els.nowTitle.textContent = item.title || "Untitled Episode";
+    els.nowTitle.textContent = title;
   }
 
   if (els.nowMeta) {
-    els.nowMeta.textContent = `${creatorLine(item)} • Episode ${item.episode_number || 1}`;
+    els.nowMeta.textContent = [
+      creatorLine(item),
+      `Episode ${item.episode_number || 1}`,
+      item.season_number ? `Season ${item.season_number}` : ""
+    ].filter(Boolean).join(" • ");
   }
 
-  if (els.audioPlayer && item.audio_url) {
-    els.audioPlayer.src = item.audio_url;
+  if (els.audioPlayer && audioUrl) {
+    els.audioPlayer.src = audioUrl;
     els.audioPlayer.play().catch(() => {});
   }
 }
 
 function bindTabs() {
   $$("[data-podcast-tab]").forEach((button) => {
+    if (button.dataset.rbPodcastTabBound === "true") return;
+    button.dataset.rbPodcastTabBound = "true";
+
     button.addEventListener("click", () => {
       const tab = button.dataset.podcastTab;
 
@@ -129,29 +204,40 @@ function bindTabs() {
   });
 }
 
-function renderShow(item) {
+function renderShow(item = {}) {
+  const title = titleOf(item, "Untitled Show");
+  const coverUrl = coverOf(item);
+
   const card = document.createElement("article");
   card.className = "rb-content-card rb-podcast-card";
-  card.dataset.creatorId = item.user_id || "";
-  card.dataset.profileLocked = item.user_id ? "true" : "false";
+  card.dataset.creatorId = item.user_id || item.creator_id || "";
+  card.dataset.profileLocked = card.dataset.creatorId ? "true" : "false";
+  card.dataset.showId = item.id || "";
 
   card.innerHTML = `
-    <img class="rb-card-cover" src="${item.cover_url || FALLBACK_COVER}" alt="${safe(item.title, "Podcast show")}" loading="lazy" />
+    <img
+      class="rb-card-cover"
+      src="${escapeHtml(coverUrl)}"
+      alt="${escapeHtml(title)}"
+      loading="lazy"
+    />
 
     <div class="rb-card-body">
-      <p class="rb-kicker">${safe(item.category, "PODCAST SHOW")}</p>
-      <h3>${safe(item.title, "Untitled Show")}</h3>
-      <p>${safe(item.description, "Rich Bizness podcast show.")}</p>
+      <p class="rb-kicker">${escapeHtml(safe(item.category, "PODCAST SHOW"))}</p>
+
+      <h3>${escapeHtml(title)}</h3>
+
+      <p>${escapeHtml(safe(item.description, "Rich Bizness podcast show."))}</p>
 
       <div class="rb-card-meta">
-        <span>${creatorLine(item)}</span>
-        <span>${niceDate(item.created_at)}</span>
+        <span>${escapeHtml(creatorLine(item))}</span>
+        <span>${escapeHtml(niceDate(item.created_at))}</span>
       </div>
 
       <div class="rb-chip-row">
-        <span class="rb-chip">${item.episode_count || 0} episodes</span>
-        <span class="rb-chip">${item.subscriber_count || 0} subs</span>
-        <span class="rb-chip">${item.play_count || 0} plays</span>
+        <span class="rb-chip">${numberOf(item.episode_count)} episodes</span>
+        <span class="rb-chip">${numberOf(item.subscriber_count)} subs</span>
+        <span class="rb-chip">${numberOf(item.play_count)} plays</span>
       </div>
     </div>
   `;
@@ -159,32 +245,52 @@ function renderShow(item) {
   return card;
 }
 
-function renderEpisode(item) {
+function renderEpisode(item = {}) {
+  const title = titleOf(item, "Untitled Episode");
+  const coverUrl = coverOf(item);
+  const audioUrl = audioOf(item);
+
   const card = document.createElement("article");
   card.className = "rb-content-card rb-podcast-card";
-  card.dataset.creatorId = item.user_id || "";
-  card.dataset.profileLocked = item.user_id ? "true" : "false";
+  card.dataset.creatorId = item.user_id || item.creator_id || "";
+  card.dataset.profileLocked = card.dataset.creatorId ? "true" : "false";
+  card.dataset.episodeId = item.id || "";
 
   card.innerHTML = `
-    <img class="rb-card-cover" src="${item.cover_url || FALLBACK_COVER}" alt="${safe(item.title, "Podcast episode")}" loading="lazy" />
+    <img
+      class="rb-card-cover"
+      src="${escapeHtml(coverUrl)}"
+      alt="${escapeHtml(title)}"
+      loading="lazy"
+    />
 
     <div class="rb-card-body">
-      <p class="rb-kicker">EP ${item.episode_number || 1} • SEASON ${item.season_number || 1}</p>
-      <h3>${safe(item.title, "Untitled Episode")}</h3>
-      <p>${safe(item.description, "Podcast episode from Rich Bizness.")}</p>
+      <p class="rb-kicker">
+        EP ${numberOf(item.episode_number, 1)} • SEASON ${numberOf(item.season_number, 1)}
+      </p>
+
+      <h3>${escapeHtml(title)}</h3>
+
+      <p>${escapeHtml(safe(item.description, "Podcast episode from Rich Bizness."))}</p>
 
       <div class="rb-card-meta">
-        <span>${creatorLine(item)}</span>
-        <span>${niceDate(item.created_at)}</span>
+        <span>${escapeHtml(creatorLine(item))}</span>
+        <span>${escapeHtml(niceDate(item.created_at))}</span>
       </div>
 
       <div class="rb-chip-row">
-        <span class="rb-chip">${item.play_count || 0} plays</span>
-        <span class="rb-chip">${item.like_count || 0} likes</span>
-        <span class="rb-chip">${item.comment_count || 0} comments</span>
+        <span class="rb-chip">${numberOf(item.play_count)} plays</span>
+        <span class="rb-chip">${numberOf(item.like_count)} likes</span>
+        <span class="rb-chip">${numberOf(item.comment_count)} comments</span>
       </div>
 
-      <button type="button" class="rb-main-launch">PLAY EPISODE</button>
+      <button
+        type="button"
+        class="rb-main-launch"
+        ${audioUrl ? "" : "disabled"}
+      >
+        PLAY EPISODE
+      </button>
     </div>
   `;
 
@@ -195,76 +301,193 @@ function renderEpisode(item) {
   return card;
 }
 
-async function loadShows() {
-  const { data, error } = await supabase
-    .from(RB_TABLES.podcastShows)
-    .select("*")
-    .eq("is_published", true)
-    .order("is_featured", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(30);
+/* =========================
+   SAFE QUERY HELPERS
+========================= */
 
-  if (error) throw error;
+async function safeLoadTable({
+  table,
+  limit = 40,
+  orderBy = "created_at",
+  attempts = []
+}) {
+  if (!table) return [];
 
-  const shows = data || [];
+  let lastError = null;
 
-  if (els.showCount) els.showCount.textContent = shows.length;
+  for (const attempt of attempts) {
+    try {
+      let query = supabase
+        .from(table)
+        .select("*")
+        .limit(limit);
 
-  if (!shows.length) {
-    setEmpty(els.showsList, "No podcast shows yet.");
-    return;
+      if (attempt.filter) {
+        query = attempt.filter(query);
+      }
+
+      if (attempt.order) {
+        query = attempt.order(query);
+      } else if (orderBy) {
+        query = query.order(orderBy, { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      lastError = error;
+      console.warn(`[RB PODCAST SAFE QUERY FAILED] ${table}: ${attempt.name}`, error?.message || error);
+    }
   }
 
-  els.showsList.innerHTML = "";
-  shows.forEach((item) => els.showsList.appendChild(renderShow(item)));
+  throw lastError || new Error(`Failed to load ${table}.`);
+}
+
+async function loadShows() {
+  if (!RB_TABLES.podcastShows) {
+    setCount(els.showCount, 0);
+    setEmpty(els.showsList, "Podcast shows table is not configured.");
+    return [];
+  }
+
+  try {
+    const shows = await safeLoadTable({
+      table: RB_TABLES.podcastShows,
+      limit: 30,
+      attempts: [
+        {
+          name: "is_published_featured_created",
+          filter: (q) => q.eq("is_published", true),
+          order: (q) =>
+            q
+              .order("is_featured", { ascending: false })
+              .order("created_at", { ascending: false })
+        },
+        {
+          name: "status_published",
+          filter: (q) => q.in("status", ["published", "active", "live"])
+        },
+        {
+          name: "visibility_public",
+          filter: (q) => q.in("visibility", ["public", "published"])
+        },
+        {
+          name: "created_no_filter",
+          filter: null
+        }
+      ]
+    });
+
+    setCount(els.showCount, shows.length);
+
+    if (!shows.length) {
+      setEmpty(els.showsList, "No podcast shows yet.");
+      return shows;
+    }
+
+    if (els.showsList) {
+      els.showsList.innerHTML = "";
+      shows.forEach((item) => {
+        els.showsList.appendChild(renderShow(item));
+      });
+    }
+
+    return shows;
+  } catch (error) {
+    console.error("[RB PODCAST SHOWS FAILED]", error);
+    setCount(els.showCount, 0);
+    setEmpty(els.showsList, error?.message || "Podcast shows failed to load.");
+    return [];
+  }
 }
 
 async function loadEpisodes() {
-  const { data, error } = await supabase
-    .from(RB_TABLES.podcastEpisodes)
-    .select("*")
-    .eq("is_published", true)
-    .order("is_featured", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(40);
+  try {
+    const episodes = await safeLoadTable({
+      table: RB_TABLES.podcastEpisodes,
+      limit: 40,
+      attempts: [
+        {
+          name: "is_published_featured_created",
+          filter: (q) => q.eq("is_published", true),
+          order: (q) =>
+            q
+              .order("is_featured", { ascending: false })
+              .order("created_at", { ascending: false })
+        },
+        {
+          name: "status_published",
+          filter: (q) => q.in("status", ["published", "active", "live"])
+        },
+        {
+          name: "visibility_public",
+          filter: (q) => q.in("visibility", ["public", "published"])
+        },
+        {
+          name: "created_no_filter",
+          filter: null
+        }
+      ]
+    });
 
-  if (error) throw error;
+    setCount(els.episodeCount, episodes.length);
 
-  const episodes = data || [];
+    const totalComments = episodes.reduce(
+      (sum, item) => sum + numberOf(item.comment_count),
+      0
+    );
 
-  if (els.episodeCount) els.episodeCount.textContent = episodes.length;
+    const totalLikes = episodes.reduce(
+      (sum, item) => sum + numberOf(item.like_count),
+      0
+    );
 
-  const totalComments = episodes.reduce(
-    (sum, item) => sum + Number(item.comment_count || 0),
-    0
-  );
+    setCount(els.commentCount, totalComments);
+    setCount(els.likeCount, totalLikes);
 
-  const totalLikes = episodes.reduce(
-    (sum, item) => sum + Number(item.like_count || 0),
-    0
-  );
+    if (!episodes.length) {
+      setEmpty(els.episodesList, "No podcast episodes yet.");
+      setEmpty(els.featuredList, "No featured podcast episodes yet.");
+      return episodes;
+    }
 
-  if (els.commentCount) els.commentCount.textContent = totalComments;
-  if (els.likeCount) els.likeCount.textContent = totalLikes;
+    if (els.episodesList) {
+      els.episodesList.innerHTML = "";
+      episodes.forEach((item) => {
+        els.episodesList.appendChild(renderEpisode(item));
+      });
+    }
 
-  if (!episodes.length) {
-    setEmpty(els.episodesList, "No podcast episodes yet.");
-    setEmpty(els.featuredList, "No featured podcast episodes yet.");
-    return;
+    const featured = episodes.filter(isFeatured).slice(0, 12);
+    const finalFeatured = featured.length ? featured : episodes.slice(0, 8);
+
+    if (els.featuredList) {
+      els.featuredList.innerHTML = "";
+      finalFeatured.forEach((item) => {
+        els.featuredList.appendChild(renderEpisode(item));
+      });
+    }
+
+    return episodes;
+  } catch (error) {
+    console.error("[RB PODCAST EPISODES FAILED]", error);
+
+    setCount(els.episodeCount, 0);
+    setCount(els.commentCount, 0);
+    setCount(els.likeCount, 0);
+
+    setEmpty(els.episodesList, error?.message || "Podcast episodes failed to load.");
+    setEmpty(els.featuredList, error?.message || "Featured podcast episodes failed to load.");
+
+    return [];
   }
-
-  els.episodesList.innerHTML = "";
-  episodes.forEach((item) => els.episodesList.appendChild(renderEpisode(item)));
-
-  const featured = episodes.filter((item) => item.is_featured).slice(0, 12);
-  const finalFeatured = featured.length ? featured : episodes.slice(0, 8);
-
-  els.featuredList.innerHTML = "";
-  finalFeatured.forEach((item) => els.featuredList.appendChild(renderEpisode(item)));
 }
 
 async function loadPodcastPage() {
-  await Promise.all([
+  await Promise.allSettled([
     loadShows(),
     loadEpisodes()
   ]);
@@ -278,33 +501,38 @@ function clearRealtime() {
   channels = [];
 }
 
-function bindRealtime() {
-  const reload = () => loadPodcastPage().catch(console.error);
+function watchTable(table) {
+  if (!table) return null;
 
+  return supabase
+    .channel(`rb-podcast-${table}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table
+      },
+      () => loadPodcastPage().catch(console.error)
+    )
+    .subscribe();
+}
+
+function bindRealtime() {
   clearRealtime();
 
   channels = [
-    RB_TABLES.podcastShows,
-    RB_TABLES.podcastEpisodes,
-    RB_TABLES.podcastComments,
-    RB_TABLES.podcastLikes
-  ].map((table) =>
-    supabase
-      .channel(`rb-podcast-${table}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table
-        },
-        reload
-      )
-      .subscribe()
-  );
+    watchTable(RB_TABLES.podcastShows),
+    watchTable(RB_TABLES.podcastEpisodes),
+    watchTable(RB_TABLES.podcastComments),
+    watchTable(RB_TABLES.podcastLikes)
+  ].filter(Boolean);
 }
 
 async function bootPodcastPage() {
+  if (booted) return;
+  booted = true;
+
   try {
     await initApp({
       guard: false,
@@ -332,11 +560,11 @@ async function bootPodcastPage() {
       route: "podcast"
     });
   } catch (error) {
-    console.error("[podcast.js]", error);
+    console.error("[RB PODCAST BOOT FAILED]", error);
 
-    setEmpty(els.showsList, "Podcast shows failed to load.");
-    setEmpty(els.episodesList, "Podcast episodes failed to load.");
-    setEmpty(els.featuredList, "Featured podcast episodes failed to load.");
+    setEmpty(els.showsList, error?.message || "Podcast shows failed to load.");
+    setEmpty(els.episodesList, error?.message || "Podcast episodes failed to load.");
+    setEmpty(els.featuredList, error?.message || "Featured podcast episodes failed to load.");
 
     markPageError(error);
   }
