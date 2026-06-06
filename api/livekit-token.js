@@ -47,25 +47,31 @@ function makeRoomName(value) {
 }
 
 function parseMetadata(body, role) {
+  const metadata =
+    typeof body.metadata === "object" && body.metadata !== null
+      ? body.metadata
+      : {};
+
   return {
     app: "Rich Bizness Mobile",
     role,
     stream_id:
       body.streamId ||
       body.stream_id ||
-      body.metadata?.stream_id ||
+      metadata.stream_id ||
       null,
     stream_slug:
       body.streamSlug ||
       body.stream_slug ||
-      body.metadata?.stream_slug ||
+      metadata.stream_slug ||
       null,
     user_id:
       body.userId ||
       body.user_id ||
-      body.metadata?.user_id ||
+      metadata.user_id ||
       null,
-    source: "api/livekit-token.js"
+    source: "api/livekit-token.js",
+    ...metadata
   };
 }
 
@@ -104,6 +110,14 @@ function getRolePermissions(role, body = {}) {
   };
 }
 
+function getRequestBody(req) {
+  if (req.method === "POST") {
+    return req.body || {};
+  }
+
+  return req.query || {};
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
@@ -128,14 +142,16 @@ export default async function handler(req, res) {
     if (!LIVEKIT_URL || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
       return res.status(500).json({
         ok: false,
-        error: "Missing LiveKit environment variables"
+        error: "Missing LiveKit environment variables",
+        required: [
+          "LIVEKIT_URL",
+          "LIVEKIT_API_KEY",
+          "LIVEKIT_API_SECRET"
+        ]
       });
     }
 
-    const body =
-      req.method === "POST"
-        ? req.body || {}
-        : req.query || {};
+    const body = getRequestBody(req);
 
     const roomName = makeRoomName(
       body.roomName ||
@@ -152,6 +168,7 @@ export default async function handler(req, res) {
 
     const name = safeText(
       body.name ||
+      body.participantName ||
       body.displayName ||
       body.display_name ||
       body.username,
