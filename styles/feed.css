@@ -2,15 +2,18 @@
    RICH BIZNESS LLC
    /styles/feed.css
    FEED PAGE ONLY
+   Mobile-safe feed layout + composer + cards
 ========================================= */
 
 .rb-feed-page {
   min-height: 100svh;
   color: #fff;
+
   background:
-    radial-gradient(circle at 50% 0%, rgba(0,255,120,.2), transparent 34%),
-    radial-gradient(circle at 85% 18%, rgba(255,215,90,.13), transparent 30%),
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.2), transparent 34%),
+    radial-gradient(circle at 85% 18%, rgba(255, 215, 90, 0.13), transparent 30%),
     linear-gradient(180deg, #03140b 0%, #010604 48%, #000 100%);
+
   overflow-x: hidden;
 }
 
@@ -20,8 +23,9 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+
   background: url("/images/brand/hero-banner.png") center / cover no-repeat;
-  opacity: .13;
+  opacity: 0.13;
   filter: saturate(1.2) contrast(1.15);
 }
 
@@ -31,13 +35,16 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
+
   background:
-    radial-gradient(circle at 50% 20%, transparent, rgba(0,0,0,.65) 58%, #000 100%),
-    linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.9));
+    radial-gradient(circle at 50% 20%, transparent, rgba(0, 0, 0, 0.65) 58%, #000 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.9));
 }
 
 .rb-feed-page .rb-topbar,
-.rb-feed-page .rb-section-shell {
+.rb-feed-page .rb-section-shell,
+.rb-feed-page .rb-bottom-nav,
+.rb-feed-page .rb-footer {
   position: relative;
   z-index: 3;
 }
@@ -45,59 +52,96 @@
 .rb-feed-shell {
   width: min(1180px, 94vw);
   margin: 0 auto;
-  padding: 28px 0 54px;
+  padding: 28px 0 calc(120px + env(safe-area-inset-bottom));
 }
 
 .rb-feed-page .rb-section-hero {
+  position: relative;
   min-height: 310px;
   padding: 28px;
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 24px;
+
   border-radius: 34px;
-  border: 1px solid rgba(255,215,100,.24);
+  border: 1px solid rgba(255, 215, 100, 0.24);
+
   background:
-    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.82)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.82)),
     url("/images/brand/Avatar-hero-Banner.png.jpeg") center / cover no-repeat;
-  box-shadow: 0 35px 90px rgba(0,0,0,.6);
+
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.6);
   overflow: hidden;
+  isolation: isolate;
+}
+
+.rb-feed-page .rb-section-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background:
+    radial-gradient(circle at 18% 22%, rgba(0, 255, 157, 0.22), transparent 38%),
+    radial-gradient(circle at 86% 12%, rgba(250, 204, 21, 0.16), transparent 34%);
+
+  pointer-events: none;
+}
+
+.rb-feed-page .rb-section-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .rb-back {
   width: max-content;
   min-height: 42px;
   padding: 0 15px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 999px;
-  border: 1px solid rgba(255,215,100,.28);
-  background: rgba(0,0,0,.48);
+  border: 1px solid rgba(255, 215, 100, 0.28);
+
+  background: rgba(0, 0, 0, 0.48);
   color: #fff;
+
   text-decoration: none;
   font-weight: 950;
+
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .rb-feed-page .rb-section-hero h1 {
   margin: 0;
+
   font-size: clamp(3.6rem, 12vw, 8.6rem);
-  line-height: .82;
-  letter-spacing: -.09em;
+  line-height: 0.82;
+  letter-spacing: -0.09em;
   text-transform: uppercase;
+
+  text-shadow:
+    0 0 24px rgba(0, 255, 157, 0.22),
+    0 0 46px rgba(250, 204, 21, 0.12);
 }
 
 .rb-feed-page .rb-subtitle {
   max-width: 680px;
   margin: 14px 0 0;
-  color: rgba(255,255,255,.78);
+
+  color: rgba(255, 255, 255, 0.78);
   font-size: 1.03rem;
   line-height: 1.55;
 }
 
 .rb-feed-layout {
   margin-top: 18px;
+
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 18px;
@@ -106,33 +150,42 @@
 
 .rb-feed-page .rb-panel,
 .feed-card {
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(0,0,0,.52);
-  box-shadow: 0 22px 60px rgba(0,0,0,.42);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background: rgba(0, 0, 0, 0.52);
+
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .rb-composer-card {
   position: sticky;
   top: 18px;
+
   padding: 18px;
+
   border-radius: 28px;
-  border-color: rgba(0,255,120,.18);
+  border-color: rgba(0, 255, 120, 0.18);
 }
 
 .rb-user-strip {
   display: flex;
   align-items: center;
   gap: 12px;
+
   margin-bottom: 16px;
 }
 
 .rb-user-strip img {
   width: 58px;
   height: 58px;
+
   object-fit: cover;
   border-radius: 18px;
-  border: 2px solid rgba(255,215,100,.72);
+  border: 2px solid rgba(255, 215, 100, 0.72);
+
   background: #06170c;
 }
 
@@ -143,7 +196,7 @@
 
 .rb-user-strip small {
   color: #7cffaa;
-  font-size: .78rem;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
@@ -155,6 +208,13 @@
 .rb-feed-page .rb-form label {
   display: grid;
   gap: 7px;
+
+  color: rgba(255, 255, 255, 0.78);
+
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .rb-feed-page .rb-form-row {
@@ -174,14 +234,17 @@
 
 .feed-card {
   overflow: hidden;
+
   border-radius: 30px;
-  border-color: rgba(0,255,120,.17);
+  border-color: rgba(0, 255, 120, 0.17);
+
   background:
-    linear-gradient(180deg, rgba(6,28,13,.86), rgba(0,0,0,.86));
+    linear-gradient(180deg, rgba(6, 28, 13, 0.86), rgba(0, 0, 0, 0.86));
 }
 
 .feed-card-head {
   padding: 16px;
+
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -192,7 +255,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
   min-width: 0;
+
   color: #fff;
   text-decoration: none;
 }
@@ -200,9 +265,10 @@
 .feed-user img {
   width: 52px;
   height: 52px;
+
   object-fit: cover;
   border-radius: 17px;
-  border: 2px solid rgba(255,215,100,.7);
+  border: 2px solid rgba(255, 215, 100, 0.7);
 }
 
 .feed-user span {
@@ -216,43 +282,52 @@
 
 .feed-user small {
   display: block;
-  color: rgba(255,255,255,.55);
-  font-size: .78rem;
+
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
 }
 
 .feed-chip {
   flex: 0 0 auto;
+
   padding: 8px 11px;
+
   border-radius: 999px;
-  background: rgba(0,255,120,.11);
+
+  background: rgba(0, 255, 120, 0.11);
   color: #7cffaa;
-  font-size: .68rem;
+
+  font-size: 0.68rem;
   font-weight: 1000;
-  letter-spacing: .1em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .feed-card h2 {
   margin: 0;
   padding: 0 16px 8px;
+
   font-size: clamp(1.4rem, 4vw, 2.4rem);
   line-height: 1;
-  letter-spacing: -.04em;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
 }
 
 .feed-body {
   margin: 0;
   padding: 0 16px 16px;
-  color: rgba(255,255,255,.76);
+
+  color: rgba(255, 255, 255, 0.76);
   line-height: 1.55;
 }
 
 .feed-media {
   width: 100%;
   max-height: 560px;
+
   object-fit: cover;
   display: block;
+
   background: #06170c;
 }
 
@@ -265,23 +340,34 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+
   padding: 14px 16px;
-  border-top: 1px solid rgba(255,255,255,.08);
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .feed-actions button {
   min-height: 40px;
-  border: 1px solid rgba(255,255,255,.1);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  background: rgba(255,255,255,.06);
+
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
+
   font-weight: 900;
+}
+
+.feed-actions button:hover {
+  border-color: rgba(0, 255, 157, 0.28);
+  background: rgba(0, 255, 157, 0.08);
 }
 
 .feed-comment-form {
   display: none;
   grid-template-columns: 1fr auto;
   gap: 10px;
+
   padding: 0 16px 16px;
 }
 
@@ -292,21 +378,27 @@
 
 .feed-comment-form input {
   min-height: 42px;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 999px;
-  background: rgba(255,255,255,.07);
-  color: #fff;
   padding: 0 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+
   outline: none;
 }
 
 .feed-comment-form button {
   min-height: 42px;
   padding: 0 16px;
+
   border: 0;
   border-radius: 999px;
+
   background: linear-gradient(135deg, #7cffaa, #ffd76b);
   color: #041006;
+
   font-weight: 1000;
   text-transform: uppercase;
 }
@@ -314,14 +406,17 @@
 .feed-comments {
   display: grid;
   gap: 8px;
+
   padding: 0 16px 16px;
 }
 
 .feed-comment {
   padding: 11px 13px;
+
   border-radius: 16px;
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.78);
+
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .feed-comment strong {
@@ -331,9 +426,12 @@
 
 .rb-empty {
   padding: 28px;
+
   border-radius: 24px;
-  border: 1px dashed rgba(255,215,100,.28);
-  background: rgba(255,255,255,.05);
+  border: 1px dashed rgba(255, 215, 100, 0.28);
+
+  background: rgba(255, 255, 255, 0.05);
+
   text-align: center;
 }
 
@@ -348,8 +446,23 @@
 
 .rb-empty p {
   margin: 0;
-  color: rgba(255,255,255,.68);
+  color: rgba(255, 255, 255, 0.68);
 }
+
+/* STATES */
+
+.rb-feed-page .is-loading {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.rb-feed-page .is-liked {
+  color: #041006;
+  border-color: transparent;
+  background: linear-gradient(135deg, #7cffaa, #ffd76b);
+}
+
+/* MOBILE */
 
 @media (max-width: 920px) {
   .rb-feed-shell {
@@ -373,19 +486,75 @@
 }
 
 @media (max-width: 560px) {
+  .rb-feed-shell {
+    width: calc(100vw - 24px);
+    padding-top: 14px;
+    padding-bottom: calc(116px + env(safe-area-inset-bottom));
+  }
+
+  .rb-feed-page .rb-section-hero {
+    min-height: 270px;
+    padding: 18px;
+    border-radius: 28px;
+  }
+
+  .rb-feed-page .rb-section-hero h1 {
+    font-size: clamp(2.65rem, 17vw, 4.2rem);
+  }
+
+  .rb-feed-page .rb-subtitle {
+    font-size: 0.92rem;
+  }
+
   .rb-feed-page .rb-form-row {
     grid-template-columns: 1fr;
   }
 
+  .feed-card {
+    border-radius: 24px;
+  }
+
   .feed-card-head {
     align-items: flex-start;
+    padding: 14px;
+  }
+
+  .feed-user img {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+  }
+
+  .feed-chip {
+    max-width: 116px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .feed-card h2 {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .feed-body {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .feed-actions {
     grid-template-columns: 1fr;
+    padding: 12px 14px;
   }
 
   .feed-comment-form {
     grid-template-columns: 1fr;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .feed-comments {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
