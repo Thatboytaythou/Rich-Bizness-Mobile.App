@@ -5,42 +5,97 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
+
     { "source": "/auth", "destination": "/auth.html" },
+    { "source": "/auth.html", "destination": "/auth.html" },
+
     { "source": "/feed", "destination": "/feed.html" },
+    { "source": "/feed.html", "destination": "/feed.html" },
+
     { "source": "/watch", "destination": "/watch.html" },
+    { "source": "/watch.html", "destination": "/watch.html" },
+
     { "source": "/live", "destination": "/live.html" },
+    { "source": "/live.html", "destination": "/live.html" },
+
     { "source": "/music", "destination": "/music.html" },
+    { "source": "/music.html", "destination": "/music.html" },
+
     { "source": "/podcast", "destination": "/music.html" },
+    { "source": "/podcast.html", "destination": "/music.html" },
+
     { "source": "/radio", "destination": "/music.html" },
+    { "source": "/radio.html", "destination": "/music.html" },
+
     { "source": "/gaming", "destination": "/gaming.html" },
+    { "source": "/gaming.html", "destination": "/gaming.html" },
+
     { "source": "/sports", "destination": "/sports.html" },
+    { "source": "/sports.html", "destination": "/sports.html" },
+
     { "source": "/gallery", "destination": "/gallery.html" },
+    { "source": "/gallery.html", "destination": "/gallery.html" },
+
     { "source": "/upload", "destination": "/upload.html" },
+    { "source": "/upload.html", "destination": "/upload.html" },
+
     { "source": "/store", "destination": "/store.html" },
+    { "source": "/store.html", "destination": "/store.html" },
+
     { "source": "/meta", "destination": "/meta.html" },
+    { "source": "/meta.html", "destination": "/meta.html" },
+
     { "source": "/messages", "destination": "/messages.html" },
+    { "source": "/messages.html", "destination": "/messages.html" },
+
     { "source": "/notifications", "destination": "/notifications.html" },
+    { "source": "/notifications.html", "destination": "/notifications.html" },
+
     { "source": "/profile", "destination": "/profile.html" },
+    { "source": "/profile.html", "destination": "/profile.html" },
+
     { "source": "/edit", "destination": "/edit.html" },
+    { "source": "/edit.html", "destination": "/edit.html" },
+
     { "source": "/settings", "destination": "/settings.html" },
+    { "source": "/settings.html", "destination": "/settings.html" },
+
     { "source": "/creator", "destination": "/creator.html" },
+    { "source": "/creator.html", "destination": "/creator.html" },
+
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin.html", "destination": "/admin.html" },
+
     { "source": "/avatar", "destination": "/avatar.html" },
+    { "source": "/avatar.html", "destination": "/avatar.html" },
 
     { "source": "/rb-secret-door", "destination": "/secret-door.html" },
     { "source": "/secret-door", "destination": "/secret-door.html" },
     { "source": "/secretDoor", "destination": "/secret-door.html" },
+
     { "source": "/rb-secret-meta2", "destination": "/secret-meta-2.html" },
     { "source": "/secret-meta-2", "destination": "/secret-meta-2.html" },
     { "source": "/secretMeta2", "destination": "/secret-meta-2.html" },
+
     { "source": "/rb-secret-meta3", "destination": "/secret-meta-3.html" },
     { "source": "/secret-meta-3", "destination": "/secret-meta-3.html" },
     { "source": "/secretMeta3", "destination": "/secret-meta-3.html" },
 
     { "source": "/games/rich-chess", "destination": "/games/rich-chess/index.html" },
+    { "source": "/games/rich-chess/", "destination": "/games/rich-chess/index.html" },
+    { "source": "/games/rich-chess/index.html", "destination": "/games/rich-chess/index.html" },
+
     { "source": "/games/money-road-runner", "destination": "/games/money-road-runner/index.html" },
+    { "source": "/games/money-road-runner/", "destination": "/games/money-road-runner/index.html" },
+    { "source": "/games/money-road-runner/index.html", "destination": "/games/money-road-runner/index.html" },
+
     { "source": "/games/smoke-city-hustle", "destination": "/games/smoke-city-hustle/index.html" },
-    { "source": "/games/studio-showdown", "destination": "/games/studio-showdown/index.html" }
+    { "source": "/games/smoke-city-hustle/", "destination": "/games/smoke-city-hustle/index.html" },
+    { "source": "/games/smoke-city-hustle/index.html", "destination": "/games/smoke-city-hustle/index.html" },
+
+    { "source": "/games/studio-showdown", "destination": "/games/studio-showdown/index.html" },
+    { "source": "/games/studio-showdown/", "destination": "/games/studio-showdown/index.html" },
+    { "source": "/games/studio-showdown/index.html", "destination": "/games/studio-showdown/index.html" }
   ],
   "headers": [
     {
@@ -50,6 +105,30 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "Permissions-Policy", "value": "camera=*, microphone=*, fullscreen=*, payment=*" }
+      ]
+    },
+    {
+      "source": "/core/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/games/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/styles/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
   ]
