@@ -3,7 +3,7 @@
    /games/rich-chess/game.js
 
    RICH CHESS PAGE CONTROLLER
-   Board UI + rules + local/realtime room hooks + CPU mode
+   Premium HUD + local CPU + realtime rooms
 ========================= */
 
 import {
@@ -20,8 +20,9 @@ import {
   getChessState,
   loadChessState,
   onChessMove,
-  toggleChessCpu,
+  enableChessCpu,
   disableChessCpu,
+  setChessCpuDifficulty,
   getChessCpuState
 } from "/core/games/chess-client.js";
 
@@ -36,6 +37,7 @@ import {
 } from "/core/games/chess-realtime.js";
 
 const $ = (id) => document.getElementById(id);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const els = {
   board: $("chessBoard"),
@@ -52,7 +54,11 @@ const els = {
   cpuBtn: $("cpuChessBtn"),
   resetBtn: $("resetChessBtn"),
   resignBtn: $("resignChessBtn"),
-  copyLinkBtn: $("copyChessLinkBtn")
+  copyLinkBtn: $("copyChessLinkBtn"),
+
+  modeCards: $$("[data-chess-mode], [data-mode]"),
+  difficultyCards: $$("[data-chess-difficulty], [data-difficulty]"),
+  actionButtons: $$("[data-chess-action], [data-action]")
 };
 
 const PAGE = {
@@ -60,7 +66,9 @@ const PAGE = {
   user: null,
   profile: null,
   roomCode: new URLSearchParams(location.search).get("room") || null,
-  syncingRemote: false
+  syncingRemote: false,
+  difficulty: "normal",
+  mode: "local"
 };
 
 function setStatus(message = "") {
@@ -100,6 +108,17 @@ function turnName(turn = "w") {
   return turn === "b" ? "Black" : "White";
 }
 
+function normalizeDifficulty(value = "normal") {
+  const text = String(value || "normal").toLowerCase();
+
+  if (["rookie", "easy"].includes(text)) return "easy";
+  if (["hustler", "normal"].includes(text)) return "normal";
+  if (["boss", "hard"].includes(text)) return "hard";
+  if (["grandmaster", "grand", "master"].includes(text)) return "boss";
+
+  return "normal";
+}
+
 function roomUrl(roomCode = PAGE.roomCode) {
   const url = new URL(window.location.href);
   url.pathname = "/games/rich-chess";
@@ -110,6 +129,41 @@ function roomUrl(roomCode = PAGE.roomCode) {
   }
 
   return url.toString();
+}
+
+function clearRoomUrl() {
+  PAGE.roomCode = null;
+  history.replaceState(null, "", "/games/rich-chess");
+}
+
+function setMode(mode = "local") {
+  PAGE.mode = mode;
+
+  els.modeCards.forEach((card) => {
+    const value =
+      card.dataset.chessMode ||
+      card.dataset.mode ||
+      card.dataset.chessAction ||
+      card.dataset.action ||
+      "";
+
+    card.classList.toggle("is-active", value === mode);
+  });
+}
+
+function setDifficultyUi(difficulty = PAGE.difficulty) {
+  PAGE.difficulty = normalizeDifficulty(difficulty);
+
+  els.difficultyCards.forEach((card) => {
+    const value = normalizeDifficulty(
+      card.dataset.chessDifficulty ||
+        card.dataset.difficulty ||
+        card.dataset.level ||
+        ""
+    );
+
+    card.classList.toggle("is-active", value === PAGE.difficulty);
+  });
 }
 
 function renderCpuButton() {
@@ -124,6 +178,7 @@ function renderCpuButton() {
     : "Play CPU";
 
   els.cpuBtn.classList.toggle("primary", cpu.enabled);
+  els.cpuBtn.classList.toggle("is-active", cpu.enabled);
   els.cpuBtn.setAttribute("aria-pressed", cpu.enabled ? "true" : "false");
 }
 
@@ -174,9 +229,15 @@ function renderPageStats() {
 
   renderCpuButton();
 
-  if (realtime.connected && PAGE.roomCode && !cpu.enabled) {
-    setStatus(`Realtime room connected: ${PAGE.roomCode}`);
+  if (cpu.enabled) {
+    setMode("cpu");
+  } else if (PAGE.roomCode || realtime.connected) {
+    setMode("room");
+  } else {
+    setMode("local");
   }
+
+  setDifficultyUi(PAGE.difficulty);
 }
 
 async function initIdentity() {
@@ -203,13 +264,20 @@ async function createRoom() {
     const chessState = getChessState();
 
     const room = await createChessRealtimeRoom({
-      initialState: chessState,
+      initialState: {
+        ...chessState,
+        cpuEnabled: false
+      },
       gameKey: "rich-chess"
     });
 
     PAGE.roomCode = room.room_code;
 
-    history.replaceState(null, "", `/games/rich-chess?room=${encodeURIComponent(PAGE.roomCode)}`);
+    history.replaceState(
+      null,
+      "",
+      `/games/rich-chess?room=${encodeURIComponent(PAGE.roomCode)}`
+    );
 
     setStatus(`New room created: ${PAGE.roomCode}`);
     renderPageStats();
@@ -234,11 +302,18 @@ async function joinRoom() {
 
     if (room.game_state) {
       PAGE.syncingRemote = true;
-      loadChessState(room.game_state);
+      loadChessState({
+        ...room.game_state,
+        cpuEnabled: false
+      });
       PAGE.syncingRemote = false;
     }
 
-    history.replaceState(null, "", `/games/rich-chess?room=${encodeURIComponent(PAGE.roomCode)}`);
+    history.replaceState(
+      null,
+      "",
+      `/games/rich-chess?room=${encodeURIComponent(PAGE.roomCode)}`
+    );
 
     setStatus(`Joined room: ${PAGE.roomCode}`);
     renderPageStats();
@@ -258,7 +333,10 @@ async function autoJoinRoomFromUrl() {
 
     if (room.game_state) {
       PAGE.syncingRemote = true;
-      loadChessState(room.game_state);
+      loadChessState({
+        ...room.game_state,
+        cpuEnabled: false
+      });
       PAGE.syncingRemote = false;
     }
 
@@ -295,24 +373,52 @@ async function copyRoomLink(event) {
   }
 }
 
-function toggleCpuMode() {
-  if (PAGE.roomCode) {
-    PAGE.roomCode = null;
-    clearChessRealtime();
-    history.replaceState(null, "", "/games/rich-chess");
-  }
+function startCpuMode() {
+  PAGE.roomCode = null;
+  clearChessRealtime();
+  clearRoomUrl();
 
-  const state = toggleChessCpu({
+  const state = enableChessCpu({
     color: "b",
-    difficulty: "normal",
+    difficulty: PAGE.difficulty,
     reset: true
   });
 
   setStatus(
     state.cpuEnabled
-      ? "CPU mode online. You are White."
-      : "CPU mode off. Local match ready."
+      ? `CPU mode on. Difficulty: ${PAGE.difficulty}. You are White.`
+      : "CPU mode failed."
   );
+
+  renderPageStats();
+}
+
+function toggleCpuMode() {
+  const cpu = getChessCpuState();
+
+  if (cpu.enabled) {
+    disableChessCpu();
+    setMode("local");
+    setStatus("CPU mode off. Local match ready.");
+  } else {
+    startCpuMode();
+  }
+
+  renderPageStats();
+}
+
+function setDifficulty(difficulty) {
+  PAGE.difficulty = normalizeDifficulty(difficulty);
+  setChessCpuDifficulty(PAGE.difficulty);
+  setDifficultyUi(PAGE.difficulty);
+
+  const cpu = getChessCpuState();
+
+  if (cpu.enabled) {
+    setStatus(`CPU difficulty set to ${PAGE.difficulty}.`);
+  } else {
+    setStatus(`CPU difficulty selected: ${PAGE.difficulty}. Tap Play CPU.`);
+  }
 
   renderPageStats();
 }
@@ -338,6 +444,83 @@ function resignBoard() {
   renderPageStats();
 }
 
+function handleAction(action = "") {
+  const key = String(action || "").toLowerCase();
+
+  if (["cpu", "play-cpu", "play_cpu"].includes(key)) {
+    toggleCpuMode();
+    return;
+  }
+
+  if (["room", "new-room", "new_room", "custom-room", "custom_room"].includes(key)) {
+    createRoom();
+    return;
+  }
+
+  if (["join", "join-room", "join_room"].includes(key)) {
+    joinRoom();
+    return;
+  }
+
+  if (["reset", "new-game", "new_game"].includes(key)) {
+    resetBoard();
+    return;
+  }
+
+  if (["resign"].includes(key)) {
+    resignBoard();
+    return;
+  }
+
+  if (["copy", "copy-link", "copy_link"].includes(key)) {
+    copyRoomLink();
+  }
+}
+
+function bindPremiumCards() {
+  els.modeCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      const mode =
+        card.dataset.chessMode ||
+        card.dataset.mode ||
+        card.dataset.chessAction ||
+        card.dataset.action ||
+        "";
+
+      handleAction(mode);
+    });
+  });
+
+  els.difficultyCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      const difficulty =
+        card.dataset.chessDifficulty ||
+        card.dataset.difficulty ||
+        card.dataset.level ||
+        "normal";
+
+      setDifficulty(difficulty);
+    });
+  });
+
+  els.actionButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const action =
+        button.dataset.chessAction ||
+        button.dataset.action ||
+        "";
+
+      if (!action) return;
+
+      if (button.tagName === "A") {
+        event.preventDefault();
+      }
+
+      handleAction(action);
+    });
+  });
+}
+
 function bindEvents() {
   els.newRoomBtn?.addEventListener("click", createRoom);
   els.joinRoomBtn?.addEventListener("click", joinRoom);
@@ -345,6 +528,8 @@ function bindEvents() {
   els.resetBtn?.addEventListener("click", resetBoard);
   els.resignBtn?.addEventListener("click", resignBoard);
   els.copyLinkBtn?.addEventListener("click", copyRoomLink);
+
+  bindPremiumCards();
 
   onChessMove(async (move, state) => {
     renderPageStats();
@@ -376,7 +561,10 @@ function bindEvents() {
     if (!moveData || !realtime.state) return;
 
     PAGE.syncingRemote = true;
-    loadChessState(realtime.state);
+    loadChessState({
+      ...realtime.state,
+      cpuEnabled: false
+    });
     PAGE.syncingRemote = false;
 
     setStatus(`Synced move: ${moveData.from} → ${moveData.to}`);
@@ -391,7 +579,10 @@ function bindEvents() {
 
     if (realtime.state && PAGE.roomCode) {
       PAGE.syncingRemote = true;
-      loadChessState(realtime.state);
+      loadChessState({
+        ...realtime.state,
+        cpuEnabled: false
+      });
       PAGE.syncingRemote = false;
     }
 
@@ -412,11 +603,15 @@ async function bootRichChess() {
 
     initChessClient({
       roomCode: PAGE.roomCode || "Local",
-      playerName: displayName()
+      playerName: displayName(),
+      cpu: false,
+      cpuColor: "b",
+      cpuDifficulty: PAGE.difficulty
     });
 
     await autoJoinRoomFromUrl();
 
+    setDifficultyUi(PAGE.difficulty);
     renderPageStats();
 
     document.body.classList.add("rich-chess-ready");
