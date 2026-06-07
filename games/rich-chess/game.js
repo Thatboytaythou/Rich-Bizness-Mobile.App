@@ -2,584 +2,345 @@
    RICH BIZNESS MOBILE
    /games/rich-chess/game.js
 
-   RICH CHESS
-   Lightweight playable chess engine
-   Board UI + legal moves + captures + score submit hook
+   RICH CHESS PAGE CONTROLLER
+   Board UI + rules + local/realtime room hooks
 ========================= */
 
 import {
-  startGameSession,
-  endGameSession
-} from "/core/features/gaming/game-session-client.js";
+  initApp,
+  getCurrentUserState,
+  markPageReady,
+  markPageError
+} from "/core/app.js";
 
 import {
-  submitGameScore
-} from "/core/features/gaming/game-score-client.js";
+  initChessClient,
+  resetChessGame,
+  resignChessGame,
+  getChessState,
+  loadChessState,
+  onChessMove
+} from "/core/games/chess-client.js";
+
+import {
+  createChessRealtimeRoom,
+  joinChessRealtimeRoom,
+  sendChessRealtimeMove,
+  onChessRealtimeMove,
+  onChessRealtime,
+  clearChessRealtime,
+  getChessRealtimeState
+} from "/core/games/chess-realtime.js";
 
 const $ = (id) => document.getElementById(id);
 
 const els = {
-  board: $("richChessBoard"),
-  status: $("richChessStatus"),
-  turn: $("richChessTurn"),
-  score: $("richChessScore"),
-  captured: $("richChessCaptured"),
-  startBtn: $("richChessStartBtn"),
-  resetBtn: $("richChessResetBtn"),
-  submitBtn: $("richChessSubmitBtn")
+  board: $("chessBoard"),
+  status: $("chessStatus"),
+  turn: $("chessTurn"),
+  moves: $("chessMoves"),
+  room: $("chessRoom"),
+  player: $("chessPlayer"),
+  captured: $("chessCaptured"),
+  moveLog: $("chessMoveLog"),
+
+  newRoomBtn: $("newChessRoomBtn"),
+  joinRoomBtn: $("joinChessRoomBtn"),
+  resetBtn: $("resetChessBtn"),
+  resignBtn: $("resignChessBtn"),
+  copyLinkBtn: $("copyChessLinkBtn")
 };
 
-const GAME_ID = "rich-chess";
-
-const PIECES = {
-  white: {
-    king: "♔",
-    queen: "♕",
-    rook: "♖",
-    bishop: "♗",
-    knight: "♘",
-    pawn: "♙"
-  },
-  black: {
-    king: "♚",
-    queen: "♛",
-    rook: "♜",
-    bishop: "♝",
-    knight: "♞",
-    pawn: "♟"
-  }
+const PAGE = {
+  booted: false,
+  user: null,
+  profile: null,
+  roomCode: new URLSearchParams(location.search).get("room") || null,
+  syncingRemote: false
 };
 
-const PIECE_VALUE = {
-  pawn: 10,
-  knight: 30,
-  bishop: 30,
-  rook: 50,
-  queen: 90,
-  king: 500
-};
-
-const state = {
-  board: [],
-  selected: null,
-  legalMoves: [],
-  turn: "white",
-  score: 0,
-  captured: [],
-  started: false,
-  session: null,
-  winner: null,
-  moveCount: 0
-};
-
-function makePiece(color, type) {
-  return {
-    color,
-    type,
-    icon: PIECES[color][type],
-    moved: false
-  };
+function setStatus(message = "") {
+  if (els.status) els.status.textContent = message;
 }
 
-function clonePiece(piece) {
-  return piece
-    ? { ...piece }
-    : null;
-}
-
-function initialBoard() {
-  const board = Array.from({ length: 8 }, () => Array(8).fill(null));
-
-  const back = [
-    "rook",
-    "knight",
-    "bishop",
-    "queen",
-    "king",
-    "bishop",
-    "knight",
-    "rook"
-  ];
-
-  back.forEach((type, col) => {
-    board[0][col] = makePiece("black", type);
-    board[1][col] = makePiece("black", "pawn");
-    board[6][col] = makePiece("white", "pawn");
-    board[7][col] = makePiece("white", type);
-  });
-
-  return board;
-}
-
-function setStatus(message) {
-  if (els.status) {
-    els.status.textContent = message;
-  }
-}
-
-function inBounds(row, col) {
-  return row >= 0 && row < 8 && col >= 0 && col < 8;
-}
-
-function pieceAt(row, col) {
-  if (!inBounds(row, col)) return null;
-  return state.board[row][col];
-}
-
-function sameColor(row, col, color) {
-  return pieceAt(row, col)?.color === color;
-}
-
-function enemyAt(row, col, color) {
-  const piece = pieceAt(row, col);
-  return piece && piece.color !== color;
-}
-
-function addSlidingMoves(moves, row, col, color, directions) {
-  directions.forEach(([dr, dc]) => {
-    let r = row + dr;
-    let c = col + dc;
-
-    while (inBounds(r, c)) {
-      if (sameColor(r, c, color)) break;
-
-      moves.push({
-        row: r,
-        col: c,
-        capture: enemyAt(r, c, color)
-      });
-
-      if (enemyAt(r, c, color)) break;
-
-      r += dr;
-      c += dc;
-    }
-  });
-}
-
-function legalMovesFor(row, col) {
-  const piece = pieceAt(row, col);
-  if (!piece) return [];
-
-  const moves = [];
-  const color = piece.color;
-
-  if (piece.type === "pawn") {
-    const dir = color === "white" ? -1 : 1;
-    const startRow = color === "white" ? 6 : 1;
-
-    if (inBounds(row + dir, col) && !pieceAt(row + dir, col)) {
-      moves.push({
-        row: row + dir,
-        col,
-        capture: false
-      });
-
-      if (
-        row === startRow &&
-        !pieceAt(row + dir * 2, col)
-      ) {
-        moves.push({
-          row: row + dir * 2,
-          col,
-          capture: false
-        });
-      }
-    }
-
-    [-1, 1].forEach((dc) => {
-      const r = row + dir;
-      const c = col + dc;
-
-      if (inBounds(r, c) && enemyAt(r, c, color)) {
-        moves.push({
-          row: r,
-          col: c,
-          capture: true
-        });
-      }
-    });
-  }
-
-  if (piece.type === "rook") {
-    addSlidingMoves(moves, row, col, color, [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1]
-    ]);
-  }
-
-  if (piece.type === "bishop") {
-    addSlidingMoves(moves, row, col, color, [
-      [1, 1],
-      [1, -1],
-      [-1, 1],
-      [-1, -1]
-    ]);
-  }
-
-  if (piece.type === "queen") {
-    addSlidingMoves(moves, row, col, color, [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-      [1, 1],
-      [1, -1],
-      [-1, 1],
-      [-1, -1]
-    ]);
-  }
-
-  if (piece.type === "knight") {
-    [
-      [2, 1],
-      [2, -1],
-      [-2, 1],
-      [-2, -1],
-      [1, 2],
-      [1, -2],
-      [-1, 2],
-      [-1, -2]
-    ].forEach(([dr, dc]) => {
-      const r = row + dr;
-      const c = col + dc;
-
-      if (!inBounds(r, c)) return;
-      if (sameColor(r, c, color)) return;
-
-      moves.push({
-        row: r,
-        col: c,
-        capture: enemyAt(r, c, color)
-      });
-    });
-  }
-
-  if (piece.type === "king") {
-    [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-      [1, 1],
-      [1, -1],
-      [-1, 1],
-      [-1, -1]
-    ].forEach(([dr, dc]) => {
-      const r = row + dr;
-      const c = col + dc;
-
-      if (!inBounds(r, c)) return;
-      if (sameColor(r, c, color)) return;
-
-      moves.push({
-        row: r,
-        col: c,
-        capture: enemyAt(r, c, color)
-      });
-    });
-  }
-
-  return moves;
-}
-
-function isLegalTarget(row, col) {
-  return state.legalMoves.some(
-    (move) => move.row === row && move.col === col
+function displayName() {
+  return (
+    PAGE.profile?.display_name ||
+    PAGE.profile?.full_name ||
+    PAGE.profile?.username ||
+    PAGE.user?.email?.split("@")[0] ||
+    "Guest"
   );
 }
 
-function clearSelection() {
-  state.selected = null;
-  state.legalMoves = [];
+function pieceIcon(piece = "") {
+  const icons = {
+    wK: "♔",
+    wQ: "♕",
+    wR: "♖",
+    wB: "♗",
+    wN: "♘",
+    wP: "♙",
+    bK: "♚",
+    bQ: "♛",
+    bR: "♜",
+    bB: "♝",
+    bN: "♞",
+    bP: "♟"
+  };
+
+  return icons[piece] || piece || "";
 }
 
-function selectSquare(row, col) {
-  const piece = pieceAt(row, col);
-
-  if (!piece || piece.color !== state.turn || state.winner) {
-    clearSelection();
-    render();
-    return;
-  }
-
-  state.selected = { row, col };
-  state.legalMoves = legalMovesFor(row, col);
-
-  render();
+function turnName(turn = "w") {
+  return turn === "b" ? "Black" : "White";
 }
 
-function promoteIfNeeded(piece, row) {
-  if (!piece || piece.type !== "pawn") return piece;
+function roomUrl(roomCode = PAGE.roomCode) {
+  const url = new URL(window.location.href);
+  url.pathname = "/games/rich-chess";
+  url.search = "";
 
-  if (
-    (piece.color === "white" && row === 0) ||
-    (piece.color === "black" && row === 7)
-  ) {
-    return {
-      ...piece,
-      type: "queen",
-      icon: PIECES[piece.color].queen
-    };
+  if (roomCode) {
+    url.searchParams.set("room", roomCode);
   }
 
-  return piece;
+  return url.toString();
 }
 
-function movePiece(toRow, toCol) {
-  if (!state.selected) return;
+function renderPageStats() {
+  const state = getChessState();
+  const realtime = getChessRealtimeState();
 
-  const { row, col } = state.selected;
-
-  if (!isLegalTarget(toRow, toCol)) {
-    selectSquare(toRow, toCol);
-    return;
-  }
-
-  const piece = clonePiece(pieceAt(row, col));
-  const captured = pieceAt(toRow, toCol);
-
-  if (!piece) return;
-
-  if (captured) {
-    state.captured.push(captured);
-    state.score += PIECE_VALUE[captured.type] || 0;
-
-    if (captured.type === "king") {
-      state.winner = piece.color;
-      state.score += 1000;
-    }
-  }
-
-  piece.moved = true;
-
-  state.board[row][col] = null;
-  state.board[toRow][toCol] = promoteIfNeeded(piece, toRow);
-
-  state.moveCount += 1;
-  state.turn = state.turn === "white" ? "black" : "white";
-
-  clearSelection();
-  render();
-
-  if (state.winner) {
-    setStatus(`${state.winner.toUpperCase()} wins. King captured.`);
-    return;
-  }
-
-  setStatus(`${state.turn.toUpperCase()} to move.`);
-}
-
-function handleSquareClick(row, col) {
-  if (!state.started) {
-    setStatus("Press Start Match first.");
-    return;
-  }
-
-  if (state.selected) {
-    movePiece(row, col);
-    return;
-  }
-
-  selectSquare(row, col);
-}
-
-function renderBoard() {
-  if (!els.board) return;
-
-  els.board.innerHTML = "";
-
-  state.board.forEach((line, row) => {
-    line.forEach((piece, col) => {
-      const square = document.createElement("button");
-
-      square.type = "button";
-      square.className = [
-        "rich-chess-square",
-        (row + col) % 2 === 0 ? "is-light" : "is-dark",
-        state.selected?.row === row && state.selected?.col === col
-          ? "is-selected"
-          : "",
-        isLegalTarget(row, col)
-          ? "is-legal"
-          : "",
-        isLegalTarget(row, col) && piece
-          ? "is-capture"
-          : ""
-      ].filter(Boolean).join(" ");
-
-      square.dataset.row = row;
-      square.dataset.col = col;
-      square.setAttribute(
-        "aria-label",
-        piece
-          ? `${piece.color} ${piece.type}`
-          : `Empty square ${row + 1}, ${col + 1}`
-      );
-
-      square.innerHTML = piece
-        ? `<span class="rich-chess-piece ${piece.color}">${piece.icon}</span>`
-        : "";
-
-      square.addEventListener("click", () => handleSquareClick(row, col));
-
-      els.board.appendChild(square);
-    });
-  });
-}
-
-function renderStats() {
-  if (els.turn) {
-    els.turn.textContent = state.winner
-      ? `${state.winner.toUpperCase()} WON`
-      : state.turn.toUpperCase();
-  }
-
-  if (els.score) {
-    els.score.textContent = String(state.score);
-  }
+  if (els.turn) els.turn.textContent = turnName(state.turn);
+  if (els.moves) els.moves.textContent = String(state.moves?.length || 0);
+  if (els.room) els.room.textContent = PAGE.roomCode || state.roomCode || "Local";
+  if (els.player) els.player.textContent = displayName();
 
   if (els.captured) {
-    els.captured.innerHTML = state.captured.length
+    els.captured.innerHTML = state.captured?.length
       ? state.captured
-          .map((piece) => `<span title="${piece.color} ${piece.type}">${piece.icon}</span>`)
+          .map((piece) => `<span title="${piece}">${pieceIcon(piece)}</span>`)
           .join("")
-      : "<span>No captures yet</span>";
+      : "<span>No captures yet.</span>";
   }
 
-  if (els.submitBtn) {
-    els.submitBtn.disabled = !state.started || !state.session?.id;
+  if (els.moveLog) {
+    els.moveLog.innerHTML = state.moves?.length
+      ? state.moves
+          .map((move, index) => `
+            <li>
+              <strong>${index + 1}.</strong>
+              <span>${pieceIcon(move.piece)} ${move.from} → ${move.to}</span>
+              ${move.captured ? `<em>${pieceIcon(move.captured)}</em>` : ""}
+            </li>
+          `)
+          .join("")
+      : "<li>No moves yet.</li>";
+  }
+
+  if (els.copyLinkBtn) {
+    els.copyLinkBtn.classList.toggle("is-disabled", !PAGE.roomCode);
+    els.copyLinkBtn.setAttribute("aria-disabled", PAGE.roomCode ? "false" : "true");
+  }
+
+  if (realtime.connected && PAGE.roomCode) {
+    setStatus(`Realtime room connected: ${PAGE.roomCode}`);
   }
 }
 
-function render() {
-  renderBoard();
-  renderStats();
-}
-
-async function startMatch() {
-  resetMatch(false);
-
-  state.started = true;
-
+async function initIdentity() {
   try {
-    state.session = await startGameSession({
-      gameId: GAME_ID,
-      gameSlug: "rich-chess",
-      gameTitle: "Rich Chess",
-      mode: "chess",
-      metadata: {
-        source: "games/rich-chess/game.js"
-      }
+    await initApp({
+      guard: false,
+      bindProfile: true,
+      toast: false
     });
 
-    setStatus("Rich Chess started. WHITE to move.");
+    const state = getCurrentUserState();
+
+    PAGE.user = state?.user || null;
+    PAGE.profile = state?.profile || null;
   } catch (error) {
-    console.warn("[RICH CHESS SESSION]", error?.message || error);
-    setStatus("Match started locally. Sign in to save score.");
+    console.warn("[RB CHESS IDENTITY]", error?.message || error);
   }
-
-  render();
 }
 
-function resetMatch(updateStatus = true) {
-  state.board = initialBoard();
-  state.selected = null;
-  state.legalMoves = [];
-  state.turn = "white";
-  state.score = 0;
-  state.captured = [];
-  state.started = false;
-  state.winner = null;
-  state.moveCount = 0;
+async function createRoom() {
+  try {
+    const chessState = getChessState();
 
-  if (updateStatus) {
-    setStatus("Board reset. Press Start Match.");
+    const room = await createChessRealtimeRoom({
+      initialState: chessState,
+      gameKey: "rich-chess"
+    });
+
+    PAGE.roomCode = room.room_code;
+
+    history.replaceState(null, "", `/games/rich-chess?room=${encodeURIComponent(PAGE.roomCode)}`);
+
+    setStatus(`New room created: ${PAGE.roomCode}`);
+    renderPageStats();
+  } catch (error) {
+    console.error("[RB CHESS CREATE ROOM]", error);
+    setStatus(error?.message || "Could not create chess room.");
   }
-
-  render();
 }
 
-async function submitScoreAndEnd() {
-  if (!state.session?.id) {
-    setStatus("No saved session. Sign in and start a match first.");
+async function joinRoom() {
+  const code =
+    prompt("Enter Rich Chess room code:", PAGE.roomCode || "")?.trim() || "";
+
+  if (!code) return;
+
+  try {
+    const room = await joinChessRealtimeRoom(code);
+
+    PAGE.roomCode = room.room_code;
+
+    if (room.game_state) {
+      PAGE.syncingRemote = true;
+      loadChessState(room.game_state);
+      PAGE.syncingRemote = false;
+    }
+
+    history.replaceState(null, "", `/games/rich-chess?room=${encodeURIComponent(PAGE.roomCode)}`);
+
+    setStatus(`Joined room: ${PAGE.roomCode}`);
+    renderPageStats();
+  } catch (error) {
+    console.error("[RB CHESS JOIN ROOM]", error);
+    setStatus(error?.message || "Could not join chess room.");
+  }
+}
+
+async function autoJoinRoomFromUrl() {
+  if (!PAGE.roomCode) return;
+
+  try {
+    const room = await joinChessRealtimeRoom(PAGE.roomCode);
+
+    if (room.game_state) {
+      PAGE.syncingRemote = true;
+      loadChessState(room.game_state);
+      PAGE.syncingRemote = false;
+    }
+
+    setStatus(`Joined room: ${PAGE.roomCode}`);
+    renderPageStats();
+  } catch (error) {
+    console.warn("[RB CHESS AUTO JOIN]", error?.message || error);
+    setStatus("Room link loaded, but realtime join failed.");
+  }
+}
+
+async function copyRoomLink(event) {
+  event?.preventDefault?.();
+
+  if (!PAGE.roomCode) {
+    setStatus("Create or join a room first.");
     return;
   }
 
-  const finalScore =
-    state.score +
-    Math.max(0, 80 - state.moveCount) +
-    (state.winner ? 500 : 0);
+  const link = roomUrl(PAGE.roomCode);
 
   try {
-    await submitGameScore({
-      gameId: GAME_ID,
-      sessionId: state.session.id,
-      score: finalScore,
-      points: finalScore,
-      level: state.winner ? "win" : "active",
-      rank: state.winner ? "King Taker" : "Chess Hustler",
-      metadata: {
-        captured: state.captured.map((piece) => ({
-          color: piece.color,
-          type: piece.type
-        })),
-        move_count: state.moveCount,
-        winner: state.winner,
-        base_score: state.score,
-        source: "games/rich-chess/game.js"
-      }
-    });
-
-    await endGameSession({
-      sessionId: state.session.id,
-      score: finalScore,
-      reason: state.winner ? "completed" : "submitted",
-      metadata: {
-        winner: state.winner,
-        move_count: state.moveCount,
-        source: "games/rich-chess/game.js"
-      }
-    });
-
-    setStatus(`Score submitted: ${finalScore}`);
-    state.started = false;
-    state.session = null;
-    render();
-  } catch (error) {
-    console.error("[RICH CHESS SCORE FAILED]", error);
-    setStatus(error?.message || "Score submit failed.");
+    await navigator.clipboard.writeText(link);
+    setStatus("Chess room link copied.");
+  } catch {
+    setStatus(link);
   }
+}
+
+function resetBoard() {
+  resetChessGame();
+  setStatus("Board reset.");
+  renderPageStats();
+}
+
+function resignBoard() {
+  const state = resignChessGame();
+  setStatus(state.status || "Player resigned.");
+  renderPageStats();
 }
 
 function bindEvents() {
-  els.startBtn?.addEventListener("click", startMatch);
-  els.resetBtn?.addEventListener("click", () => resetMatch(true));
-  els.submitBtn?.addEventListener("click", submitScoreAndEnd);
+  els.newRoomBtn?.addEventListener("click", createRoom);
+  els.joinRoomBtn?.addEventListener("click", joinRoom);
+  els.resetBtn?.addEventListener("click", resetBoard);
+  els.resignBtn?.addEventListener("click", resignBoard);
+  els.copyLinkBtn?.addEventListener("click", copyRoomLink);
 
-  window.addEventListener("beforeunload", () => {
-    if (!state.session?.id) return;
+  onChessMove(async (move, state) => {
+    renderPageStats();
 
-    endGameSession({
-      sessionId: state.session.id,
-      score: state.score,
-      reason: "page_unload",
-      metadata: {
-        source: "games/rich-chess/game.js"
+    if (PAGE.syncingRemote) return;
+
+    if (PAGE.roomCode) {
+      try {
+        await sendChessRealtimeMove(move, state);
+      } catch (error) {
+        console.warn("[RB CHESS MOVE SYNC]", error?.message || error);
       }
-    }).catch(() => {});
+    }
   });
+
+  onChessRealtimeMove((row) => {
+    const moveData = row?.move_data;
+    const realtime = getChessRealtimeState();
+
+    if (!moveData || !realtime.state) return;
+
+    PAGE.syncingRemote = true;
+    loadChessState(realtime.state);
+    PAGE.syncingRemote = false;
+
+    setStatus(`Synced move: ${moveData.from} → ${moveData.to}`);
+    renderPageStats();
+  });
+
+  onChessRealtime(() => {
+    const realtime = getChessRealtimeState();
+
+    if (realtime.state && PAGE.roomCode) {
+      PAGE.syncingRemote = true;
+      loadChessState(realtime.state);
+      PAGE.syncingRemote = false;
+    }
+
+    renderPageStats();
+  });
+
+  window.addEventListener("beforeunload", clearChessRealtime);
 }
 
-function bootRichChess() {
-  bindEvents();
-  resetMatch(true);
+async function bootRichChess() {
+  if (PAGE.booted) return;
+  PAGE.booted = true;
 
-  document.body.classList.add("rich-chess-ready");
+  try {
+    bindEvents();
 
-  console.log("RICH CHESS READY");
+    await initIdentity();
+
+    initChessClient({
+      roomCode: PAGE.roomCode || "Local",
+      playerName: displayName()
+    });
+
+    await autoJoinRoomFromUrl();
+
+    renderPageStats();
+
+    document.body.classList.add("rich-chess-ready");
+    markPageReady("rich-chess");
+
+    console.log("RB RICH CHESS PAGE READY");
+  } catch (error) {
+    console.error("[RB RICH CHESS]", error);
+    setStatus(error?.message || "Rich Chess failed to load.");
+    markPageError(error);
+  }
 }
 
 if (document.readyState === "loading") {
