@@ -3,7 +3,7 @@
    /core/games/chess-client.js
 
    RICH CHESS CLIENT
-   Local chess state + UI bridge
+   Local chess state + UI bridge + CPU mode
    Uses locked chess-board.js model
 ========================= */
 
@@ -28,6 +28,10 @@ import {
   applyChessMove
 } from "/core/games/chess-board.js";
 
+import {
+  applyChessCpuMove
+} from "/core/games/chess-ai.js";
+
 const CHESS = {
   board: createChessBoard(),
   turn: "w",
@@ -36,11 +40,20 @@ const CHESS = {
   moves: [],
   captured: [],
   lastMove: null,
+
   roomCode: "Local",
   playerName: "Guest",
   status: "Rich Chess ready.",
+
   locked: false,
   flipped: false,
+
+  cpuEnabled: false,
+  cpuColor: "b",
+  cpuDifficulty: "normal",
+  cpuThinking: false,
+  cpuDelay: 520,
+
   onMove: null
 };
 
@@ -73,11 +86,18 @@ function snapshot() {
     moves: CHESS.moves.map((move) => ({ ...move })),
     captured: [...CHESS.captured],
     lastMove: CHESS.lastMove ? { ...CHESS.lastMove } : null,
+
     roomCode: CHESS.roomCode,
     playerName: CHESS.playerName,
     status: CHESS.status,
+
     flipped: CHESS.flipped,
-    locked: CHESS.locked
+    locked: CHESS.locked,
+
+    cpuEnabled: CHESS.cpuEnabled,
+    cpuColor: CHESS.cpuColor,
+    cpuDifficulty: CHESS.cpuDifficulty,
+    cpuThinking: CHESS.cpuThinking
   };
 }
 
@@ -97,7 +117,37 @@ function setSelection(pos, legalTargets = []) {
   }
 }
 
+function emitMove(move) {
+  const state = snapshot();
+
+  CHESS.onMove?.(move, state);
+
+  window.dispatchEvent(
+    new CustomEvent("rb-chess-move", {
+      detail: {
+        move,
+        state
+      }
+    })
+  );
+}
+
+function isCpuTurn() {
+  return (
+    CHESS.cpuEnabled &&
+    !CHESS.locked &&
+    !CHESS.cpuThinking &&
+    CHESS.turn === CHESS.cpuColor
+  );
+}
+
 function selectSquare(square) {
+  if (isCpuTurn()) {
+    CHESS.status = "CPU is thinking...";
+    paint();
+    return;
+  }
+
   const pos = normalizeSquare(square);
   if (!pos) return;
 
@@ -131,6 +181,41 @@ function selectSquare(square) {
   paint();
 }
 
+function finishMove(result, source = "human") {
+  CHESS.board = result.board;
+  CHESS.turn = result.nextTurn;
+  CHESS.lastMove = result.move;
+  CHESS.moves.push(result.move);
+
+  if (result.captured) {
+    CHESS.captured.push(result.captured);
+  }
+
+  setSelection(null, []);
+
+  CHESS.status =
+    source === "cpu"
+      ? result.status || `CPU moved ${result.move.piece} ${result.move.from} → ${result.move.to}.`
+      : `${result.move.piece} moved ${result.move.from} → ${result.move.to}.`;
+
+  const kingCaptured = result.captured && chessPieceType(result.captured) === "K";
+
+  if (kingCaptured) {
+    CHESS.locked = true;
+    CHESS.cpuThinking = false;
+    CHESS.status = `${turnLabel(result.move.turn)} wins. King captured.`;
+  }
+
+  paint();
+  emitMove(result.move);
+
+  if (source === "human") {
+    scheduleCpuMove();
+  }
+
+  return true;
+}
+
 function moveSelected(toSquare) {
   const from = CHESS.selected;
   const to = normalizeSquare(toSquare);
@@ -150,40 +235,7 @@ function moveSelected(toSquare) {
       turn: CHESS.turn
     });
 
-    CHESS.board = result.board;
-    CHESS.turn = result.nextTurn;
-    CHESS.lastMove = result.move;
-    CHESS.moves.push(result.move);
-
-    if (result.captured) {
-      CHESS.captured.push(result.captured);
-    }
-
-    setSelection(null, []);
-
-    CHESS.status = `${result.move.piece} moved ${result.move.from} → ${result.move.to}.`;
-
-    const kingCaptured = result.captured && chessPieceType(result.captured) === "K";
-
-    if (kingCaptured) {
-      CHESS.locked = true;
-      CHESS.status = `${turnLabel(result.move.turn)} wins. King captured.`;
-    }
-
-    paint();
-
-    CHESS.onMove?.(result.move, snapshot());
-
-    window.dispatchEvent(
-      new CustomEvent("rb-chess-move", {
-        detail: {
-          move: result.move,
-          state: snapshot()
-        }
-      })
-    );
-
-    return true;
+    return finishMove(result, "human");
   } catch (error) {
     showChessIllegal(toName);
     CHESS.status = error?.message || "Illegal move.";
@@ -192,9 +244,61 @@ function moveSelected(toSquare) {
   }
 }
 
+function runCpuMove() {
+  if (!isCpuTurn()) return false;
+
+  CHESS.cpuThinking = true;
+  CHESS.status = "CPU is thinking...";
+  paint();
+
+  window.setTimeout(() => {
+    try {
+      if (!CHESS.cpuEnabled || CHESS.locked || CHESS.turn !== CHESS.cpuColor) {
+        CHESS.cpuThinking = false;
+        paint();
+        return;
+      }
+
+      const result = applyChessCpuMove({
+        board: CHESS.board,
+        color: CHESS.cpuColor,
+        difficulty: CHESS.cpuDifficulty
+      });
+
+      CHESS.cpuThinking = false;
+
+      if (!result.ok || !result.move) {
+        CHESS.locked = true;
+        CHESS.status = result.status || "CPU has no legal moves.";
+        paint();
+        return;
+      }
+
+      finishMove(result, "cpu");
+    } catch (error) {
+      CHESS.cpuThinking = false;
+      CHESS.status = error?.message || "CPU move failed.";
+      paint();
+    }
+  }, CHESS.cpuDelay);
+
+  return true;
+}
+
+function scheduleCpuMove() {
+  if (!isCpuTurn()) return false;
+  return runCpuMove();
+}
+
 export function handleChessSquareTap({ square }) {
   if (CHESS.locked) {
     CHESS.status = "Match is locked. Reset board to play again.";
+    paint();
+    return;
+  }
+
+  if (isCpuTurn()) {
+    CHESS.status = "CPU is thinking...";
     paint();
     return;
   }
@@ -230,11 +334,16 @@ export function resetChessGame() {
   CHESS.moves = [];
   CHESS.captured = [];
   CHESS.lastMove = null;
-  CHESS.status = "New Rich Chess match ready.";
+  CHESS.status = CHESS.cpuEnabled
+    ? "New CPU match ready. You are White."
+    : "New Rich Chess match ready.";
   CHESS.locked = false;
+  CHESS.cpuThinking = false;
 
   setSelection(null, []);
   paint();
+
+  scheduleCpuMove();
 
   return snapshot();
 }
@@ -243,6 +352,7 @@ export function resignChessGame(color = CHESS.turn) {
   const side = normalizeTurn(color);
 
   CHESS.locked = true;
+  CHESS.cpuThinking = false;
   CHESS.status = `${turnLabel(side)} resigned.`;
 
   paint();
@@ -254,6 +364,8 @@ export function unlockChessGame() {
   CHESS.locked = false;
   CHESS.status = "Match unlocked.";
   paint();
+
+  scheduleCpuMove();
 
   return snapshot();
 }
@@ -274,6 +386,11 @@ export function loadChessState(state = {}) {
   CHESS.flipped = Boolean(state.flipped);
   CHESS.locked = Boolean(state.locked);
 
+  CHESS.cpuEnabled = Boolean(state.cpuEnabled ?? CHESS.cpuEnabled);
+  CHESS.cpuColor = normalizeTurn(state.cpuColor || CHESS.cpuColor);
+  CHESS.cpuDifficulty = state.cpuDifficulty || CHESS.cpuDifficulty;
+  CHESS.cpuThinking = false;
+
   if (CHESS.selected) {
     setSelectedSquare(CHESS.selected);
     setLegalTargets(CHESS.legalTargets);
@@ -282,6 +399,7 @@ export function loadChessState(state = {}) {
   }
 
   paint();
+  scheduleCpuMove();
 
   return snapshot();
 }
@@ -311,6 +429,73 @@ export function setChessFlipped(flipped = false) {
   return snapshot();
 }
 
+export function enableChessCpu({
+  color = "b",
+  difficulty = "normal",
+  reset = true
+} = {}) {
+  CHESS.cpuEnabled = true;
+  CHESS.cpuColor = normalizeTurn(color);
+  CHESS.cpuDifficulty = difficulty || "normal";
+  CHESS.roomCode = "CPU";
+  CHESS.status = `CPU mode on. You are ${CHESS.cpuColor === "b" ? "White" : "Black"}.`;
+
+  if (reset) {
+    resetChessGame();
+  } else {
+    paint();
+    scheduleCpuMove();
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb-chess-cpu-toggle", {
+      detail: snapshot()
+    })
+  );
+
+  return snapshot();
+}
+
+export function disableChessCpu() {
+  CHESS.cpuEnabled = false;
+  CHESS.cpuThinking = false;
+  CHESS.roomCode = "Local";
+  CHESS.status = "CPU mode off. Local match ready.";
+
+  paint();
+
+  window.dispatchEvent(
+    new CustomEvent("rb-chess-cpu-toggle", {
+      detail: snapshot()
+    })
+  );
+
+  return snapshot();
+}
+
+export function toggleChessCpu(options = {}) {
+  return CHESS.cpuEnabled
+    ? disableChessCpu()
+    : enableChessCpu(options);
+}
+
+export function setChessCpuDifficulty(difficulty = "normal") {
+  CHESS.cpuDifficulty = difficulty || "normal";
+  CHESS.status = `CPU difficulty set to ${CHESS.cpuDifficulty}.`;
+  paint();
+
+  return snapshot();
+}
+
+export function getChessCpuState() {
+  return {
+    enabled: CHESS.cpuEnabled,
+    color: CHESS.cpuColor,
+    difficulty: CHESS.cpuDifficulty,
+    thinking: CHESS.cpuThinking
+  };
+}
+
 export function onChessMove(callback) {
   CHESS.onMove = typeof callback === "function" ? callback : null;
 
@@ -325,6 +510,9 @@ export function initChessClient({
   roomCode = "Local",
   playerName = "Guest",
   flipped = false,
+  cpu = false,
+  cpuColor = "b",
+  cpuDifficulty = "normal",
   onMove = null
 } = {}) {
   CHESS.roomCode = roomCode || "Local";
@@ -332,11 +520,17 @@ export function initChessClient({
   CHESS.flipped = Boolean(flipped);
   CHESS.onMove = typeof onMove === "function" ? onMove : null;
 
+  CHESS.cpuEnabled = Boolean(cpu);
+  CHESS.cpuColor = normalizeTurn(cpuColor);
+  CHESS.cpuDifficulty = cpuDifficulty || "normal";
+  CHESS.cpuThinking = false;
+
   initChessUI({
     onSquareTap: handleChessSquareTap
   });
 
   paint();
+  scheduleCpuMove();
 
   return snapshot();
 }
