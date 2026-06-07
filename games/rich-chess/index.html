@@ -17,28 +17,83 @@
   <link rel="stylesheet" href="/games/rich-chess/board.css" />
 </head>
 
-<body class="rich-chess-page rb-gaming-page">
+<body class="rich-chess-page rb-gaming-page rich-chess-premium">
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
   <div class="rb-bg-noise" aria-hidden="true"></div>
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <main class="rich-chess-shell">
-    <header class="rich-chess-hero">
-      <a class="rb-back" href="/gaming">← Gaming</a>
+  <main class="rich-chess-app-shell">
+    <aside class="rich-chess-left-rail" aria-label="Rich Chess menu">
+      <a class="rich-player-card" href="/profile">
+        <span class="rich-player-avatar">♛</span>
+        <span>
+          <strong id="chessPlayer">Guest</strong>
+          <small>Elite Member • Online</small>
+        </span>
+      </a>
 
-      <section>
-        <p class="rich-chess-kicker">RICH BIZNESS ARCADE</p>
-        <h1>Rich Chess</h1>
-        <p id="chessStatus" class="rich-chess-status" aria-live="polite">
-          Loading Rich Chess arena...
-        </p>
+      <nav class="rich-chess-menu" aria-label="Chess navigation">
+        <a class="is-active" href="#play">▷ Play</a>
+        <a href="/gaming">♟ Gaming</a>
+        <a href="#multiplayer">♙ Multiplayer</a>
+        <a href="#leaderboard">♜ Leaderboard</a>
+        <a href="#settings">⚙ Settings</a>
+      </nav>
+
+      <section class="rich-chess-brand-tower" aria-hidden="true">
+        <span>♛</span>
+        <strong>RICH</strong>
+        <strong>BIZNESS</strong>
+        <small>LLC</small>
       </section>
-    </header>
+    </aside>
 
-    <section class="rich-chess-layout">
-      <section class="rich-chess-arena" aria-label="Rich Chess board">
+    <section class="rich-chess-main-stage">
+      <header class="rich-chess-top-hud">
+        <a class="rb-back" href="/gaming">← Gaming</a>
+
+        <section class="rich-chess-title-lockup">
+          <p class="rich-chess-kicker">RICH BIZNESS LLC</p>
+          <h1>Rich Chess</h1>
+        </section>
+
+        <section class="rich-chess-wallet-hud" aria-label="Player wallet">
+          <span>💎 8,450</span>
+          <span>🪙 125,600</span>
+          <span>✉</span>
+          <span>🔔</span>
+          <span>⚙</span>
+        </section>
+      </header>
+
+      <section class="rich-chess-match-hud" aria-label="Match heads up display">
+        <article>
+          <span class="rich-avatar-mini">♔</span>
+          <div>
+            <strong>Rich Player</strong>
+            <small>Human • White</small>
+          </div>
+        </article>
+
+        <article class="rich-chess-clock">
+          <strong>10:00</strong>
+          <small>Blitz</small>
+        </article>
+
+        <article>
+          <span class="rich-avatar-mini dark">♚</span>
+          <div>
+            <strong id="chessRoom">Local</strong>
+            <small>CPU / Room</small>
+          </div>
+        </article>
+      </section>
+
+      <section class="rich-chess-board-stage" id="play" aria-label="Rich Chess board stage">
+        <div class="rich-chess-board-glow" aria-hidden="true"></div>
+
         <div
           id="chessBoard"
           class="rich-chess-board"
@@ -47,76 +102,109 @@
         ></div>
       </section>
 
-      <aside class="rich-chess-panel" aria-label="Rich Chess controls">
-        <h2>Match Control</h2>
-
-        <section class="rich-chess-stat-grid">
-          <article class="rich-chess-stat">
-            <span>Turn</span>
-            <strong id="chessTurn">White</strong>
-          </article>
-
-          <article class="rich-chess-stat">
-            <span>Moves</span>
-            <strong id="chessMoves">0</strong>
-          </article>
-
-          <article class="rich-chess-stat">
-            <span>Room</span>
-            <strong id="chessRoom">Local</strong>
-          </article>
-
-          <article class="rich-chess-stat">
-            <span>Player</span>
-            <strong id="chessPlayer">Guest</strong>
-          </article>
-        </section>
-
-        <section>
-          <h2>Captured</h2>
-          <div id="chessCaptured" class="rich-chess-captured">
-            <span>No captures yet.</span>
-          </div>
-        </section>
-
-        <section>
-          <h2>Move Log</h2>
+      <section class="rich-chess-bottom-panels" aria-label="Match details">
+        <article class="rich-chess-info-panel">
+          <h2>Move History</h2>
           <ol id="chessMoveLog" class="rich-chess-move-log">
             <li>No moves yet.</li>
           </ol>
-        </section>
+        </article>
 
-        <section class="rich-chess-actions">
-          <button id="newChessRoomBtn" type="button" class="primary">
-            New Room
-          </button>
+        <article class="rich-chess-info-panel rich-chess-status-panel">
+          <h2>Game Status</h2>
 
-          <button id="joinChessRoomBtn" type="button">
-            Join Room
-          </button>
+          <p id="chessStatus" class="rich-chess-status" aria-live="polite">
+            Loading Rich Chess arena...
+          </p>
 
-          <button id="cpuChessBtn" type="button">
-            Play CPU
-          </button>
+          <section class="rich-chess-mini-stats">
+            <span>
+              <small>Turn</small>
+              <strong id="chessTurn">White</strong>
+            </span>
 
-          <button id="resetChessBtn" type="button">
-            Reset Board
-          </button>
+            <span>
+              <small>Moves</small>
+              <strong id="chessMoves">0</strong>
+            </span>
+          </section>
+        </article>
 
-          <button id="resignChessBtn" type="button">
-            Resign
-          </button>
-
-          <a id="copyChessLinkBtn" href="#" role="button">
-            Copy Link
-          </a>
-        </section>
-
-        <p class="rich-chess-note">
-          Tap a piece, then tap a legal square. Use Play CPU for offline bot mode or New Room / Join Room for realtime online play.
-        </p>
-      </aside>
+        <article class="rich-chess-info-panel">
+          <h2>Captured Pieces</h2>
+          <div id="chessCaptured" class="rich-chess-captured">
+            <span>No captures yet.</span>
+          </div>
+        </article>
+      </section>
     </section>
+
+    <aside class="rich-chess-right-rail" aria-label="Rich Chess controls">
+      <section class="rich-chess-panel">
+        <h2>Game Mode</h2>
+
+        <button id="cpuChessBtn" type="button" class="rich-mode-card is-active">
+          <strong>CPU Challenge</strong>
+          <small>Play offline bot mode</small>
+        </button>
+
+        <button id="newChessRoomBtn" type="button" class="rich-mode-card">
+          <strong>Custom Room</strong>
+          <small>Create online room</small>
+        </button>
+
+        <button id="joinChessRoomBtn" type="button" class="rich-mode-card">
+          <strong>Join Room</strong>
+          <small>Realtime multiplayer</small>
+        </button>
+      </section>
+
+      <section class="rich-chess-panel">
+        <h2>CPU Difficulty</h2>
+
+        <button type="button" class="rich-difficulty-card">
+          <strong>Rookie</strong>
+          <small>400 - 800 ELO</small>
+        </button>
+
+        <button type="button" class="rich-difficulty-card">
+          <strong>Hustler</strong>
+          <small>800 - 1400 ELO</small>
+        </button>
+
+        <button type="button" class="rich-difficulty-card">
+          <strong>Boss</strong>
+          <small>1400 - 2000 ELO</small>
+        </button>
+
+        <button type="button" class="rich-difficulty-card is-active">
+          <strong>Grandmaster</strong>
+          <small>2000+ ELO</small>
+        </button>
+      </section>
+
+      <section class="rich-chess-actions premium-actions">
+        <button id="resetChessBtn" type="button" class="primary">
+          New Game
+        </button>
+
+        <button id="resignChessBtn" type="button">
+          Resign
+        </button>
+
+        <a id="copyChessLinkBtn" href="#" role="button">
+          Copy Link
+        </a>
+      </section>
+    </aside>
+
+    <nav class="rich-chess-bottom-nav" aria-label="Bottom chess navigation">
+      <a href="/">⌂<span>Home</span></a>
+      <a href="/profile">♙<span>Profile</span></a>
+      <a class="is-active" href="/games/rich-chess">♜<span>Chess</span></a>
+      <a href="/messages">♧<span>Social</span></a>
+      <a href="/store">🛒<span>Shop</span></a>
+    </nav>
   </main>
 
   <script type="module" src="/games/rich-chess/game.js"></script>
