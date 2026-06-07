@@ -420,7 +420,7 @@ export async function loadChessRealtimeMoves(roomId = REALTIME.roomId) {
   return data || [];
 }
 
-export function clearChessRealtime() {
+export function clearChessRealtime({ keepRoom = false } = {}) {
   const supabase = REALTIME.supabase || getSupabase();
 
   [
@@ -436,6 +436,15 @@ export function clearChessRealtime() {
   REALTIME.roomChannel = null;
   REALTIME.moveChannel = null;
   REALTIME.presenceChannel = null;
+
+  if (!keepRoom) {
+    REALTIME.roomCode = null;
+    REALTIME.roomId = null;
+    REALTIME.room = null;
+    REALTIME.state = null;
+  }
+
+  emitRealtime();
 }
 
 export async function bindChessRealtimeRoom({
@@ -446,7 +455,7 @@ export async function bindChessRealtimeRoom({
 
   const supabase = REALTIME.supabase || getSupabase();
 
-  clearChessRealtime();
+  clearChessRealtime({ keepRoom: true });
 
   REALTIME.roomChannel = supabase
     .channel(`rb-chess-room-${roomId}`)
@@ -555,6 +564,8 @@ export async function initChessRealtime({
   return getChessRealtimeState();
 }
 
-window.addEventListener("beforeunload", clearChessRealtime);
+window.addEventListener("beforeunload", () => {
+  clearChessRealtime();
+});
 
 console.log("RB CHESS REALTIME READY");
