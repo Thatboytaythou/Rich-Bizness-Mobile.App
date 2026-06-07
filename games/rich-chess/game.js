@@ -3,7 +3,7 @@
    /games/rich-chess/game.js
 
    RICH CHESS PAGE CONTROLLER
-   Board UI + rules + local/realtime room hooks
+   Board UI + rules + local/realtime room hooks + CPU mode
 ========================= */
 
 import {
@@ -19,7 +19,10 @@ import {
   resignChessGame,
   getChessState,
   loadChessState,
-  onChessMove
+  onChessMove,
+  toggleChessCpu,
+  disableChessCpu,
+  getChessCpuState
 } from "/core/games/chess-client.js";
 
 import {
@@ -46,6 +49,7 @@ const els = {
 
   newRoomBtn: $("newChessRoomBtn"),
   joinRoomBtn: $("joinChessRoomBtn"),
+  cpuBtn: $("cpuChessBtn"),
   resetBtn: $("resetChessBtn"),
   resignBtn: $("resignChessBtn"),
   copyLinkBtn: $("copyChessLinkBtn")
@@ -108,13 +112,35 @@ function roomUrl(roomCode = PAGE.roomCode) {
   return url.toString();
 }
 
+function renderCpuButton() {
+  const cpu = getChessCpuState();
+
+  if (!els.cpuBtn) return;
+
+  els.cpuBtn.textContent = cpu.enabled
+    ? cpu.thinking
+      ? "CPU Thinking"
+      : "CPU On"
+    : "Play CPU";
+
+  els.cpuBtn.classList.toggle("primary", cpu.enabled);
+  els.cpuBtn.setAttribute("aria-pressed", cpu.enabled ? "true" : "false");
+}
+
 function renderPageStats() {
   const state = getChessState();
   const realtime = getChessRealtimeState();
+  const cpu = getChessCpuState();
 
   if (els.turn) els.turn.textContent = turnName(state.turn);
   if (els.moves) els.moves.textContent = String(state.moves?.length || 0);
-  if (els.room) els.room.textContent = PAGE.roomCode || state.roomCode || "Local";
+
+  if (els.room) {
+    els.room.textContent = cpu.enabled
+      ? "CPU"
+      : PAGE.roomCode || state.roomCode || "Local";
+  }
+
   if (els.player) els.player.textContent = displayName();
 
   if (els.captured) {
@@ -140,11 +166,15 @@ function renderPageStats() {
   }
 
   if (els.copyLinkBtn) {
-    els.copyLinkBtn.classList.toggle("is-disabled", !PAGE.roomCode);
-    els.copyLinkBtn.setAttribute("aria-disabled", PAGE.roomCode ? "false" : "true");
+    const canCopy = Boolean(PAGE.roomCode) && !cpu.enabled;
+
+    els.copyLinkBtn.classList.toggle("is-disabled", !canCopy);
+    els.copyLinkBtn.setAttribute("aria-disabled", canCopy ? "false" : "true");
   }
 
-  if (realtime.connected && PAGE.roomCode) {
+  renderCpuButton();
+
+  if (realtime.connected && PAGE.roomCode && !cpu.enabled) {
     setStatus(`Realtime room connected: ${PAGE.roomCode}`);
   }
 }
@@ -168,6 +198,8 @@ async function initIdentity() {
 
 async function createRoom() {
   try {
+    disableChessCpu();
+
     const chessState = getChessState();
 
     const room = await createChessRealtimeRoom({
@@ -194,6 +226,8 @@ async function joinRoom() {
   if (!code) return;
 
   try {
+    disableChessCpu();
+
     const room = await joinChessRealtimeRoom(code);
 
     PAGE.roomCode = room.room_code;
@@ -218,6 +252,8 @@ async function autoJoinRoomFromUrl() {
   if (!PAGE.roomCode) return;
 
   try {
+    disableChessCpu();
+
     const room = await joinChessRealtimeRoom(PAGE.roomCode);
 
     if (room.game_state) {
@@ -237,6 +273,13 @@ async function autoJoinRoomFromUrl() {
 async function copyRoomLink(event) {
   event?.preventDefault?.();
 
+  const cpu = getChessCpuState();
+
+  if (cpu.enabled) {
+    setStatus("CPU mode is local. Create a room for an online link.");
+    return;
+  }
+
   if (!PAGE.roomCode) {
     setStatus("Create or join a room first.");
     return;
@@ -252,14 +295,45 @@ async function copyRoomLink(event) {
   }
 }
 
+function toggleCpuMode() {
+  if (PAGE.roomCode) {
+    PAGE.roomCode = null;
+    clearChessRealtime();
+    history.replaceState(null, "", "/games/rich-chess");
+  }
+
+  const state = toggleChessCpu({
+    color: "b",
+    difficulty: "normal",
+    reset: true
+  });
+
+  setStatus(
+    state.cpuEnabled
+      ? "CPU mode online. You are White."
+      : "CPU mode off. Local match ready."
+  );
+
+  renderPageStats();
+}
+
 function resetBoard() {
   resetChessGame();
-  setStatus("Board reset.");
+
+  const cpu = getChessCpuState();
+
+  setStatus(
+    cpu.enabled
+      ? "CPU board reset. You are White."
+      : "Board reset."
+  );
+
   renderPageStats();
 }
 
 function resignBoard() {
   const state = resignChessGame();
+
   setStatus(state.status || "Player resigned.");
   renderPageStats();
 }
@@ -267,6 +341,7 @@ function resignBoard() {
 function bindEvents() {
   els.newRoomBtn?.addEventListener("click", createRoom);
   els.joinRoomBtn?.addEventListener("click", joinRoom);
+  els.cpuBtn?.addEventListener("click", toggleCpuMode);
   els.resetBtn?.addEventListener("click", resetBoard);
   els.resignBtn?.addEventListener("click", resignBoard);
   els.copyLinkBtn?.addEventListener("click", copyRoomLink);
@@ -275,6 +350,10 @@ function bindEvents() {
     renderPageStats();
 
     if (PAGE.syncingRemote) return;
+
+    const cpu = getChessCpuState();
+
+    if (cpu.enabled) return;
 
     if (PAGE.roomCode) {
       try {
@@ -285,10 +364,15 @@ function bindEvents() {
     }
   });
 
+  window.addEventListener("rb-chess-cpu-toggle", renderPageStats);
+  window.addEventListener("rb-chess-move", renderPageStats);
+
   onChessRealtimeMove((row) => {
     const moveData = row?.move_data;
     const realtime = getChessRealtimeState();
+    const cpu = getChessCpuState();
 
+    if (cpu.enabled) return;
     if (!moveData || !realtime.state) return;
 
     PAGE.syncingRemote = true;
@@ -301,6 +385,9 @@ function bindEvents() {
 
   onChessRealtime(() => {
     const realtime = getChessRealtimeState();
+    const cpu = getChessCpuState();
+
+    if (cpu.enabled) return;
 
     if (realtime.state && PAGE.roomCode) {
       PAGE.syncingRemote = true;
