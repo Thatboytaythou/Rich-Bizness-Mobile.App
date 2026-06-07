@@ -4,6 +4,7 @@
 
    RICH CHESS UI ENGINE
    Board paint + tap selection + move log + captured pieces
+   Tight piece rendering + clean coordinates
 ========================= */
 
 const PIECE_ICONS = {
@@ -52,8 +53,9 @@ function squareName(row, col) {
 }
 
 function parseSquare(square = "") {
-  const file = square[0];
-  const rank = Number(square[1]);
+  const text = String(square || "").trim().toLowerCase();
+  const file = text[0];
+  const rank = Number(text[1]);
   const col = FILES.indexOf(file);
   const row = 8 - rank;
 
@@ -71,7 +73,7 @@ function pieceType(piece = "") {
 }
 
 function isSameSquare(a, b) {
-  return a && b && a.row === b.row && a.col === b.col;
+  return Boolean(a && b && a.row === b.row && a.col === b.col);
 }
 
 function targetHasSquare(targets = [], square) {
@@ -98,6 +100,14 @@ function clearNode(el) {
   while (el.firstChild) el.removeChild(el.firstChild);
 }
 
+function createCoordLabel(text, className) {
+  const label = document.createElement("span");
+  label.className = className;
+  label.textContent = text;
+  label.setAttribute("aria-hidden", "true");
+  return label;
+}
+
 function createSquare({
   row,
   col,
@@ -109,17 +119,22 @@ function createSquare({
 }) {
   const square = document.createElement("button");
   const name = squareName(row, col);
+
   const isDark = (row + col) % 2 === 1;
   const selectedMatch = isSameSquare(selected, { row, col });
   const legalMatch = targetHasSquare(legalTargets, { row, col });
+  const isLastMove = lastMove?.from === name || lastMove?.to === name;
 
   square.type = "button";
+
   square.className = [
     "rich-chess-square",
     isDark ? "is-dark" : "is-light",
     selectedMatch ? "is-selected" : "",
     legalMatch ? "is-legal" : "",
-    lastMove?.from === name || lastMove?.to === name ? "is-last-move" : "",
+    legalMatch && piece ? "is-capture" : "",
+    isLastMove ? "is-last-move" : "",
+    piece ? "has-piece" : "",
     piece ? `has-${pieceColor(piece)}` : ""
   ]
     .filter(Boolean)
@@ -130,35 +145,43 @@ function createSquare({
   square.dataset.col = String(col);
 
   square.setAttribute("role", "gridcell");
-  square.setAttribute("aria-label", `${name}${piece ? ` ${piece}` : ""}`);
+  square.setAttribute(
+    "aria-label",
+    piece ? `${name}, ${pieceColor(piece)} ${pieceType(piece)}` : `${name}, empty`
+  );
 
-  const coord = document.createElement("small");
-  coord.className = "rich-chess-coord";
+  const showRank = (!flipped && col === 0) || (flipped && col === 7);
+  const showFile = (!flipped && row === 7) || (flipped && row === 0);
 
-  if ((!flipped && col === 0) || (flipped && col === 7)) {
-    coord.textContent = String(8 - row);
+  if (showRank) {
+    square.appendChild(
+      createCoordLabel(String(8 - row), "rich-chess-rank-label")
+    );
   }
 
-  const file = document.createElement("em");
-  file.className = "rich-chess-file";
-
-  if ((!flipped && row === 7) || (flipped && row === 0)) {
-    file.textContent = FILES[col];
+  if (showFile) {
+    square.appendChild(
+      createCoordLabel(FILES[col], "rich-chess-file-label")
+    );
   }
-
-  const pieceNode = document.createElement("span");
-  pieceNode.className = "rich-chess-piece";
 
   if (piece) {
+    const pieceNode = document.createElement("span");
+
+    pieceNode.className = [
+      "rich-chess-piece",
+      pieceColor(piece),
+      `type-${pieceType(piece).toLowerCase()}`
+    ].join(" ");
+
     pieceNode.textContent = PIECE_ICONS[piece] || piece;
     pieceNode.dataset.piece = piece;
     pieceNode.dataset.color = pieceColor(piece);
     pieceNode.dataset.type = pieceType(piece);
-  }
+    pieceNode.setAttribute("aria-hidden", "true");
 
-  square.appendChild(coord);
-  square.appendChild(file);
-  square.appendChild(pieceNode);
+    square.appendChild(pieceNode);
+  }
 
   square.addEventListener("click", () => {
     UI.onSquareTap?.({
@@ -203,6 +226,7 @@ export function initChessUI({
   if (UI.boardEl) {
     UI.boardEl.classList.add("rich-chess-board");
     UI.boardEl.setAttribute("role", "grid");
+    UI.boardEl.setAttribute("aria-label", "Rich Chess board");
   }
 
   return getChessUI();
@@ -279,21 +303,28 @@ export function renderChessBoard({
   if (!UI.boardEl) return;
 
   UI.selected = typeof selected === "string" ? parseSquare(selected) : selected;
+
   UI.legalTargets = legalTargets
     .map((item) => (typeof item === "string" ? parseSquare(item) : item))
     .filter(Boolean);
+
   UI.lastMove = lastMove;
 
   clearNode(UI.boardEl);
 
-  const rows = flipped ? [...board].reverse() : board;
+  UI.boardEl.classList.toggle("is-flipped", Boolean(flipped));
 
-  rows.forEach((rankRows, visualRow) => {
-    const realRow = flipped ? 7 - visualRow : visualRow;
-    const cols = flipped ? [...rankRows].reverse() : rankRows;
+  const rowIndexes = flipped
+    ? [7, 6, 5, 4, 3, 2, 1, 0]
+    : [0, 1, 2, 3, 4, 5, 6, 7];
 
-    cols.forEach((piece, visualCol) => {
-      const realCol = flipped ? 7 - visualCol : visualCol;
+  const colIndexes = flipped
+    ? [7, 6, 5, 4, 3, 2, 1, 0]
+    : [0, 1, 2, 3, 4, 5, 6, 7];
+
+  rowIndexes.forEach((realRow) => {
+    colIndexes.forEach((realCol) => {
+      const piece = board?.[realRow]?.[realCol] || null;
 
       UI.boardEl.appendChild(
         createSquare({
