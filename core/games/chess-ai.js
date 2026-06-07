@@ -3,18 +3,20 @@
    /core/games/chess-ai.js
 
    RICH CHESS CPU ENGINE
-   Offline CPU brain for Rich Chess
-   No Supabase required
+   Safe CPU brain for Rich Chess
+   Uses chess-rules.js
 ========================= */
 
 import {
-  chessPieceAt,
-  chessPieceColor,
   chessPieceType,
-  chessSquareName,
-  getChessLegalMoves,
-  applyChessMove
+  parseChessSquare
 } from "/core/games/chess-board.js";
+
+import {
+  getAllSafeChessMoves,
+  applyRichChessMove,
+  getChessGameStatus
+} from "/core/games/chess-rules.js";
 
 const PIECE_VALUE = {
   P: 100,
@@ -44,14 +46,16 @@ function opposite(color = "b") {
   return color === "w" ? "b" : "w";
 }
 
+function colorName(color = "b") {
+  return color === "b" ? "Black" : "White";
+}
+
 function safeDifficulty(value = "normal") {
   const text = String(value || "normal").toLowerCase();
 
-  if (["easy", "normal", "hard", "boss"].includes(text)) {
-    return text;
-  }
-
-  return "normal";
+  return ["easy", "normal", "hard", "boss"].includes(text)
+    ? text
+    : "normal";
 }
 
 function randomItem(items = []) {
@@ -63,80 +67,43 @@ function pieceValue(piece = "") {
   return PIECE_VALUE[chessPieceType(piece)] || 0;
 }
 
-function cloneBoard(board = []) {
-  return board.map((row) => [...row]);
+function enrichMove(move = {}) {
+  const fromPos = parseChessSquare(move.from);
+  const toPos = parseChessSquare(move.to);
+
+  return {
+    ...move,
+    row: fromPos?.row ?? null,
+    col: fromPos?.col ?? null,
+    toRow: toPos?.row ?? null,
+    toCol: toPos?.col ?? null
+  };
 }
 
 function allMovesForColor(board = [], color = "b") {
-  const moves = [];
-
-  for (let row = 0; row < 8; row += 1) {
-    for (let col = 0; col < 8; col += 1) {
-      const piece = chessPieceAt(board, row, col);
-
-      if (!piece || chessPieceColor(piece) !== color) continue;
-
-      const from = chessSquareName(row, col);
-
-      const legalMoves = getChessLegalMoves({
-        board,
-        row,
-        col,
-        turn: color
-      });
-
-      legalMoves.forEach((target) => {
-        const to = target.square || chessSquareName(target.row, target.col);
-        const captured = chessPieceAt(board, target.row, target.col);
-
-        moves.push({
-          from,
-          to,
-          piece,
-          captured,
-          row,
-          col,
-          toRow: target.row,
-          toCol: target.col
-        });
-      });
-    }
-  }
-
-  return moves;
-}
-
-function isSquareAttacked(board = [], square, byColor = "w") {
-  if (!square) return false;
-
-  const enemyMoves = allMovesForColor(board, byColor);
-
-  return enemyMoves.some((move) => move.to === square);
+  return getAllSafeChessMoves(board, color).map(enrichMove);
 }
 
 function scoreMove(board = [], move, color = "b", difficulty = "normal") {
   let score = 0;
 
-  const enemyColor = opposite(color);
-
   if (move.captured) {
     score += pieceValue(move.captured) * 10;
-    score -= Math.floor(pieceValue(move.piece) * 0.35);
+    score -= Math.floor(pieceValue(move.piece) * 0.25);
   }
 
-  const center = CENTER_BONUS[move.to] || 0;
-  score += center;
+  score += CENTER_BONUS[move.to] || 0;
 
   if (chessPieceType(move.piece) === "P") {
     const advance = color === "b" ? move.toRow : 7 - move.toRow;
-    score += advance * 4;
+    score += Number(advance || 0) * 4;
 
     if ((color === "b" && move.toRow === 7) || (color === "w" && move.toRow === 0)) {
       score += PIECE_VALUE.Q;
     }
   }
 
-  if (chessPieceType(move.piece) === "N" || chessPieceType(move.piece) === "B") {
+  if (["N", "B"].includes(chessPieceType(move.piece))) {
     const startBackRank = color === "b" ? 0 : 7;
 
     if (move.row === startBackRank) {
@@ -145,42 +112,34 @@ function scoreMove(board = [], move, color = "b", difficulty = "normal") {
   }
 
   try {
-    const result = applyChessMove({
-      board: cloneBoard(board),
+    const result = applyRichChessMove({
+      board,
       from: move.from,
       to: move.to,
       turn: color
     });
 
-    const movedPieceValue = pieceValue(move.piece);
+    const enemyStatus = getChessGameStatus(result.board, result.nextTurn);
 
-    if (isSquareAttacked(result.board, move.to, enemyColor)) {
-      score -= Math.floor(movedPieceValue * 0.72);
+    if (enemyStatus.state === "check") {
+      score += 90;
     }
 
-    const enemyKingCaptured = result.captured && chessPieceType(result.captured) === "K";
-    if (enemyKingCaptured) {
+    if (enemyStatus.state === "checkmate") {
+      score += 999999;
+    }
+
+    if (result.game_over && result.winner === color) {
       score += 999999;
     }
   } catch {
     score -= 999999;
   }
 
-  if (difficulty === "easy") {
-    score += Math.random() * 180;
-  }
-
-  if (difficulty === "normal") {
-    score += Math.random() * 72;
-  }
-
-  if (difficulty === "hard") {
-    score += Math.random() * 24;
-  }
-
-  if (difficulty === "boss") {
-    score += Math.random() * 8;
-  }
+  if (difficulty === "easy") score += Math.random() * 180;
+  if (difficulty === "normal") score += Math.random() * 72;
+  if (difficulty === "hard") score += Math.random() * 24;
+  if (difficulty === "boss") score += Math.random() * 8;
 
   return score;
 }
@@ -242,16 +201,20 @@ export function applyChessCpuMove({
   });
 
   if (!move) {
+    const status = getChessGameStatus(board, color);
+
     return {
       ok: false,
       move: null,
       board,
       nextTurn: opposite(color),
-      status: `${color === "b" ? "Black" : "White"} CPU has no legal moves.`
+      status: status.message || `${colorName(color)} CPU has no legal moves.`,
+      game_over: ["checkmate", "stalemate"].includes(status.state),
+      winner: status.winner || null
     };
   }
 
-  const result = applyChessMove({
+  const result = applyRichChessMove({
     board,
     from: move.from,
     to: move.to,
@@ -264,7 +227,9 @@ export function applyChessCpuMove({
     board: result.board,
     captured: result.captured,
     nextTurn: result.nextTurn,
-    status: `CPU moved ${result.move.piece} ${result.move.from} → ${result.move.to}.`,
+    status: result.status?.message || `CPU moved ${result.move.piece} ${result.move.from} → ${result.move.to}.`,
+    game_over: result.game_over,
+    winner: result.winner,
     score: move.score || 0
   };
 }
