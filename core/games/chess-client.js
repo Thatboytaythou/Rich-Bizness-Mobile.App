@@ -4,7 +4,7 @@
 
    RICH CHESS CLIENT
    Local chess state + UI bridge + CPU mode
-   Uses locked chess-board.js model
+   Uses locked chess-board.js model + chess-rules.js
 ========================= */
 
 import {
@@ -23,10 +23,13 @@ import {
   chessPieceColor,
   chessPieceType,
   chessSquareName,
-  parseChessSquare,
-  getChessLegalMoves,
-  applyChessMove
+  parseChessSquare
 } from "/core/games/chess-board.js";
+
+import {
+  getSafeChessMoves,
+  applyRichChessMove
+} from "/core/games/chess-rules.js";
 
 import {
   applyChessCpuMove
@@ -167,7 +170,7 @@ function selectSquare(square) {
     return;
   }
 
-  const legalTargets = getChessLegalMoves({
+  const legalTargets = getSafeChessMoves({
     board: CHESS.board,
     row: pos.row,
     col: pos.col,
@@ -194,22 +197,28 @@ function finishMove(result, source = "human") {
   setSelection(null, []);
 
   CHESS.status =
-    source === "cpu"
-      ? result.status || `CPU moved ${result.move.piece} ${result.move.from} → ${result.move.to}.`
-      : `${result.move.piece} moved ${result.move.from} → ${result.move.to}.`;
+    result.status?.message ||
+    (
+      source === "cpu"
+        ? result.status || `CPU moved ${result.move.piece} ${result.move.from} → ${result.move.to}.`
+        : `${result.move.piece} moved ${result.move.from} → ${result.move.to}.`
+    );
 
   const kingCaptured = result.captured && chessPieceType(result.captured) === "K";
 
-  if (kingCaptured) {
+  if (kingCaptured || result.game_over) {
     CHESS.locked = true;
     CHESS.cpuThinking = false;
-    CHESS.status = `${turnLabel(result.move.turn)} wins. King captured.`;
+
+    if (kingCaptured) {
+      CHESS.status = `${turnLabel(result.move.turn)} wins. King captured.`;
+    }
   }
 
   paint();
   emitMove(result.move);
 
-  if (source === "human") {
+  if (source === "human" && !CHESS.locked) {
     scheduleCpuMove();
   }
 
@@ -228,7 +237,7 @@ function moveSelected(toSquare) {
       : chessSquareName(to.row, to.col);
 
   try {
-    const result = applyChessMove({
+    const result = applyRichChessMove({
       board: CHESS.board,
       from,
       to,
