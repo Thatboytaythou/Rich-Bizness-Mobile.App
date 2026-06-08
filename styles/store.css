@@ -2,321 +2,393 @@
    RICH BIZNESS LLC
    /styles/store.css
    STORE PAGE ONLY
+
+   Updates:
+   - Works with body.rb-store-page AND body[data-section="store"]
+   - Keeps page shell separate from body class
+   - No project-avatar references
+   - Mobile-safe grid/actions
+   - Matches store.js card classes
 ========================================= */
 
-body[data-section="store"]{
-  min-height:100svh;
-  color:#fff;
+body.rb-store-page,
+body[data-section="store"] {
+  min-height: 100svh;
+  color: #fff;
   background:
-    radial-gradient(circle at 50% 0%,rgba(0,255,120,.2),transparent 34%),
-    radial-gradient(circle at 84% 18%,rgba(255,215,90,.16),transparent 30%),
-    linear-gradient(180deg,#03140b 0%,#020604 48%,#000 100%);
-  overflow-x:hidden;
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.2), transparent 34%),
+    radial-gradient(circle at 84% 18%, rgba(255, 215, 90, 0.16), transparent 30%),
+    linear-gradient(180deg, #03140b 0%, #020604 48%, #000 100%);
+  overflow-x: hidden;
 }
 
-body[data-section="store"]::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  z-index:0;
-  pointer-events:none;
-  background:url("/images/brand/hero-banner.png") center/cover no-repeat;
-  opacity:.14;
-  filter:saturate(1.25) contrast(1.12);
+body.rb-store-page::before,
+body[data-section="store"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url("/images/brand/hero-banner.png") center / cover no-repeat;
+  opacity: 0.14;
+  filter: saturate(1.25) contrast(1.12);
 }
 
-body[data-section="store"]::after{
-  content:"";
-  position:fixed;
-  inset:0;
-  z-index:1;
-  pointer-events:none;
+body.rb-store-page::after,
+body[data-section="store"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
   background:
-    radial-gradient(circle at 50% 18%,transparent,rgba(0,0,0,.68) 58%,#000 100%),
-    linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.92));
+    radial-gradient(circle at 50% 18%, transparent, rgba(0, 0, 0, 0.68) 58%, #000 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.92));
 }
 
-.rb-store-page{
-  position:relative;
-  z-index:2;
-  width:min(1180px,94vw);
-  margin:0 auto;
-  padding:34px 0 58px;
+body.rb-store-page .rb-topbar,
+body[data-section="store"] .rb-topbar,
+body.rb-store-page .rb-section-shell,
+body[data-section="store"] .rb-section-shell,
+body.rb-store-page .rb-footer,
+body[data-section="store"] .rb-footer {
+  position: relative;
+  z-index: 2;
 }
 
-.rb-store-page .rb-section-hero{
-  min-height:390px;
-  padding:30px;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
-  gap:20px;
-  border-radius:36px;
-  border:1px solid rgba(255,215,100,.24);
+.rb-store-shell,
+.rb-store-page-shell {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, 94vw);
+  margin: 0 auto;
+  padding: 110px 0 58px;
+}
+
+/* HERO */
+
+.rb-store-shell .rb-section-hero,
+.rb-store-page-shell .rb-section-hero,
+body[data-section="store"] .rb-section-hero,
+body.rb-store-page .rb-section-hero {
+  min-height: 390px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 20px;
+  border-radius: 36px;
+  border: 1px solid rgba(255, 215, 100, 0.24);
   background:
-    linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.84)),
-    url("/images/brand/Avatar-hero-Banner.png.jpeg") center/cover no-repeat;
-  box-shadow:0 35px 90px rgba(0,0,0,.62);
-  overflow:hidden;
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.84)),
+    url("/images/brand/Avatar-hero-Banner.png.jpeg") center / cover no-repeat;
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.62);
+  overflow: hidden;
 }
 
-.rb-store-page .rb-section-hero h1{
-  margin:0;
-  font-size:clamp(3.8rem,13vw,9rem);
-  line-height:.82;
-  letter-spacing:-.1em;
-  text-transform:uppercase;
+.rb-store-shell .rb-section-hero h1,
+.rb-store-page-shell .rb-section-hero h1,
+body[data-section="store"] .rb-section-hero h1,
+body.rb-store-page .rb-section-hero h1 {
+  margin: 0;
+  font-size: clamp(3.8rem, 13vw, 9rem);
+  line-height: 0.82;
+  letter-spacing: -0.1em;
+  text-transform: uppercase;
 }
 
-.rb-store-page .rb-section-hero > p:not(.rb-kicker){
-  max-width:720px;
-  margin:0;
-  color:rgba(255,255,255,.78);
-  line-height:1.55;
+.rb-store-shell .rb-section-hero > p:not(.rb-kicker),
+.rb-store-page-shell .rb-section-hero > p:not(.rb-kicker),
+body[data-section="store"] .rb-section-hero > p:not(.rb-kicker),
+body.rb-store-page .rb-section-hero > p:not(.rb-kicker) {
+  max-width: 720px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.55;
 }
 
-.rb-store-actions{
-  display:grid;
-  grid-template-columns:1fr 220px 220px;
-  gap:10px;
-  margin-top:8px;
+/* FILTER ACTIONS */
+
+.rb-store-actions {
+  display: grid;
+  grid-template-columns: 1fr 220px 220px;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 .rb-store-actions input,
-.rb-store-actions select{
-  min-height:48px;
-  width:100%;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:999px;
-  background:rgba(0,0,0,.52);
-  color:#fff;
-  outline:none;
-  padding:0 16px;
-  font:inherit;
-  backdrop-filter:blur(14px);
+.rb-store-actions select {
+  min-height: 48px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.52);
+  color: #fff;
+  outline: none;
+  padding: 0 16px;
+  font: inherit;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .rb-store-actions input:focus,
-.rb-store-actions select:focus{
-  border-color:rgba(124,255,170,.58);
-  box-shadow:0 0 0 4px rgba(0,255,120,.1);
+.rb-store-actions select:focus {
+  border-color: rgba(124, 255, 170, 0.58);
+  box-shadow: 0 0 0 4px rgba(0, 255, 120, 0.1);
 }
 
-.rb-store-status{
-  margin:18px 0;
-  padding:18px;
-  border-radius:24px;
-  border:1px dashed rgba(255,215,100,.28);
-  background:rgba(255,255,255,.05);
-  color:rgba(255,255,255,.72);
-  text-align:center;
-  font-weight:900;
+.rb-store-status,
+#storeStatus {
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px dashed rgba(255, 215, 100, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.72);
+  text-align: center;
+  font-weight: 900;
 }
 
-.rb-store-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
-  margin-top:18px;
+/* GRID */
+
+.rb-store-grid,
+#storeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 18px;
 }
 
-.rb-store-card{
-  overflow:hidden;
-  border-radius:28px;
-  border:1px solid rgba(0,255,120,.18);
-  background:linear-gradient(180deg,rgba(7,29,14,.88),rgba(0,0,0,.84));
-  box-shadow:0 22px 60px rgba(0,0,0,.42);
+.rb-store-card {
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(0, 255, 120, 0.18);
+  background:
+    linear-gradient(180deg, rgba(7, 29, 14, 0.88), rgba(0, 0, 0, 0.84));
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
 }
 
-.rb-store-media{
-  position:relative;
-  min-height:260px;
-  overflow:hidden;
-  background:#06170c;
+.rb-store-media {
+  position: relative;
+  min-height: 260px;
+  overflow: hidden;
+  background: #06170c;
 }
 
-.rb-store-media img{
-  width:100%;
-  height:100%;
-  min-height:260px;
-  object-fit:cover;
-  display:block;
-  transition:transform .25s ease;
+.rb-store-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s ease;
 }
 
-.rb-store-card:hover .rb-store-media img{
-  transform:scale(1.04);
+.rb-store-card:hover .rb-store-media img {
+  transform: scale(1.04);
 }
 
-.rb-store-badge{
-  position:absolute;
-  left:12px;
-  top:12px;
-  padding:8px 11px;
-  border-radius:999px;
-  background:linear-gradient(135deg,#7cffaa,#ffd76b);
-  color:#041006;
-  font-size:.68rem;
-  font-weight:1000;
-  letter-spacing:.1em;
-  text-transform:uppercase;
+.rb-store-badge {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7cffaa, #ffd76b);
+  color: #041006;
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.rb-store-badge.rb-danger{
-  left:auto;
-  right:12px;
-  background:linear-gradient(135deg,#ff7676,#ffbd6b);
+.rb-store-badge.rb-danger {
+  left: auto;
+  right: 12px;
+  background: linear-gradient(135deg, #ff7676, #ffbd6b);
 }
 
-.rb-store-info{
-  padding:16px;
+.rb-store-info {
+  padding: 16px;
 }
 
-.rb-store-row{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  align-items:center;
-  margin-bottom:10px;
+.rb-store-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.rb-store-row span{
-  color:#7cffaa;
-  font-size:.72rem;
-  font-weight:1000;
-  letter-spacing:.1em;
-  text-transform:uppercase;
+.rb-store-row span {
+  color: #7cffaa;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.rb-store-row strong{
-  color:#ffd76b;
-  font-size:1.05rem;
+.rb-store-row strong {
+  color: #ffd76b;
+  font-size: 1.05rem;
 }
 
-.rb-store-info h2{
-  margin:0 0 8px;
-  font-size:1.35rem;
-  line-height:1.05;
-  letter-spacing:-.03em;
-  text-transform:uppercase;
+.rb-store-info h2 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
 }
 
-.rb-store-info p{
-  margin:0;
-  color:rgba(255,255,255,.72);
-  line-height:1.45;
+.rb-store-info p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.45;
 }
 
-.rb-store-meta{
-  margin-top:13px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
+.rb-store-meta {
+  margin-top: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
 }
 
-.rb-store-meta span{
-  padding:7px 9px;
-  border-radius:999px;
-  border:1px solid rgba(255,215,100,.18);
-  background:rgba(255,255,255,.06);
-  color:#ffe08a;
-  font-size:.68rem;
-  font-weight:950;
-  text-transform:uppercase;
+.rb-store-meta span {
+  padding: 7px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 100, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffe08a;
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
 }
 
-.rb-store-seller{
-  margin-top:15px;
-  padding:10px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  border-radius:20px;
-  background:rgba(255,255,255,.055);
-  border:1px solid rgba(255,255,255,.08);
+/* SELLER */
+
+.rb-store-seller {
+  margin-top: 15px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.rb-store-seller img{
-  width:42px;
-  height:42px;
-  object-fit:cover;
-  border-radius:14px;
-  border:1px solid rgba(124,255,170,.55);
+.rb-store-seller img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 255, 170, 0.55);
 }
 
-.rb-store-seller strong{
-  display:block;
-  font-weight:1000;
+.rb-store-seller strong {
+  display: block;
+  font-weight: 1000;
 }
 
-.rb-store-seller small{
-  display:block;
-  color:rgba(255,255,255,.56);
-  font-size:.76rem;
+.rb-store-seller small {
+  display: block;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.76rem;
 }
 
-.rb-store-buttons{
-  margin-top:15px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
+/* BUTTONS */
+
+.rb-store-buttons {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-.rb-store-buttons button{
-  min-height:42px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  font-weight:1000;
-  letter-spacing:.07em;
-  text-transform:uppercase;
+.rb-store-buttons button {
+  min-height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-weight: 1000;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
-.rb-store-buttons button:first-child{
-  grid-column:1/-1;
-  border:0;
-  background:linear-gradient(135deg,#7cffaa,#ffd76b);
-  color:#041006;
-  box-shadow:0 0 26px rgba(0,255,120,.22);
+.rb-store-buttons button:first-child {
+  grid-column: 1 / -1;
+  border: 0;
+  background: linear-gradient(135deg, #7cffaa, #ffd76b);
+  color: #041006;
+  box-shadow: 0 0 26px rgba(0, 255, 120, 0.22);
 }
 
-.rb-store-buttons button:disabled{
-  opacity:.45;
-  cursor:not-allowed;
+.rb-store-buttons button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-@media(max-width:980px){
-  .rb-store-page{
-    width:92vw;
-    padding-top:22px;
+/* MOBILE */
+
+@media (max-width: 980px) {
+  .rb-store-shell,
+  .rb-store-page-shell {
+    width: 92vw;
+    padding-top: 92px;
   }
 
-  .rb-store-actions{
-    grid-template-columns:1fr;
+  .rb-store-actions {
+    grid-template-columns: 1fr;
   }
 
-  .rb-store-grid{
-    grid-template-columns:1fr;
+  .rb-store-grid,
+  #storeGrid {
+    grid-template-columns: 1fr;
   }
 
-  .rb-store-page .rb-section-hero{
-    min-height:340px;
-    padding:24px;
+  .rb-store-shell .rb-section-hero,
+  .rb-store-page-shell .rb-section-hero,
+  body[data-section="store"] .rb-section-hero,
+  body.rb-store-page .rb-section-hero {
+    min-height: 340px;
+    padding: 24px;
   }
 }
 
-@media(max-width:560px){
+@media (max-width: 560px) {
+  .rb-store-shell,
+  .rb-store-page-shell {
+    width: calc(100vw - 20px);
+    padding-top: 128px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  .rb-store-shell .rb-section-hero,
+  .rb-store-page-shell .rb-section-hero,
+  body[data-section="store"] .rb-section-hero,
+  body.rb-store-page .rb-section-hero {
+    border-radius: 28px;
+  }
+
+  .rb-store-shell .rb-section-hero h1,
+  .rb-store-page-shell .rb-section-hero h1,
+  body[data-section="store"] .rb-section-hero h1,
+  body.rb-store-page .rb-section-hero h1 {
+    font-size: clamp(2.9rem, 17vw, 5rem);
+  }
+
   .rb-store-media,
-  .rb-store-media img{
-    min-height:220px;
+  .rb-store-media img {
+    min-height: 220px;
   }
 
-  .rb-store-buttons{
-    grid-template-columns:1fr;
+  .rb-store-buttons {
+    grid-template-columns: 1fr;
   }
 
-  .rb-store-buttons button:first-child{
-    grid-column:auto;
+  .rb-store-buttons button:first-child {
+    grid-column: auto;
   }
 }
