@@ -3,6 +3,12 @@
    /styles/feed.css
    FEED PAGE ONLY
    Mobile-safe feed layout + composer + cards
+
+   Updates:
+   - No project-avatar fallback
+   - Topbar-safe shell spacing
+   - Better shared card compatibility
+   - Feed media/audio/comment states locked
 ========================================= */
 
 .rb-feed-page {
@@ -52,7 +58,10 @@
 .rb-feed-shell {
   width: min(1180px, 94vw);
   margin: 0 auto;
-  padding: 28px 0 calc(120px + env(safe-area-inset-bottom));
+  padding:
+    calc(var(--rb-topbar-height, 82px) + 28px)
+    0
+    calc(120px + env(safe-area-inset-bottom));
 }
 
 .rb-feed-page .rb-section-hero {
@@ -162,7 +171,7 @@
 
 .rb-composer-card {
   position: sticky;
-  top: 18px;
+  top: calc(var(--rb-topbar-height, 82px) + 16px);
 
   padding: 18px;
 
@@ -186,7 +195,11 @@
   border-radius: 18px;
   border: 2px solid rgba(255, 215, 100, 0.72);
 
-  background: #06170c;
+  background:
+    #06170c
+    url("/images/brand/Avatar-hero-Banner.png.jpeg")
+    center / cover
+    no-repeat;
 }
 
 .rb-user-strip strong {
@@ -269,6 +282,12 @@
   object-fit: cover;
   border-radius: 17px;
   border: 2px solid rgba(255, 215, 100, 0.7);
+
+  background:
+    #06170c
+    url("/images/brand/Avatar-hero-Banner.png.jpeg")
+    center / cover
+    no-repeat;
 }
 
 .feed-user span {
@@ -424,7 +443,7 @@
   margin-right: 6px;
 }
 
-.rb-empty {
+.rb-feed-page .rb-empty {
   padding: 28px;
 
   border-radius: 24px;
@@ -435,16 +454,16 @@
   text-align: center;
 }
 
-.rb-empty[hidden] {
+.rb-feed-page .rb-empty[hidden] {
   display: none !important;
 }
 
-.rb-empty h2 {
+.rb-feed-page .rb-empty h2 {
   margin: 0 0 8px;
   text-transform: uppercase;
 }
 
-.rb-empty p {
+.rb-feed-page .rb-empty p {
   margin: 0;
   color: rgba(255, 255, 255, 0.68);
 }
@@ -467,7 +486,7 @@
 @media (max-width: 920px) {
   .rb-feed-shell {
     width: 92vw;
-    padding-top: 18px;
+    padding-top: calc(var(--rb-topbar-height, 82px) + 18px);
   }
 
   .rb-feed-page .rb-section-hero {
@@ -488,7 +507,7 @@
 @media (max-width: 560px) {
   .rb-feed-shell {
     width: calc(100vw - 24px);
-    padding-top: 14px;
+    padding-top: calc(var(--rb-topbar-height, 118px) + 14px);
     padding-bottom: calc(116px + env(safe-area-inset-bottom));
   }
 
