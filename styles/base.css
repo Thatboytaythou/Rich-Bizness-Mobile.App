@@ -5,6 +5,12 @@
 
    GLOBAL BASE FOUNDATION
    App Shell + Reset + Index Lock
+
+   Updates:
+   - No project-avatar fallback
+   - Adds rb-empty-card alias
+   - Adds safe fixed background layering
+   - Keeps index/avatar fullscreen lock untouched
 ========================= */
 
 :root {
@@ -254,7 +260,8 @@ select {
     filter 0.18s ease;
 }
 
-.rb-empty {
+.rb-empty,
+.rb-empty-card {
   padding: 18px;
   border-radius: 22px;
   border: 1px solid rgba(250, 204, 21, 0.14);
@@ -262,6 +269,11 @@ select {
   color: rgba(255, 255, 255, 0.72);
   font-weight: 800;
   line-height: 1.45;
+}
+
+.rb-empty-card {
+  border-style: dashed;
+  text-align: center;
 }
 
 .rb-shell {
@@ -303,6 +315,7 @@ select {
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: radial-gradient(circle at center, black 0%, transparent 74%);
+  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 74%);
 }
 
 .rb-bg-vignette {
