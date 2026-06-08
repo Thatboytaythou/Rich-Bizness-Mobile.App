@@ -14,7 +14,7 @@
 
   <meta
     name="description"
-    content="Rich Bizness Mobile profile universe with realtime identity, creator systems, uploads, gaming, sports, live, and metaverse sync."
+    content="Rich Bizness Mobile profile universe with realtime identity, XP, avatar, creator systems, uploads, gaming, sports, live, and metaverse sync."
   />
 
   <link rel="stylesheet" href="/styles/base.css" />
@@ -23,10 +23,14 @@
   <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
+
+  <script
+    type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"
+  ></script>
 </head>
 
 <body class="rb-body rb-profile-page" data-page="profile">
-
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -34,7 +38,6 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
     <a class="rb-brand" href="/" data-route="home">
       <span>WELCOME</span>
       <strong>RICH BIZNESS</strong>
@@ -62,34 +65,27 @@
       <a href="/profile" data-route="profile" class="is-active">Profile</a>
       <a href="/settings" data-route="settings">Settings</a>
     </nav>
-
   </header>
 
   <main class="rb-profile-shell">
-
     <section class="rb-profile-hero">
-
       <div id="profileBanner" class="rb-profile-banner"></div>
 
       <div class="rb-profile-inner">
-
         <div class="rb-profile-avatar-wrap">
-
           <img
             id="profileAvatar"
             class="rb-profile-avatar"
-            src="/images/brand/hero-banner.png"
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Profile Avatar"
             data-rb-avatar
             data-rb-avatar-link
           />
 
           <div class="rb-profile-online" aria-hidden="true"></div>
-
         </div>
 
         <div class="rb-profile-copy">
-
           <p id="profileStatus" class="rb-profile-kicker">
             Loading profile...
           </p>
@@ -111,7 +107,6 @@
           </div>
 
           <div class="rb-profile-meta">
-
             <div id="profileRank" class="rb-meta-pill" data-rb-badge>
               Member
             </div>
@@ -127,11 +122,33 @@
             <div id="profileBalance" class="rb-meta-pill">
               $0.00
             </div>
-
           </div>
 
-          <div class="rb-profile-actions">
+          <section
+            id="profileXpGauge"
+            class="rb-profile-xp-gauge"
+            aria-label="Profile XP Progress"
+          >
+            <div class="rb-profile-xp-head">
+              <span>RICH XP</span>
+              <strong id="profileXpGaugeText">0 XP</strong>
+            </div>
 
+            <div class="rb-profile-xp-bar" aria-hidden="true">
+              <div
+                id="profileXpGaugeFill"
+                class="rb-profile-xp-fill"
+                style="width:0%;"
+              ></div>
+            </div>
+
+            <div class="rb-profile-xp-row">
+              <span>Level Progress</span>
+              <span id="profileXpGaugeNext">1000 XP TO LVL 2</span>
+            </div>
+          </section>
+
+          <div class="rb-profile-actions">
             <button id="profileEditBtn" class="rb-btn primary" type="button">
               Edit Profile
             </button>
@@ -152,10 +169,12 @@
               Admin
             </button>
 
+            <a class="rb-btn ghost" href="/meta" data-route="meta">
+              Enter Meta
+            </a>
           </div>
 
           <div class="rb-profile-socials">
-
             <a
               id="profileWebsite"
               href="#"
@@ -167,19 +186,13 @@
             </a>
 
             <div id="profileSocials"></div>
-
           </div>
-
         </div>
-
       </div>
-
     </section>
 
     <section class="rb-panel rb-profile-stats">
-
       <div class="rb-stat-grid">
-
         <article>
           <strong id="profileFollowers">0</strong>
           <span>Followers</span>
@@ -199,13 +212,40 @@
           <strong id="profileLiveCount">0</strong>
           <span>Live Streams</span>
         </article>
+      </div>
+    </section>
 
+    <section class="rb-panel rb-profile-world-entry">
+      <div class="rb-module-head">
+        <div>
+          <p class="rb-kicker">META WORLD ENTRY</p>
+          <h2>Avatar Gateway</h2>
+        </div>
+
+        <a class="rb-btn gold" href="/meta" data-route="meta">
+          Enter World
+        </a>
       </div>
 
+      <div class="rb-profile-world-grid">
+        <article class="rb-mini-card">
+          <strong>Profile</strong>
+          <span>Your identity hub</span>
+        </article>
+
+        <article class="rb-mini-card">
+          <strong>Avatar</strong>
+          <span>Edit, sync, and enter Meta</span>
+        </article>
+
+        <article class="rb-mini-card">
+          <strong>XP</strong>
+          <span>Upload, live, post, build, earn</span>
+        </article>
+      </div>
     </section>
 
     <section class="rb-profile-tabs rb-tabs">
-
       <button class="is-active" data-profile-tab="feed" type="button">
         Posts
       </button>
@@ -233,19 +273,15 @@
       <button data-profile-tab="admin" type="button">
         Admin
       </button>
-
     </section>
 
     <section class="rb-profile-panels">
-
       <div class="rb-profile-panel is-active" data-profile-panel="feed">
-
         <div id="profileEmpty" class="rb-empty" style="display:none;">
           No posts yet. Upload something and build the universe.
         </div>
 
         <div id="profileFeed" class="rb-profile-feed"></div>
-
       </div>
 
       <div
@@ -253,9 +289,7 @@
         data-profile-panel="creator"
         style="display:none;"
       >
-
         <div class="rb-panel rb-profile-module">
-
           <div class="rb-module-head">
             <div>
               <p class="rb-kicker">CREATOR SYSTEM</p>
@@ -268,9 +302,7 @@
           </div>
 
           <div id="profileCreatorPanel" class="rb-profile-grid"></div>
-
         </div>
-
       </div>
 
       <div
@@ -278,9 +310,7 @@
         data-profile-panel="store"
         style="display:none;"
       >
-
         <div class="rb-panel rb-profile-module">
-
           <div class="rb-module-head">
             <div>
               <p class="rb-kicker">STORE SYSTEM</p>
@@ -293,9 +323,7 @@
           </div>
 
           <div id="profileStorePanel" class="rb-profile-grid"></div>
-
         </div>
-
       </div>
 
       <div
@@ -303,9 +331,7 @@
         data-profile-panel="gaming"
         style="display:none;"
       >
-
         <div class="rb-panel rb-profile-module">
-
           <div class="rb-module-head">
             <div>
               <p class="rb-kicker">GAMING SYSTEM</p>
@@ -318,9 +344,7 @@
           </div>
 
           <div id="profileGamingPanel" class="rb-profile-grid"></div>
-
         </div>
-
       </div>
 
       <div
@@ -328,9 +352,7 @@
         data-profile-panel="sports"
         style="display:none;"
       >
-
         <div class="rb-panel rb-profile-module">
-
           <div class="rb-module-head">
             <div>
               <p class="rb-kicker">SPORTS SYSTEM</p>
@@ -343,9 +365,7 @@
           </div>
 
           <div id="profileSportsPanel" class="rb-profile-grid"></div>
-
         </div>
-
       </div>
 
       <div
@@ -353,24 +373,20 @@
         data-profile-panel="meta"
         style="display:none;"
       >
-
         <div class="rb-panel rb-profile-module">
-
           <div class="rb-module-head">
             <div>
               <p class="rb-kicker">META SYSTEM</p>
-              <h2>Meta Worlds</h2>
+              <h2>Meta World</h2>
             </div>
 
-            <a class="rb-btn ghost" href="/meta" data-route="meta">
-              Open Meta
+            <a class="rb-btn gold" href="/meta" data-route="meta">
+              Enter Meta World
             </a>
           </div>
 
           <div id="profileMetaPanel" class="rb-profile-grid"></div>
-
         </div>
-
       </div>
 
       <div
@@ -378,9 +394,7 @@
         data-profile-panel="admin"
         style="display:none;"
       >
-
         <div class="rb-panel rb-profile-module">
-
           <div class="rb-module-head">
             <div>
               <p class="rb-kicker">UNIVERSE CONTROL</p>
@@ -393,7 +407,6 @@
           </div>
 
           <div class="rb-profile-grid">
-
             <article class="rb-mini-card">
               <strong>Realtime</strong>
               <span>System Synced</span>
@@ -408,15 +421,10 @@
               <strong>Universe</strong>
               <span>Rich Bizness Mobile</span>
             </article>
-
           </div>
-
         </div>
-
       </div>
-
     </section>
-
   </main>
 
   <footer class="rb-footer">
@@ -430,6 +438,5 @@
   </script>
 
   <script type="module" src="/core/pages/profile.js"></script>
-
 </body>
 </html>
