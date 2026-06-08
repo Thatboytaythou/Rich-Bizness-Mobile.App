@@ -6,6 +6,7 @@
    CINEMATIC PROFILE EXPERIENCE
    Profile + Messages + Notifications + Creator/Admin Panels
    Avatar + Banner Sync Ready
+   XP Gauge + Meta World Entry Ready
 ========================================= */
 
 .rb-profile-page,
@@ -66,7 +67,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url("/images/brand/Avatar-hero-Banner.png.jpeg");
+  background-image: url("/images/brand/hero-banner.png");
   background-size: cover;
   background-position: center;
   transform: scale(1.06);
@@ -283,6 +284,88 @@
   box-shadow: 0 0 18px rgba(102, 255, 153, 0.9);
 }
 
+/* XP GAUGE */
+
+.rb-profile-xp-gauge {
+  position: relative;
+  margin-top: 22px;
+  width: min(560px, 100%);
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(16, 185, 129, 0.18), transparent 42%),
+    linear-gradient(145deg, rgba(0, 0, 0, 0.42), rgba(5, 8, 5, 0.72));
+  box-shadow:
+    0 0 34px rgba(16, 185, 129, 0.1),
+    inset 0 0 28px rgba(255, 255, 255, 0.025);
+}
+
+.rb-profile-xp-head,
+.rb-profile-xp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rb-profile-xp-head span,
+.rb-profile-xp-row span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.rb-profile-xp-head strong {
+  color: #facc15;
+  font-size: 0.85rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 18px rgba(250, 204, 21, 0.28);
+}
+
+.rb-profile-xp-bar {
+  position: relative;
+  height: 14px;
+  overflow: hidden;
+  margin: 12px 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+}
+
+.rb-profile-xp-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, #22c55e, #8effcb, #facc15);
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.44),
+    0 0 32px rgba(250, 204, 21, 0.18);
+  transition: width 0.55s ease;
+}
+
+.rb-profile-xp-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.28) 0,
+      rgba(255, 255, 255, 0.28) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  opacity: 0.22;
+  animation: rbXpStripe 1.2s linear infinite;
+}
+
 /* CARD BLOCKS */
 
 .rb-profile-card,
@@ -290,7 +373,8 @@
 .rb-edit-card,
 .rb-message-card,
 .rb-admin-card,
-.rb-creator-card {
+.rb-creator-card,
+.rb-profile-world-entry {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -307,6 +391,16 @@
     0 32px 90px rgba(0, 0, 0, 0.48),
     0 0 44px rgba(16, 185, 129, 0.11),
     inset 0 0 54px rgba(255, 255, 255, 0.018);
+}
+
+.rb-profile-world-entry {
+  margin-top: 22px;
+}
+
+.rb-profile-world-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .rb-profile-card {
@@ -523,10 +617,134 @@
 }
 
 .rb-mini-card h3,
+.rb-mini-card strong,
 .rb-notification-card strong {
   display: block;
   margin: 0 0 8px;
   color: #facc15;
+}
+
+.rb-mini-card span,
+.rb-mini-card small {
+  display: block;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+/* META PROFILE CARD */
+
+.rb-profile-meta-avatar-card {
+  grid-column: 1 / -1;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) 1fr;
+  gap: 22px;
+  align-items: center;
+  overflow: hidden;
+  padding: clamp(18px, 3vw, 28px);
+  border-radius: 30px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  background:
+    radial-gradient(circle at 18% 22%, rgba(16, 185, 129, 0.22), transparent 40%),
+    radial-gradient(circle at 86% 74%, rgba(250, 204, 21, 0.15), transparent 34%),
+    linear-gradient(145deg, rgba(0, 0, 0, 0.66), rgba(5, 8, 5, 0.88));
+  box-shadow:
+    0 0 46px rgba(16, 185, 129, 0.14),
+    inset 0 0 44px rgba(255, 255, 255, 0.02);
+}
+
+.rb-profile-meta-avatar-stage {
+  position: relative;
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 26px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+  background:
+    radial-gradient(circle, rgba(16, 185, 129, 0.18), transparent 62%),
+    rgba(0, 0, 0, 0.36);
+}
+
+.rb-profile-meta-avatar-stage img,
+.rb-profile-meta-avatar-stage model-viewer {
+  position: relative;
+  z-index: 3;
+  width: min(230px, 80%);
+  height: min(250px, 72vw);
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+.rb-profile-meta-avatar-stage model-viewer {
+  min-height: 260px;
+  background: transparent;
+}
+
+.rb-profile-meta-orbit,
+.rb-profile-meta-aura {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.rb-profile-meta-orbit {
+  width: 220px;
+  height: 220px;
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  box-shadow:
+    0 0 34px rgba(16, 185, 129, 0.16),
+    inset 0 0 24px rgba(250, 204, 21, 0.08);
+  animation: rbProfileSpin 18s linear infinite;
+}
+
+.rb-profile-meta-aura {
+  width: 260px;
+  height: 260px;
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(16, 185, 129, 0.1),
+      rgba(250, 204, 21, 0.16),
+      rgba(16, 185, 129, 0.1)
+    );
+  filter: blur(18px);
+  opacity: 0.72;
+  animation: rbMetaAura 5s ease-in-out infinite;
+}
+
+.rb-profile-meta-avatar-copy h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.8rem, 4vw, 3.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.rb-profile-meta-avatar-copy p {
+  max-width: 640px;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.65;
+}
+
+.rb-profile-meta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.rb-profile-meta-badges span {
+  padding: 9px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+  background: rgba(255, 255, 255, 0.055);
+  color: #fefce8;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .rb-notification-card.is-unread {
@@ -684,6 +902,29 @@
   }
 }
 
+@keyframes rbXpStripe {
+  from {
+    transform: translateX(-18px);
+  }
+
+  to {
+    transform: translateX(18px);
+  }
+}
+
+@keyframes rbMetaAura {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0.56;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+    opacity: 0.86;
+  }
+}
+
 /* MOBILE */
 
 @media (max-width: 920px) {
@@ -702,13 +943,33 @@
   .rb-profile-actions,
   .rb-profile-socials,
   .rb-profile-tabs,
-  .rb-profile-editor-actions {
+  .rb-profile-editor-actions,
+  .rb-profile-xp-head,
+  .rb-profile-xp-row {
     justify-content: center;
+  }
+
+  .rb-profile-xp-gauge {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .rb-profile-feed,
   #profileFeed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rb-profile-meta-avatar-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .rb-profile-meta-badges {
+    justify-content: center;
+  }
+
+  .rb-profile-world-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -768,8 +1029,25 @@
     width: 100%;
   }
 
+  .rb-profile-xp-head,
+  .rb-profile-xp-row {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
   .rb-profile-feed,
   #profileFeed {
     grid-template-columns: 1fr;
+  }
+
+  .rb-profile-meta-avatar-stage {
+    min-height: 230px;
+  }
+
+  .rb-profile-meta-avatar-stage img,
+  .rb-profile-meta-avatar-stage model-viewer {
+    width: min(210px, 82%);
+    height: 230px;
   }
 }
