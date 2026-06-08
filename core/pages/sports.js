@@ -4,6 +4,15 @@
 
    SPORTS PAGE CONTROLLER
    Profile Keys Locked
+
+   Updates:
+   - No project-avatar fallback
+   - Safe HTML escaping
+   - Direct table fallbacks
+   - Tabs bind once
+   - Realtime reload guarded
+   - Video/audio media support for uploads/posts
+   - Profile/meta-compatible activity detail
 ========================= */
 
 import {
@@ -13,8 +22,13 @@ import {
   markPageError
 } from "/core/app.js";
 
-import { RB_TABLES } from "/core/shared/rb-config.js";
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  RB_TABLES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   getProfileIdentity,
@@ -23,17 +37,18 @@ import {
 } from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
-const $$ = (selector) => document.querySelectorAll(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
+const FALLBACK_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const TABLES = {
-  sportsPosts: RB_TABLES.sportsPosts || "sports_posts",
-  sportsPicks: RB_TABLES.sportsPicks || "sports_picks",
-  sportsUploads: RB_TABLES.sportsUploads || "sports_uploads",
-  sportsBroadcasts: RB_TABLES.sportsBroadcasts || "sports_broadcasts",
-  sportsProfiles: RB_TABLES.sportsProfiles || "sports_profiles",
-  sportsTeams: RB_TABLES.sportsTeams || "sports_teams"
+  sportsPosts: RB_TABLES?.sportsPosts || "sports_posts",
+  sportsPicks: RB_TABLES?.sportsPicks || "sports_picks",
+  sportsUploads: RB_TABLES?.sportsUploads || "sports_uploads",
+  sportsBroadcasts: RB_TABLES?.sportsBroadcasts || "sports_broadcasts",
+  sportsProfiles: RB_TABLES?.sportsProfiles || "sports_profiles",
+  sportsTeams: RB_TABLES?.sportsTeams || "sports_teams"
 };
 
 const els = {
@@ -55,6 +70,39 @@ let channels = [];
 let currentUser = null;
 let currentProfile = null;
 let profileIdentity = null;
+let tabsBound = false;
+let loading = false;
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function safeText(value, fallback = "") {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+function safePath(value = "", fallback = FALLBACK_COVER) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
 
 function syncProfileKeys() {
   const state = getCurrentUserState?.() || {};
@@ -68,15 +116,11 @@ function syncProfileKeys() {
   document.body.dataset.rbProfileId = profileIdentity?.id || "";
   document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
 
-  bindProfileShell();
+  bindProfileShell?.();
 
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
-}
-
-function safe(value, fallback = "") {
-  return value || fallback;
 }
 
 function niceDate(date) {
@@ -89,27 +133,71 @@ function niceDate(date) {
   });
 }
 
-function creatorLine(item) {
-  return item?.display_name || item?.username || "Rich Bizness Sports";
+function creatorLine(item = {}) {
+  return item.display_name || item.username || "Rich Bizness Sports";
 }
 
 function setEmpty(target, text) {
   if (!target) return;
-  target.innerHTML = `<p class="rb-empty">${text}</p>`;
+  target.innerHTML = `<p class="rb-empty">${escapeHtml(text)}</p>`;
 }
 
-function mediaImage(item) {
-  return (
-    item?.cover_url ||
-    item?.thumbnail_url ||
-    item?.media_url ||
-    item?.file_url ||
-    item?.logo_url ||
+function mediaImage(item = {}) {
+  return safePath(
+    item.cover_url ||
+      item.thumbnail_url ||
+      item.media_url ||
+      item.file_url ||
+      item.logo_url,
     FALLBACK_COVER
   );
 }
 
+function mediaMarkup(item = {}) {
+  const url = safePath(item.media_url || item.file_url || item.cover_url || item.thumbnail_url, "");
+  if (!url) return "";
+
+  const lower = url.toLowerCase();
+
+  if (/\.(mp4|mov|webm|m4v)(\?|$)/.test(lower) || item.media_type === "video") {
+    return `
+      <video
+        class="rb-card-cover"
+        src="${escapeHtml(url)}"
+        controls
+        playsinline
+      ></video>
+    `;
+  }
+
+  if (/\.(mp3|wav|m4a|ogg)(\?|$)/.test(lower) || item.media_type === "audio") {
+    return `
+      <div class="rb-card-audio-wrap">
+        <img
+          class="rb-card-cover"
+          src="${escapeHtml(mediaImage(item))}"
+          alt=""
+          loading="lazy"
+        />
+        <audio src="${escapeHtml(url)}" controls></audio>
+      </div>
+    `;
+  }
+
+  return `
+    <img
+      class="rb-card-cover"
+      src="${escapeHtml(mediaImage(item))}"
+      alt=""
+      loading="lazy"
+    />
+  `;
+}
+
 function bindTabs() {
+  if (tabsBound) return;
+  tabsBound = true;
+
   $$("[data-sports-tab]").forEach((button) => {
     button.addEventListener("click", () => {
       const tab = button.dataset.sportsTab;
@@ -119,10 +207,9 @@ function bindTabs() {
       });
 
       $$("[data-sports-panel]").forEach((panel) => {
-        panel.classList.toggle(
-          "is-active",
-          panel.dataset.sportsPanel === tab
-        );
+        const active = panel.dataset.sportsPanel === tab;
+        panel.classList.toggle("is-active", active);
+        panel.style.display = active ? "block" : "none";
       });
     });
   });
@@ -135,27 +222,42 @@ function cardTemplate({
   image = FALLBACK_COVER,
   meta = "",
   badges = [],
-  creatorId = ""
+  creatorId = "",
+  media = ""
 }) {
   const card = document.createElement("article");
+
   card.className = "rb-content-card rb-sports-card";
   card.dataset.creatorId = creatorId || "";
   card.dataset.profileLocked = creatorId ? "true" : "false";
 
   card.innerHTML = `
-    <img class="rb-card-cover" src="${image || FALLBACK_COVER}" alt="${title}" loading="lazy" />
+    ${
+      media ||
+      `
+        <img
+          class="rb-card-cover"
+          src="${escapeHtml(safePath(image, FALLBACK_COVER))}"
+          alt="${escapeHtml(title)}"
+          loading="lazy"
+        />
+      `
+    }
 
     <div class="rb-card-body">
-      <p class="rb-kicker">${kicker}</p>
-      <h3>${title}</h3>
-      <p>${body}</p>
+      <p class="rb-kicker">${escapeHtml(kicker)}</p>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(body)}</p>
 
       <div class="rb-card-meta">
-        <span>${meta}</span>
+        <span>${escapeHtml(meta)}</span>
       </div>
 
       <div class="rb-chip-row">
-        ${badges.map((badge) => `<span class="rb-chip">${badge}</span>`).join("")}
+        ${badges
+          .filter(Boolean)
+          .map((badge) => `<span class="rb-chip">${escapeHtml(badge)}</span>`)
+          .join("")}
       </div>
     </div>
   `;
@@ -163,28 +265,29 @@ function cardTemplate({
   return card;
 }
 
-function renderPost(item) {
+function renderPost(item = {}) {
   return cardTemplate({
     kicker: item.sport || item.league || "SPORTS POST",
     title: item.title || "Sports Post",
-    body: safe(item.body, "No caption yet."),
+    body: safeText(item.body, "No caption yet."),
     image: mediaImage(item),
+    media: mediaMarkup(item),
     meta: `${creatorLine(item)} • ${niceDate(item.created_at)}`,
     creatorId: item.user_id,
     badges: [
       item.team_name,
-      `${item.like_count || 0} likes`,
-      `${item.comment_count || 0} comments`,
-      `${item.view_count || 0} views`
-    ].filter(Boolean)
+      `${Number(item.like_count || 0).toLocaleString()} likes`,
+      `${Number(item.comment_count || 0).toLocaleString()} comments`,
+      `${Number(item.view_count || 0).toLocaleString()} views`
+    ]
   });
 }
 
-function renderPick(item) {
+function renderPick(item = {}) {
   return cardTemplate({
     kicker: item.sport || item.league || "PICK",
     title: item.title || `${item.team_name || "Team"} Pick`,
-    body: safe(item.prediction, "Prediction locked in."),
+    body: safeText(item.prediction, "Prediction locked in."),
     image: FALLBACK_COVER,
     meta: `${creatorLine(item)} • ${niceDate(item.created_at)}`,
     creatorId: item.user_id,
@@ -192,34 +295,35 @@ function renderPick(item) {
       item.team_name,
       item.opponent ? `vs ${item.opponent}` : "",
       item.result || "pending",
-      `${item.confidence || 0}% confidence`
-    ].filter(Boolean)
+      `${Number(item.confidence || 0)}% confidence`
+    ]
   });
 }
 
-function renderUpload(item) {
+function renderUpload(item = {}) {
   return cardTemplate({
     kicker: item.content_type || item.clip_type || "UPLOAD",
     title: item.title || "Sports Highlight",
-    body: safe(item.caption, "Sports clip uploaded to Rich Bizness."),
+    body: safeText(item.caption, "Sports clip uploaded to Rich Bizness."),
     image: mediaImage(item),
+    media: mediaMarkup(item),
     meta: `${creatorLine(item)} • ${niceDate(item.created_at)}`,
     creatorId: item.user_id,
     badges: [
       item.sport_name,
       item.team_name,
       item.athlete_name,
-      `${item.views || 0} views`,
-      `${item.likes || 0} likes`
-    ].filter(Boolean)
+      `${Number(item.views || 0).toLocaleString()} views`,
+      `${Number(item.likes || 0).toLocaleString()} likes`
+    ]
   });
 }
 
-function renderBroadcast(item) {
+function renderBroadcast(item = {}) {
   return cardTemplate({
     kicker: item.status || "BROADCAST",
     title: item.title || "Sports Broadcast",
-    body: safe(item.description, "Live sports broadcast."),
+    body: safeText(item.description, "Live sports broadcast."),
     image: mediaImage(item),
     meta: `${creatorLine(item)} • ${niceDate(item.scheduled_for || item.created_at)}`,
     creatorId: item.user_id,
@@ -228,42 +332,54 @@ function renderBroadcast(item) {
       item.league,
       item.team_name,
       item.access_type,
-      `${item.viewer_count || 0} watching`
-    ].filter(Boolean)
+      `${Number(item.viewer_count || 0).toLocaleString()} watching`
+    ]
   });
 }
 
-function renderProfile(item) {
+function renderProfile(item = {}) {
   return cardTemplate({
     kicker: item.rank_title || "FAN PROFILE",
     title: item.display_name || item.username || item.fan_tag || "Sports Fan",
-    body: safe(item.bio, "Rich Bizness sports fan."),
-    image: FALLBACK_COVER,
+    body: safeText(item.bio, "Rich Bizness sports fan."),
+    image: FALLBACK_AVATAR,
     meta: `${item.favorite_team || "No team yet"} • ${item.favorite_sport || "Sports"}`,
     creatorId: item.user_id,
     badges: [
       item.fan_tag,
-      `${item.points || 0} pts`,
-      `${item.win_count || 0}W`,
-      `${item.loss_count || 0}L`
-    ].filter(Boolean)
+      `${Number(item.points || 0).toLocaleString()} pts`,
+      `${Number(item.win_count || 0)}W`,
+      `${Number(item.loss_count || 0)}L`
+    ]
   });
 }
 
-function renderTeam(item) {
+function renderTeam(item = {}) {
   return cardTemplate({
     kicker: item.sport || "TEAM",
     title: item.team_name || item.title || "Sports Team",
-    body: safe(item.city, "Rich Bizness sports team."),
+    body: safeText(item.city, "Rich Bizness sports team."),
     image: mediaImage(item),
-    meta: `${item.wins || 0}W • ${item.losses || 0}L`,
+    meta: `${Number(item.wins || 0)}W • ${Number(item.losses || 0)}L`,
     creatorId: "",
     badges: [
       item.slug,
       item.city,
       item.sport
-    ].filter(Boolean)
+    ]
   });
+}
+
+function paintList(target, data = [], renderer, emptyText) {
+  if (!target) return;
+
+  if (!data.length) {
+    setEmpty(target, emptyText);
+    return;
+  }
+
+  target.innerHTML = "";
+  data.forEach((item) => target.appendChild(renderer(item)));
 }
 
 async function loadPosts() {
@@ -275,15 +391,8 @@ async function loadPosts() {
 
   if (error) throw error;
 
-  if (els.postCount) els.postCount.textContent = data?.length || 0;
-
-  if (!data?.length) {
-    setEmpty(els.postsList, "No sports posts yet.");
-    return;
-  }
-
-  els.postsList.innerHTML = "";
-  data.forEach((item) => els.postsList.appendChild(renderPost(item)));
+  if (els.postCount) els.postCount.textContent = String(data?.length || 0);
+  paintList(els.postsList, data || [], renderPost, "No sports posts yet.");
 }
 
 async function loadPicks() {
@@ -295,15 +404,8 @@ async function loadPicks() {
 
   if (error) throw error;
 
-  if (els.pickCount) els.pickCount.textContent = data?.length || 0;
-
-  if (!data?.length) {
-    setEmpty(els.picksList, "No sports picks yet.");
-    return;
-  }
-
-  els.picksList.innerHTML = "";
-  data.forEach((item) => els.picksList.appendChild(renderPick(item)));
+  if (els.pickCount) els.pickCount.textContent = String(data?.length || 0);
+  paintList(els.picksList, data || [], renderPick, "No sports picks yet.");
 }
 
 async function loadUploads() {
@@ -315,15 +417,8 @@ async function loadUploads() {
 
   if (error) throw error;
 
-  if (els.uploadCount) els.uploadCount.textContent = data?.length || 0;
-
-  if (!data?.length) {
-    setEmpty(els.uploadsList, "No sports uploads yet.");
-    return;
-  }
-
-  els.uploadsList.innerHTML = "";
-  data.forEach((item) => els.uploadsList.appendChild(renderUpload(item)));
+  if (els.uploadCount) els.uploadCount.textContent = String(data?.length || 0);
+  paintList(els.uploadsList, data || [], renderUpload, "No sports uploads yet.");
 }
 
 async function loadBroadcasts() {
@@ -335,15 +430,8 @@ async function loadBroadcasts() {
 
   if (error) throw error;
 
-  if (els.broadcastCount) els.broadcastCount.textContent = data?.length || 0;
-
-  if (!data?.length) {
-    setEmpty(els.broadcastsList, "No broadcasts yet.");
-    return;
-  }
-
-  els.broadcastsList.innerHTML = "";
-  data.forEach((item) => els.broadcastsList.appendChild(renderBroadcast(item)));
+  if (els.broadcastCount) els.broadcastCount.textContent = String(data?.length || 0);
+  paintList(els.broadcastsList, data || [], renderBroadcast, "No broadcasts yet.");
 }
 
 async function loadProfiles() {
@@ -355,13 +443,7 @@ async function loadProfiles() {
 
   if (error) throw error;
 
-  if (!data?.length) {
-    setEmpty(els.profilesList, "No sports fan profiles yet.");
-    return;
-  }
-
-  els.profilesList.innerHTML = "";
-  data.forEach((item) => els.profilesList.appendChild(renderProfile(item)));
+  paintList(els.profilesList, data || [], renderProfile, "No sports fan profiles yet.");
 }
 
 async function loadTeams() {
@@ -373,24 +455,34 @@ async function loadTeams() {
 
   if (error) throw error;
 
-  if (!data?.length) {
-    setEmpty(els.teamsList, "No teams loaded yet.");
-    return;
-  }
-
-  els.teamsList.innerHTML = "";
-  data.forEach((item) => els.teamsList.appendChild(renderTeam(item)));
+  paintList(els.teamsList, data || [], renderTeam, "No teams loaded yet.");
 }
 
 async function loadSportsPage() {
-  await Promise.all([
-    loadPosts(),
-    loadPicks(),
-    loadUploads(),
-    loadBroadcasts(),
-    loadProfiles(),
-    loadTeams()
-  ]);
+  if (loading) return;
+  loading = true;
+
+  try {
+    await Promise.all([
+      loadPosts(),
+      loadPicks(),
+      loadUploads(),
+      loadBroadcasts(),
+      loadProfiles(),
+      loadTeams()
+    ]);
+
+    window.dispatchEvent(
+      new CustomEvent("rb:sports-update", {
+        detail: {
+          route: "sports",
+          profileLocked: !!profileIdentity?.id
+        }
+      })
+    );
+  } finally {
+    loading = false;
+  }
 }
 
 function clearRealtime() {
@@ -413,15 +505,15 @@ function bindRealtime() {
     TABLES.sportsBroadcasts,
     TABLES.sportsProfiles,
     TABLES.sportsTeams
-  ].map((table) =>
+  ].map((tableName) =>
     supabase
-      .channel(`rb-sports-${table}`)
+      .channel(`rb-sports-${tableName}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table
+          table: tableName
         },
         reload
       )
@@ -448,6 +540,9 @@ async function bootSportsPage() {
 
     window.addEventListener("beforeunload", clearRealtime);
 
+    document.body.dataset.rbPage = "sports";
+    document.body.dataset.rbRoute = "sports";
+    document.body.dataset.rbProfileLock = profileIdentity?.id ? "true" : "false";
     document.body.classList.add("rb-sports-ready");
 
     markPageReady("sports");
