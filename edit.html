@@ -2,11 +2,20 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
   <title>Edit Profile • Rich Bizness LLC</title>
+
   <meta name="theme-color" content="#050805" />
-  <meta name="description" content="Edit your Rich Bizness Mobile profile identity, avatar, banner, and bio." />
+
+  <meta
+    name="description"
+    content="Edit your Rich Bizness Mobile profile identity, avatar, banner, and bio."
+  />
 
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/main.css" />
@@ -17,7 +26,8 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-edit-page">
+<body class="rb-body rb-edit-page" data-page="edit">
+
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -25,73 +35,153 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/">
+
+    <a class="rb-brand" href="/" data-route="home">
       <span>IDENTITY EDITOR</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
     <nav class="rb-topnav" aria-label="Main navigation">
-      <a href="/profile">Profile</a>
-      <a href="/feed">Feed</a>
-      <a href="/upload">Upload</a>
-      <a href="/settings">Settings</a>
+      <a href="/" data-route="home">Portal</a>
+      <a href="/profile" data-route="profile">Profile</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/upload" data-route="upload">Upload</a>
+      <a href="/settings" data-route="settings">Settings</a>
     </nav>
+
   </header>
 
   <main class="rb-section-shell rb-edit-shell">
+
     <section class="rb-auth-hero">
-      <p class="rb-kicker">RICH BIZNESS IDENTITY</p>
-      <h1>Edit Profile</h1>
+
+      <p class="rb-kicker">
+        RICH BIZNESS IDENTITY
+      </p>
+
+      <h1>
+        Edit Profile
+      </h1>
+
       <p>
         Update your name, handle, bio, avatar, and banner across the Rich Bizness universe.
       </p>
+
     </section>
 
     <section class="rb-auth-panel">
+
       <form id="edit-profile-form" class="rb-auth-form">
-        <h2>Identity Settings</h2>
 
-        <label>
+        <h2>
+          Identity Settings
+        </h2>
+
+        <label for="edit-display-name">
           Display Name
-          <input id="edit-display-name" name="display_name" type="text" autocomplete="name" placeholder="Your display name" />
+
+          <input
+            id="edit-display-name"
+            name="display_name"
+            type="text"
+            autocomplete="name"
+            placeholder="Your display name"
+            required
+          />
         </label>
 
-        <label>
+        <label for="edit-username">
           Username
-          <input id="edit-username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="yourhandle" />
+
+          <input
+            id="edit-username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="yourhandle"
+            required
+            minlength="3"
+            maxlength="24"
+          />
         </label>
 
-        <label>
+        <label for="edit-bio">
           Bio
-          <textarea id="edit-bio" name="bio" rows="5" placeholder="Tell the universe who you are..."></textarea>
+
+          <textarea
+            id="edit-bio"
+            name="bio"
+            rows="5"
+            placeholder="Tell the universe who you are..."
+          ></textarea>
         </label>
 
-        <label>
+        <label for="edit-avatar-file">
           Avatar
-          <input id="edit-avatar-file" name="avatar" type="file" accept="image/*" />
+
+          <input
+            id="edit-avatar-file"
+            name="avatar"
+            type="file"
+            accept="image/*"
+          />
         </label>
 
-        <label>
+        <label for="edit-banner-file">
           Banner
-          <input id="edit-banner-file" name="banner" type="file" accept="image/*" />
+
+          <input
+            id="edit-banner-file"
+            name="banner"
+            type="file"
+            accept="image/*"
+          />
         </label>
 
-        <p id="edit-profile-message" class="rb-form-note" aria-live="polite"></p>
+        <p
+          id="edit-status"
+          class="rb-form-note"
+          aria-live="polite"
+        >
+          Profile editor ready.
+        </p>
 
         <div class="rb-form-actions">
-          <button class="rb-main-launch" type="submit">
+
+          <button
+            id="edit-save-btn"
+            class="rb-main-launch"
+            type="submit"
+          >
             SAVE PROFILE
           </button>
 
-          <button id="edit-back-btn" class="rb-btn ghost" type="button">
+          <button
+            id="edit-back-btn"
+            class="rb-btn ghost"
+            type="button"
+          >
             ← Back To Profile
           </button>
+
         </div>
+
       </form>
+
     </section>
+
   </main>
 
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
   <script type="module" src="/core/pages/edit.js"></script>
+
 </body>
 </html>
