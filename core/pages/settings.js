@@ -3,8 +3,14 @@
    /core/pages/settings.js
 
    SETTINGS PAGE CONTROLLER
+   Direct Supabase Settings Render
    Profile Lock + Auth + Realtime Settings
-   Uses locked rb-supabase.js client
+
+   Flow:
+   - Settings reads current user/profile
+   - Settings does not depend on profile-state feature
+   - Realtime watches profiles + optional user_settings
+   - Sign out clears realtime first
 ========================================= */
 
 import {
@@ -22,25 +28,21 @@ import {
 } from "/core/shared/rb-config.js";
 
 import {
-  createRealtimeChannel,
-  removeRealtimeChannel
+  getSupabase
 } from "/core/shared/rb-supabase.js";
 
 import {
   rbSignOut,
+  getUser,
   ensureMyProfile
 } from "/core/shared/rb-auth.js";
-
-import {
-  refreshProfileState,
-  onProfileState
-} from "/core/features/profile/profile-state.js";
 
 import {
   profileName,
   profileHandle,
   profileAvatar,
-  profileBadge
+  profileBadge,
+  bindProfileShell
 } from "/core/shared/rb-profile.js";
 
 import {
@@ -48,6 +50,8 @@ import {
 } from "/core/shared/rb-toast.js";
 
 const $ = (id) => document.getElementById(id);
+
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const els = {
   email: $("settings-email"),
@@ -64,19 +68,31 @@ const els = {
   profileLock: $("settings-profile-lock")
 };
 
+let supabase = null;
 let channel = null;
 let actionsBound = false;
+let currentUser = null;
+let currentProfile = null;
 
-function state() {
-  return getCurrentUserState?.() || {};
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
 }
 
-function currentUser() {
-  return state().user || null;
-}
+function safeImage(value = "", fallback = DEFAULT_AVATAR) {
+  const src = String(value || "").trim();
 
-function currentProfile() {
-  return state().profile || null;
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
 }
 
 function setText(el, value) {
@@ -84,36 +100,67 @@ function setText(el, value) {
 }
 
 function setImage(el, url, alt = "") {
-  if (!el || !url) return;
+  if (!el) return;
+
+  const finalUrl = safeImage(url, DEFAULT_AVATAR);
 
   if (el.tagName === "IMG") {
-    el.src = url;
-    el.alt = alt;
+    el.src = finalUrl;
+    el.alt = alt || "Settings avatar";
     return;
   }
 
-  el.style.backgroundImage = `url("${url}")`;
+  el.style.backgroundImage = `url("${finalUrl}")`;
+}
+
+function syncState() {
+  const appState = getCurrentUserState?.() || {};
+
+  currentUser = appState.user || getUser?.() || null;
+  currentProfile = appState.profile || currentProfile || null;
+}
+
+async function fetchMyProfile() {
+  const user = getUser?.() || currentUser;
+
+  if (!user?.id) {
+    currentUser = null;
+    currentProfile = null;
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from(table("profiles", "profiles"))
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  currentUser = user;
+  currentProfile = data || null;
+
+  return currentProfile;
 }
 
 function paintSettings() {
-  const user = currentUser();
-  const profile = currentProfile();
+  const user = currentUser || getUser?.();
+  const profile = currentProfile || {};
+
+  const role = profile?.role || "user";
+  const displayName = profileName(profile);
+  const handle = profileHandle(profile);
+  const avatar = safeImage(profileAvatar(profile), DEFAULT_AVATAR);
 
   setText(els.email, user?.email || "Guest Mode");
-  setText(els.name, profileName(profile));
-  setText(els.handle, profileHandle(profile));
+  setText(els.name, displayName);
+  setText(els.handle, handle);
   setText(els.badge, profileBadge(profile));
-  setText(els.role, String(profile?.role || "user").toUpperCase());
+  setText(els.role, String(role).toUpperCase());
 
-  setImage(
-    els.avatar,
-    profileAvatar(profile),
-    profileName(profile)
-  );
+  setImage(els.avatar, avatar, displayName);
 
   if (els.status) {
-    const role = profile?.role || "user";
-
     els.status.style.color = "";
 
     if (profile?.is_verified) {
@@ -142,49 +189,60 @@ function paintSettings() {
       ? `Profile locked through ${RB_PROFILE_KEYS?.identitySource || "profiles"}`
       : "Profile lock required"
   );
+
+  bindProfileShell?.();
 }
 
 async function refreshSettingsIdentity() {
-  await refreshProfileState();
   await refreshAppIdentity();
+  syncState();
+  await fetchMyProfile();
   paintSettings();
 }
 
-async function clearRealtime() {
-  if (!channel) return;
+function clearRealtime() {
+  if (!channel || !supabase) return;
 
-  await removeRealtimeChannel(channel);
+  supabase.removeChannel(channel);
   channel = null;
 }
 
 function bindRealtime() {
-  const user = currentUser();
-  if (!user?.id) return;
+  const user = currentUser || getUser?.();
+
+  if (!user?.id || !supabase) return;
 
   clearRealtime();
 
-  channel = createRealtimeChannel(`rb-settings-${user.id}`)
+  channel = supabase
+    .channel(`rb-settings-${user.id}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.profiles,
+        table: table("profiles", "profiles"),
         filter: `id=eq.${user.id}`
       },
       refreshSettingsIdentity
-    )
-    .on(
+    );
+
+  const userSettingsTable = table("userSettings", "user_settings");
+
+  if (userSettingsTable) {
+    channel.on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.userSettings,
+        table: userSettingsTable,
         filter: `user_id=eq.${user.id}`
       },
       refreshSettingsIdentity
-    )
-    .subscribe();
+    );
+  }
+
+  channel.subscribe();
 }
 
 function bindSettingsActions() {
@@ -207,7 +265,7 @@ function bindSettingsActions() {
       els.signOutBtn.disabled = true;
       els.signOutBtn.textContent = "Signing out...";
 
-      await clearRealtime();
+      clearRealtime();
 
       await rbSignOut({
         redirectTo: RB_ROUTES.auth || "/auth"
@@ -230,22 +288,19 @@ async function bootSettingsPage() {
       guard: true,
       bindProfile: true,
       toast: false,
-      ensureProfile: true,
-      profileState: true
+      ensureProfile: true
     });
 
+    supabase = getSupabase();
+
     await ensureMyProfile();
-    await refreshProfileState();
     await refreshAppIdentity();
+
+    syncState();
+    await fetchMyProfile();
 
     paintSettings();
     bindSettingsActions();
-
-    onProfileState((profileState) => {
-      if (!profileState?.ready) return;
-      paintSettings();
-    });
-
     bindRealtime();
 
     document.body.dataset.rbPage = "settings";
