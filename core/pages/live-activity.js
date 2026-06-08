@@ -5,6 +5,13 @@
    LIVE ACTIVITY ENGINE
    Uses locked rb-supabase.js client
    No duplicate Supabase client
+
+   Updates:
+   - Handles live_streams.creator_id schema
+   - Safe table fallback
+   - No duplicate realtime channel
+   - Event detail connects Meta World Engine activityState
+   - Badge creation stays clean
 ========================= */
 
 import {
@@ -20,7 +27,7 @@ import {
 
 const supabase = getSupabase();
 
-const LIVE_TABLE = RB_TABLES.liveStreams || "live_streams";
+const LIVE_TABLE = RB_TABLES?.liveStreams || "live_streams";
 
 const state = {
   liveCount: 0,
@@ -58,6 +65,9 @@ function setLiveUI() {
   window.dispatchEvent(
     new CustomEvent("rb:activity-update", {
       detail: {
+        liveActive: state.liveCount > 0,
+        liveCount: state.liveCount,
+        liveFeatured: state.featuredLive,
         live: {
           active: state.liveCount > 0,
           count: state.liveCount,
@@ -69,14 +79,17 @@ function setLiveUI() {
 }
 
 export async function loadLiveActivity() {
-  if (loading) return;
+  if (loading) return state;
 
   loading = true;
 
   try {
     const { count, error } = await supabase
       .from(LIVE_TABLE)
-      .select("id", { count: "exact", head: true })
+      .select("id", {
+        count: "exact",
+        head: true
+      })
       .eq("status", "live");
 
     if (error) {
@@ -87,7 +100,19 @@ export async function loadLiveActivity() {
 
     const { data, error: featuredError } = await supabase
       .from(LIVE_TABLE)
-      .select("id,title,slug,viewer_count,thumbnail_url,cover_url,created_at,status")
+      .select(`
+        id,
+        creator_id,
+        title,
+        slug,
+        display_slug,
+        viewer_count,
+        thumbnail_url,
+        cover_url,
+        created_at,
+        started_at,
+        status
+      `)
       .eq("status", "live")
       .order("viewer_count", { ascending: false })
       .limit(1)
@@ -101,12 +126,15 @@ export async function loadLiveActivity() {
     }
 
     setLiveUI();
+    return state;
   } finally {
     loading = false;
   }
 }
 
 function watchLiveActivity() {
+  if (channels.length) return;
+
   const channel = createRealtimeChannel("rb-live-activity")
     .on(
       "postgres_changes",
@@ -125,7 +153,7 @@ function watchLiveActivity() {
 }
 
 export async function bootLiveActivity() {
-  if (booted) return;
+  if (booted) return state;
 
   booted = true;
 
@@ -137,6 +165,8 @@ export async function bootLiveActivity() {
   document.body.classList.add("rb-live-activity-ready");
 
   console.log("RB LIVE ACTIVITY READY");
+
+  return state;
 }
 
 export async function destroyLiveActivity() {
