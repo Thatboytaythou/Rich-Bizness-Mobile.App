@@ -3,7 +3,14 @@
    /core/pages/admin.js
 
    ADMIN PAGE CONTROLLER
-   Synced with auth + profile-state
+   Direct Supabase Admin Dashboard
+   Profile Lock + Admin Role Check + Realtime
+
+   Flow:
+   - Reads current profile directly
+   - Confirms admin through profiles.role OR admin_roles
+   - Loads counts + audit logs
+   - No profile-state dependency
 ========================= */
 
 import {
@@ -24,19 +31,16 @@ import {
 } from "/core/shared/rb-supabase.js";
 
 import {
+  getUser,
   ensureMyProfile
 } from "/core/shared/rb-auth.js";
-
-import {
-  refreshProfileState,
-  onProfileState
-} from "/core/features/profile/profile-state.js";
 
 import {
   profileName,
   profileAvatar,
   profileHandle,
-  profileBadge
+  profileBadge,
+  bindProfileShell
 } from "/core/shared/rb-profile.js";
 
 import {
@@ -44,9 +48,9 @@ import {
   toastError
 } from "/core/shared/rb-toast.js";
 
-const supabase = getSupabase();
-
 const $ = (id) => document.getElementById(id);
+
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const els = {
   name: $("admin-user-name"),
@@ -72,18 +76,104 @@ const els = {
 };
 
 const state = {
-  profile: null,
+  supabase: null,
   user: null,
+  profile: null,
+  adminRole: null,
   channel: null,
   actionsBound: false
 };
 
-function getState() {
-  return getCurrentUserState() || {};
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
 }
 
-function isAdmin(profile = state.profile) {
+function safeImage(value = "", fallback = DEFAULT_AVATAR) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function setText(el, value) {
+  if (el) el.textContent = value ?? "";
+}
+
+function syncStateFromApp() {
+  const appState = getCurrentUserState?.() || {};
+
+  state.user = appState.user || getUser?.() || state.user || null;
+  state.profile = appState.profile || state.profile || null;
+}
+
+async function fetchMyProfile() {
+  const user = getUser?.() || state.user;
+
+  if (!user?.id) {
+    state.user = null;
+    state.profile = null;
+    return null;
+  }
+
+  const { data, error } = await state.supabase
+    .from(table("profiles", "profiles"))
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  state.user = user;
+  state.profile = data || null;
+
+  return state.profile;
+}
+
+async function fetchAdminRole() {
+  if (!state.user?.id) {
+    state.adminRole = null;
+    return null;
+  }
+
+  const { data, error } = await state.supabase
+    .from(table("adminRoles", "admin_roles"))
+    .select("*")
+    .eq("user_id", state.user.id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB ADMIN ROLE WARNING]", error.message);
+    state.adminRole = null;
+    return null;
+  }
+
+  state.adminRole = data || null;
+  return state.adminRole;
+}
+
+function isAdmin(profile = state.profile, adminRole = state.adminRole) {
   const role = profile?.role || "user";
+  const roleKey = adminRole?.role_key || "";
 
   return [
     "admin",
@@ -91,47 +181,48 @@ function isAdmin(profile = state.profile) {
     "super_admin",
     "founder",
     "rich_admin"
-  ].includes(role);
-}
-
-function setText(el, value) {
-  if (el) el.textContent = value;
+  ].includes(role) || [
+    "founder",
+    "rich_admin",
+    "elite_mod",
+    "support"
+  ].includes(roleKey);
 }
 
 function paintIdentity() {
-  const current = getState();
+  const profile = state.profile || {};
+  const name = profileName(profile);
+  const avatar = safeImage(profileAvatar(profile), DEFAULT_AVATAR);
 
-  state.user = current.user || null;
-  state.profile = current.profile || null;
-
-  if (els.name) els.name.textContent = profileName(state.profile);
-  if (els.handle) els.handle.textContent = profileHandle(state.profile);
-  if (els.badge) els.badge.textContent = profileBadge(state.profile);
+  setText(els.name, name);
+  setText(els.handle, profileHandle(profile));
+  setText(els.badge, state.adminRole?.role_label || profileBadge(profile));
 
   if (els.avatar) {
-    const avatar = profileAvatar(state.profile);
-
     if (els.avatar.tagName === "IMG") {
       els.avatar.src = avatar;
-      els.avatar.alt = profileName(state.profile);
+      els.avatar.alt = name;
     } else {
       els.avatar.style.backgroundImage = `url("${avatar}")`;
     }
   }
 
-  if (els.status) {
-    els.status.textContent = isAdmin()
+  setText(
+    els.status,
+    isAdmin()
       ? "Admin system connected."
-      : "Admin access required.";
-  }
+      : "Admin access required."
+  );
+
+  bindProfileShell?.();
 }
 
-async function countTable(table, match = {}) {
-  if (!table) return 0;
+async function countTable(tableName, match = {}) {
+  if (!tableName) return 0;
 
   try {
-    let query = supabase
-      .from(table)
+    let query = state.supabase
+      .from(tableName)
       .select("id", {
         count: "exact",
         head: true
@@ -147,7 +238,7 @@ async function countTable(table, match = {}) {
 
     return count || 0;
   } catch (error) {
-    console.warn(`[RB ADMIN COUNT WARNING] ${table}:`, error.message);
+    console.warn(`[RB ADMIN COUNT WARNING] ${tableName}:`, error.message);
     return 0;
   }
 }
@@ -166,14 +257,16 @@ async function loadAdminCounts() {
     uploads,
     reports,
     payouts,
-    live
+    liveByCreator,
+    liveByUser
   ] = await Promise.all([
-    countTable(RB_TABLES.profiles),
-    countTable(RB_TABLES.feedPosts),
-    countTable(RB_TABLES.uploads),
-    countTable(RB_TABLES.moderationReports),
-    countTable(RB_TABLES.payoutRequests || "payout_requests"),
-    countTable(RB_TABLES.liveStreams, { status: "live" })
+    countTable(table("profiles", "profiles")),
+    countTable(table("feedPosts", "feed_posts")),
+    countTable(table("uploads", "uploads")),
+    countTable(table("moderationReports", "moderation_reports")),
+    countTable(table("payoutRequests", "payout_requests")),
+    countTable(table("liveStreams", "live_streams"), { status: "live" }),
+    countTable(table("liveStreams", "live_streams"), { status: "live" })
   ]);
 
   setText(els.usersCount, users);
@@ -181,7 +274,7 @@ async function loadAdminCounts() {
   setText(els.uploadsCount, uploads);
   setText(els.reportsCount, reports);
   setText(els.payoutsCount, payouts);
-  setText(els.liveCount, live);
+  setText(els.liveCount, liveByCreator || liveByUser || 0);
 
   setText(els.syncStatus, "Admin dashboard synced");
 }
@@ -190,8 +283,8 @@ async function loadAuditLogs() {
   if (!els.auditList || !isAdmin()) return;
 
   try {
-    const { data, error } = await supabase
-      .from(RB_TABLES.adminAuditLogs)
+    const { data, error } = await state.supabase
+      .from(table("adminAuditLogs", "admin_audit_logs"))
       .select("*")
       .order("created_at", { ascending: false })
       .limit(20);
@@ -200,7 +293,12 @@ async function loadAuditLogs() {
 
     if (!data?.length) {
       els.auditList.innerHTML = "";
-      if (els.empty) els.empty.style.display = "block";
+
+      if (els.empty) {
+        els.empty.style.display = "block";
+        els.empty.textContent = "Audit logs waiting.";
+      }
+
       return;
     }
 
@@ -209,13 +307,20 @@ async function loadAuditLogs() {
     els.auditList.innerHTML = data
       .map((item) => {
         const title = item.action || item.event_type || "Admin Event";
-        const body = item.description || item.message || item.table_name || "System action logged.";
+        const body =
+          item.description ||
+          item.message ||
+          item.target_table ||
+          "System action logged.";
+
+        const severity = item.severity || "normal";
 
         return `
-          <article class="rb-card rb-admin-card">
+          <article class="rb-card rb-admin-card" data-severity="${escapeHtml(severity)}">
             <div class="rb-card-body">
-              <strong>${String(title)}</strong>
-              <p>${String(body)}</p>
+              <p class="rb-kicker">${escapeHtml(severity)}</p>
+              <strong>${escapeHtml(title)}</strong>
+              <p>${escapeHtml(body)}</p>
             </div>
           </article>
         `;
@@ -236,8 +341,8 @@ async function loadAuditLogs() {
 }
 
 function clearRealtime() {
-  if (state.channel) {
-    supabase.removeChannel(state.channel);
+  if (state.channel && state.supabase) {
+    state.supabase.removeChannel(state.channel);
     state.channel = null;
   }
 }
@@ -247,14 +352,41 @@ function bindRealtime() {
 
   clearRealtime();
 
-  state.channel = supabase
+  state.channel = state.supabase
     .channel(`rb-admin-${state.user.id}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.profiles
+        table: table("profiles", "profiles")
+      },
+      async () => {
+        await fetchMyProfile();
+        await fetchAdminRole();
+        paintIdentity();
+        await loadAdminCounts();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: table("adminRoles", "admin_roles"),
+        filter: `user_id=eq.${state.user.id}`
+      },
+      async () => {
+        await fetchAdminRole();
+        paintIdentity();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: table("feedPosts", "feed_posts")
       },
       loadAdminCounts
     )
@@ -263,7 +395,7 @@ function bindRealtime() {
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.feedPosts
+        table: table("uploads", "uploads")
       },
       loadAdminCounts
     )
@@ -272,9 +404,18 @@ function bindRealtime() {
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.uploads
+        table: table("moderationReports", "moderation_reports")
       },
       loadAdminCounts
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: table("adminAuditLogs", "admin_audit_logs")
+      },
+      loadAuditLogs
     )
     .subscribe();
 }
@@ -284,8 +425,7 @@ function bindActions() {
   state.actionsBound = true;
 
   els.refreshBtn?.addEventListener("click", async () => {
-    await loadAdminCounts();
-    await loadAuditLogs();
+    await refreshAdmin();
     toastInfo("Admin dashboard refreshed.", "Rich Bizness");
   });
 
@@ -300,19 +440,29 @@ function bindActions() {
   window.addEventListener("beforeunload", clearRealtime);
 }
 
+async function refreshAdmin() {
+  await refreshAppIdentity();
+  syncStateFromApp();
+  await fetchMyProfile();
+  await fetchAdminRole();
+  paintIdentity();
+  await loadAdminCounts();
+  await loadAuditLogs();
+}
+
 async function bootAdminPage() {
   try {
     await initApp({
       guard: true,
       bindProfile: true,
-      toast: false
+      toast: false,
+      ensureProfile: true
     });
 
-    await ensureMyProfile();
-    await refreshProfileState();
-    await refreshAppIdentity();
+    state.supabase = getSupabase();
 
-    paintIdentity();
+    await ensureMyProfile();
+    await refreshAdmin();
 
     if (!isAdmin()) {
       toastError("Admin access required.");
@@ -321,17 +471,11 @@ async function bootAdminPage() {
     }
 
     bindActions();
-
-    onProfileState((profileState) => {
-      if (!profileState.ready) return;
-      paintIdentity();
-    });
-
-    await loadAdminCounts();
-    await loadAuditLogs();
-
     bindRealtime();
 
+    document.body.dataset.rbPage = "admin";
+    document.body.dataset.rbRoute = "admin";
+    document.body.dataset.rbProfileLock = "true";
     document.body.classList.add("rb-admin-ready");
 
     markPageReady("admin");
