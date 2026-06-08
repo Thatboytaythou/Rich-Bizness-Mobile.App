@@ -1,9 +1,16 @@
 /* =========================
    RICH BIZNESS MOBILE
-   /core/pages/creator.js
+   /core/pages/admin.js
 
-   CREATOR PAGE CONTROLLER
-   Synced with auth + profile-state
+   ADMIN PAGE CONTROLLER
+   Direct Supabase Admin Dashboard
+   Profile Lock + Admin Role Check + Realtime
+
+   Flow:
+   - Reads current profile directly
+   - Confirms admin through profiles.role OR admin_roles
+   - Loads counts + audit logs
+   - No profile-state dependency
 ========================= */
 
 import {
@@ -24,103 +31,82 @@ import {
 } from "/core/shared/rb-supabase.js";
 
 import {
+  getUser,
   ensureMyProfile
 } from "/core/shared/rb-auth.js";
 
 import {
-  refreshProfileState,
-  onProfileState
-} from "/core/features/profile/profile-state.js";
-
-import {
-  updateMyProfile,
   profileName,
   profileAvatar,
   profileHandle,
-  profileBadge
+  profileBadge,
+  bindProfileShell
 } from "/core/shared/rb-profile.js";
 
 import {
   toastInfo,
-  toastSuccess,
   toastError
 } from "/core/shared/rb-toast.js";
 
-const supabase = getSupabase();
-
 const $ = (id) => document.getElementById(id);
 
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+
 const els = {
-  name: $("creator-user-name"),
-  handle: $("creator-user-handle"),
-  avatar: $("creator-user-avatar"),
-  badge: $("creator-user-badge"),
-  status: $("creator-status"),
-  syncStatus: $("creator-sync-status"),
+  name: $("admin-user-name"),
+  handle: $("admin-user-handle"),
+  avatar: $("admin-user-avatar"),
+  badge: $("admin-user-badge"),
+  status: $("admin-status"),
+  syncStatus: $("admin-sync-status"),
 
-  postsCount: $("creator-posts-count"),
-  liveCount: $("creator-live-count"),
-  uploadsCount: $("creator-uploads-count"),
-  productsCount: $("creator-products-count"),
-  balance: $("creator-balance"),
-  revenue: $("creator-revenue"),
+  usersCount: $("admin-users-count"),
+  postsCount: $("admin-posts-count"),
+  uploadsCount: $("admin-uploads-count"),
+  reportsCount: $("admin-reports-count"),
+  payoutsCount: $("admin-payouts-count"),
+  liveCount: $("admin-live-count"),
 
-  enableBtn: $("creator-enable-btn"),
-  refreshBtn: $("creator-refresh-btn"),
-  profileBtn: $("creator-profile-btn"),
-  uploadBtn: $("creator-upload-btn"),
-  liveBtn: $("creator-live-btn"),
-  storeBtn: $("creator-store-btn"),
+  refreshBtn: $("admin-refresh-btn"),
+  homeBtn: $("admin-home-btn"),
+  profileBtn: $("admin-profile-btn"),
 
-  activityList: $("creator-activity-list"),
-  empty: $("creator-empty")
+  auditList: $("admin-audit-list"),
+  empty: $("admin-empty")
 };
 
 const state = {
+  supabase: null,
   user: null,
   profile: null,
-  pageSettings: null,
-  balance: null,
+  adminRole: null,
   channel: null,
   actionsBound: false
 };
 
-function getState() {
-  return getCurrentUserState() || {};
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
 }
 
-function currentRole() {
-  return state.profile?.role || "user";
-}
+function safeImage(value = "", fallback = DEFAULT_AVATAR) {
+  const src = String(value || "").trim();
 
-function isCreatorEnabled() {
-  return !!(
-    state.profile?.is_creator ||
-    state.profile?.is_artist ||
-    state.profile?.is_seller ||
-    [
-      "creator",
-      "artist",
-      "seller",
-      "admin",
-      "owner",
-      "super_admin",
-      "founder",
-      "rich_admin"
-    ].includes(currentRole())
-  );
-}
+  if (!src || src.includes("project-avatar")) return fallback;
 
-function setText(el, value) {
-  if (el) el.textContent = value;
-}
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
 
-function money(cents = 0) {
-  return `$${(Number(cents || 0) / 100).toFixed(2)}`;
+  return fallback;
 }
 
 function escapeHtml(value = "") {
-  return String(value)
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -128,22 +114,94 @@ function escapeHtml(value = "") {
     .replace(/'/g, "&#039;");
 }
 
+function setText(el, value) {
+  if (el) el.textContent = value ?? "";
+}
+
+function syncStateFromApp() {
+  const appState = getCurrentUserState?.() || {};
+
+  state.user = appState.user || getUser?.() || state.user || null;
+  state.profile = appState.profile || state.profile || null;
+}
+
+async function fetchMyProfile() {
+  const user = getUser?.() || state.user;
+
+  if (!user?.id) {
+    state.user = null;
+    state.profile = null;
+    return null;
+  }
+
+  const { data, error } = await state.supabase
+    .from(table("profiles", "profiles"))
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  state.user = user;
+  state.profile = data || null;
+
+  return state.profile;
+}
+
+async function fetchAdminRole() {
+  if (!state.user?.id) {
+    state.adminRole = null;
+    return null;
+  }
+
+  const { data, error } = await state.supabase
+    .from(table("adminRoles", "admin_roles"))
+    .select("*")
+    .eq("user_id", state.user.id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB ADMIN ROLE WARNING]", error.message);
+    state.adminRole = null;
+    return null;
+  }
+
+  state.adminRole = data || null;
+  return state.adminRole;
+}
+
+function isAdmin(profile = state.profile, adminRole = state.adminRole) {
+  const role = profile?.role || "user";
+  const roleKey = adminRole?.role_key || "";
+
+  return [
+    "admin",
+    "owner",
+    "super_admin",
+    "founder",
+    "rich_admin"
+  ].includes(role) || [
+    "founder",
+    "rich_admin",
+    "elite_mod",
+    "support"
+  ].includes(roleKey);
+}
+
 function paintIdentity() {
-  const current = getState();
+  const profile = state.profile || {};
+  const name = profileName(profile);
+  const avatar = safeImage(profileAvatar(profile), DEFAULT_AVATAR);
 
-  state.user = current.user || null;
-  state.profile = current.profile || null;
-
-  setText(els.name, profileName(state.profile));
-  setText(els.handle, profileHandle(state.profile));
-  setText(els.badge, profileBadge(state.profile));
+  setText(els.name, name);
+  setText(els.handle, profileHandle(profile));
+  setText(els.badge, state.adminRole?.role_label || profileBadge(profile));
 
   if (els.avatar) {
-    const avatar = profileAvatar(state.profile);
-
     if (els.avatar.tagName === "IMG") {
       els.avatar.src = avatar;
-      els.avatar.alt = profileName(state.profile);
+      els.avatar.alt = name;
     } else {
       els.avatar.style.backgroundImage = `url("${avatar}")`;
     }
@@ -151,18 +209,20 @@ function paintIdentity() {
 
   setText(
     els.status,
-    isCreatorEnabled()
-      ? "Creator system connected."
-      : "Creator mode available."
+    isAdmin()
+      ? "Admin system connected."
+      : "Admin access required."
   );
+
+  bindProfileShell?.();
 }
 
-async function countTable(table, match = {}) {
-  if (!table) return 0;
+async function countTable(tableName, match = {}) {
+  if (!tableName) return 0;
 
   try {
-    let query = supabase
-      .from(table)
+    let query = state.supabase
+      .from(tableName)
       .select("id", {
         count: "exact",
         head: true
@@ -178,235 +238,144 @@ async function countTable(table, match = {}) {
 
     return count || 0;
   } catch (error) {
-    console.warn(`[RB CREATOR COUNT WARNING] ${table}:`, error.message);
+    console.warn(`[RB ADMIN COUNT WARNING] ${tableName}:`, error.message);
     return 0;
   }
 }
 
-async function loadCreatorSettings() {
-  if (!state.user?.id) return null;
-
-  try {
-    const { data, error } = await supabase
-      .from(RB_TABLES.creatorPageSettings)
-      .select("*")
-      .eq("user_id", state.user.id)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    state.pageSettings = data || null;
-    return state.pageSettings;
-  } catch (error) {
-    console.warn("[RB CREATOR SETTINGS WARNING]", error.message);
-    state.pageSettings = null;
-    return null;
+async function loadAdminCounts() {
+  if (!isAdmin()) {
+    setText(els.syncStatus, "Access blocked");
+    return;
   }
-}
 
-async function ensureCreatorSettings() {
-  if (!state.user?.id) return null;
-
-  const existing = await loadCreatorSettings();
-  if (existing?.id) return existing;
-
-  try {
-    const { data, error } = await supabase
-      .from(RB_TABLES.creatorPageSettings)
-      .upsert(
-        {
-          user_id: state.user.id,
-          display_name: profileName(state.profile),
-          handle: profileHandle(state.profile),
-          avatar_url: profileAvatar(state.profile),
-          is_active: true,
-          metadata: {
-            source: "creator.js",
-            app: "Rich Bizness Mobile"
-          },
-          updated_at: new Date().toISOString()
-        },
-        {
-          onConflict: "user_id"
-        }
-      )
-      .select()
-      .maybeSingle();
-
-    if (error) throw error;
-
-    state.pageSettings = data || null;
-    return state.pageSettings;
-  } catch (error) {
-    console.warn("[RB CREATOR SETTINGS UPSERT WARNING]", error.message);
-    return null;
-  }
-}
-
-async function loadBalance() {
-  if (!state.user?.id) return null;
-
-  try {
-    const { data, error } = await supabase
-      .from(RB_TABLES.creatorAvailableBalances)
-      .select("*")
-      .eq("artist_user_id", state.user.id)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    state.balance = data || null;
-
-    setText(els.balance, money(data?.available_cents || 0));
-    setText(els.revenue, money(data?.earned_cents || 0));
-
-    return state.balance;
-  } catch (error) {
-    console.warn("[RB CREATOR BALANCE WARNING]", error.message);
-
-    setText(els.balance, "$0.00");
-    setText(els.revenue, "$0.00");
-
-    return null;
-  }
-}
-
-async function loadCreatorCounts() {
-  if (!state.user?.id) return;
-
-  setText(els.syncStatus, "Syncing creator dashboard...");
+  setText(els.syncStatus, "Syncing admin dashboard...");
 
   const [
+    users,
     posts,
-    live,
     uploads,
-    products
+    reports,
+    payouts,
+    live
   ] = await Promise.all([
-    countTable(RB_TABLES.feedPosts, { user_id: state.user.id }),
-    countTable(RB_TABLES.liveStreams, { host_user_id: state.user.id }),
-    countTable(RB_TABLES.uploads, { user_id: state.user.id }),
-    countTable(RB_TABLES.products, { creator_id: state.user.id })
+    countTable(table("profiles", "profiles")),
+    countTable(table("feedPosts", "feed_posts")),
+    countTable(table("uploads", "uploads")),
+    countTable(table("moderationReports", "moderation_reports")),
+    countTable(table("payoutRequests", "payout_requests")),
+    countTable(table("liveStreams", "live_streams"), { status: "live" })
   ]);
 
+  setText(els.usersCount, users);
   setText(els.postsCount, posts);
-  setText(els.liveCount, live);
   setText(els.uploadsCount, uploads);
-  setText(els.productsCount, products);
+  setText(els.reportsCount, reports);
+  setText(els.payoutsCount, payouts);
+  setText(els.liveCount, live);
 
-  setText(els.syncStatus, "Creator dashboard synced");
+  setText(els.syncStatus, "Admin dashboard synced");
 }
 
-async function loadCreatorActivity() {
-  if (!els.activityList || !state.user?.id) return;
+async function loadAuditLogs() {
+  if (!els.auditList || !isAdmin()) return;
 
   try {
-    const { data, error } = await supabase
-      .from(RB_TABLES.feedPosts)
-      .select("id, title, body, section, created_at")
-      .eq("user_id", state.user.id)
+    const { data, error } = await state.supabase
+      .from(table("adminAuditLogs", "admin_audit_logs"))
+      .select("*")
       .order("created_at", { ascending: false })
-      .limit(12);
+      .limit(20);
 
     if (error) throw error;
 
     if (!data?.length) {
-      els.activityList.innerHTML = "";
+      els.auditList.innerHTML = "";
+
       if (els.empty) {
         els.empty.style.display = "block";
-        els.empty.textContent = "No creator activity yet.";
+        els.empty.textContent = "Audit logs waiting.";
       }
+
       return;
     }
 
     if (els.empty) els.empty.style.display = "none";
 
-    els.activityList.innerHTML = data
+    els.auditList.innerHTML = data
       .map((item) => {
+        const title = item.action || item.event_type || "Admin Event";
+        const body =
+          item.description ||
+          item.message ||
+          item.target_table ||
+          "System action logged.";
+
+        const severity = item.severity || "normal";
+
         return `
-          <article class="rb-card rb-creator-card">
+          <article class="rb-card rb-admin-card" data-severity="${escapeHtml(severity)}">
             <div class="rb-card-body">
-              <span class="rb-card-kicker">${escapeHtml(item.section || "feed")}</span>
-              <h3 class="rb-card-title">${escapeHtml(item.title || "Creator Post")}</h3>
-              <p class="rb-card-copy">${escapeHtml(item.body || "Rich Bizness activity.")}</p>
+              <p class="rb-kicker">${escapeHtml(severity)}</p>
+              <strong>${escapeHtml(title)}</strong>
+              <p>${escapeHtml(body)}</p>
             </div>
           </article>
         `;
       })
       .join("");
   } catch (error) {
-    console.warn("[RB CREATOR ACTIVITY WARNING]", error.message);
+    console.warn("[RB ADMIN AUDIT WARNING]", error.message);
 
-    if (els.activityList) els.activityList.innerHTML = "";
+    if (els.auditList) {
+      els.auditList.innerHTML = "";
+    }
 
     if (els.empty) {
       els.empty.style.display = "block";
-      els.empty.textContent = "Creator activity waiting.";
-    }
-  }
-}
-
-async function enableCreatorMode() {
-  if (!state.user?.id) {
-    window.location.href = RB_ROUTES.auth || "/auth";
-    return;
-  }
-
-  try {
-    els.enableBtn.disabled = true;
-    els.enableBtn.textContent = "Enabling...";
-
-    await updateMyProfile({
-      is_creator: true,
-      role: currentRole() === "user" ? "creator" : currentRole()
-    });
-
-    await ensureCreatorSettings();
-    await refreshProfileState();
-    await refreshAppIdentity();
-
-    paintIdentity();
-
-    toastSuccess("Creator mode enabled.", "Rich Bizness");
-
-    if (els.enableBtn) {
-      els.enableBtn.textContent = "Creator Enabled";
-    }
-  } catch (error) {
-    console.error("[RB CREATOR ENABLE FAILED]", error);
-    toastError(error?.message || "Creator mode failed.");
-
-    if (els.enableBtn) {
-      els.enableBtn.disabled = false;
-      els.enableBtn.textContent = "Enable Creator";
+      els.empty.textContent = "Audit logs waiting.";
     }
   }
 }
 
 function clearRealtime() {
-  if (state.channel) {
-    supabase.removeChannel(state.channel);
+  if (state.channel && state.supabase) {
+    state.supabase.removeChannel(state.channel);
     state.channel = null;
   }
 }
 
 function bindRealtime() {
-  if (!state.user?.id) return;
+  if (!state.user?.id || !isAdmin()) return;
 
   clearRealtime();
 
-  state.channel = supabase
-    .channel(`rb-creator-${state.user.id}`)
+  state.channel = state.supabase
+    .channel(`rb-admin-${state.user.id}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.profiles,
-        filter: `id=eq.${state.user.id}`
+        table: table("profiles", "profiles")
       },
       async () => {
-        await refreshProfileState();
-        await refreshAppIdentity();
+        await fetchMyProfile();
+        await fetchAdminRole();
+        paintIdentity();
+        await loadAdminCounts();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: table("adminRoles", "admin_roles"),
+        filter: `user_id=eq.${state.user.id}`
+      },
+      async () => {
+        await fetchAdminRole();
         paintIdentity();
       }
     )
@@ -415,23 +384,36 @@ function bindRealtime() {
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.feedPosts,
-        filter: `user_id=eq.${state.user.id}`
+        table: table("feedPosts", "feed_posts")
       },
-      async () => {
-        await loadCreatorCounts();
-        await loadCreatorActivity();
-      }
+      loadAdminCounts
     )
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table: RB_TABLES.creatorAvailableBalances,
-        filter: `artist_user_id=eq.${state.user.id}`
+        table: table("uploads", "uploads")
       },
-      loadBalance
+      loadAdminCounts
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: table("moderationReports", "moderation_reports")
+      },
+      loadAdminCounts
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: table("adminAuditLogs", "admin_audit_logs")
+      },
+      loadAuditLogs
     )
     .subscribe();
 }
@@ -440,83 +422,72 @@ function bindActions() {
   if (state.actionsBound) return;
   state.actionsBound = true;
 
-  els.enableBtn?.addEventListener("click", enableCreatorMode);
-
   els.refreshBtn?.addEventListener("click", async () => {
-    await loadCreatorCounts();
-    await loadBalance();
-    await loadCreatorActivity();
-    toastInfo("Creator dashboard refreshed.", "Rich Bizness");
+    await refreshAdmin();
+    toastInfo("Admin dashboard refreshed.", "Rich Bizness");
+  });
+
+  els.homeBtn?.addEventListener("click", () => {
+    window.location.href = RB_ROUTES.home || "/";
   });
 
   els.profileBtn?.addEventListener("click", () => {
     window.location.href = RB_ROUTES.profile || "/profile";
   });
 
-  els.uploadBtn?.addEventListener("click", () => {
-    window.location.href = RB_ROUTES.upload || "/upload";
-  });
-
-  els.liveBtn?.addEventListener("click", () => {
-    window.location.href = RB_ROUTES.live || "/live";
-  });
-
-  els.storeBtn?.addEventListener("click", () => {
-    window.location.href = RB_ROUTES.store || "/store";
-  });
-
   window.addEventListener("beforeunload", clearRealtime);
 }
 
-async function bootCreatorPage() {
+async function refreshAdmin() {
+  await refreshAppIdentity();
+  syncStateFromApp();
+  await fetchMyProfile();
+  await fetchAdminRole();
+  paintIdentity();
+  await loadAdminCounts();
+  await loadAuditLogs();
+}
+
+async function bootAdminPage() {
   try {
     await initApp({
       guard: true,
       bindProfile: true,
-      toast: false
+      toast: false,
+      ensureProfile: true
     });
+
+    state.supabase = getSupabase();
 
     await ensureMyProfile();
-    await refreshProfileState();
-    await refreshAppIdentity();
+    await refreshAdmin();
 
-    paintIdentity();
-    bindActions();
-
-    onProfileState((profileState) => {
-      if (!profileState.ready) return;
-      paintIdentity();
-    });
-
-    if (isCreatorEnabled()) {
-      await ensureCreatorSettings();
-
-      if (els.enableBtn) {
-        els.enableBtn.textContent = "Creator Enabled";
-        els.enableBtn.disabled = true;
-      }
+    if (!isAdmin()) {
+      toastError("Admin access required.");
+      window.location.href = RB_ROUTES.profile || "/profile";
+      return;
     }
 
-    await loadCreatorCounts();
-    await loadBalance();
-    await loadCreatorActivity();
-
+    bindActions();
     bindRealtime();
 
-    document.body.classList.add("rb-creator-ready");
+    document.body.dataset.rbPage = "admin";
+    document.body.dataset.rbRoute = "admin";
+    document.body.dataset.rbProfileLock = "true";
+    document.body.classList.add("rb-admin-ready");
 
-    markPageReady("creator");
+    markPageReady("admin");
 
-    console.log("RB CREATOR PAGE READY");
+    console.log("RB ADMIN PAGE READY");
   } catch (error) {
-    console.error("[RB CREATOR BOOT FAILED]", error);
+    console.error("[RB ADMIN BOOT FAILED]", error);
     markPageError(error);
-    toastError(error?.message || "Creator dashboard failed.");
+    toastError(error?.message || "Admin failed to load.");
   }
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootCreatorPage);
+  document.addEventListener("DOMContentLoaded", bootAdminPage);
 } else {
-  bootCreatorPage();
+  bootAdminPage();
 }
