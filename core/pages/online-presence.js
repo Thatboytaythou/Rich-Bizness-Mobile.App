@@ -4,6 +4,13 @@
 
    ONLINE PRESENCE ENGINE
    Shared Supabase Client + Profile Identity
+
+   Updates:
+   - No duplicate Supabase client
+   - Stable guest presence ID
+   - Safe profile identity keys
+   - Meta/world activity compatible event detail
+   - Clean channel teardown
 ========================= */
 
 import {
@@ -20,6 +27,9 @@ import {
 
 const supabase = getSupabase();
 
+const PRESENCE_CHANNEL = "rb-online-presence";
+const GUEST_KEY = "rb_guest_presence_id";
+
 const state = {
   channel: null,
   onlineCount: 0,
@@ -31,9 +41,39 @@ function currentSection() {
     document.body?.dataset?.rbRoute ||
     document.body?.dataset?.page ||
     document.body?.dataset?.section ||
-    window.location.pathname.replace("/", "") ||
+    window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "") ||
     "portal"
   );
+}
+
+function safeIdentity(profile = null) {
+  const identity = getProfileIdentity(profile) || {};
+
+  return {
+    id: identity.id || profile?.id || null,
+    username: identity.username || profile?.username || null,
+    displayName:
+      identity.displayName ||
+      identity.display_name ||
+      profile?.display_name ||
+      profile?.full_name ||
+      "Guest",
+    avatarUrl:
+      identity.avatarUrl ||
+      identity.avatar_url ||
+      profile?.avatar_url ||
+      null,
+    rankTitle:
+      identity.rankTitle ||
+      identity.rank_title ||
+      profile?.rank_title ||
+      "Member",
+    richLevel:
+      identity.richLevel ||
+      identity.rich_level ||
+      profile?.rich_level ||
+      1
+  };
 }
 
 function updatePresenceUI() {
@@ -53,7 +93,14 @@ function updatePresenceUI() {
   window.dispatchEvent(
     new CustomEvent("rb:presence-update", {
       detail: {
+        onlineActive: state.onlineCount > 0,
         onlineCount: state.onlineCount,
+        presenceUsers: state.users,
+        presence: {
+          active: state.onlineCount > 0,
+          count: state.onlineCount,
+          users: state.users
+        },
         users: state.users
       }
     })
@@ -66,22 +113,50 @@ function flattenPresence(presenceState = {}) {
     .filter(Boolean);
 }
 
-async function trackPresence(channel) {
-  const session = getSession();
-  const user = getUser() || session?.user || null;
-  const profile = getProfile();
-  const identity = getProfileIdentity(profile);
+function getPresenceKey(user = null) {
+  if (user?.id) return user.id;
+
+  let guestId = localStorage.getItem(GUEST_KEY);
+
+  if (!guestId) {
+    guestId = crypto.randomUUID();
+    localStorage.setItem(GUEST_KEY, guestId);
+  }
+
+  return guestId;
+}
+
+async function trackPresence(channel = state.channel) {
+  if (!channel) return;
+
+  const session = getSession?.();
+  const user = getUser?.() || session?.user || null;
+  const profile = getProfile?.() || null;
+  const identity = safeIdentity(profile);
 
   await channel.track({
     user_id: user?.id || null,
-    session_id: user?.id ? null : crypto.randomUUID(),
-    username: identity?.username || null,
-    display_name: identity?.display_name || "Guest",
-    avatar_url: identity?.avatar_url || null,
+    session_id: user?.id ? null : getPresenceKey(null),
+    username: identity.username,
+    display_name: identity.displayName,
+    avatar_url: identity.avatarUrl,
+    rank_title: identity.rankTitle,
+    rich_level: identity.richLevel,
     section: currentSection(),
     path: window.location.pathname,
     online_at: new Date().toISOString()
   });
+}
+
+function syncPresenceFromChannel(channel = state.channel) {
+  if (!channel) return;
+
+  const users = flattenPresence(channel.presenceState());
+
+  state.users = users;
+  state.onlineCount = users.length;
+
+  updatePresenceUI();
 }
 
 export async function bootPresence() {
@@ -93,17 +168,10 @@ export async function bootPresence() {
       state.channel = null;
     }
 
-    const user = getUser();
-    const presenceKey =
-      user?.id ||
-      localStorage.getItem("rb_guest_presence_id") ||
-      crypto.randomUUID();
+    const user = getUser?.();
+    const presenceKey = getPresenceKey(user);
 
-    if (!user?.id) {
-      localStorage.setItem("rb_guest_presence_id", presenceKey);
-    }
-
-    const channel = supabase.channel("rb-online-presence", {
+    const channel = supabase.channel(PRESENCE_CHANNEL, {
       config: {
         presence: {
           key: presenceKey
@@ -115,28 +183,13 @@ export async function bootPresence() {
 
     channel
       .on("presence", { event: "sync" }, () => {
-        const users = flattenPresence(channel.presenceState());
-
-        state.users = users;
-        state.onlineCount = users.length;
-
-        updatePresenceUI();
+        syncPresenceFromChannel(channel);
       })
       .on("presence", { event: "join" }, () => {
-        const users = flattenPresence(channel.presenceState());
-
-        state.users = users;
-        state.onlineCount = users.length;
-
-        updatePresenceUI();
+        syncPresenceFromChannel(channel);
       })
       .on("presence", { event: "leave" }, () => {
-        const users = flattenPresence(channel.presenceState());
-
-        state.users = users;
-        state.onlineCount = users.length;
-
-        updatePresenceUI();
+        syncPresenceFromChannel(channel);
       })
       .subscribe(async (status) => {
         console.log(`[RB ONLINE PRESENCE] ${status}`);
@@ -158,6 +211,7 @@ export async function clearPresence() {
   if (!state.channel) return;
 
   await supabase.removeChannel(state.channel);
+
   state.channel = null;
   state.onlineCount = 0;
   state.users = [];
@@ -179,6 +233,9 @@ window.addEventListener("visibilitychange", async () => {
     console.warn("[RB PRESENCE RETRACK SKIPPED]", error?.message || error);
   }
 });
+
+window.RBBootPresence = bootPresence;
+window.RBClearPresence = clearPresence;
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootPresence);
