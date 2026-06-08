@@ -1,1 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Messages • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile realtime messages, direct threads, smoke-cloud chat, and profile-locked DM system."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-body rb-messages-page" data-page="messages">
+
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-topbar">
+
+    <a class="rb-brand" href="/" data-route="home">
+      <span>RICH DM’S</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Messages navigation">
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/profile" data-route="profile">Profile</a>
+      <a href="/notifications" data-route="notifications">Alerts</a>
+      <a href="/settings" data-route="settings">Settings</a>
+    </nav>
+
+  </header>
+
+  <main class="rb-section-shell rb-messages-shell">
+
+    <section class="rb-section-hero">
+
+      <div class="rb-section-hero-copy">
+
+        <p class="rb-kicker">RICH BIZNESS DIRECT</p>
+
+        <h1>Messages</h1>
+
+        <p class="rb-subtitle">
+          Profile-locked realtime conversations, smoke-cloud threads,
+          direct chats, group rooms, call sessions, and Rich Bizness alerts.
+        </p>
+
+        <div class="rb-profile-actions">
+
+          <button
+            id="messages-new-btn"
+            class="rb-btn primary"
+            type="button"
+          >
+            New Message
+          </button>
+
+          <a
+            class="rb-btn ghost"
+            href="/profile"
+            data-route="profile"
+          >
+            My Profile
+          </a>
+
+          <a
+            class="rb-btn gold"
+            href="/notifications"
+            data-route="notifications"
+          >
+            Alerts
+          </a>
+
+        </div>
+
+      </div>
+
+      <article class="rb-profile-card rb-message-card">
+
+        <div class="rb-profile-avatar-wrap">
+
+          <img
+            id="messages-user-avatar"
+            class="rb-profile-avatar"
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
+            alt="Messages user avatar"
+            data-rb-avatar
+          />
+
+          <div class="rb-profile-online" aria-hidden="true"></div>
+
+        </div>
+
+        <h2 id="messages-user-name">
+          Rich Bizness User
+        </h2>
+
+        <p
+          id="messages-user-handle"
+          class="rb-profile-handle"
+        >
+          @richbizness
+        </p>
+
+        <div class="rb-profile-meta">
+
+          <div
+            id="messages-thread-count"
+            class="rb-meta-pill"
+          >
+            0 active conversations
+          </div>
+
+          <div
+            id="messages-sync-status"
+            class="rb-meta-pill"
+          >
+            Starting messages...
+          </div>
+
+        </div>
+
+      </article>
+
+    </section>
+
+    <section class="rb-panel">
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">PROFILE LOCK</p>
+          <h2 class="rb-panel-title">DM Identity</h2>
+        </div>
+
+      </div>
+
+      <div class="rb-list-stack">
+
+        <article class="rb-mini-card">
+          <strong>Status</strong>
+          <span id="messages-status">
+            Loading message system...
+          </span>
+        </article>
+
+        <article class="rb-mini-card">
+          <strong>Identity</strong>
+          <span id="messages-identity-status">
+            Waiting for profile lock
+          </span>
+        </article>
+
+        <article class="rb-mini-card">
+          <strong>Theme</strong>
+          <span>
+            Smoke Cloud • Rich-DM’s • 💨
+          </span>
+        </article>
+
+      </div>
+
+    </section>
+
+    <section class="rb-panel">
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">REALTIME THREADS</p>
+          <h2 class="rb-panel-title">Conversations</h2>
+        </div>
+
+      </div>
+
+      <div
+        id="messages-threads-list"
+        class="rb-list-stack"
+      >
+        <article class="rb-empty-card">
+          Loading Rich Bizness DMs...
+        </article>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/messages.js"></script>
+
+</body>
+</html>
