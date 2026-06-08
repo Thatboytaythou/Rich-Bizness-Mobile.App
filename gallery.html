@@ -1,1 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Gallery • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile gallery universe with realtime uploads, visual drops, featured media, profile sync, and creator visuals."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/gallery.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body class="rb-body rb-gallery-page" data-page="gallery">
+
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-topbar">
+
+    <a class="rb-brand" href="/" data-route="home">
+      <span>RICH BIZNESS GALLERY</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Gallery navigation">
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a class="is-active" href="/gallery" data-route="gallery">Gallery</a>
+      <a href="/store" data-route="store">Store</a>
+      <a href="/upload" data-route="upload">Upload</a>
+      <a href="/meta" data-route="meta">Meta</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
+    </nav>
+
+  </header>
+
+  <main class="rb-section-shell rb-gallery-shell">
+
+    <section class="rb-section-hero rb-gallery-hero">
+
+      <div class="rb-section-hero-copy">
+
+        <p class="rb-kicker">
+          RICH BIZNESS VISUALS
+        </p>
+
+        <h1>
+          Gallery Universe
+        </h1>
+
+        <p class="rb-subtitle">
+          Realtime visuals, image drops, videos, featured uploads, and gallery posts
+          connected to the Rich Bizness profile system.
+        </p>
+
+        <div class="rb-form-actions">
+
+          <button
+            id="gallery-upload-btn"
+            class="rb-main-launch"
+            type="button"
+          >
+            UPLOAD TO GALLERY
+          </button>
+
+          <button
+            id="gallery-profile-btn"
+            class="rb-btn ghost"
+            type="button"
+          >
+            MY PROFILE
+          </button>
+
+          <a
+            class="rb-btn gold"
+            href="/upload?section=gallery"
+            data-route="upload"
+          >
+            QUICK DROP
+          </a>
+
+        </div>
+
+      </div>
+
+      <div class="rb-gallery-identity-card">
+
+        <div class="rb-profile-avatar-wrap">
+
+          <img
+            class="rb-profile-avatar"
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
+            alt="Current profile avatar"
+            data-rb-current-avatar
+            data-rb-avatar
+          />
+
+        </div>
+
+        <p class="rb-kicker">
+          PROFILE LOCKED
+        </p>
+
+        <h2>
+          Visual Identity
+        </h2>
+
+        <p>
+          Gallery drops stay attached to your Rich Bizness profile key.
+        </p>
+
+      </div>
+
+    </section>
+
+    <section class="rb-panel rb-gallery-stats">
+
+      <div class="rb-stat-grid">
+
+        <article>
+          <strong id="gallery-upload-count">0</strong>
+          <span>Uploads</span>
+        </article>
+
+        <article>
+          <strong id="gallery-post-count">0</strong>
+          <span>Posts</span>
+        </article>
+
+        <article>
+          <strong id="gallery-image-count">0</strong>
+          <span>Images</span>
+        </article>
+
+        <article>
+          <strong id="gallery-video-count">0</strong>
+          <span>Videos</span>
+        </article>
+
+      </div>
+
+    </section>
+
+    <section class="rb-panel">
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">
+            GALLERY NAVIGATION
+          </p>
+
+          <h2>
+            Explore Visual Drops
+          </h2>
+        </div>
+
+      </div>
+
+      <div class="rb-tabs rb-gallery-tabs">
+
+        <button
+          class="is-active"
+          type="button"
+          data-gallery-tab="featured"
+        >
+          Featured
+        </button>
+
+        <button
+          type="button"
+          data-gallery-tab="uploads"
+        >
+          Uploads
+        </button>
+
+        <button
+          type="button"
+          data-gallery-tab="posts"
+        >
+          Posts
+        </button>
+
+      </div>
+
+    </section>
+
+    <section
+      class="rb-panel is-active"
+      data-gallery-panel="featured"
+    >
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">
+            FEATURED VISUALS
+          </p>
+
+          <h2>
+            Featured Gallery
+          </h2>
+        </div>
+
+      </div>
+
+      <div
+        id="gallery-featured-list"
+        class="rb-gallery-grid"
+      >
+        <div class="rb-empty">
+          Loading featured gallery...
+        </div>
+      </div>
+
+    </section>
+
+    <section
+      class="rb-panel"
+      data-gallery-panel="uploads"
+      style="display:none;"
+    >
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">
+            MEDIA UPLOADS
+          </p>
+
+          <h2>
+            Gallery Uploads
+          </h2>
+        </div>
+
+      </div>
+
+      <div
+        id="gallery-uploads-list"
+        class="rb-gallery-grid"
+      >
+        <div class="rb-empty">
+          Loading gallery uploads...
+        </div>
+      </div>
+
+    </section>
+
+    <section
+      class="rb-panel"
+      data-gallery-panel="posts"
+      style="display:none;"
+    >
+
+      <div class="rb-panel-head">
+
+        <div>
+          <p class="rb-kicker">
+            VISUAL POSTS
+          </p>
+
+          <h2>
+            Gallery Posts
+          </h2>
+        </div>
+
+      </div>
+
+      <div
+        id="gallery-posts-list"
+        class="rb-card-grid"
+      >
+        <div class="rb-empty">
+          Loading gallery posts...
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="rb-footer">
+    <span>© 2026 Rich Bizness LLC</span>
+  </footer>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/gallery.js"></script>
+
+</body>
+</html>
