@@ -3,7 +3,16 @@
    /core/pages/edit.js
 
    EDIT PROFILE PAGE CONTROLLER
-   Locked to shared auth/profile/upload identity chain
+   Direct Supabase profile update
+   Avatar + Banner Upload Locked
+   Meta Avatar Sync Locked
+
+   Flow:
+   - Edit updates profiles
+   - Avatar upload goes to avatars bucket
+   - Banner upload goes to profile-banners bucket
+   - Meta avatar syncs only avatar_url + identity metadata
+   - No project-avatar fallback
 ========================================= */
 
 import {
@@ -16,8 +25,14 @@ import {
 
 import {
   RB_ROUTES,
+  RB_TABLES,
+  RB_BUCKETS,
   RB_PROFILE_KEYS
 } from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   getUser,
@@ -25,22 +40,9 @@ import {
 } from "/core/shared/rb-auth.js";
 
 import {
-  updateMyProfile,
-  refreshMyProfile,
+  getProfileIdentity,
   bindProfileShell
 } from "/core/shared/rb-profile.js";
-
-import {
-  refreshProfileState
-} from "/core/features/profile/profile-state.js";
-
-import {
-  syncAvatarToUniverse
-} from "/core/features/profile/avatar-sync.js";
-
-import {
-  createContentWithUpload
-} from "/core/shared/rb-upload-router.js";
 
 import {
   toastSuccess,
@@ -48,6 +50,9 @@ import {
 } from "/core/shared/rb-toast.js";
 
 const $ = (id) => document.getElementById(id);
+
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_BANNER = "/images/brand/hero-banner.png";
 
 const els = {
   form: $("edit-profile-form"),
@@ -61,7 +66,36 @@ const els = {
   status: $("edit-status")
 };
 
+let supabase = null;
+let currentUser = null;
+let currentProfile = null;
+let currentIdentity = null;
 let isSubmitting = false;
+
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
+}
+
+function bucket(key, fallback) {
+  return RB_BUCKETS?.[key] || fallback || key;
+}
+
+function safeImage(value = "", fallback = "") {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
 
 function cleanUsername(username = "") {
   return String(username || "")
@@ -72,8 +106,19 @@ function cleanUsername(username = "") {
     .slice(0, 24);
 }
 
-function currentProfile() {
-  return getCurrentUserState()?.profile || {};
+function fileExt(file) {
+  const fromName = String(file?.name || "").split(".").pop()?.toLowerCase();
+
+  if (fromName && fromName.length <= 6) return fromName;
+
+  const mime = String(file?.type || "");
+
+  if (mime.includes("png")) return "png";
+  if (mime.includes("webp")) return "webp";
+  if (mime.includes("gif")) return "gif";
+  if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
+
+  return "jpg";
 }
 
 function setStatus(message = "", type = "info") {
@@ -83,8 +128,36 @@ function setStatus(message = "", type = "info") {
   els.status.dataset.type = type;
 }
 
+function syncState() {
+  const appState = getCurrentUserState?.() || {};
+
+  currentUser = appState.user || getUser?.() || null;
+  currentProfile = appState.profile || null;
+  currentIdentity = getProfileIdentity(currentProfile);
+}
+
+async function fetchMyProfile() {
+  const user = getUser();
+
+  if (!user?.id) return null;
+
+  const { data, error } = await supabase
+    .from(table("profiles", "profiles"))
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  currentUser = user;
+  currentProfile = data || null;
+  currentIdentity = getProfileIdentity(currentProfile);
+
+  return currentProfile;
+}
+
 function fillForm() {
-  const profile = currentProfile();
+  const profile = currentProfile || getCurrentUserState?.()?.profile || {};
 
   if (els.displayName) {
     els.displayName.value = profile.display_name || profile.full_name || "";
@@ -125,54 +198,69 @@ function setLoading(isLoading) {
   }
 }
 
-async function uploadOneProfileFile({ file, type, purpose }) {
-  if (!file) return null;
+function validateImageFile(file) {
+  if (!file) return;
 
-  const result = await createContentWithUpload({
-    type,
-    file,
-    metadata: {
-      purpose,
-      source: "edit.js",
-      section: "profile",
-      profile_lock: true,
-      profile_key_source: RB_PROFILE_KEYS?.identitySource || "profiles"
-    },
-    upsert: true
-  });
+  if (!String(file.type || "").startsWith("image/")) {
+    throw new Error("Only image files can be used for profile media.");
+  }
 
-  return (
-    result?.uploaded?.publicUrl ||
-    result?.uploaded?.public_url ||
-    result?.uploaded?.url ||
-    result?.publicUrl ||
-    result?.public_url ||
-    result?.url ||
-    null
-  );
+  const maxBytes = 8 * 1024 * 1024;
+
+  if (file.size > maxBytes) {
+    throw new Error("Profile images must be under 8MB.");
+  }
+}
+
+async function uploadProfileFile({ file, bucketName, folder }) {
+  if (!file || !currentUser?.id) return null;
+
+  validateImageFile(file);
+
+  const ext = fileExt(file);
+  const path = `${currentUser.id}/${folder}-${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(bucketName)
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: true,
+      contentType: file.type || "image/jpeg"
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(path);
+
+  return data?.publicUrl || null;
 }
 
 async function uploadProfileMedia() {
   const updates = {};
 
-  const avatarUrl = await uploadOneProfileFile({
+  const avatarBucket = bucket("avatars", "avatars");
+  const bannerBucket = bucket("profileBanners", "profile-banners");
+
+  const avatarUrl = await uploadProfileFile({
     file: els.avatarFile?.files?.[0],
-    type: "profileAvatar",
-    purpose: "profile_avatar"
+    bucketName: avatarBucket,
+    folder: "avatar"
   });
 
   if (avatarUrl) {
-    updates.avatar_url = avatarUrl;
+    updates.avatar_url = safeImage(avatarUrl, DEFAULT_AVATAR);
   }
 
-  const bannerUrl = await uploadOneProfileFile({
+  const bannerUrl = await uploadProfileFile({
     file: els.bannerFile?.files?.[0],
-    type: "profileBanner",
-    purpose: "profile_banner"
+    bucketName: bannerBucket,
+    folder: "banner"
   });
 
   if (bannerUrl) {
-    updates.banner_url = bannerUrl;
+    updates.banner_url = safeImage(bannerUrl, DEFAULT_BANNER);
   }
 
   return updates;
@@ -192,6 +280,71 @@ function validateProfilePayload({ displayName, username }) {
   }
 }
 
+async function updateProfileDirect(payload) {
+  if (!currentUser?.id) throw new Error("Missing signed-in user.");
+
+  const { data, error } = await supabase
+    .from(table("profiles", "profiles"))
+    .update({
+      ...payload,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", currentUser.id)
+    .select()
+    .maybeSingle();
+
+  if (error) throw error;
+
+  currentProfile = data || currentProfile;
+  currentIdentity = getProfileIdentity(currentProfile);
+
+  return currentProfile;
+}
+
+async function syncMetaAvatarFromProfile({ avatarChanged = false } = {}) {
+  if (!currentUser?.id || !currentProfile) return;
+
+  const { data: oldMeta } = await supabase
+    .from(table("metaAvatars", "meta_avatars"))
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  const avatarUrl = safeImage(currentProfile.avatar_url, DEFAULT_AVATAR);
+  const bannerUrl = safeImage(currentProfile.banner_url, DEFAULT_BANNER);
+
+  const payload = {
+    user_id: currentUser.id,
+    display_name: currentProfile.display_name || currentProfile.full_name || "Rich User",
+    avatar_url: avatarChanged ? avatarUrl : safeImage(oldMeta?.avatar_url, avatarUrl),
+    model_url: oldMeta?.model_url || null,
+    aura: oldMeta?.aura || "green-gold",
+    rank: currentProfile.rank_title || oldMeta?.rank || "Traveler",
+    level: Number(currentProfile.rich_level || oldMeta?.level || 1),
+    xp: Number(oldMeta?.xp || currentProfile.rich_points || 0),
+    is_active: true,
+    metadata: {
+      ...(oldMeta?.metadata || {}),
+      source: "edit.js",
+      app: "Rich Bizness Mobile",
+      profile_lock: true,
+      profile_key_source: RB_PROFILE_KEYS?.identitySource || "profiles",
+      synced_from: table("profiles", "profiles"),
+      profile_avatar_url: avatarUrl,
+      banner_url: bannerUrl,
+      avatar_changed: Boolean(avatarChanged),
+      last_synced_at: new Date().toISOString()
+    },
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await supabase
+    .from(table("metaAvatars", "meta_avatars"))
+    .upsert(payload, { onConflict: "user_id" });
+
+  if (error) throw error;
+}
+
 async function saveProfile(event) {
   event.preventDefault();
 
@@ -209,7 +362,10 @@ async function saveProfile(event) {
   setStatus("Saving profile...", "info");
 
   try {
+    currentUser = user;
+
     await ensureMyProfile();
+    await fetchMyProfile();
 
     const displayName = els.displayName?.value?.trim() || "";
     const username = cleanUsername(els.username?.value || "");
@@ -222,7 +378,7 @@ async function saveProfile(event) {
 
     const mediaUpdates = await uploadProfileMedia();
 
-    await updateMyProfile({
+    const nextProfile = await updateProfileDirect({
       display_name: displayName,
       full_name: displayName,
       username,
@@ -230,13 +386,12 @@ async function saveProfile(event) {
       ...mediaUpdates
     });
 
-    await refreshMyProfile();
-    await refreshProfileState();
-    await refreshAppIdentity();
+    await syncMetaAvatarFromProfile({
+      avatarChanged: Boolean(mediaUpdates.avatar_url)
+    });
 
-    if (mediaUpdates.avatar_url || mediaUpdates.banner_url) {
-      await syncAvatarToUniverse();
-    }
+    await refreshAppIdentity();
+    await fetchMyProfile();
 
     bindProfileShell?.();
 
@@ -267,12 +422,17 @@ async function bootEditPage() {
       guard: true,
       bindProfile: true,
       toast: false,
-      ensureProfile: true,
-      profileState: true
+      ensureProfile: true
     });
+
+    supabase = getSupabase();
 
     await ensureMyProfile();
     await refreshAppIdentity();
+
+    syncState();
+
+    await fetchMyProfile();
 
     fillForm();
     bindEditActions();
