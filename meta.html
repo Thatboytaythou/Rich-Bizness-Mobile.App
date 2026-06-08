@@ -14,11 +14,10 @@
 
   <meta
     name="description"
-    content="Rich Bizness Mobile meta universe with synced avatars, worlds, rooms, live portals, games, stores, and creator spaces."
+    content="Rich Bizness Mobile cinematic meta world gateway with synced avatars, XP, worlds, rooms, live portals, games, music, stores, and creator spaces."
   />
 
   <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/main.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/cards.css" />
@@ -28,7 +27,7 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-meta-page meta-body">
+<body class="rb-body rb-meta-page meta-body" data-page="meta">
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -36,19 +35,23 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/">
+    <a class="rb-brand" href="/" data-route="home">
       <span>META PORTAL</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
     <nav class="rb-topnav" aria-label="Meta navigation">
-      <a href="/feed">Feed</a>
-      <a href="/live">Live</a>
-      <a href="/music">Music</a>
-      <a href="/gaming">Gaming</a>
-      <a class="is-active" href="/meta">Meta</a>
-      <a href="/profile">Profile</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/watch" data-route="watch">Watch</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/gaming" data-route="gaming">Gaming</a>
+      <a href="/sports" data-route="sports">Sports</a>
+      <a href="/store" data-route="store">Store</a>
+      <a href="/upload" data-route="upload">Upload</a>
+      <a href="/meta" data-route="meta" class="is-active">Meta</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
     </nav>
   </header>
 
@@ -60,9 +63,18 @@
         <h1>Step Into The Rich Bizness Universe</h1>
 
         <p class="rb-subtitle">
-          Build worlds, enter lounges, sync your avatar, jump into live rooms,
-          games, music drops, sports hubs, stores, and creator portals.
+          Your profile leads the world. Sync your avatar, enter the cinematic portal,
+          and move through real app sections that build XP.
         </p>
+
+        <div class="meta-user-chip">
+          <img
+            id="metaUserAvatar"
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
+            alt="Profile avatar"
+          />
+          <span id="metaUserName">Guest</span>
+        </div>
 
         <div class="meta-actions rb-profile-actions">
           <button id="createAvatarBtn" class="rb-btn primary" type="button">
@@ -108,6 +120,21 @@
           </article>
         </div>
       </div>
+    </section>
+
+    <section class="rb-panel meta-world-engine-panel">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">CINEMATIC GATEWAY</p>
+          <h2>Meta World Portal</h2>
+        </div>
+      </div>
+
+      <div
+        id="metaWorldStage"
+        class="meta-world-stage"
+        aria-label="Rich Bizness Meta World"
+      ></div>
     </section>
 
     <section class="rb-panel meta-create-panel">
@@ -222,10 +249,15 @@
       </div>
     </section>
 
-    <a href="/" class="rb-auth-home">
+    <a href="/" class="rb-auth-home" data-route="home">
       ← Back To Portal
     </a>
   </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+    bindGlobalNavigation();
+  </script>
 
   <script type="module" src="/core/pages/meta.js"></script>
 </body>
