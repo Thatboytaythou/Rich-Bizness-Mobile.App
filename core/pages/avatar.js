@@ -4,6 +4,13 @@
 
    3D AVATAR PAGE CONTROLLER
    Profile Lock + Meta Avatar Sync
+   Avatar Builder → Meta World Gateway
+
+   Flow:
+   - Profile identity stays locked to profiles
+   - Avatar builder syncs into meta_avatars
+   - Meta page uses meta_avatars for the world avatar
+   - No project-avatar fallback
 ========================= */
 
 import {
@@ -22,11 +29,11 @@ import {
 } from "/core/shared/rb-config.js";
 
 import {
-  getSupabase,
-  getUser
+  getSupabase
 } from "/core/shared/rb-supabase.js";
 
 import {
+  getUser,
   ensureMyProfile
 } from "/core/shared/rb-auth.js";
 
@@ -40,6 +47,7 @@ const $ = (id) => document.getElementById(id);
 
 const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 const DEFAULT_BANNER = "/images/brand/hero-banner.png";
+const DEFAULT_META_AVATAR = "/images/brand/meta-avatar.png.jpeg";
 
 const els = {
   canvas: $("avatarCanvas"),
@@ -72,18 +80,53 @@ let avatarGroup = null;
 let animationFrame = null;
 let clockStart = performance.now();
 
-function safe(value, fallback = "") {
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
+}
+
+function bucket(key, fallback) {
+  return RB_BUCKETS?.[key] || fallback || key;
+}
+
+function clean(value, fallback = "") {
   return value === null || value === undefined || value === "" ? fallback : value;
+}
+
+function safeImage(value = "", fallback = DEFAULT_AVATAR) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
+
+function safeText(value = "", fallback = "") {
+  const text = String(value || "").trim();
+  return text || fallback;
 }
 
 function setText(el, value) {
   if (el) el.textContent = value;
 }
 
+function setStatus(value) {
+  setText(els.avatarStatus, value);
+  if (els.avatarStatus) els.avatarStatus.dataset.status = String(value || "");
+}
+
 function syncState() {
   const state = getCurrentUserState?.() || {};
 
-  currentUser = state.user || getUser() || null;
+  currentUser = state.user || getUser?.() || null;
   currentProfile = state.profile || null;
   currentIdentity = getProfileIdentity(currentProfile);
 }
@@ -91,18 +134,25 @@ function syncState() {
 function paintIdentity() {
   const identity = currentIdentity || getProfileIdentity();
 
+  const displayName = safeText(
+    currentMetaAvatar?.display_name,
+    identity.displayName || "Rich User"
+  );
+
+  const username = safeText(identity.username, "richuser");
+  const avatarUrl = safeImage(identity.avatarUrl, DEFAULT_AVATAR);
+  const rankTitle = safeText(currentMetaAvatar?.rank, identity.rankTitle || "Member");
+  const level = clean(currentMetaAvatar?.level, identity.richLevel || 1);
+
   if (els.avatarImg) {
-    els.avatarImg.src = identity.avatarUrl || DEFAULT_AVATAR;
-    els.avatarImg.alt = identity.displayName || "Rich Bizness Avatar";
+    els.avatarImg.src = avatarUrl;
+    els.avatarImg.alt = displayName || "Rich Bizness Avatar";
   }
 
-  setText(els.avatarName, identity.displayName || "Rich User");
-  setText(els.avatarHandle, identity.username ? `@${identity.username}` : "@richuser");
-  setText(
-    els.avatarRank,
-    `${identity.rankTitle || "Member"} • LVL ${identity.richLevel || 1}`
-  );
-  setText(els.avatarStatus, identity.onlineStatus || "online");
+  setText(els.avatarName, displayName);
+  setText(els.avatarHandle, username ? `@${username}` : "@richuser");
+  setText(els.avatarRank, `${rankTitle} • LVL ${level}`);
+  setStatus(currentMetaAvatar?.id ? "synced" : identity.onlineStatus || "online");
 
   bindProfileShell?.();
 }
@@ -111,7 +161,7 @@ async function loadMetaAvatar() {
   if (!currentUser?.id) return null;
 
   const { data, error } = await supabase
-    .from(RB_TABLES.metaAvatars)
+    .from(table("metaAvatars", "meta_avatars"))
     .select("*")
     .eq("user_id", currentUser.id)
     .maybeSingle();
@@ -125,14 +175,33 @@ async function loadMetaAvatar() {
   }
 
   if (els.outfitInput) {
-    els.outfitInput.value = currentMetaAvatar?.metadata?.outfit || "rich-default";
+    els.outfitInput.value =
+      currentMetaAvatar?.metadata?.outfit || "rich-default";
   }
 
   if (els.motionInput) {
-    els.motionInput.value = currentMetaAvatar?.metadata?.motion || "idle-float";
+    els.motionInput.value =
+      currentMetaAvatar?.metadata?.motion || "idle-float";
   }
 
+  paintIdentity();
+  applyAvatarVisualState();
+
   return currentMetaAvatar;
+}
+
+function avatarSettings() {
+  return {
+    aura: els.auraInput?.value || currentMetaAvatar?.aura || "green-gold",
+    outfit:
+      els.outfitInput?.value ||
+      currentMetaAvatar?.metadata?.outfit ||
+      "rich-default",
+    motion:
+      els.motionInput?.value ||
+      currentMetaAvatar?.metadata?.motion ||
+      "idle-float"
+  };
 }
 
 async function syncAvatarToMeta() {
@@ -142,59 +211,79 @@ async function syncAvatarToMeta() {
   }
 
   await ensureMyProfile();
-  await refreshMyProfile();
+  await refreshMyProfile?.();
   await refreshAppIdentity();
 
   syncState();
 
   const identity = currentIdentity || getProfileIdentity();
+  const settings = avatarSettings();
+
+  const avatarUrl = safeImage(identity.avatarUrl, DEFAULT_AVATAR);
+  const bannerUrl = safeImage(identity.bannerUrl, DEFAULT_BANNER);
 
   const payload = {
     user_id: currentUser.id,
-    display_name: identity.displayName,
-    avatar_url: identity.avatarUrl || DEFAULT_AVATAR,
-    aura: els.auraInput?.value || "green-gold",
-    rank: identity.rankTitle || "Traveler",
-    level: identity.richLevel || 1,
+    display_name: safeText(identity.displayName, "Rich User"),
+    avatar_url: avatarUrl,
+    model_url: currentMetaAvatar?.model_url || null,
+    aura: settings.aura,
+    rank: safeText(identity.rankTitle, "Traveler"),
+    level: Number(identity.richLevel || currentMetaAvatar?.level || 1),
+    xp: Number(currentMetaAvatar?.xp || currentProfile?.rich_points || 0),
     is_active: true,
     metadata: {
+      ...(currentMetaAvatar?.metadata || {}),
       source: "avatar.js",
       app: "Rich Bizness Mobile",
       profile_lock: true,
       profile_key_source: RB_PROFILE_KEYS?.identitySource || "profiles",
-      synced_from: RB_TABLES.profiles,
-      avatar_bucket: RB_BUCKETS.metaAvatars || "meta-avatars",
-      outfit: els.outfitInput?.value || "rich-default",
-      motion: els.motionInput?.value || "idle-float",
-      banner_url: identity.bannerUrl || DEFAULT_BANNER
+      synced_from: table("profiles", "profiles"),
+      avatar_bucket: bucket("metaAvatars", "meta-avatars"),
+      profile_avatar_url: avatarUrl,
+      banner_url: bannerUrl,
+      outfit: settings.outfit,
+      motion: settings.motion,
+      last_synced_at: new Date().toISOString()
     },
     updated_at: new Date().toISOString()
   };
 
   const { data, error } = await supabase
-    .from(RB_TABLES.metaAvatars)
+    .from(table("metaAvatars", "meta_avatars"))
     .upsert(payload, { onConflict: "user_id" })
     .select()
     .maybeSingle();
 
   if (error) throw error;
 
-  currentMetaAvatar = data || null;
+  currentMetaAvatar = data || payload;
+
   paintIdentity();
+  applyAvatarVisualState();
 
   document.body.classList.add("rb-avatar-synced");
 
   return currentMetaAvatar;
 }
 
+/* =========================
+   THREE AVATAR PREVIEW
+========================= */
+
 function createAvatarScene() {
-  if (!els.canvas || !window.THREE) return;
+  if (!els.canvas || !window.THREE) {
+    console.warn("[RB AVATAR] THREE or avatarCanvas missing.");
+    return;
+  }
+
+  const THREE = window.THREE;
 
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera(
     55,
-    els.canvas.clientWidth / els.canvas.clientHeight,
+    Math.max(1, els.canvas.clientWidth) / Math.max(1, els.canvas.clientHeight),
     0.1,
     1000
   );
@@ -208,7 +297,11 @@ function createAvatarScene() {
   });
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(els.canvas.clientWidth, els.canvas.clientHeight, false);
+  renderer.setSize(
+    Math.max(1, els.canvas.clientWidth),
+    Math.max(1, els.canvas.clientHeight),
+    false
+  );
 
   const ambient = new THREE.AmbientLight(0xffffff, 1.4);
   scene.add(ambient);
@@ -222,6 +315,7 @@ function createAvatarScene() {
   scene.add(goldLight);
 
   avatarGroup = new THREE.Group();
+  avatarGroup.name = "RB_AVATAR_BUILDER_PREVIEW";
   scene.add(avatarGroup);
 
   const bodyMaterial = new THREE.MeshStandardMaterial({
@@ -252,6 +346,7 @@ function createAvatarScene() {
     new THREE.SphereGeometry(0.72, 48, 48),
     bodyMaterial
   );
+  head.name = "head";
   head.position.y = 1.25;
   avatarGroup.add(head);
 
@@ -259,6 +354,7 @@ function createAvatarScene() {
     new THREE.CapsuleGeometry(0.55, 1.45, 16, 32),
     bodyMaterial
   );
+  body.name = "body";
   body.position.y = -0.05;
   avatarGroup.add(body);
 
@@ -266,6 +362,7 @@ function createAvatarScene() {
     new THREE.TorusGeometry(0.62, 0.045, 16, 80),
     goldMaterial
   );
+  crown.name = "crown";
   crown.position.y = 2.03;
   crown.rotation.x = Math.PI / 2;
   avatarGroup.add(crown);
@@ -274,6 +371,7 @@ function createAvatarScene() {
     new THREE.TorusGeometry(1.25, 0.025, 16, 100),
     glowMaterial
   );
+  aura.name = "aura";
   aura.position.y = 0.65;
   aura.rotation.x = Math.PI / 2;
   avatarGroup.add(aura);
@@ -282,19 +380,76 @@ function createAvatarScene() {
     new THREE.TorusGeometry(1.85, 0.035, 16, 140),
     glowMaterial
   );
+  portalRing.name = "portalRing";
   portalRing.position.z = -0.55;
   avatarGroup.add(portalRing);
 
+  applyAvatarVisualState();
   animateAvatar();
+}
+
+function auraColorHex(aura = "green-gold") {
+  const key = String(aura || "").toLowerCase();
+
+  if (key.includes("purple")) return 0xa855f7;
+  if (key.includes("blue")) return 0x38bdf8;
+  if (key.includes("red")) return 0xff3131;
+  if (key.includes("gold")) return 0xfacc15;
+
+  return 0x00ffae;
+}
+
+function applyAvatarVisualState() {
+  if (!avatarGroup || !window.THREE) return;
+
+  const settings = avatarSettings();
+  const color = auraColorHex(settings.aura);
+
+  avatarGroup.userData.motion = settings.motion;
+  avatarGroup.userData.outfit = settings.outfit;
+  avatarGroup.userData.aura = settings.aura;
+
+  avatarGroup.traverse((child) => {
+    if (!child?.material) return;
+
+    if (child.name === "aura" || child.name === "portalRing") {
+      child.material.color.setHex(color);
+      child.material.emissive?.setHex?.(color);
+    }
+
+    if (child.name === "body" || child.name === "head") {
+      if (settings.outfit === "gold-boss") {
+        child.material.color.setHex(0x141006);
+        child.material.emissive?.setHex?.(0x3d2c00);
+      } else if (settings.outfit === "midnight") {
+        child.material.color.setHex(0x020617);
+        child.material.emissive?.setHex?.(0x0f172a);
+      } else {
+        child.material.color.setHex(0x07130c);
+        child.material.emissive?.setHex?.(0x003d25);
+      }
+    }
+  });
 }
 
 function animateAvatar() {
   if (!renderer || !scene || !camera || !avatarGroup) return;
 
   const t = (performance.now() - clockStart) / 1000;
+  const motion = avatarGroup.userData.motion || "idle-float";
 
-  avatarGroup.rotation.y = Math.sin(t * 0.45) * 0.28;
-  avatarGroup.position.y = Math.sin(t * 1.3) * 0.08;
+  const speed =
+    motion === "boss-walk" ? 0.85 :
+    motion === "smoke-idle" ? 0.42 :
+    0.45;
+
+  const float =
+    motion === "boss-walk" ? Math.sin(t * 2.4) * 0.045 :
+    motion === "smoke-idle" ? Math.sin(t * 0.8) * 0.06 :
+    Math.sin(t * 1.3) * 0.08;
+
+  avatarGroup.rotation.y = Math.sin(t * speed) * 0.28;
+  avatarGroup.position.y = float;
 
   avatarGroup.children.forEach((child, index) => {
     if (child.geometry?.type === "TorusGeometry") {
@@ -309,8 +464,8 @@ function animateAvatar() {
 function resizeAvatarScene() {
   if (!renderer || !camera || !els.canvas) return;
 
-  const width = els.canvas.clientWidth || window.innerWidth;
-  const height = els.canvas.clientHeight || window.innerHeight;
+  const width = Math.max(1, els.canvas.clientWidth || window.innerWidth);
+  const height = Math.max(1, els.canvas.clientHeight || window.innerHeight);
 
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
@@ -323,17 +478,23 @@ function resetAvatarView() {
   avatarGroup.rotation.set(0, 0, 0);
   avatarGroup.position.set(0, 0, 0);
   clockStart = performance.now();
+
+  setStatus("view reset");
 }
+
+/* =========================
+   EVENTS + CLEANUP
+========================= */
 
 function bindAvatarActions() {
   els.syncBtn?.addEventListener("click", async () => {
     try {
-      setText(els.avatarStatus, "syncing...");
+      setStatus("syncing...");
       await syncAvatarToMeta();
-      setText(els.avatarStatus, "synced");
+      setStatus("synced");
     } catch (error) {
       console.error("[avatar sync failed]", error);
-      setText(els.avatarStatus, "sync failed");
+      setStatus("sync failed");
     }
   });
 
@@ -347,6 +508,15 @@ function bindAvatarActions() {
     window.location.href = RB_ROUTES.profile || "/profile";
   });
 
+  [els.auraInput, els.motionInput, els.outfitInput]
+    .filter(Boolean)
+    .forEach((input) => {
+      input.addEventListener("change", () => {
+        applyAvatarVisualState();
+        setStatus("unsaved changes");
+      });
+    });
+
   window.addEventListener("resize", resizeAvatarScene);
 }
 
@@ -356,10 +526,29 @@ function cleanupAvatarPage() {
 
   window.removeEventListener("resize", resizeAvatarScene);
 
-  if (renderer) {
-    renderer.dispose();
+  if (scene) {
+    scene.traverse((obj) => {
+      obj.geometry?.dispose?.();
+
+      if (Array.isArray(obj.material)) {
+        obj.material.forEach((mat) => mat?.dispose?.());
+      } else {
+        obj.material?.dispose?.();
+      }
+    });
   }
+
+  renderer?.dispose?.();
+
+  scene = null;
+  camera = null;
+  renderer = null;
+  avatarGroup = null;
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootAvatarPage() {
   try {
