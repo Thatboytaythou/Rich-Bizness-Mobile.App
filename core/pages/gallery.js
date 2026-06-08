@@ -5,10 +5,12 @@
    Gallery Page
    Profile Keys Locked
    Realtime Enabled
+   Direct Supabase Gallery Controller
 ========================= */
 
 import {
   initApp,
+  getCurrentUserState,
   markPageReady,
   markPageError
 } from "/core/app.js";
@@ -33,9 +35,15 @@ import {
 } from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
-const $$ = (selector) => document.querySelectorAll(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
+const FALLBACK_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+
+const TABLES = {
+  uploads: RB_TABLES?.uploads || "uploads",
+  feedPosts: RB_TABLES?.feedPosts || "feed_posts"
+};
 
 const els = {
   uploadCount: $("gallery-upload-count"),
@@ -53,10 +61,44 @@ const els = {
 
 let supabase = null;
 let channels = [];
+let currentUser = null;
+let currentProfile = null;
 let identity = null;
 
 function safe(value, fallback = "") {
-  return value || fallback;
+  return value === null || value === undefined || value === ""
+    ? fallback
+    : String(value);
+}
+
+function safePath(value = "", fallback = FALLBACK_COVER) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
+
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function setText(el, value = "") {
+  if (el) el.textContent = value;
 }
 
 function niceDate(date) {
@@ -69,94 +111,182 @@ function niceDate(date) {
   });
 }
 
-function creatorLine(item) {
-  return item?.display_name || item?.username || "Rich Bizness Gallery";
+function creatorLine(item = {}) {
+  return (
+    item.display_name ||
+    item.username ||
+    item.creator_name ||
+    "Rich Bizness Gallery"
+  );
 }
 
-function mediaKind(item) {
-  const type = String(item?.media_type || item?.mime_type || "").toLowerCase();
+function mediaKind(item = {}) {
+  const type = String(item.media_type || item.mime_type || "").toLowerCase();
+  const url = String(
+    item.public_url ||
+      item.media_url ||
+      item.file_url ||
+      item.thumbnail_url ||
+      item.cover_url ||
+      ""
+  ).toLowerCase();
 
-  if (type.includes("video")) return "video";
-  if (type.includes("audio")) return "audio";
-  if (type.includes("image")) return "image";
+  if (type.includes("video") || /\.(mp4|mov|webm|m4v)(\?|$)/.test(url)) {
+    return "video";
+  }
+
+  if (type.includes("audio") || /\.(mp3|wav|m4a|ogg)(\?|$)/.test(url)) {
+    return "audio";
+  }
 
   return "image";
 }
 
-function mediaUrl(item) {
-  return (
-    item?.public_url ||
-    item?.media_url ||
-    item?.thumbnail_url ||
-    item?.cover_url ||
+function mediaUrl(item = {}) {
+  return safePath(
+    item.public_url ||
+      item.media_url ||
+      item.file_url ||
+      item.thumbnail_url ||
+      item.cover_url ||
+      item.image_url,
     FALLBACK_COVER
   );
 }
 
 function setEmpty(target, text) {
   if (!target) return;
-  target.innerHTML = `<p class="rb-empty">${text}</p>`;
+
+  target.innerHTML = `
+    <div class="rb-empty">
+      ${escapeHtml(text)}
+    </div>
+  `;
+}
+
+function syncProfileKeys() {
+  const appState = getCurrentUserState?.() || {};
+
+  currentUser = appState.user || getUser?.() || null;
+  currentProfile = appState.profile || getProfile?.() || null;
+  identity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = identity?.id || "";
+  document.body.dataset.rbRoute = "gallery";
+  document.body.dataset.rbProfileLocked = identity?.id ? "true" : "false";
+
+  bindProfileShell?.();
+
+  $$("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+
+  $$("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safePath(profileAvatar(currentProfile), FALLBACK_AVATAR);
+    const name = profileName(currentProfile);
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt = name;
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
 }
 
 function bindTabs() {
   $$("[data-gallery-tab]").forEach((button) => {
+    if (button.dataset.rbGalleryBound === "true") return;
+    button.dataset.rbGalleryBound = "true";
+
     button.addEventListener("click", () => {
-      const tab = button.dataset.galleryTab;
+      const tab = button.dataset.galleryTab || "uploads";
 
       $$("[data-gallery-tab]").forEach((btn) => {
         btn.classList.toggle("is-active", btn === button);
       });
 
       $$("[data-gallery-panel]").forEach((panel) => {
-        panel.classList.toggle(
-          "is-active",
-          panel.dataset.galleryPanel === tab
-        );
+        const active = panel.dataset.galleryPanel === tab;
+
+        panel.classList.toggle("is-active", active);
+        panel.style.display = active ? "block" : "none";
       });
     });
   });
 }
 
 function bindGalleryActions() {
-  if (els.uploadBtn) {
-    els.uploadBtn.addEventListener("click", () => {
-      window.location.href = `${RB_ROUTES.upload}?section=gallery`;
-    });
-  }
+  els.uploadBtn?.addEventListener("click", () => {
+    window.location.href = `${RB_ROUTES?.upload || "/upload"}?section=gallery`;
+  });
 
-  if (els.profileBtn) {
-    els.profileBtn.addEventListener("click", () => {
-      window.location.href = buildProfileUrl(getProfile());
-    });
-  }
+  els.profileBtn?.addEventListener("click", () => {
+    window.location.href = buildProfileUrl(currentProfile || getProfile?.());
+  });
 }
 
-function renderGalleryTile(item) {
+function renderGalleryTile(item = {}) {
   const kind = mediaKind(item);
   const src = mediaUrl(item);
+  const title = safe(item.title, "Untitled Drop");
   const creatorName = creatorLine(item);
 
   const tile = document.createElement("article");
   tile.className = "rb-gallery-tile";
   tile.dataset.ownerId = item.user_id || "";
+  tile.dataset.profileLocked = item.user_id ? "true" : "false";
 
   tile.innerHTML = `
     <div class="rb-gallery-media">
       ${
         kind === "video"
-          ? `<video src="${src}" muted playsinline preload="metadata"></video>`
-          : `<img src="${src}" alt="${safe(item.title, "Gallery upload")}" loading="lazy" />`
+          ? `
+            <video
+              src="${escapeHtml(src)}"
+              controls
+              playsinline
+              preload="metadata"
+            ></video>
+          `
+          : kind === "audio"
+            ? `
+              <div class="rb-gallery-audio">
+                <img
+                  src="${escapeHtml(FALLBACK_COVER)}"
+                  alt=""
+                  loading="lazy"
+                />
+                <audio src="${escapeHtml(src)}" controls></audio>
+              </div>
+            `
+            : `
+              <img
+                src="${escapeHtml(src)}"
+                alt="${escapeHtml(title)}"
+                loading="lazy"
+              />
+            `
       }
     </div>
 
     <div class="rb-gallery-info">
-      <p class="rb-kicker">${safe(item.category || item.section, "GALLERY")}</p>
-      <h3>${safe(item.title, "Untitled Drop")}</h3>
-      <p>${safe(item.description || item.body, "Visual drop from Rich Bizness.")}</p>
+      <p class="rb-kicker">
+        ${escapeHtml(safe(item.category || item.section, "GALLERY"))}
+      </p>
+
+      <h3>
+        ${escapeHtml(title)}
+      </h3>
+
+      <p>
+        ${escapeHtml(safe(item.description || item.body, "Visual drop from Rich Bizness."))}
+      </p>
 
       <div class="rb-card-meta">
-        <span>${creatorName}</span>
-        <span>${niceDate(item.created_at)}</span>
+        <span>${escapeHtml(creatorName)}</span>
+        <span>${escapeHtml(niceDate(item.created_at))}</span>
       </div>
     </div>
   `;
@@ -164,34 +294,53 @@ function renderGalleryTile(item) {
   return tile;
 }
 
-function renderPostCard(item) {
-  const image =
+function renderPostCard(item = {}) {
+  const image = safePath(
     item.thumbnail_url ||
-    item.media_url ||
-    item.cover_url ||
-    FALLBACK_COVER;
+      item.media_url ||
+      item.file_url ||
+      item.cover_url ||
+      item.image_url,
+    FALLBACK_COVER
+  );
+
+  const title = safe(item.title, "Gallery Post");
 
   const card = document.createElement("article");
   card.className = "rb-content-card rb-gallery-card";
   card.dataset.ownerId = item.user_id || "";
+  card.dataset.profileLocked = item.user_id ? "true" : "false";
 
   card.innerHTML = `
-    <img class="rb-card-cover" src="${image}" alt="${safe(item.title, "Gallery post")}" loading="lazy" />
+    <img
+      class="rb-card-cover"
+      src="${escapeHtml(image)}"
+      alt="${escapeHtml(title)}"
+      loading="lazy"
+    />
 
     <div class="rb-card-body">
-      <p class="rb-kicker">${safe(item.section, "GALLERY POST")}</p>
-      <h3>${safe(item.title, "Gallery Post")}</h3>
-      <p>${safe(item.body, "No caption yet.")}</p>
+      <p class="rb-kicker">
+        ${escapeHtml(safe(item.section, "GALLERY POST"))}
+      </p>
+
+      <h3>
+        ${escapeHtml(title)}
+      </h3>
+
+      <p>
+        ${escapeHtml(safe(item.body || item.description, "No caption yet."))}
+      </p>
 
       <div class="rb-card-meta">
-        <span>${creatorLine(item)}</span>
-        <span>${niceDate(item.created_at)}</span>
+        <span>${escapeHtml(creatorLine(item))}</span>
+        <span>${escapeHtml(niceDate(item.created_at))}</span>
       </div>
 
       <div class="rb-chip-row">
-        <span class="rb-chip">${item.like_count || 0} likes</span>
-        <span class="rb-chip">${item.comment_count || 0} comments</span>
-        <span class="rb-chip">${item.view_count || 0} views</span>
+        <span class="rb-chip">${Number(item.like_count || 0)} likes</span>
+        <span class="rb-chip">${Number(item.comment_count || 0)} comments</span>
+        <span class="rb-chip">${Number(item.view_count || 0)} views</span>
       </div>
     </div>
   `;
@@ -201,7 +350,7 @@ function renderPostCard(item) {
 
 async function loadUploads() {
   const { data, error } = await supabase
-    .from(RB_TABLES.uploads)
+    .from(TABLES.uploads)
     .select("*")
     .eq("section", "gallery")
     .order("created_at", { ascending: false })
@@ -213,9 +362,9 @@ async function loadUploads() {
   const imageCount = uploads.filter((item) => mediaKind(item) === "image").length;
   const videoCount = uploads.filter((item) => mediaKind(item) === "video").length;
 
-  if (els.uploadCount) els.uploadCount.textContent = uploads.length;
-  if (els.imageCount) els.imageCount.textContent = imageCount;
-  if (els.videoCount) els.videoCount.textContent = videoCount;
+  setText(els.uploadCount, uploads.length);
+  setText(els.imageCount, imageCount);
+  setText(els.videoCount, videoCount);
 
   if (!uploads.length) {
     setEmpty(els.uploadsList, "No gallery uploads yet.");
@@ -246,7 +395,7 @@ async function loadUploads() {
 
 async function loadPosts() {
   const { data, error } = await supabase
-    .from(RB_TABLES.feedPosts)
+    .from(TABLES.feedPosts)
     .select("*")
     .eq("section", "gallery")
     .order("created_at", { ascending: false })
@@ -256,7 +405,7 @@ async function loadPosts() {
 
   const posts = data || [];
 
-  if (els.postCount) els.postCount.textContent = posts.length;
+  setText(els.postCount, posts.length);
 
   if (!posts.length) {
     setEmpty(els.postsList, "No gallery posts yet.");
@@ -292,49 +441,22 @@ function bindRealtime() {
   clearRealtime();
 
   channels = [
-    RB_TABLES.uploads,
-    RB_TABLES.feedPosts
-  ].map((table) =>
+    TABLES.uploads,
+    TABLES.feedPosts
+  ].map((tableName) =>
     supabase
-      .channel(`rb-gallery-${table}`)
+      .channel(`rb-gallery-${tableName}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table
+          table: tableName
         },
         reload
       )
       .subscribe()
   );
-}
-
-function lockProfileKeys() {
-  const user = getUser();
-  const profile = getProfile();
-
-  identity = getProfileIdentity(profile);
-
-  document.body.dataset.rbUserId = user?.id || "";
-  document.body.dataset.rbProfileId = identity.id || "";
-  document.body.dataset.rbRoute = "gallery";
-  document.body.dataset.rbProfileLocked = identity.id ? "true" : "false";
-
-  bindProfileShell();
-
-  $$("[data-rb-profile-link]").forEach((el) => {
-    el.href = buildProfileUrl(profile);
-  });
-
-  $$("[data-rb-current-avatar]").forEach((el) => {
-    if (el.tagName === "IMG") {
-      el.src = profileAvatar(profile);
-      el.alt = profileName(profile);
-    } else {
-      el.style.backgroundImage = `url("${profileAvatar(profile)}")`;
-    }
-  });
 }
 
 async function bootGalleryPage() {
@@ -347,7 +469,7 @@ async function bootGalleryPage() {
 
     supabase = getSupabase();
 
-    lockProfileKeys();
+    syncProfileKeys();
     bindTabs();
     bindGalleryActions();
 
@@ -356,6 +478,8 @@ async function bootGalleryPage() {
 
     window.addEventListener("beforeunload", clearRealtime);
 
+    document.body.dataset.rbPage = "gallery";
+    document.body.dataset.rbRoute = "gallery";
     document.body.classList.add("rb-gallery-ready");
 
     markPageReady("gallery");
