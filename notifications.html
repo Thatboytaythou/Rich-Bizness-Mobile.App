@@ -2,25 +2,16 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>Notifications • Rich Bizness Mobile</title>
 
-  <meta
-    name="theme-color"
-    content="#050805"
-  />
-
-  <meta
-    name="description"
-    content="Realtime Rich Bizness notifications, alerts, mentions, live updates, tips, followers, and creator activity."
-  />
+  <meta name="theme-color" content="#050805" />
+  <meta name="description" content="Realtime Rich Bizness notifications, alerts, mentions, live updates, tips, followers, and creator activity." />
 
   <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
@@ -28,7 +19,7 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-notifications-page">
+<body class="rb-body rb-notifications-page" data-page="notifications">
 
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
@@ -37,58 +28,46 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
-    <a class="rb-brand" href="/">
+    <a class="rb-brand" href="/" data-route="home">
       <span>WELCOME BACK</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
     <nav class="rb-topnav" aria-label="Notifications navigation">
-      <a href="/feed">Feed</a>
-      <a href="/messages">Messages</a>
-      <a class="is-active" href="/notifications">Alerts</a>
-      <a href="/profile">Profile</a>
-      <a href="/settings">Settings</a>
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/messages" data-route="messages">Messages</a>
+      <a class="is-active" href="/notifications" data-route="notifications">Alerts</a>
+      <a href="/profile" data-route="profile">Profile</a>
+      <a href="/settings" data-route="settings">Settings</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell rb-notifications-shell">
 
     <section class="rb-profile-card">
 
-      <p class="rb-kicker">
-        RICH BIZNESS ALERTS
-      </p>
+      <p class="rb-kicker">RICH BIZNESS ALERTS</p>
 
-      <h1 id="notifications-title">
-        Notifications
-      </h1>
+      <h1 id="notifications-title">Notifications</h1>
 
-      <p
-        id="notifications-status"
-        class="rb-profile-bio"
-      >
+      <p id="notifications-status" class="rb-profile-bio">
         Loading notification system...
       </p>
 
       <div class="rb-profile-actions">
 
-        <button
-          id="notifications-refresh-btn"
-          class="rb-main-launch"
-          type="button"
-        >
+        <button id="notifications-refresh-btn" class="rb-main-launch" type="button">
           REFRESH ALERTS
         </button>
 
-        <button
-          id="notifications-read-btn"
-          class="rb-btn ghost"
-          type="button"
-        >
+        <button id="notifications-read-all-btn" class="rb-btn ghost" type="button">
           MARK ALL READ
+        </button>
+
+        <button id="notifications-seen-btn" class="rb-btn gold" type="button">
+          MARK SEEN
         </button>
 
       </div>
@@ -98,51 +77,18 @@
     <section class="rb-profile-grid">
 
       <article class="rb-mini-card">
-
-        <strong>
-          Unread
-        </strong>
-
-        <span id="notifications-unread-count">
-          0 alerts
-        </span>
-
+        <strong>Unread</strong>
+        <span id="notifications-unread-count">0 unread alerts</span>
       </article>
 
       <article class="rb-mini-card">
-
-        <strong>
-          Total
-        </strong>
-
-        <span id="notifications-total-count">
-          0 notifications
-        </span>
-
+        <strong>Status</strong>
+        <span id="notifications-sync-status">Notification system starting</span>
       </article>
 
       <article class="rb-mini-card">
-
-        <strong>
-          Status
-        </strong>
-
-        <span id="notifications-sync-status">
-          Realtime ready
-        </span>
-
-      </article>
-
-      <article class="rb-mini-card">
-
-        <strong>
-          Identity
-        </strong>
-
-        <span id="notifications-identity-status">
-          Profile synced
-        </span>
-
+        <strong>Identity</strong>
+        <span id="notifications-identity-status">Waiting for profile</span>
       </article>
 
     </section>
@@ -150,56 +96,45 @@
     <section class="rb-panel">
 
       <div class="rb-panel-head">
-
         <div>
-          <p class="rb-kicker">
-            REALTIME ACTIVITY
-          </p>
-
-          <h2>
-            Universe Alerts
-          </h2>
+          <p class="rb-kicker">LATEST ALERT</p>
+          <h2>Newest Notification</h2>
         </div>
-
       </div>
 
-      <div
-        id="notifications-empty"
-        class="rb-empty"
-        style="display:none;"
-      >
-
-        <h2>
-          No Notifications Yet
-        </h2>
-
-        <p>
-          Likes, follows, live alerts, purchases, messages, creator activity,
-          and realtime universe events will appear here.
-        </p>
-
-      </div>
-
-      <section
-        id="notifications-list"
-        class="rb-profile-grid rb-notifications-grid"
-      ></section>
+      <div id="notifications-latest" class="rb-list-stack"></div>
 
     </section>
 
-    <a
-      href="/"
-      class="rb-auth-home"
-    >
+    <section class="rb-panel">
+
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">REALTIME ACTIVITY</p>
+          <h2>Universe Alerts</h2>
+        </div>
+      </div>
+
+      <div id="notifications-empty" class="rb-empty" style="display:none;">
+        No Rich Bizness alerts yet.
+      </div>
+
+      <section id="notifications-list" class="rb-profile-grid rb-notifications-grid"></section>
+
+    </section>
+
+    <a href="/" class="rb-auth-home" data-route="home">
       ← Back To Portal
     </a>
 
   </main>
 
-  <script
-    type="module"
-    src="/core/pages/notifications.js"
-  ></script>
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/notifications.js"></script>
 
 </body>
 </html>
