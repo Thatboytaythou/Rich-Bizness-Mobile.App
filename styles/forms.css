@@ -5,6 +5,11 @@
 
    AUTH + FORM SYSTEM
    Base-safe polished form layer
+
+   Updates:
+   - Supports #edit-status from edit.js
+   - Supports form status data-type states
+   - Keeps auth/edit/settings/upload form styling aligned
 ========================================= */
 
 .rb-auth-shell {
@@ -370,15 +375,52 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   margin-top: 6px;
 }
 
-.rb-form-note {
+.rb-form-note,
+#edit-status,
+#settings-sync-status,
+#upload-status {
   min-height: 22px;
   margin: 4px 0 0;
 
-  color: rgba(255, 255, 255, 0.64);
+  padding: 10px 12px;
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(0, 0, 0, 0.28);
+
+  color: rgba(255, 255, 255, 0.68);
 
   font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.4;
+}
+
+.rb-form-note[data-type="info"],
+#edit-status[data-type="info"],
+#settings-sync-status[data-type="info"],
+#upload-status[data-type="info"] {
+  color: #bae6fd;
+  border-color: rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.rb-form-note[data-type="success"],
+#edit-status[data-type="success"],
+#settings-sync-status[data-type="success"],
+#upload-status[data-type="success"] {
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.rb-form-note[data-type="error"],
+#edit-status[data-type="error"],
+#settings-sync-status[data-type="error"],
+#upload-status[data-type="error"] {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* MESSAGES */
