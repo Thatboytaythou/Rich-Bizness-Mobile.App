@@ -5,6 +5,7 @@
    PROFILE PAGE CONTROLLER
    Full page-owned profile render
    Supabase connected
+   Meta world connected
 
    Image Lock:
    - Profile avatar = profiles.avatar_url only
@@ -73,7 +74,10 @@ const state = {
     followers: 0,
     following: 0,
     posts: 0,
-    live: 0
+    live: 0,
+    worlds: 0,
+    rooms: 0,
+    uploads: 0
   },
   posts: [],
   extras: {},
@@ -346,42 +350,53 @@ async function loadProfileDirect() {
    DATA FETCH
 ========================= */
 
+async function countBy(tableName, column, value) {
+  if (!tableName || !column || !value) return 0;
+
+  const { count, error } = await supabase
+    .from(tableName)
+    .select("id", { count: "exact", head: true })
+    .eq(column, value);
+
+  if (error) {
+    console.warn(`[RB PROFILE COUNT WARNING: ${tableName}.${column}]`, error.message);
+    return 0;
+  }
+
+  return count || 0;
+}
+
 async function fetchCounts(profileId) {
   if (!profileId) return state.counts;
 
-  const [followers, following, posts, liveByCreator, liveByUser] =
-    await Promise.allSettled([
-      supabase
-        .from(table("followers", "followers"))
-        .select("id", { count: "exact", head: true })
-        .eq("following_id", profileId),
-
-      supabase
-        .from(table("followers", "followers"))
-        .select("id", { count: "exact", head: true })
-        .eq("follower_id", profileId),
-
-      supabase
-        .from(table("feedPosts", "feed_posts"))
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", profileId),
-
-      supabase
-        .from(table("liveStreams", "live_streams"))
-        .select("id", { count: "exact", head: true })
-        .eq("creator_id", profileId),
-
-      supabase
-        .from(table("liveStreams", "live_streams"))
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", profileId)
-    ]);
+  const [
+    followers,
+    following,
+    posts,
+    liveByCreator,
+    liveByUser,
+    worlds,
+    rooms,
+    uploads
+  ] = await Promise.all([
+    countBy(table("followers", "followers"), "following_id", profileId),
+    countBy(table("followers", "followers"), "follower_id", profileId),
+    countBy(table("feedPosts", "feed_posts"), "user_id", profileId),
+    countBy(table("liveStreams", "live_streams"), "creator_id", profileId),
+    countBy(table("liveStreams", "live_streams"), "user_id", profileId),
+    countBy(table("metaWorlds", "meta_worlds"), "owner_id", profileId),
+    countBy(table("metaRooms", "meta_rooms"), "owner_id", profileId),
+    countBy(table("uploads", "uploads"), "user_id", profileId)
+  ]);
 
   state.counts = {
-    followers: followers.value?.count || 0,
-    following: following.value?.count || 0,
-    posts: posts.value?.count || 0,
-    live: liveByCreator.value?.count || liveByUser.value?.count || 0
+    followers,
+    following,
+    posts,
+    live: liveByCreator || liveByUser || 0,
+    worlds,
+    rooms,
+    uploads
   };
 
   return state.counts;
@@ -683,6 +698,8 @@ function renderMetaPanel() {
   const meta = state.extras.meta;
   const name = profileName(profile);
 
+  const metaRoute = RB_ROUTES?.meta || "/meta";
+
   if (!meta) {
     els.metaPanel.innerHTML = `
       <div class="rb-profile-meta-avatar-card">
@@ -697,10 +714,17 @@ function renderMetaPanel() {
         </div>
 
         <div class="rb-profile-meta-avatar-copy">
-          <p class="rb-kicker">META AVATAR</p>
+          <p class="rb-kicker">META WORLD</p>
           <h3>No Meta Avatar Yet</h3>
-          <p>Open Meta to build your avatar universe.</p>
-          <a class="rb-btn ghost" href="/meta">Open Meta</a>
+          <p>Build your avatar, enter your cinematic world, and move through real app sections.</p>
+
+          <div class="rb-profile-meta-badges">
+            <span>${formatMetaCount("Worlds", state.counts.worlds)}</span>
+            <span>${formatMetaCount("Rooms", state.counts.rooms)}</span>
+            <span>${formatMetaCount("Uploads", state.counts.uploads)}</span>
+          </div>
+
+          <a class="rb-btn ghost" href="${metaRoute}">Enter Meta World</a>
         </div>
       </div>
     `;
@@ -752,7 +776,7 @@ function renderMetaPanel() {
       </div>
 
       <div class="rb-profile-meta-avatar-copy">
-        <p class="rb-kicker">META AVATAR</p>
+        <p class="rb-kicker">META WORLD</p>
         <h3>${escapeHtml(meta.display_name || name)}</h3>
 
         <div class="rb-profile-meta-badges">
@@ -760,12 +784,22 @@ function renderMetaPanel() {
           <span>LVL ${level}</span>
           <span>${escapeHtml(aura)}</span>
           <span>${xp.toLocaleString()} XP</span>
+          <span>${formatMetaCount("Worlds", state.counts.worlds)}</span>
+          <span>${formatMetaCount("Rooms", state.counts.rooms)}</span>
         </div>
 
-        <a class="rb-btn ghost" href="/meta">Open Meta</a>
+        <a class="rb-btn ghost" href="${metaRoute}">Enter Meta World</a>
       </div>
     </div>
   `;
+}
+
+function formatMetaCount(label, value) {
+  return `${label}: ${formatNumber(value)}`;
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
 }
 
 function renderExtras() {
@@ -991,17 +1025,26 @@ function subscribeRealtime(profileId) {
     table("gamerProfiles", "gamer_profiles"),
     table("sportsProfiles", "sports_profiles"),
     table("storeSellerProfiles", "store_seller_profiles"),
-    table("creatorPageSettings", "creator_page_settings")
+    table("creatorPageSettings", "creator_page_settings"),
+    table("metaWorlds", "meta_worlds"),
+    table("metaRooms", "meta_rooms"),
+    table("uploads", "uploads")
   ]
     .filter(Boolean)
     .forEach((tableName) => {
+      const userColumn =
+        tableName === table("metaWorlds", "meta_worlds") ||
+        tableName === table("metaRooms", "meta_rooms")
+          ? "owner_id"
+          : "user_id";
+
       channel.on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: tableName,
-          filter: `user_id=eq.${profileId}`
+          filter: `${userColumn}=eq.${profileId}`
         },
         reloadSoft
       );
