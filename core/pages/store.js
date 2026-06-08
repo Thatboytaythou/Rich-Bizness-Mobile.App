@@ -5,6 +5,14 @@
    STORE PAGE CONTROLLER
    Products + Cart + Likes + Views + Checkout
    Profile Keys Locked
+
+   Updates:
+   - No project-avatar fallback
+   - Safe HTML escaping
+   - Direct table fallbacks
+   - Product likes upsert-safe
+   - View tracking de-duped per session
+   - Realtime cleanup locked
 ========================= */
 
 import {
@@ -32,6 +40,7 @@ import {
 const $ = (id) => document.getElementById(id);
 
 const FALLBACK_IMAGE = "/images/brand/hero-banner.png";
+const FALLBACK_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const grid = $("storeGrid");
 const statusEl = $("storeStatus");
@@ -45,36 +54,74 @@ let currentProfile = null;
 let profileIdentity = null;
 let products = [];
 let channel = null;
+let filtersBound = false;
 
-const money = (cents = 0, currency = "usd") =>
-  new Intl.NumberFormat("en-US", {
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
+}
+
+function money(cents = 0, currency = "usd") {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: String(currency || "usd").toUpperCase()
   }).format((Number(cents) || 0) / 100);
+}
 
-const safe = (value, fallback = "") => String(value ?? fallback);
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-function imageFor(product) {
-  return (
+function safeText(value, fallback = "") {
+  const text = String(value ?? fallback ?? "").trim();
+  return text || fallback;
+}
+
+function safePath(value = "", fallback = FALLBACK_IMAGE) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
+
+function imageFor(product = {}) {
+  return safePath(
     product.image_url ||
-    product.cover_url ||
-    product.media_url ||
-    product.preview_url ||
+      product.cover_url ||
+      product.media_url ||
+      product.preview_url ||
+      product.digital_file_url,
     FALLBACK_IMAGE
   );
 }
 
-function setStatus(message = "") {
+function setStatus(message = "", type = "info") {
   if (!statusEl) return;
+
   statusEl.textContent = message;
+  statusEl.dataset.type = type;
   statusEl.style.display = message ? "block" : "none";
 }
 
 function syncProfileKeys() {
-  const state = getCurrentUserState?.() || {};
+  const appState = getCurrentUserState?.() || {};
 
-  currentUser = state.user || null;
-  currentProfile = state.profile || null;
+  currentUser = appState.user || null;
+  currentProfile = appState.profile || null;
   profileIdentity = getProfileIdentity(currentProfile);
 
   document.body.dataset.rbRoute = "store";
@@ -82,7 +129,7 @@ function syncProfileKeys() {
   document.body.dataset.rbProfileId = profileIdentity?.id || "";
   document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
 
-  bindProfileShell();
+  bindProfileShell?.();
 
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
@@ -101,26 +148,35 @@ function getAnonId() {
   return id;
 }
 
+function markViewed(productId) {
+  const key = `rb_store_viewed_${productId}`;
+  if (sessionStorage.getItem(key)) return false;
+
+  sessionStorage.setItem(key, "true");
+  return true;
+}
+
 async function requireUser() {
   if (currentUser?.id) return currentUser;
 
   syncProfileKeys();
 
   if (!currentUser?.id) {
-    window.location.href = `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(RB_ROUTES.store || "/store")}`;
+    window.location.href =
+      `${RB_ROUTES?.auth || "/auth"}?next=${encodeURIComponent(RB_ROUTES?.store || "/store")}`;
     return null;
   }
 
   return currentUser;
 }
 
-function hydrateCategories(items) {
+function hydrateCategories(items = []) {
   if (!categoryEl) return;
 
   const current = categoryEl.value || "all";
   const categories = [
     ...new Set(items.map((item) => item.category).filter(Boolean))
-  ];
+  ].sort();
 
   categoryEl.innerHTML = `<option value="all">All categories</option>`;
 
@@ -141,13 +197,14 @@ function filteredProducts() {
 
   return products.filter((product) => {
     const text = `
-      ${product.title}
-      ${product.description}
-      ${product.category}
-      ${product.product_type}
-      ${product.fulfillment_type}
-      ${product.city}
-      ${product.state}
+      ${product.title || ""}
+      ${product.description || ""}
+      ${product.category || ""}
+      ${product.product_type || ""}
+      ${product.fulfillment_type || ""}
+      ${product.city || ""}
+      ${product.state || ""}
+      ${product.location_label || ""}
     `.toLowerCase();
 
     return (
@@ -158,11 +215,21 @@ function filteredProducts() {
   });
 }
 
-function sellerFor(product) {
+function sellerFor(product = {}) {
   const seller = product.store_seller_profiles;
 
   if (Array.isArray(seller)) return seller[0] || null;
   return seller || null;
+}
+
+function isSoldOut(product = {}) {
+  const stock = Number(product.inventory_count ?? product.quantity ?? 0);
+
+  return (
+    stock <= 0 &&
+    !product.is_digital &&
+    product.fulfillment_type === "shipping"
+  );
 }
 
 function renderProducts() {
@@ -172,79 +239,101 @@ function renderProducts() {
 
   if (!items.length) {
     grid.innerHTML = "";
-    setStatus("No products found.");
+    setStatus("No products found.", "info");
     return;
   }
 
   setStatus("");
 
-  grid.innerHTML = items.map((product) => {
-    const seller = sellerFor(product);
+  grid.innerHTML = items
+    .map((product) => {
+      const seller = sellerFor(product);
 
-    const sellerName =
-      seller?.seller_name ||
-      seller?.display_name ||
-      seller?.username ||
-      "Rich Bizness Seller";
+      const sellerName =
+        seller?.seller_name ||
+        seller?.display_name ||
+        seller?.username ||
+        "Rich Bizness Seller";
 
-    const soldOut =
-      Number(product.inventory_count || product.quantity || 0) <= 0 &&
-      !product.is_digital &&
-      product.fulfillment_type === "shipping";
+      const soldOut = isSoldOut(product);
+      const productImage = imageFor(product);
+      const sellerAvatar = safePath(seller?.avatar_url, FALLBACK_AVATAR);
 
-    return `
-      <article
-        class="rb-store-card"
-        data-product-id="${product.id}"
-        data-seller-id="${product.seller_id || ""}"
-        data-profile-locked="${product.seller_id ? "true" : "false"}"
-      >
-        <div class="rb-store-media">
-          <img src="${imageFor(product)}" alt="${safe(product.title)}" loading="lazy" />
+      return `
+        <article
+          class="rb-store-card"
+          data-product-id="${escapeHtml(product.id)}"
+          data-seller-id="${escapeHtml(product.seller_id || "")}"
+          data-profile-locked="${product.seller_id ? "true" : "false"}"
+        >
+          <div class="rb-store-media">
+            <img
+              src="${escapeHtml(productImage)}"
+              alt="${escapeHtml(safeText(product.title, "Rich Bizness Product"))}"
+              loading="lazy"
+            />
 
-          ${product.is_featured ? `<span class="rb-store-badge">Featured</span>` : ""}
-          ${soldOut ? `<span class="rb-store-badge rb-danger">Sold Out</span>` : ""}
-        </div>
-
-        <div class="rb-store-info">
-          <div class="rb-store-row">
-            <span>${safe(product.marketing_emoji, "💨")} ${safe(product.category, "general")}</span>
-            <strong>${money(product.price_cents, product.currency)}</strong>
+            ${product.is_featured ? `<span class="rb-store-badge">Featured</span>` : ""}
+            ${soldOut ? `<span class="rb-store-badge rb-danger">Sold Out</span>` : ""}
           </div>
 
-          <h2>${safe(product.title, "Untitled Drop")}</h2>
-          <p>${safe(product.description, "No description yet.")}</p>
+          <div class="rb-store-info">
+            <div class="rb-store-row">
+              <span>${escapeHtml(safeText(product.marketing_emoji, "💨"))} ${escapeHtml(safeText(product.category, "general"))}</span>
+              <strong>${escapeHtml(money(product.price_cents, product.currency))}</strong>
+            </div>
 
-          <div class="rb-store-meta">
-            <span>${safe(product.product_type, "physical")}</span>
-            <span>${safe(product.fulfillment_type, "shipping")}</span>
-            <span>${Number(product.likes || 0)} likes</span>
-            <span>${Number(product.sales_count || 0)} sold</span>
-          </div>
+            <h2>${escapeHtml(safeText(product.title, "Untitled Drop"))}</h2>
 
-          <div class="rb-store-seller">
-            <img src="${seller?.avatar_url || FALLBACK_IMAGE}" alt="" loading="lazy" />
-            <div>
-              <strong>${sellerName}</strong>
-              <small>${seller?.seller_rank || "Rookie Seller"}</small>
+            <p>${escapeHtml(safeText(product.description, "No description yet."))}</p>
+
+            <div class="rb-store-meta">
+              <span>${escapeHtml(safeText(product.product_type, "physical"))}</span>
+              <span>${escapeHtml(safeText(product.fulfillment_type, "shipping"))}</span>
+              <span>${Number(product.likes || 0).toLocaleString()} likes</span>
+              <span>${Number(product.sales_count || 0).toLocaleString()} sold</span>
+            </div>
+
+            <div class="rb-store-seller">
+              <img
+                src="${escapeHtml(sellerAvatar)}"
+                alt="${escapeHtml(sellerName)}"
+                loading="lazy"
+              />
+
+              <div>
+                <strong>${escapeHtml(sellerName)}</strong>
+                <small>${escapeHtml(safeText(seller?.seller_rank, "Rookie Seller"))}</small>
+              </div>
+            </div>
+
+            <div class="rb-store-buttons">
+              <button data-action="buy" data-id="${escapeHtml(product.id)}" ${soldOut ? "disabled" : ""}>
+                Buy Now
+              </button>
+
+              <button data-action="cart" data-id="${escapeHtml(product.id)}" ${soldOut ? "disabled" : ""}>
+                Add Cart
+              </button>
+
+              <button data-action="like" data-id="${escapeHtml(product.id)}">
+                💸 Like
+              </button>
             </div>
           </div>
-
-          <div class="rb-store-buttons">
-            <button data-action="buy" data-id="${product.id}" ${soldOut ? "disabled" : ""}>Buy Now</button>
-            <button data-action="cart" data-id="${product.id}" ${soldOut ? "disabled" : ""}>Add Cart</button>
-            <button data-action="like" data-id="${product.id}">💸 Like</button>
-          </div>
-        </div>
-      </article>
-    `;
-  }).join("");
+        </article>
+      `;
+    })
+    .join("");
 
   bindProductButtons();
   items.forEach((item) => trackView(item.id));
 }
 
 function bindFilters() {
+  if (filtersBound) return;
+  filtersBound = true;
+
   [searchEl, categoryEl, typeEl].forEach((el) => {
     if (!el) return;
     el.addEventListener("input", renderProducts);
@@ -254,6 +343,9 @@ function bindFilters() {
 
 function bindProductButtons() {
   grid?.querySelectorAll("button[data-action]").forEach((button) => {
+    if (button.dataset.rbBound === "true") return;
+    button.dataset.rbBound = "true";
+
     button.addEventListener("click", async () => {
       const id = button.dataset.id;
       const action = button.dataset.action;
@@ -266,10 +358,10 @@ function bindProductButtons() {
 }
 
 async function loadProducts() {
-  setStatus("Loading marketplace...");
+  setStatus("Loading marketplace...", "info");
 
   const { data, error } = await supabase
-    .from(RB_TABLES.products)
+    .from(table("products", "products"))
     .select(`
       *,
       store_seller_profiles:seller_id (
@@ -307,8 +399,13 @@ async function buyProduct(productId, button) {
   try {
     const response = await fetch("/api/create-store-checkout-session", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ product_id: productId, quantity: 1 })
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        quantity: 1
+      })
     });
 
     const json = await response.json();
@@ -322,7 +419,7 @@ async function buyProduct(productId, button) {
     console.error("[store checkout]", error);
     button.disabled = false;
     button.textContent = "Buy Now";
-    alert(error.message || "Checkout failed.");
+    setStatus(error.message || "Checkout failed.", "error");
   }
 }
 
@@ -330,14 +427,14 @@ async function addToCart(productId, button) {
   const user = await requireUser();
   if (!user) return;
 
-  const product = products.find((item) => item.id === productId);
+  const product = products.find((item) => String(item.id) === String(productId));
   if (!product) return;
 
   button.disabled = true;
   button.textContent = "Adding...";
 
   const { error } = await supabase
-    .from(RB_TABLES.storeCartItems)
+    .from(table("storeCartItems", "store_cart_items"))
     .insert({
       user_id: user.id,
       product_id: product.id,
@@ -356,7 +453,13 @@ async function addToCart(productId, button) {
   button.disabled = false;
   button.textContent = error ? "Try Again" : "Added ✓";
 
-  if (error) console.error("[store cart]", error);
+  if (error) {
+    console.error("[store cart]", error);
+    setStatus(error.message || "Could not add to cart.", "error");
+    return;
+  }
+
+  setStatus("Added to cart.", "success");
 }
 
 async function likeProduct(productId, button) {
@@ -366,29 +469,37 @@ async function likeProduct(productId, button) {
   button.disabled = true;
 
   const { error } = await supabase
-    .from(RB_TABLES.productLikes)
-    .insert({
-      product_id: productId,
-      user_id: user.id,
-      reaction: "💸"
-    });
+    .from(table("productLikes", "product_likes"))
+    .upsert(
+      {
+        product_id: productId,
+        user_id: user.id,
+        reaction: "💸"
+      },
+      {
+        onConflict: "product_id,user_id"
+      }
+    );
 
   if (error) {
     console.error("[store like]", error);
     button.disabled = false;
+    setStatus(error.message || "Like failed.", "error");
     return;
   }
 
-  const product = products.find((item) => item.id === productId);
+  const product = products.find((item) => String(item.id) === String(productId));
   if (product) product.likes = Number(product.likes || 0) + 1;
 
   renderProducts();
 }
 
 async function trackView(productId) {
+  if (!productId || !markViewed(productId)) return;
+
   try {
     await supabase
-      .from(RB_TABLES.productViews)
+      .from(table("productViews", "product_views"))
       .insert({
         product_id: productId,
         user_id: currentUser?.id || null,
@@ -397,34 +508,48 @@ async function trackView(productId) {
   } catch (_) {}
 }
 
-function bindRealtime() {
-  if (channel) {
+function clearRealtime() {
+  if (channel && supabase) {
     supabase.removeChannel(channel);
     channel = null;
   }
+}
+
+function bindRealtime() {
+  clearRealtime();
 
   channel = supabase
     .channel("rb-store-products")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.products },
+      {
+        event: "*",
+        schema: "public",
+        table: table("products", "products")
+      },
       loadProducts
     )
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.productLikes },
+      {
+        event: "*",
+        schema: "public",
+        table: table("productLikes", "product_likes")
+      },
       loadProducts
     )
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: RB_TABLES.storeCartItems },
+      {
+        event: "*",
+        schema: "public",
+        table: table("storeCartItems", "store_cart_items")
+      },
       loadProducts
     )
     .subscribe();
 
-  window.addEventListener("beforeunload", () => {
-    if (channel) supabase.removeChannel(channel);
-  });
+  window.addEventListener("beforeunload", clearRealtime);
 }
 
 async function bootStorePage() {
@@ -444,6 +569,9 @@ async function bootStorePage() {
 
     bindRealtime();
 
+    document.body.dataset.rbPage = "store";
+    document.body.dataset.rbRoute = "store";
+    document.body.dataset.rbProfileLock = profileIdentity?.id ? "true" : "false";
     document.body.classList.add("rb-store-ready");
 
     markPageReady("store");
@@ -454,7 +582,7 @@ async function bootStorePage() {
     });
   } catch (error) {
     console.error("[store.js]", error);
-    setStatus("Store could not load right now.");
+    setStatus("Store could not load right now.", "error");
     markPageError(error);
   }
 }
