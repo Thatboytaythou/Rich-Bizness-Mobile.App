@@ -13,6 +13,12 @@ import { createMetaWorldEngine } from "/core/features/meta/world-engine.js";
 
    MASTER UNIVERSE BOOT
    Galaxy + Portal + Orbit Cards + Avatar + Meta Preview
+   XP Gauge / Activity Bridge Enabled
+
+   Keep this lightweight:
+   - Preview only
+   - No page controllers loaded here
+   - No auth/profile heavy boot here
 ========================= */
 
 const container = document.getElementById("canvas-container");
@@ -143,8 +149,30 @@ const activityState = {
   onlineCount: 0,
   orbitBoost: 1,
   portalBoost: 1,
-  theme: "green"
+  theme: "green",
+  xp: 0,
+  level: 1,
+  rank: "Biz Legend",
+  xpPercent: 0,
+  xpEnergy: 1
 };
+
+function safeImage(value = "", fallback = "/images/brand/hero-banner.png") {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
 
 function makeContext() {
   return {
@@ -159,7 +187,10 @@ function makeContext() {
     raycaster,
     pointer,
     motion,
-    modules,
+    modules: modules.map((mod) => ({
+      ...mod,
+      image: safeImage(mod.image)
+    })),
     activityState,
     isMobile: () => window.innerWidth <= motion.mobileBreakpoint
   };
@@ -171,6 +202,33 @@ function safeCall(engine, method, ...args) {
   } catch (error) {
     console.warn(`[RB UNIVERSE ENGINE ERROR] ${method}`, error);
   }
+}
+
+function syncActivityToBody() {
+  if (!document.body) return;
+
+  document.body.dataset.rbUniverseXp = String(activityState.xp);
+  document.body.dataset.rbUniverseLevel = String(activityState.level);
+  document.body.dataset.rbUniverseRank = String(activityState.rank);
+  document.body.dataset.rbUniverseXpPercent = String(Math.round(activityState.xpPercent));
+}
+
+function broadcastUniverseActivity(type = "universe") {
+  syncActivityToBody();
+
+  engines.forEach((engine) => {
+    safeCall(engine, "onActivityUpdate", activityState);
+    safeCall(engine, "setActivityState", activityState);
+  });
+
+  window.dispatchEvent(
+    new CustomEvent("rb:universe-preview-update", {
+      detail: {
+        type,
+        activityState: { ...activityState }
+      }
+    })
+  );
 }
 
 function initUniverse() {
@@ -232,6 +290,7 @@ function initUniverse() {
   bindEvents();
   resizeUniverse();
   animateUniverse();
+  broadcastUniverseActivity("mount");
 
   document.body.classList.add("rb-universe-ready");
 
@@ -253,6 +312,9 @@ function bindEvents() {
 
   window.addEventListener("rb:activity-update", onActivityUpdate);
   window.addEventListener("rb:presence-update", onPresenceUpdate);
+  window.addEventListener("rb:xp-gauge-update", onXpGaugeUpdate);
+  window.addEventListener("rb:app-xp-update", onAppXpUpdate);
+  window.addEventListener("rb:rich-action", onRichAction);
 
   window.RB_SWAP_AVATAR = () => {
     engines.forEach((engine) => safeCall(engine, "swapAvatar"));
@@ -261,6 +323,12 @@ function bindEvents() {
   window.RB_PORTAL_THEME = (theme = "green") => {
     activityState.theme = theme;
     engines.forEach((engine) => safeCall(engine, "setTheme", theme));
+    broadcastUniverseActivity("theme");
+  };
+
+  window.RB_UNIVERSE_ACTIVITY = (next = {}) => {
+    Object.assign(activityState, next || {});
+    broadcastUniverseActivity("manual");
   };
 
   window.RB_UNIVERSE_DESTROY = destroyUniverse;
@@ -281,6 +349,9 @@ function unbindEvents() {
 
   window.removeEventListener("rb:activity-update", onActivityUpdate);
   window.removeEventListener("rb:presence-update", onPresenceUpdate);
+  window.removeEventListener("rb:xp-gauge-update", onXpGaugeUpdate);
+  window.removeEventListener("rb:app-xp-update", onAppXpUpdate);
+  window.removeEventListener("rb:rich-action", onRichAction);
 }
 
 function onActivityUpdate(event) {
@@ -297,7 +368,7 @@ function onActivityUpdate(event) {
     activityState.liveActive
   );
 
-  engines.forEach((engine) => safeCall(engine, "onActivityUpdate", activityState));
+  broadcastUniverseActivity("live");
 }
 
 function onPresenceUpdate(event) {
@@ -308,7 +379,74 @@ function onPresenceUpdate(event) {
     activityState.onlineCount > 0
   );
 
-  engines.forEach((engine) => safeCall(engine, "onPresenceUpdate", activityState));
+  broadcastUniverseActivity("presence");
+}
+
+function onXpGaugeUpdate(event) {
+  const detail = event.detail || {};
+
+  activityState.xp = Math.max(0, Number(detail.xp ?? activityState.xp) || 0);
+  activityState.level = Math.max(1, Number(detail.level ?? activityState.level) || 1);
+  activityState.rank = detail.rank || activityState.rank || "Biz Legend";
+  activityState.xpPercent = Math.max(0, Math.min(100, Number(detail.percent ?? activityState.xpPercent) || 0));
+
+  activityState.xpEnergy =
+    1 +
+    Math.min(0.45, activityState.xpPercent / 240) +
+    Math.min(0.25, activityState.level / 100);
+
+  document.body.classList.toggle(
+    "rb-orbit-xp-energy",
+    activityState.xp > 0 || activityState.level > 1
+  );
+
+  broadcastUniverseActivity("xp");
+}
+
+function onAppXpUpdate(event) {
+  onXpGaugeUpdate({
+    detail: event.detail || {}
+  });
+}
+
+function onRichAction(event) {
+  const detail = event.detail || {};
+
+  if (detail?.section) {
+    activityState.theme = detail.section === "music"
+      ? "gold"
+      : detail.section === "live"
+        ? "red"
+        : detail.section === "gaming"
+          ? "green"
+          : detail.section === "store"
+            ? "gold"
+            : activityState.theme;
+  }
+
+  if (detail?.xp) {
+    onXpGaugeUpdate({
+      detail: {
+        xp:
+          detail.xp?.xp ??
+          detail.xp?.total_xp ??
+          detail.xp?.new_xp ??
+          activityState.xp,
+        level:
+          detail.xp?.level ??
+          detail.xp?.new_level ??
+          activityState.level,
+        rank:
+          detail.xp?.rank ||
+          detail.xp?.rank_title ||
+          activityState.rank,
+        percent: activityState.xpPercent
+      }
+    });
+    return;
+  }
+
+  broadcastUniverseActivity("rich-action");
 }
 
 function updatePointer(event) {
@@ -395,7 +533,8 @@ function destroyUniverse() {
   document.body.classList.remove(
     "rb-universe-ready",
     "rb-orbit-live-energy",
-    "rb-orbit-presence-energy"
+    "rb-orbit-presence-energy",
+    "rb-orbit-xp-energy"
   );
 }
 
