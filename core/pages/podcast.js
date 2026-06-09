@@ -6,6 +6,14 @@
    Shows + Episodes + Featured
    Profile Keys Locked
    Safe Loader + Realtime Enabled
+   XP Gauge Enabled
+
+   Updates:
+   - No project-avatar fallback
+   - Safe URL handling
+   - Podcast XP gauge connected
+   - Tab display fixed
+   - Realtime cleanup locked
 ========================= */
 
 import {
@@ -16,8 +24,7 @@ import {
 } from "/core/app.js";
 
 import {
-  RB_TABLES,
-  RB_ROUTES
+  RB_TABLES
 } from "/core/shared/rb-config.js";
 
 import {
@@ -34,6 +41,7 @@ const $ = (id) => document.getElementById(id);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
+const FALLBACK_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const els = {
   showCount: $("podcast-show-count"),
@@ -48,7 +56,14 @@ const els = {
   nowCover: $("podcast-now-cover"),
   nowTitle: $("podcast-now-title"),
   nowMeta: $("podcast-now-meta"),
-  audioPlayer: $("podcast-audio-player")
+  audioPlayer: $("podcast-audio-player"),
+
+  xpGauge: $("podcast-xp-gauge"),
+  xpFill: $("podcast-xp-gauge-fill"),
+  xpText: $("podcast-xp-gauge-text"),
+  xpNext: $("podcast-xp-gauge-next"),
+  xpLevel: $("podcast-xp-level"),
+  xpRank: $("podcast-xp-rank")
 };
 
 let supabase = null;
@@ -57,6 +72,10 @@ let currentUser = null;
 let currentProfile = null;
 let profileIdentity = null;
 let booted = false;
+
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
+}
 
 function escapeHtml(value = "") {
   return String(value ?? "")
@@ -69,6 +88,23 @@ function escapeHtml(value = "") {
 
 function safe(value, fallback = "") {
   return String(value || fallback || "").trim();
+}
+
+function safeUrl(value = "", fallback = FALLBACK_COVER) {
+  const url = String(value || "").trim();
+
+  if (!url || url.includes("project-avatar")) return fallback;
+
+  if (
+    url.startsWith("/") ||
+    url.startsWith("https://") ||
+    url.startsWith("http://") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
+  }
+
+  return fallback;
 }
 
 function setEmpty(target, text) {
@@ -108,21 +144,21 @@ function titleOf(item = {}, fallback = "Untitled") {
 }
 
 function coverOf(item = {}) {
-  return (
+  return safeUrl(
     item.cover_url ||
-    item.image_url ||
-    item.thumbnail_url ||
-    item.show_cover_url ||
+      item.image_url ||
+      item.thumbnail_url ||
+      item.show_cover_url,
     FALLBACK_COVER
   );
 }
 
 function audioOf(item = {}) {
-  return (
+  return safeUrl(
     item.audio_url ||
-    item.file_url ||
-    item.media_url ||
-    item.url ||
+      item.file_url ||
+      item.media_url ||
+      item.url,
     ""
   );
 }
@@ -135,6 +171,101 @@ function numberOf(value, fallback = 0) {
 function isFeatured(item = {}) {
   return Boolean(item.is_featured || item.featured);
 }
+
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Podcaster";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, profileIdentity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  if (els.xpText) {
+    els.xpText.textContent = `${model.xp.toLocaleString()} XP`;
+  }
+
+  if (els.xpNext) {
+    els.xpNext.textContent = `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`;
+  }
+
+  if (els.xpLevel) {
+    els.xpLevel.textContent = `LVL ${model.level}`;
+  }
+
+  if (els.xpRank) {
+    els.xpRank.textContent = model.rank;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "podcast",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   PROFILE LOCK
+========================= */
 
 function syncProfileKeys() {
   const state = getCurrentUserState?.() || {};
@@ -153,7 +284,30 @@ function syncProfileKeys() {
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeUrl(
+      currentProfile?.avatar_url || profileIdentity?.avatar_url,
+      FALLBACK_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
 }
+
+/* =========================
+   PLAYER
+========================= */
 
 function playEpisode(item = {}) {
   const title = titleOf(item, "Untitled Episode");
@@ -162,6 +316,7 @@ function playEpisode(item = {}) {
 
   if (els.nowCover) {
     els.nowCover.src = coverUrl;
+    els.nowCover.alt = title;
   }
 
   if (els.nowTitle) {
@@ -182,27 +337,34 @@ function playEpisode(item = {}) {
   }
 }
 
+/* =========================
+   TABS
+========================= */
+
 function bindTabs() {
   $$("[data-podcast-tab]").forEach((button) => {
     if (button.dataset.rbPodcastTabBound === "true") return;
     button.dataset.rbPodcastTabBound = "true";
 
     button.addEventListener("click", () => {
-      const tab = button.dataset.podcastTab;
+      const tab = button.dataset.podcastTab || "featured";
 
       $$("[data-podcast-tab]").forEach((btn) => {
         btn.classList.toggle("is-active", btn === button);
       });
 
       $$("[data-podcast-panel]").forEach((panel) => {
-        panel.classList.toggle(
-          "is-active",
-          panel.dataset.podcastPanel === tab
-        );
+        const active = panel.dataset.podcastPanel === tab;
+        panel.classList.toggle("is-active", active);
+        panel.style.display = active ? "block" : "none";
       });
     });
   });
 }
+
+/* =========================
+   RENDER
+========================= */
 
 function renderShow(item = {}) {
   const title = titleOf(item, "Untitled Show");
@@ -306,19 +468,19 @@ function renderEpisode(item = {}) {
 ========================= */
 
 async function safeLoadTable({
-  table,
+  table: tableName,
   limit = 40,
   orderBy = "created_at",
   attempts = []
 }) {
-  if (!table) return [];
+  if (!tableName) return [];
 
   let lastError = null;
 
   for (const attempt of attempts) {
     try {
       let query = supabase
-        .from(table)
+        .from(tableName)
         .select("*")
         .limit(limit);
 
@@ -339,23 +501,19 @@ async function safeLoadTable({
       return data || [];
     } catch (error) {
       lastError = error;
-      console.warn(`[RB PODCAST SAFE QUERY FAILED] ${table}: ${attempt.name}`, error?.message || error);
+      console.warn(`[RB PODCAST SAFE QUERY FAILED] ${tableName}: ${attempt.name}`, error?.message || error);
     }
   }
 
-  throw lastError || new Error(`Failed to load ${table}.`);
+  throw lastError || new Error(`Failed to load ${tableName}.`);
 }
 
 async function loadShows() {
-  if (!RB_TABLES.podcastShows) {
-    setCount(els.showCount, 0);
-    setEmpty(els.showsList, "Podcast shows table is not configured.");
-    return [];
-  }
+  const showsTable = table("podcastShows", "podcast_shows");
 
   try {
     const shows = await safeLoadTable({
-      table: RB_TABLES.podcastShows,
+      table: showsTable,
       limit: 30,
       attempts: [
         {
@@ -405,9 +563,11 @@ async function loadShows() {
 }
 
 async function loadEpisodes() {
+  const episodesTable = table("podcastEpisodes", "podcast_episodes");
+
   try {
     const episodes = await safeLoadTable({
-      table: RB_TABLES.podcastEpisodes,
+      table: episodesTable,
       limit: 40,
       attempts: [
         {
@@ -493,6 +653,10 @@ async function loadPodcastPage() {
   ]);
 }
 
+/* =========================
+   REALTIME
+========================= */
+
 function clearRealtime() {
   channels.forEach((channel) => {
     supabase?.removeChannel(channel);
@@ -501,17 +665,17 @@ function clearRealtime() {
   channels = [];
 }
 
-function watchTable(table) {
-  if (!table) return null;
+function watchTable(tableName) {
+  if (!tableName) return null;
 
   return supabase
-    .channel(`rb-podcast-${table}`)
+    .channel(`rb-podcast-${tableName}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table
+        table: tableName
       },
       () => loadPodcastPage().catch(console.error)
     )
@@ -522,12 +686,16 @@ function bindRealtime() {
   clearRealtime();
 
   channels = [
-    watchTable(RB_TABLES.podcastShows),
-    watchTable(RB_TABLES.podcastEpisodes),
-    watchTable(RB_TABLES.podcastComments),
-    watchTable(RB_TABLES.podcastLikes)
+    watchTable(table("podcastShows", "podcast_shows")),
+    watchTable(table("podcastEpisodes", "podcast_episodes")),
+    watchTable(table("podcastComments", "podcast_comments")),
+    watchTable(table("podcastLikes", "podcast_likes"))
   ].filter(Boolean);
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootPodcastPage() {
   if (booted) return;
@@ -551,6 +719,9 @@ async function bootPodcastPage() {
 
     window.addEventListener("beforeunload", clearRealtime);
 
+    document.body.dataset.rbPage = "podcast";
+    document.body.dataset.rbRoute = "podcast";
+    document.body.dataset.rbProfileLock = profileIdentity?.id ? "true" : "false";
     document.body.classList.add("rb-podcast-ready");
 
     markPageReady("podcast");
