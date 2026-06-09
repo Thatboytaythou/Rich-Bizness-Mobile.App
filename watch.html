@@ -27,8 +27,9 @@
 </head>
 
 <body
-  class="rb-body rb-watch-page live-body rb-watch-hologram-page"
+  class="rb-body rb-watch-page live-body rb-watch-hologram-page rb-orbit-xp-energy"
   data-page="watch"
+  data-rb-page="watch"
   data-rb-route="watch"
 >
   <div class="rb-bg-layer" aria-hidden="true"></div>
@@ -50,7 +51,19 @@
           GO LIVE
         </a>
 
-        <a class="live-watch-link ghost" href="/profile" data-route="profile">
+        <a class="live-watch-link ghost" href="/music" data-route="music">
+          MUSIC
+        </a>
+
+        <a class="live-watch-link ghost" href="/podcast" data-route="podcast">
+          PODCAST
+        </a>
+
+        <a class="live-watch-link ghost" href="/radio" data-route="radio">
+          RADIO
+        </a>
+
+        <a class="live-watch-link ghost" href="/profile" data-route="profile" data-rb-profile-link>
           PROFILE
         </a>
       </nav>
@@ -223,6 +236,12 @@
       </div>
     </section>
   </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
 
   <script type="module" src="/core/pages/watch.js"></script>
 </body>
