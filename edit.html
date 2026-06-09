@@ -26,8 +26,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-edit-page" data-page="edit">
-
+<body
+  class="rb-body rb-edit-page rb-orbit-xp-energy"
+  data-page="edit"
+  data-rb-page="edit"
+  data-rb-route="edit"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -35,7 +39,6 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
     <a class="rb-brand" href="/" data-route="home">
       <span>IDENTITY EDITOR</span>
       <strong>RICH BIZNESS</strong>
@@ -44,18 +47,15 @@
 
     <nav class="rb-topnav" aria-label="Main navigation">
       <a href="/" data-route="home">Portal</a>
-      <a href="/profile" data-route="profile">Profile</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
       <a href="/feed" data-route="feed">Feed</a>
       <a href="/upload" data-route="upload">Upload</a>
       <a href="/settings" data-route="settings">Settings</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell rb-edit-shell">
-
     <section class="rb-auth-hero">
-
       <p class="rb-kicker">
         RICH BIZNESS IDENTITY
       </p>
@@ -67,13 +67,10 @@
       <p>
         Update your name, handle, bio, avatar, and banner across the Rich Bizness universe.
       </p>
-
     </section>
 
     <section class="rb-auth-panel">
-
       <form id="edit-profile-form" class="rb-auth-form">
-
         <h2>
           Identity Settings
         </h2>
@@ -88,6 +85,7 @@
             autocomplete="name"
             placeholder="Your display name"
             required
+            data-rb-display-name-input
           />
         </label>
 
@@ -105,6 +103,7 @@
             required
             minlength="3"
             maxlength="24"
+            data-rb-username-input
           />
         </label>
 
@@ -116,6 +115,7 @@
             name="bio"
             rows="5"
             placeholder="Tell the universe who you are..."
+            data-rb-bio-input
           ></textarea>
         </label>
 
@@ -127,6 +127,7 @@
             name="avatar"
             type="file"
             accept="image/*"
+            data-rb-avatar-input
           />
         </label>
 
@@ -138,6 +139,7 @@
             name="banner"
             type="file"
             accept="image/*"
+            data-rb-banner-input
           />
         </label>
 
@@ -150,7 +152,6 @@
         </p>
 
         <div class="rb-form-actions">
-
           <button
             id="edit-save-btn"
             class="rb-main-launch"
@@ -163,16 +164,13 @@
             id="edit-back-btn"
             class="rb-btn ghost"
             type="button"
+            data-route="profile"
           >
             ← Back To Profile
           </button>
-
         </div>
-
       </form>
-
     </section>
-
   </main>
 
   <script type="module">
@@ -182,6 +180,5 @@
   </script>
 
   <script type="module" src="/core/pages/edit.js"></script>
-
 </body>
 </html>
