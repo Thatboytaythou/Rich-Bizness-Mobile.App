@@ -27,8 +27,12 @@
   <link rel="stylesheet" href="/styles/music.css" />
 </head>
 
-<body class="rb-body rb-podcast-page rb-music-page" data-page="podcast" data-rb-route="podcast">
-
+<body
+  class="rb-body rb-podcast-page rb-music-page rb-orbit-xp-energy"
+  data-page="podcast"
+  data-rb-page="podcast"
+  data-rb-route="podcast"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -56,7 +60,6 @@
   </header>
 
   <main class="rb-section-shell rb-music-shell rb-podcast-shell">
-
     <section class="rb-section-hero rb-music-hero rb-podcast-hero">
       <div class="rb-section-copy">
         <p class="rb-kicker">RICH BIZNESS PODCAST</p>
@@ -70,12 +73,16 @@
         </p>
 
         <div class="rb-section-actions">
-          <a class="rb-btn primary" href="/upload?section=podcast" data-route="/upload?section=podcast">
+          <a class="rb-btn primary" href="/upload?section=podcast" data-route="upload">
             Drop Podcast
           </a>
 
           <a class="rb-btn ghost" href="/music" data-route="music">
             Music Universe
+          </a>
+
+          <a class="rb-btn ghost" href="/radio" data-route="radio">
+            Radio Universe
           </a>
 
           <a class="rb-btn ghost" href="/profile" data-route="profile" data-rb-profile-link>
@@ -156,7 +163,6 @@
     </section>
 
     <section class="rb-music-panels rb-podcast-panels">
-
       <section class="rb-music-panel rb-podcast-panel is-active" data-podcast-panel="shows">
         <div class="rb-module-head">
           <div>
@@ -164,7 +170,7 @@
             <h2>Podcast Shows</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=podcast">
+          <a class="rb-btn ghost" href="/upload?section=podcast" data-route="upload">
             Create Show
           </a>
         </div>
@@ -181,7 +187,7 @@
             <h2>Podcast Episodes</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=podcast">
+          <a class="rb-btn ghost" href="/upload?section=podcast" data-route="upload">
             Drop Episode
           </a>
         </div>
@@ -198,7 +204,7 @@
             <h2>Featured Podcast</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/music">
+          <a class="rb-btn ghost" href="/music" data-route="music">
             Back To Music
           </a>
         </div>
@@ -207,9 +213,7 @@
           <p class="rb-empty">Loading featured podcast...</p>
         </div>
       </section>
-
     </section>
-
   </main>
 
   <nav class="rb-bottom-nav" aria-label="Primary navigation">
@@ -233,6 +237,11 @@
       <span>Podcast</span>
     </button>
 
+    <button data-route="radio" type="button" aria-label="Radio">
+      <span class="rb-nav-icon">📻</span>
+      <span>Radio</span>
+    </button>
+
     <button data-route="upload" type="button" aria-label="Upload">
       <span class="rb-nav-icon">⬆️</span>
       <span>Upload</span>
@@ -249,6 +258,23 @@
     } from "/core/shared/rb-navigation.js";
 
     bindGlobalNavigation();
+
+    document.querySelectorAll("[data-podcast-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const tab = button.dataset.podcastTab;
+
+        document.querySelectorAll("[data-podcast-tab]").forEach((btn) => {
+          btn.classList.toggle("is-active", btn === button);
+        });
+
+        document.querySelectorAll("[data-podcast-panel]").forEach((panel) => {
+          const active = panel.dataset.podcastPanel === tab;
+
+          panel.classList.toggle("is-active", active);
+          panel.style.display = active ? "" : "none";
+        });
+      });
+    });
   </script>
 
   <script type="module" src="/core/pages/live-activity.js"></script>
