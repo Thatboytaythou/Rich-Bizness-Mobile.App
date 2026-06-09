@@ -27,8 +27,12 @@
   <link rel="stylesheet" href="/styles/music.css" />
 </head>
 
-<body class="rb-body rb-radio-page rb-music-page" data-page="radio" data-rb-route="radio">
-
+<body
+  class="rb-body rb-radio-page rb-music-page rb-orbit-xp-energy"
+  data-page="radio"
+  data-rb-page="radio"
+  data-rb-route="radio"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -48,6 +52,7 @@
       <a href="/watch" data-route="watch">Watch</a>
       <a href="/live" data-route="live">Live</a>
       <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
       <a href="/radio" data-route="radio" class="is-active">Radio</a>
       <a href="/upload" data-route="upload">Upload</a>
       <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
@@ -55,7 +60,6 @@
   </header>
 
   <main class="rb-section-shell rb-music-shell rb-radio-shell">
-
     <section class="rb-section-hero rb-music-hero rb-radio-hero">
       <div class="rb-section-copy">
         <p class="rb-kicker">RICH BIZNESS RADIO</p>
@@ -69,12 +73,16 @@
         </p>
 
         <div class="rb-section-actions">
-          <a class="rb-btn primary" href="/upload?section=radio" data-route="/upload?section=radio">
+          <a class="rb-btn primary" href="/upload?section=radio" data-route="upload">
             Add Radio
           </a>
 
           <a class="rb-btn ghost" href="/music" data-route="music">
             Music Universe
+          </a>
+
+          <a class="rb-btn ghost" href="/podcast" data-route="podcast">
+            Podcast Universe
           </a>
 
           <a class="rb-btn ghost" href="/profile" data-route="profile" data-rb-profile-link>
@@ -155,7 +163,6 @@
     </section>
 
     <section class="rb-music-panels rb-radio-panels">
-
       <section class="rb-music-panel rb-radio-panel is-active" data-radio-panel="stations">
         <div class="rb-module-head">
           <div>
@@ -163,7 +170,7 @@
             <h2>Radio Stations</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=radio">
+          <a class="rb-btn ghost" href="/upload?section=radio" data-route="upload">
             Add Radio
           </a>
         </div>
@@ -180,7 +187,7 @@
             <h2>Featured Radio</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=radio">
+          <a class="rb-btn ghost" href="/upload?section=radio" data-route="upload">
             Feature Station
           </a>
         </div>
@@ -197,7 +204,7 @@
             <h2>Listener Sessions</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/music">
+          <a class="rb-btn ghost" href="/music" data-route="music">
             Back To Music
           </a>
         </div>
@@ -206,9 +213,7 @@
           <p class="rb-empty">Loading radio sessions...</p>
         </div>
       </section>
-
     </section>
-
   </main>
 
   <nav class="rb-bottom-nav" aria-label="Primary navigation">
@@ -225,6 +230,11 @@
     <button data-route="music" type="button" aria-label="Music">
       <span class="rb-nav-icon">🎵</span>
       <span>Music</span>
+    </button>
+
+    <button data-route="podcast" type="button" aria-label="Podcast">
+      <span class="rb-nav-icon">🎙️</span>
+      <span>Podcast</span>
     </button>
 
     <button data-route="radio" class="is-active" type="button" aria-label="Radio">
@@ -248,6 +258,23 @@
     } from "/core/shared/rb-navigation.js";
 
     bindGlobalNavigation();
+
+    document.querySelectorAll("[data-radio-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const tab = button.dataset.radioTab;
+
+        document.querySelectorAll("[data-radio-tab]").forEach((btn) => {
+          btn.classList.toggle("is-active", btn === button);
+        });
+
+        document.querySelectorAll("[data-radio-panel]").forEach((panel) => {
+          const active = panel.dataset.radioPanel === tab;
+
+          panel.classList.toggle("is-active", active);
+          panel.style.display = active ? "" : "none";
+        });
+      });
+    });
   </script>
 
   <script type="module" src="/core/pages/live-activity.js"></script>
