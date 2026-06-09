@@ -4,6 +4,7 @@
 
    GLOBAL CARD SYSTEM
    Cinematic Green + Gold Polish
+   Centered + Profile Lock + XP Energy Ready
 ========================================= */
 
 .rb-card,
@@ -43,6 +44,45 @@
     background 0.28s ease;
 }
 
+body[data-rb-profile-locked="true"] .rb-card,
+body[data-rb-profile-locked="true"] .rb-media-card,
+body[data-rb-profile-locked="true"] .rb-live-card,
+body[data-rb-profile-locked="true"] .rb-feed-card,
+body[data-rb-profile-locked="true"] .rb-music-card,
+body[data-rb-profile-locked="true"] .rb-podcast-card,
+body[data-rb-profile-locked="true"] .rb-radio-card,
+body[data-rb-profile-locked="true"] .rb-game-card,
+body[data-rb-profile-locked="true"] .rb-sports-card,
+body[data-rb-profile-locked="true"] .rb-gallery-card,
+body[data-rb-profile-locked="true"] .rb-store-card,
+body[data-rb-profile-locked="true"] .rb-meta-card,
+body[data-rb-profile-locked="true"] .rb-profile-card,
+body[data-rb-profile-locked="true"] .rb-creator-card {
+  border-color: rgba(102, 255, 153, 0.24);
+}
+
+body.rb-orbit-xp-energy .rb-card,
+body.rb-orbit-xp-energy .rb-media-card,
+body.rb-orbit-xp-energy .rb-live-card,
+body.rb-orbit-xp-energy .rb-feed-card,
+body.rb-orbit-xp-energy .rb-music-card,
+body.rb-orbit-xp-energy .rb-podcast-card,
+body.rb-orbit-xp-energy .rb-radio-card,
+body.rb-orbit-xp-energy .rb-game-card,
+body.rb-orbit-xp-energy .rb-sports-card,
+body.rb-orbit-xp-energy .rb-gallery-card,
+body.rb-orbit-xp-energy .rb-store-card,
+body.rb-orbit-xp-energy .rb-meta-card,
+body.rb-orbit-xp-energy .rb-profile-card,
+body.rb-orbit-xp-energy .rb-creator-card {
+  border-color: rgba(250, 204, 21, 0.24);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.46),
+    0 0 34px rgba(16, 185, 129, 0.14),
+    0 0 46px rgba(250, 204, 21, 0.08),
+    inset 0 0 28px rgba(255, 255, 255, 0.018);
+}
+
 .rb-card:hover,
 .rb-media-card:hover,
 .rb-live-card:hover,
@@ -63,6 +103,27 @@
     0 40px 100px rgba(0, 0, 0, 0.56),
     0 0 45px rgba(16, 185, 129, 0.2),
     0 0 75px rgba(250, 204, 21, 0.08);
+}
+
+body.rb-orbit-xp-energy .rb-card:hover,
+body.rb-orbit-xp-energy .rb-media-card:hover,
+body.rb-orbit-xp-energy .rb-live-card:hover,
+body.rb-orbit-xp-energy .rb-feed-card:hover,
+body.rb-orbit-xp-energy .rb-music-card:hover,
+body.rb-orbit-xp-energy .rb-podcast-card:hover,
+body.rb-orbit-xp-energy .rb-radio-card:hover,
+body.rb-orbit-xp-energy .rb-game-card:hover,
+body.rb-orbit-xp-energy .rb-sports-card:hover,
+body.rb-orbit-xp-energy .rb-gallery-card:hover,
+body.rb-orbit-xp-energy .rb-store-card:hover,
+body.rb-orbit-xp-energy .rb-meta-card:hover,
+body.rb-orbit-xp-energy .rb-profile-card:hover,
+body.rb-orbit-xp-energy .rb-creator-card:hover {
+  border-color: rgba(250, 204, 21, 0.42);
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.56),
+    0 0 48px rgba(16, 185, 129, 0.22),
+    0 0 84px rgba(250, 204, 21, 0.12);
 }
 
 .rb-card > *,
@@ -157,7 +218,21 @@
 .rb-store-card:hover::after,
 .rb-meta-card:hover::after,
 .rb-profile-card:hover::after,
-.rb-creator-card:hover::after {
+.rb-creator-card:hover::after,
+body.rb-orbit-xp-energy .rb-card::after,
+body.rb-orbit-xp-energy .rb-media-card::after,
+body.rb-orbit-xp-energy .rb-live-card::after,
+body.rb-orbit-xp-energy .rb-feed-card::after,
+body.rb-orbit-xp-energy .rb-music-card::after,
+body.rb-orbit-xp-energy .rb-podcast-card::after,
+body.rb-orbit-xp-energy .rb-radio-card::after,
+body.rb-orbit-xp-energy .rb-game-card::after,
+body.rb-orbit-xp-energy .rb-sports-card::after,
+body.rb-orbit-xp-energy .rb-gallery-card::after,
+body.rb-orbit-xp-energy .rb-store-card::after,
+body.rb-orbit-xp-energy .rb-meta-card::after,
+body.rb-orbit-xp-energy .rb-profile-card::after,
+body.rb-orbit-xp-energy .rb-creator-card::after {
   opacity: 1;
 }
 
@@ -232,6 +307,32 @@
     brightness(1.02);
 }
 
+body.rb-orbit-xp-energy .rb-card img,
+body.rb-orbit-xp-energy .rb-card video,
+body.rb-orbit-xp-energy .rb-media-card img,
+body.rb-orbit-xp-energy .rb-media-card video,
+body.rb-orbit-xp-energy .rb-live-card img,
+body.rb-orbit-xp-energy .rb-live-card video,
+body.rb-orbit-xp-energy .rb-feed-card img,
+body.rb-orbit-xp-energy .rb-feed-card video,
+body.rb-orbit-xp-energy .rb-music-card img,
+body.rb-orbit-xp-energy .rb-music-card video,
+body.rb-orbit-xp-energy .rb-game-card img,
+body.rb-orbit-xp-energy .rb-game-card video,
+body.rb-orbit-xp-energy .rb-sports-card img,
+body.rb-orbit-xp-energy .rb-sports-card video,
+body.rb-orbit-xp-energy .rb-gallery-card img,
+body.rb-orbit-xp-energy .rb-gallery-card video,
+body.rb-orbit-xp-energy .rb-store-card img,
+body.rb-orbit-xp-energy .rb-store-card video,
+body.rb-orbit-xp-energy .rb-meta-card img,
+body.rb-orbit-xp-energy .rb-meta-card video {
+  filter:
+    saturate(1.18)
+    contrast(1.1)
+    brightness(1);
+}
+
 /* BODY */
 
 .rb-card-overlay {
@@ -250,6 +351,7 @@
   display: grid;
   gap: 12px;
   padding: 18px;
+  text-align: center;
 }
 
 .rb-card-kicker {
@@ -270,6 +372,8 @@
 }
 
 .rb-card-copy {
+  margin-left: auto;
+  margin-right: auto;
   color: var(--rb-muted, rgba(255, 255, 255, 0.68));
   line-height: 1.55;
   font-size: 0.92rem;
@@ -280,7 +384,7 @@
 .rb-card-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -296,6 +400,7 @@
 .rb-card-user {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
 }
 
@@ -310,6 +415,13 @@
     url("/images/brand/Avatar-hero-Banner.png.jpeg")
     center / cover no-repeat;
   box-shadow: 0 0 18px rgba(16, 185, 129, 0.18);
+}
+
+body.rb-orbit-xp-energy .rb-card-user img {
+  border-color: rgba(250, 204, 21, 0.52);
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.2),
+    0 0 24px rgba(250, 204, 21, 0.12);
 }
 
 .rb-card-user strong {
@@ -398,11 +510,18 @@
   animation: rbWaveMove 6.5s linear infinite;
 }
 
+body.rb-orbit-xp-energy .rb-music-wave {
+  box-shadow:
+    0 0 22px rgba(16, 185, 129, 0.14),
+    0 0 28px rgba(250, 204, 21, 0.1);
+}
+
 /* ACTIONS */
 
 .rb-card-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -495,6 +614,17 @@
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+
+body.rb-orbit-xp-energy .rb-empty,
+body.rb-orbit-xp-energy .rb-mini-empty,
+body.rb-orbit-xp-energy .rb-card-empty {
+  border-color: rgba(250, 204, 21, 0.24);
+  box-shadow:
+    0 0 24px rgba(16, 185, 129, 0.08),
+    0 0 34px rgba(250, 204, 21, 0.05),
+    inset 0 0 24px rgba(255, 255, 255, 0.02);
 }
 
 /* ANIMATIONS */
