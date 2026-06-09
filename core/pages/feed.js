@@ -4,6 +4,7 @@
 
    FEED PAGE CONTROLLER
    Public view + signed-in posting
+   XP Gauge Enabled
 ========================================= */
 
 import {
@@ -27,6 +28,9 @@ import {
 } from "/core/features/profile/profile-state.js";
 
 import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl,
   profileAvatar,
   profileName
 } from "/core/shared/rb-profile.js";
@@ -76,12 +80,20 @@ const els = {
   refresh: $("feedRefreshBtn"),
   composerAvatar: $("composerAvatar"),
   composerName: $("composerName"),
-  empty: $("feedEmpty")
+  empty: $("feedEmpty"),
+
+  xpGauge: $("feed-xp-gauge"),
+  xpFill: $("feed-xp-gauge-fill"),
+  xpText: $("feed-xp-gauge-text"),
+  xpNext: $("feed-xp-gauge-next"),
+  xpLevel: $("feed-xp-level"),
+  xpRank: $("feed-xp-rank")
 };
 
 const FEED = {
   user: null,
   profile: null,
+  identity: null,
   posts: [],
   actionsBound: false,
   booted: false,
@@ -92,8 +104,29 @@ function safeText(value, fallback = "") {
   return String(value ?? fallback).trim();
 }
 
+function safeImage(value = "", fallback = DEFAULT_AVATAR) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
+
 function setStatus(text) {
   if (els.status) els.status.textContent = text;
+}
+
+function setText(el, value = "") {
+  if (el) el.textContent = value;
 }
 
 function signInUrl() {
@@ -103,11 +136,122 @@ function signInUrl() {
 }
 
 function currentAvatar() {
-  return profileAvatar(FEED.profile) || DEFAULT_AVATAR;
+  return safeImage(profileAvatar(FEED.profile), DEFAULT_AVATAR);
 }
 
 function currentName() {
   return profileName(FEED.profile) || "Rich Bizness User";
+}
+
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rankTitle ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Feed Creator";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  FEED.identity = getProfileIdentity?.(FEED.profile) || FEED.identity || null;
+
+  const model = getProfileXpModel(FEED.profile, FEED.identity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "feed",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+function syncFeedProfileLock() {
+  FEED.identity = getProfileIdentity?.(FEED.profile) || null;
+
+  document.body.dataset.rbRoute = "feed";
+  document.body.dataset.rbUserId = FEED.user?.id || "";
+  document.body.dataset.rbProfileId = FEED.identity?.id || "";
+  document.body.dataset.rbProfileLocked = FEED.identity?.id ? "true" : "false";
+
+  bindProfileShell?.();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl?.(FEED.profile) || "/profile";
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = currentAvatar();
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt = currentName();
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
 }
 
 function paintComposer() {
@@ -117,6 +261,8 @@ function paintComposer() {
     avatarUrl: FEED.user?.id ? currentAvatar() : DEFAULT_AVATAR,
     displayName: FEED.user?.id ? currentName() : "Guest Viewer"
   });
+
+  syncFeedProfileLock();
 }
 
 async function initFeedAuth() {
@@ -126,9 +272,11 @@ async function initFeedAuth() {
 
   FEED.user = auth.user || getUser() || null;
   FEED.profile = auth.profile || null;
+  FEED.identity = getProfileIdentity?.(FEED.profile) || null;
 
   if (FEED.user?.id) {
     FEED.profile = await ensureMyProfile();
+    FEED.identity = getProfileIdentity?.(FEED.profile) || null;
     await refreshProfileState();
   }
 
@@ -186,10 +334,12 @@ async function loadPosts() {
     return {
       ...post,
       avatar_url:
-        post.avatar_url ||
-        post.metadata?.profile_avatar ||
-        profile.avatar_url ||
-        DEFAULT_AVATAR,
+        safeImage(
+          post.avatar_url ||
+            post.metadata?.profile_avatar ||
+            profile.avatar_url,
+          DEFAULT_AVATAR
+        ),
       username:
         post.username ||
         profile.username ||
@@ -213,7 +363,19 @@ async function loadPosts() {
     }
   });
 
+  renderXpGauge();
   setStatus(`${FEED.posts.length} feed posts loaded.`);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:feed-update", {
+      detail: {
+        route: "feed",
+        posts: FEED.posts.length,
+        profileLocked: !!FEED.identity?.id,
+        xpGauge: true
+      }
+    })
+  );
 }
 
 async function createPost(event) {
@@ -236,7 +398,9 @@ async function createPost(event) {
       section: safeText(els.section?.value, "feed"),
       visibility: safeText(els.visibility?.value, "public"),
       metadata: {
-        source_page: "feed.js"
+        source_page: "feed.js",
+        profile_locked: true,
+        profile_id: FEED.user.id
       }
     });
 
@@ -278,6 +442,8 @@ async function handleComments(postId) {
       postId,
       comments
     });
+
+    renderXpGauge();
   } catch (error) {
     setStatus(error?.message || "Comments failed.");
   }
@@ -344,6 +510,7 @@ function bindUI() {
 
     FEED.profile = profileState.profile || FEED.profile;
     FEED.user = profileState.auth?.user || FEED.user;
+    FEED.identity = getProfileIdentity?.(FEED.profile) || FEED.identity || null;
 
     paintComposer();
   });
@@ -371,13 +538,23 @@ async function init() {
     clearFeedRealtime();
   });
 
+  document.body.dataset.rbPage = "feed";
+  document.body.dataset.rbRoute = "feed";
+  document.body.dataset.rbProfileLock = FEED.identity?.id ? "true" : "false";
   document.body.classList.add("rb-feed-ready");
 
-  console.log("RB FEED PAGE READY");
+  markPageReady?.("feed");
+
+  console.log("RB FEED PAGE READY", {
+    profileLocked: !!FEED.identity?.id,
+    route: "feed",
+    xpGauge: true
+  });
 }
 
 init().catch((error) => {
   console.error("[RB FEED INIT FAILED]", error);
   setFeedError(error);
   setStatus(error?.message || "Feed failed to load.");
+  markPageError?.(error);
 });
