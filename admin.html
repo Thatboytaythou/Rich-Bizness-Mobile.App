@@ -27,8 +27,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-admin-page" data-page="admin">
-
+<body
+  class="rb-body rb-admin-page rb-orbit-xp-energy"
+  data-page="admin"
+  data-rb-page="admin"
+  data-rb-route="admin"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -36,7 +40,6 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
     <a class="rb-brand" href="/" data-route="home">
       <span>CONTROL CENTER</span>
       <strong>RICH BIZNESS</strong>
@@ -47,19 +50,21 @@
       <a href="/" data-route="home">Portal</a>
       <a href="/feed" data-route="feed">Feed</a>
       <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
+      <a href="/gaming" data-route="gaming">Gaming</a>
+      <a href="/sports" data-route="sports">Sports</a>
+      <a href="/store" data-route="store">Store</a>
       <a href="/upload" data-route="upload">Upload</a>
-      <a href="/profile" data-route="profile">Profile</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
       <a href="/settings" data-route="settings">Settings</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell rb-admin-shell">
-
     <section class="rb-section-hero">
-
       <div class="rb-section-hero-copy">
-
         <p class="rb-kicker">RICH BIZNESS CONTROL</p>
 
         <h1>Admin Dashboard</h1>
@@ -71,7 +76,6 @@
         </p>
 
         <div class="rb-profile-actions">
-
           <button
             id="admin-refresh-btn"
             class="rb-btn primary"
@@ -84,6 +88,7 @@
             id="admin-home-btn"
             class="rb-btn ghost"
             type="button"
+            data-route="home"
           >
             Back To Portal
           </button>
@@ -92,41 +97,38 @@
             id="admin-profile-btn"
             class="rb-btn gold"
             type="button"
+            data-route="profile"
           >
             My Profile
           </button>
-
         </div>
-
       </div>
 
       <article class="rb-profile-card rb-admin-identity-card">
-
         <div class="rb-profile-avatar-wrap">
-
           <img
             id="admin-user-avatar"
             class="rb-profile-avatar"
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Admin avatar"
             data-rb-avatar
+            data-rb-profile-avatar
           />
 
           <div class="rb-profile-online" aria-hidden="true"></div>
-
         </div>
 
-        <h2 id="admin-user-name">Rich Bizness Admin</h2>
+        <h2 id="admin-user-name" data-rb-name>Rich Bizness Admin</h2>
 
         <p
           id="admin-user-handle"
           class="rb-profile-handle"
+          data-rb-username
         >
           @richbizness
         </p>
 
         <div class="rb-profile-meta">
-
           <div
             id="admin-user-badge"
             class="rb-meta-pill"
@@ -147,15 +149,11 @@
           >
             Starting dashboard...
           </div>
-
         </div>
-
       </article>
-
     </section>
 
     <section class="rb-stat-grid">
-
       <article>
         <strong id="admin-users-count">0</strong>
         <span>Users</span>
@@ -185,13 +183,10 @@
         <strong id="admin-live-count">0</strong>
         <span>Live Now</span>
       </article>
-
     </section>
 
     <section class="rb-card-grid">
-
       <article class="rb-panel">
-
         <div class="rb-panel-head">
           <div>
             <p class="rb-kicker">QUICK ACTIONS</p>
@@ -200,7 +195,6 @@
         </div>
 
         <div class="rb-form-actions">
-
           <a class="rb-main-launch" href="/profile" data-route="profile">
             Manage Profile
           </a>
@@ -211,6 +205,18 @@
 
           <a class="rb-btn ghost" href="/live" data-route="live">
             Live Control
+          </a>
+
+          <a class="rb-btn ghost" href="/music" data-route="music">
+            Music Control
+          </a>
+
+          <a class="rb-btn ghost" href="/podcast" data-route="podcast">
+            Podcast Control
+          </a>
+
+          <a class="rb-btn ghost" href="/radio" data-route="radio">
+            Radio Control
           </a>
 
           <a class="rb-btn ghost" href="/notifications" data-route="notifications">
@@ -224,13 +230,10 @@
           <a class="rb-btn ghost" href="/settings" data-route="settings">
             Settings
           </a>
-
         </div>
-
       </article>
 
       <article class="rb-panel">
-
         <div class="rb-panel-head">
           <div>
             <p class="rb-kicker">LIVE SYSTEMS</p>
@@ -239,7 +242,6 @@
         </div>
 
         <div class="rb-list-stack">
-
           <div class="rb-mini-card">
             <strong>SUPABASE</strong>
             <span>Realtime Channels Active</span>
@@ -255,12 +257,14 @@
             <span>Revenue Monitoring Ready</span>
           </div>
 
+          <div class="rb-mini-card">
+            <strong>MUSIC</strong>
+            <span>Tracks • Podcast • Radio Synced</span>
+          </div>
         </div>
-
       </article>
 
       <article class="rb-panel">
-
         <div class="rb-panel-head">
           <div>
             <p class="rb-kicker">HEALTH</p>
@@ -269,7 +273,6 @@
         </div>
 
         <div class="rb-list-stack">
-
           <div class="rb-mini-card">
             <strong>API STATUS</strong>
             <span>Stable</span>
@@ -284,22 +287,16 @@
             <strong>REALTIME ENGINE</strong>
             <span>Synced Across Universe</span>
           </div>
-
         </div>
-
       </article>
-
     </section>
 
     <section class="rb-panel">
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">REALTIME ADMIN FEED</p>
           <h2 class="rb-panel-title">System Activity</h2>
         </div>
-
       </div>
 
       <div
@@ -314,9 +311,7 @@
         id="admin-audit-list"
         class="rb-list-stack"
       ></div>
-
     </section>
-
   </main>
 
   <script type="module">
@@ -326,6 +321,5 @@
   </script>
 
   <script type="module" src="/core/pages/admin.js"></script>
-
 </body>
 </html>
