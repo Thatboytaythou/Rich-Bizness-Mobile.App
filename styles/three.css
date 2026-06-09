@@ -5,6 +5,7 @@
 
    THREE.JS UNIVERSE CANVAS
    CINEMATIC PORTAL ENGINE
+   XP Energy Visual Sync
 ========================= */
 
 #canvas-container {
@@ -184,6 +185,48 @@
 }
 
 /* =========================
+   XP / PRESENCE / LIVE CANVAS ENERGY
+========================= */
+
+body.rb-orbit-xp-energy #canvas-container::before {
+  opacity: 0.96;
+
+  filter:
+    blur(54px)
+    saturate(1.48)
+    brightness(1.08);
+}
+
+body.rb-orbit-xp-energy #canvas-container canvas {
+  filter:
+    saturate(1.16)
+    contrast(1.05)
+    brightness(1.03);
+}
+
+body.rb-orbit-live-energy #canvas-container::before {
+  opacity: 1;
+
+  filter:
+    blur(56px)
+    saturate(1.55)
+    brightness(1.1);
+}
+
+body.rb-orbit-presence-energy #canvas-container canvas {
+  filter:
+    saturate(1.12)
+    contrast(1.04);
+}
+
+body.rb-orbit-xp-energy.rb-universe-transitioning #canvas-container canvas {
+  filter:
+    blur(1.5px)
+    brightness(1.14)
+    saturate(1.3);
+}
+
+/* =========================
    PORTAL CINEMA MODE
 ========================= */
 
@@ -233,6 +276,15 @@
   animation: rbLightSweep 18s linear infinite;
 }
 
+body.rb-orbit-xp-energy .rb-index-page #canvas-container .rb-light-rays,
+body.rb-orbit-xp-energy #canvas-container .rb-light-rays {
+  filter:
+    blur(12px)
+    brightness(1.18);
+
+  opacity: 0.88;
+}
+
 /* =========================
    GALAXY OVERLAY
 ========================= */
@@ -250,6 +302,10 @@
   opacity: 0.7;
 
   mix-blend-mode: screen;
+}
+
+body.rb-orbit-xp-energy #canvas-container .rb-space-overlay {
+  opacity: 0.82;
 }
 
 /* =========================
@@ -356,6 +412,22 @@
       saturate(1.06)
       contrast(1.02);
   }
+
+  body.rb-orbit-xp-energy #canvas-container::before {
+    filter:
+      blur(42px)
+      saturate(1.38)
+      brightness(1.06);
+
+    opacity: 0.92;
+  }
+
+  body.rb-orbit-xp-energy #canvas-container canvas {
+    filter:
+      saturate(1.12)
+      contrast(1.04)
+      brightness(1.02);
+  }
 }
 
 /* =========================
@@ -367,6 +439,13 @@
     filter:
       blur(32px)
       saturate(1.18);
+  }
+
+  body.rb-orbit-xp-energy #canvas-container::before {
+    filter:
+      blur(36px)
+      saturate(1.28)
+      brightness(1.04);
   }
 }
 
