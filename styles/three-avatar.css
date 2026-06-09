@@ -5,6 +5,7 @@
 
    REALTIME 3D AVATAR ENGINE
    Safe avatar overlay + mini avatar support
+   XP Energy Sync Enabled
 ========================================= */
 
 /* =========================
@@ -257,6 +258,58 @@
 }
 
 /* =========================
+   XP ENERGY STATES
+========================= */
+
+body.rb-orbit-xp-energy .rb-avatar-player {
+  filter:
+    drop-shadow(0 0 26px rgba(0, 255, 157, 0.34))
+    drop-shadow(0 0 38px rgba(250, 204, 21, 0.18))
+    brightness(1.05);
+}
+
+body.rb-orbit-xp-energy .rb-avatar-3d-container {
+  border-color: rgba(250, 204, 21, 0.18);
+
+  box-shadow:
+    0 0 28px rgba(0, 255, 157, 0.2),
+    0 0 74px rgba(250, 204, 21, 0.1),
+    0 0 90px rgba(0, 0, 0, 0.62),
+    inset 0 0 38px rgba(255, 255, 255, 0.05);
+}
+
+body.rb-orbit-xp-energy .rb-avatar-3d-container::before {
+  opacity: 0.72;
+
+  filter:
+    blur(16px)
+    saturate(1.42)
+    brightness(1.06);
+
+  animation-duration: 8s;
+}
+
+body.rb-orbit-xp-energy .rb-avatar-ring {
+  opacity: 0.58;
+  border-color: rgba(250, 204, 21, 0.18);
+  animation-duration: 11s;
+}
+
+body.rb-orbit-xp-energy .rb-avatar-mini {
+  border-color: rgba(250, 204, 21, 0.22);
+
+  box-shadow:
+    0 0 18px rgba(0, 255, 157, 0.24),
+    0 0 28px rgba(250, 204, 21, 0.12),
+    inset 0 0 16px rgba(255, 255, 255, 0.04);
+}
+
+body.rb-orbit-xp-energy .rb-avatar-mini::before {
+  opacity: 0.62;
+  animation-duration: 5.8s;
+}
+
+/* =========================
    ACTIVE STATES
 ========================= */
 
@@ -323,6 +376,10 @@
   animation: rbAvatarPulse 1.2s ease-out infinite;
 }
 
+body.rb-orbit-xp-energy .rb-avatar-pulse {
+  border-color: rgba(250, 204, 21, 0.22);
+}
+
 /* =========================
    FLOAT MOTION
 ========================= */
@@ -351,6 +408,14 @@
   z-index: -2;
 
   animation: rbAvatarGlow 8s ease-in-out infinite;
+}
+
+body.rb-orbit-xp-energy .rb-avatar-cinema-glow {
+  background:
+    radial-gradient(circle, rgba(0, 255, 157, 0.2), transparent 56%),
+    radial-gradient(circle, rgba(250, 204, 21, 0.12), transparent 66%);
+
+  opacity: 0.78;
 }
 
 /* =========================
@@ -444,6 +509,13 @@
 
   .rb-avatar-3d-container::before {
     inset: -8px;
+  }
+
+  body.rb-orbit-xp-energy .rb-avatar-player {
+    filter:
+      drop-shadow(0 0 20px rgba(0, 255, 157, 0.28))
+      drop-shadow(0 0 28px rgba(250, 204, 21, 0.12))
+      brightness(1.04);
   }
 }
 
