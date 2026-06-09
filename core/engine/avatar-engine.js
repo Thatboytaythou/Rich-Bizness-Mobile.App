@@ -5,10 +5,11 @@
    CINEMATIC 3D AVATAR ENGINE
    Boy/Girl • Portal Roam • Controllable • Living Motion
    Safer cleanup + mobile scale lock + pointer control cleanup
+   Profile Lock + XP Energy Sync Enabled
 ========================= */
 
 export function createAvatarEngine(ctx) {
-  const { THREE, scene, activityState } = ctx;
+  const { THREE, scene, activityState = {} } = ctx;
 
   let avatarRoot = null;
   let avatar = null;
@@ -17,6 +18,15 @@ export function createAvatarEngine(ctx) {
   let controlsBound = false;
   let avatarType = "boy";
   let mode = "roam";
+
+  const xpState = {
+    xp: 0,
+    level: 1,
+    rank: "Biz Legend",
+    percent: 0,
+    energy: 0,
+    pulse: 0
+  };
 
   const keys = {
     forward: false,
@@ -29,6 +39,8 @@ export function createAvatarEngine(ctx) {
   const target = new THREE.Vector3(5.6, -2.55, 8.6);
   const velocity = new THREE.Vector3();
   const roamTarget = new THREE.Vector3(5.6, -2.55, 8.6);
+  const zeroVector = new THREE.Vector3();
+  const scaleVector = new THREE.Vector3();
 
   let movePadActive = false;
   let emotion = "boss";
@@ -37,12 +49,44 @@ export function createAvatarEngine(ctx) {
   let walkTime = 0;
   let lastRoamPick = 0;
 
+  function clamp01(value) {
+    return Math.max(0, Math.min(1, Number(value) || 0));
+  }
+
   function baseScale() {
-    return window.innerWidth <= 720 ? 0.28 : 0.32;
+    const base = window.innerWidth <= 720 ? 0.28 : 0.32;
+    return base * (1 + xpState.energy * 0.035);
+  }
+
+  function syncXpState(source = activityState || {}) {
+    const xp = Number(source.xp ?? source.rich_points ?? source.points ?? source.totalXp ?? xpState.xp ?? 0) || 0;
+    const level = Number(source.level ?? source.rich_level ?? xpState.level ?? 1) || 1;
+    const rank = source.rank || source.rankTitle || source.rank_title || xpState.rank || "Biz Legend";
+
+    let percent = source.percent ?? source.xpPercent ?? source.progress ?? xpState.percent ?? 0;
+
+    if (percent > 1) {
+      percent = percent / 100;
+    }
+
+    percent = clamp01(percent);
+
+    xpState.xp = xp;
+    xpState.level = level;
+    xpState.rank = rank;
+    xpState.percent = percent;
+    xpState.energy = clamp01(percent * 0.72 + Math.min(level, 100) / 240);
+    xpState.pulse = Math.max(xpState.pulse, 1);
+
+    if (avatarRoot && portalDive <= 0.01) {
+      avatarRoot.scale.setScalar(baseScale());
+    }
   }
 
   function mount() {
     if (mounted) return;
+
+    syncXpState();
 
     avatarRoot = new THREE.Group();
     avatarRoot.position.copy(target);
@@ -136,11 +180,13 @@ export function createAvatarEngine(ctx) {
     avatarRoot.add(avatar);
 
     const isGirl = type === "girl";
+    const xpGlow = xpState.energy;
+    const xpPulse = xpState.pulse;
 
     const skin = makeMat(isGirl ? 0xd89a78 : 0xe8b88a, { shininess: 32 });
     const outfit = makeMat(isGirl ? 0x15091c : 0x070a08, {
       emissive: isGirl ? 0x26051f : 0x021407,
-      emissiveIntensity: 0.38,
+      emissiveIntensity: 0.38 + xpGlow * 0.22,
       shininess: 46
     });
 
@@ -151,7 +197,7 @@ export function createAvatarEngine(ctx) {
 
     const gold = makeMat(0xfacc15, {
       emissive: 0xc99700,
-      emissiveIntensity: 1.22,
+      emissiveIntensity: 1.22 + xpGlow * 0.36,
       shininess: 150
     });
 
@@ -166,7 +212,7 @@ export function createAvatarEngine(ctx) {
       new THREE.BoxGeometry(bodyW + 0.34, bodyH + 0.34, bodyD + 0.26),
       makeBasic(isGirl ? 0xf472b6 : 0x22c55e, {
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.08 + xpPulse * 0.015,
         wireframe: true,
         depthWrite: false
       }),
@@ -191,7 +237,7 @@ export function createAvatarEngine(ctx) {
       new THREE.BoxGeometry(isGirl ? 2.78 : 3.05, 0.45, 0.16),
       makeMat(0x010101, {
         emissive: isGirl ? 0x2b061e : 0x043018,
-        emissiveIntensity: 0.62,
+        emissiveIntensity: 0.62 + xpGlow * 0.2,
         shininess: 150
       }),
       { x: 0, y: 5.55, z: 1.72 }
@@ -252,6 +298,9 @@ export function createAvatarEngine(ctx) {
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("rb:xp-gauge-update", onXpGaugeUpdate);
+    window.addEventListener("rb:app-xp-update", onXpGaugeUpdate);
+    window.addEventListener("rb:universe-preview-update", onUniverseUpdate);
 
     window.RB_SWAP_AVATAR = swapAvatar;
     window.RB_AVATAR_MODE = setMode;
@@ -265,11 +314,22 @@ export function createAvatarEngine(ctx) {
 
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("keyup", onKeyUp);
+    window.removeEventListener("rb:xp-gauge-update", onXpGaugeUpdate);
+    window.removeEventListener("rb:app-xp-update", onXpGaugeUpdate);
+    window.removeEventListener("rb:universe-preview-update", onUniverseUpdate);
 
     if (window.RB_SWAP_AVATAR === swapAvatar) delete window.RB_SWAP_AVATAR;
     if (window.RB_AVATAR_MODE === setMode) delete window.RB_AVATAR_MODE;
     if (window.RB_AVATAR_EMOTE === setEmotion) delete window.RB_AVATAR_EMOTE;
     if (window.RB_AVATAR_PORTAL === portalJump) delete window.RB_AVATAR_PORTAL;
+  }
+
+  function onXpGaugeUpdate(event) {
+    syncXpState(event?.detail || {});
+  }
+
+  function onUniverseUpdate(event) {
+    syncXpState(event?.detail?.activityState || event?.detail || {});
   }
 
   function onKeyDown(event) {
@@ -316,6 +376,7 @@ export function createAvatarEngine(ctx) {
   function portalJump() {
     portalDiveTarget = 1;
     mode = "portal";
+    xpState.pulse = Math.max(xpState.pulse, 1);
     window.dispatchEvent(new CustomEvent("rb:avatar-portal-jump"));
   }
 
@@ -362,6 +423,7 @@ export function createAvatarEngine(ctx) {
     if (!mounted || !avatarRoot || !avatar) return;
 
     walkTime += 0.016;
+    xpState.pulse *= 0.94;
 
     updateMotion(t);
     updateBodyAnimation(t);
@@ -378,10 +440,11 @@ export function createAvatarEngine(ctx) {
     if (keys.right) input.x += 1;
 
     const hasInput = input.lengthSq() > 0;
+    const xpSpeed = 1 + xpState.energy * 0.22;
 
     if (hasInput) {
       input.normalize();
-      const speed = keys.run ? 0.16 : 0.085;
+      const speed = (keys.run ? 0.16 : 0.085) * xpSpeed;
       velocity.lerp(input.multiplyScalar(speed), 0.18);
     } else if (mode === "roam") {
       pickRoamTarget(t);
@@ -390,13 +453,13 @@ export function createAvatarEngine(ctx) {
       toTarget.y = 0;
 
       if (toTarget.length() > 0.4) {
-        toTarget.normalize().multiplyScalar(0.035);
+        toTarget.normalize().multiplyScalar(0.035 * xpSpeed);
         velocity.lerp(toTarget, 0.035);
       } else {
-        velocity.lerp(new THREE.Vector3(0, 0, 0), 0.05);
+        velocity.lerp(zeroVector, 0.05);
       }
     } else {
-      velocity.lerp(new THREE.Vector3(0, 0, 0), 0.1);
+      velocity.lerp(zeroVector, 0.1);
     }
 
     avatarRoot.position.x += velocity.x;
@@ -405,27 +468,28 @@ export function createAvatarEngine(ctx) {
     avatarRoot.position.x = THREE.MathUtils.clamp(avatarRoot.position.x, -11, 11);
     avatarRoot.position.z = THREE.MathUtils.clamp(avatarRoot.position.z, 5.8, 11.4);
 
-    avatarRoot.position.y = -2.55 + Math.sin(t * 1.35) * 0.12;
+    avatarRoot.position.y = -2.55 + Math.sin(t * 1.35) * (0.12 + xpState.energy * 0.035);
 
     if (velocity.lengthSq() > 0.00002) {
       const rot = Math.atan2(velocity.x, velocity.z);
       avatarRoot.rotation.y += (rot - avatarRoot.rotation.y) * 0.08;
     } else {
-      avatarRoot.rotation.y += (Math.sin(t * 0.55) * 0.18 - avatarRoot.rotation.y) * 0.035;
+      avatarRoot.rotation.y += (Math.sin(t * 0.55) * (0.18 + xpState.energy * 0.04) - avatarRoot.rotation.y) * 0.035;
     }
   }
 
   function updateBodyAnimation(t) {
     const moving = velocity.lengthSq() > 0.00008;
     const runBoost = keys.run ? 1.75 : 1;
-    const step = Math.sin(t * 5.2 * runBoost) * (moving ? 1 : 0.18);
+    const xpBoost = 1 + xpState.energy * 0.22;
+    const step = Math.sin(t * 5.2 * runBoost * xpBoost) * (moving ? 1 : 0.18);
     const bounce = Math.abs(step) * (moving ? 0.09 : 0.025);
 
-    avatar.position.y = bounce;
+    avatar.position.y = bounce + xpState.pulse * 0.025;
 
     if (parts.head) {
-      parts.head.position.y = 5.45 + Math.sin(t * 2.6) * 0.08;
-      parts.head.rotation.y = Math.sin(t * 1.05) * 0.055;
+      parts.head.position.y = 5.45 + Math.sin(t * 2.6) * (0.08 + xpState.energy * 0.018);
+      parts.head.rotation.y = Math.sin(t * 1.05) * (0.055 + xpState.energy * 0.015);
     }
 
     if (parts.leftLeg) parts.leftLeg.rotation.x = step * 0.48;
@@ -442,20 +506,30 @@ export function createAvatarEngine(ctx) {
       parts.rightShoe.rotation.x = parts.rightLeg.rotation.x * 0.22;
     }
 
-    if (parts.chain) parts.chain.rotation.z = Math.sin(t * 2.3) * 0.035;
-    if (parts.pendant) parts.pendant.rotation.z = Math.sin(t * 2.8) * 0.09;
+    if (parts.chain) parts.chain.rotation.z = Math.sin(t * 2.3) * (0.035 + xpState.energy * 0.012);
+    if (parts.pendant) parts.pendant.rotation.z = Math.sin(t * 2.8) * (0.09 + xpState.energy * 0.018);
 
     if (parts.bodyGlow?.material) {
       parts.bodyGlow.material.opacity =
         0.055 +
         Math.abs(Math.sin(t * 1.8)) * 0.07 +
-        (activityState.liveActive ? 0.03 : 0);
+        (activityState.liveActive ? 0.03 : 0) +
+        xpState.energy * 0.045 +
+        xpState.pulse * 0.025;
     }
 
     if (parts.chatgptCore) {
-      const corePulse = 1 + Math.sin(t * 4.4) * 0.18;
+      const corePulse = 1 + Math.sin(t * 4.4) * (0.18 + xpState.energy * 0.04) + xpState.pulse * 0.08;
       parts.chatgptCore.scale.set(corePulse, corePulse, 0.28);
-      parts.chatgptCore.material.opacity = 0.68 + Math.sin(t * 3.8) * 0.16;
+      parts.chatgptCore.material.opacity = 0.68 + Math.sin(t * 3.8) * 0.16 + xpState.energy * 0.08;
+    }
+
+    if (parts.chain?.material) {
+      parts.chain.material.emissiveIntensity = 1.2 + xpState.energy * 0.42 + xpState.pulse * 0.18;
+    }
+
+    if (parts.pendant?.material) {
+      parts.pendant.material.emissiveIntensity = 1.2 + xpState.energy * 0.48 + xpState.pulse * 0.22;
     }
   }
 
@@ -469,7 +543,7 @@ export function createAvatarEngine(ctx) {
     }
 
     if (emotion === "alert") {
-      parts.shades.material.emissiveIntensity = 0.9 + Math.sin(t * 8) * 0.25;
+      parts.shades.material.emissiveIntensity = 0.9 + Math.sin(t * 8) * 0.25 + xpState.energy * 0.18;
       parts.head.rotation.y = Math.sin(t * 2.6) * 0.11;
     }
 
@@ -477,7 +551,7 @@ export function createAvatarEngine(ctx) {
       parts.mouth.scale.x = 1;
       parts.mouth.position.y = 4.78;
       parts.head.rotation.z = 0;
-      parts.shades.material.emissiveIntensity = 0.55 + Math.sin(t * 2) * 0.08;
+      parts.shades.material.emissiveIntensity = 0.55 + Math.sin(t * 2) * 0.08 + xpState.energy * 0.14;
     }
   }
 
@@ -490,12 +564,13 @@ export function createAvatarEngine(ctx) {
       avatarRoot.position.y += (-1.65 - avatarRoot.position.y) * 0.04;
 
       avatarRoot.scale.setScalar(baseScale() * (1 - portalDive * 0.72));
-      avatarRoot.rotation.y += 0.16;
+      avatarRoot.rotation.y += 0.16 + xpState.energy * 0.04;
 
       if (portalDive > 0.92) {
         portalDiveTarget = 0;
         portalDive = 0;
         mode = "roam";
+        xpState.pulse = Math.max(xpState.pulse, 1);
 
         avatarRoot.position.set(
           THREE.MathUtils.randFloat(-6, 6),
@@ -507,13 +582,19 @@ export function createAvatarEngine(ctx) {
       }
     } else {
       const next = baseScale();
-      avatarRoot.scale.lerp(new THREE.Vector3(next, next, next), 0.08);
+      scaleVector.set(next, next, next);
+      avatarRoot.scale.lerp(scaleVector, 0.08);
     }
   }
 
   function resize() {
     if (!avatarRoot || portalDive > 0.01) return;
     avatarRoot.scale.setScalar(baseScale());
+  }
+
+  function setActivityState(next = {}) {
+    Object.assign(activityState, next);
+    syncXpState(activityState);
   }
 
   function destroy() {
@@ -526,6 +607,7 @@ export function createAvatarEngine(ctx) {
     keys.run = false;
 
     movePadActive = false;
+    xpState.pulse = 0;
 
     if (avatarRoot) {
       scene.remove(avatarRoot);
@@ -547,6 +629,7 @@ export function createAvatarEngine(ctx) {
     setMode,
     setEmotion,
     portalJump,
+    setActivityState,
     onPointerDown,
     onPointerMove,
     onPointerUp
