@@ -7,6 +7,7 @@
    Profile + Messages + Notifications + Creator/Admin Panels
    Avatar + Banner Sync Ready
    XP Gauge + Meta World Entry Ready
+   Profile Lock + XP Energy Sync Enabled
 ========================================= */
 
 .rb-profile-page,
@@ -284,6 +285,48 @@
   box-shadow: 0 0 18px rgba(102, 255, 153, 0.9);
 }
 
+/* PROFILE LOCK + XP ENERGY */
+
+body[data-rb-profile-locked="true"] .rb-profile-hero,
+body[data-rb-profile-locked="true"] .rb-profile-card,
+body[data-rb-profile-locked="true"] .rb-settings-card,
+body[data-rb-profile-locked="true"] .rb-edit-card {
+  border-color: rgba(0, 255, 157, 0.28);
+}
+
+body.rb-orbit-xp-energy .rb-profile-hero {
+  border-color: rgba(250, 204, 21, 0.3);
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.52),
+    0 0 74px rgba(16, 185, 129, 0.18),
+    0 0 84px rgba(250, 204, 21, 0.1),
+    inset 0 0 96px rgba(250, 204, 21, 0.06);
+}
+
+body.rb-orbit-xp-energy .rb-profile-hero::before {
+  opacity: 1;
+  filter: blur(34px) saturate(1.32) brightness(1.08);
+}
+
+body.rb-orbit-xp-energy .rb-profile-avatar-wrap::before {
+  opacity: 0.86;
+  filter: blur(16px) saturate(1.34) brightness(1.06);
+  animation-duration: 9s;
+}
+
+body.rb-orbit-xp-energy .rb-profile-avatar,
+body.rb-orbit-xp-energy [data-rb-avatar],
+body.rb-orbit-xp-energy [data-rb-auth-avatar],
+body.rb-orbit-xp-energy #messages-user-avatar,
+body.rb-orbit-xp-energy #creator-user-avatar {
+  border-color: rgba(250, 204, 21, 0.34);
+  box-shadow:
+    0 0 0 10px rgba(16, 185, 129, 0.12),
+    0 30px 70px rgba(0, 0, 0, 0.62),
+    0 0 70px rgba(16, 185, 129, 0.3),
+    0 0 48px rgba(250, 204, 21, 0.16);
+}
+
 /* XP GAUGE */
 
 .rb-profile-xp-gauge {
@@ -326,7 +369,9 @@
   text-shadow: 0 0 18px rgba(250, 204, 21, 0.28);
 }
 
-.rb-profile-xp-bar {
+.rb-profile-xp-bar,
+#profileXpGauge,
+#profile-xp-gauge {
   position: relative;
   height: 14px;
   overflow: hidden;
@@ -337,7 +382,9 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
 }
 
-.rb-profile-xp-fill {
+.rb-profile-xp-fill,
+#profileXpGaugeFill,
+#profile-xp-gauge-fill {
   position: absolute;
   inset: 0 auto 0 0;
   width: 0%;
@@ -350,7 +397,9 @@
   transition: width 0.55s ease;
 }
 
-.rb-profile-xp-fill::after {
+.rb-profile-xp-fill::after,
+#profileXpGaugeFill::after,
+#profile-xp-gauge-fill::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -364,6 +413,14 @@
     );
   opacity: 0.22;
   animation: rbXpStripe 1.2s linear infinite;
+}
+
+body.rb-orbit-xp-energy .rb-profile-xp-gauge {
+  border-color: rgba(250, 204, 21, 0.32);
+  box-shadow:
+    0 0 38px rgba(16, 185, 129, 0.16),
+    0 0 48px rgba(250, 204, 21, 0.1),
+    inset 0 0 32px rgba(255, 255, 255, 0.03);
 }
 
 /* CARD BLOCKS */
@@ -391,6 +448,21 @@
     0 32px 90px rgba(0, 0, 0, 0.48),
     0 0 44px rgba(16, 185, 129, 0.11),
     inset 0 0 54px rgba(255, 255, 255, 0.018);
+}
+
+body.rb-orbit-xp-energy .rb-profile-card,
+body.rb-orbit-xp-energy .rb-settings-card,
+body.rb-orbit-xp-energy .rb-edit-card,
+body.rb-orbit-xp-energy .rb-message-card,
+body.rb-orbit-xp-energy .rb-admin-card,
+body.rb-orbit-xp-energy .rb-creator-card,
+body.rb-orbit-xp-energy .rb-profile-world-entry {
+  border-color: rgba(250, 204, 21, 0.26);
+  box-shadow:
+    0 32px 90px rgba(0, 0, 0, 0.48),
+    0 0 50px rgba(16, 185, 129, 0.14),
+    0 0 54px rgba(250, 204, 21, 0.08),
+    inset 0 0 58px rgba(255, 255, 255, 0.024);
 }
 
 .rb-profile-world-entry {
@@ -452,6 +524,13 @@
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   box-shadow: 0 0 18px rgba(16, 185, 129, 0.07);
+}
+
+body.rb-orbit-xp-energy .rb-meta-pill {
+  border-color: rgba(250, 204, 21, 0.2);
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.1),
+    0 0 24px rgba(250, 204, 21, 0.06);
 }
 
 .rb-profile-actions .rb-btn,
@@ -547,6 +626,10 @@
   transform: translateY(-2px);
 }
 
+body.rb-orbit-xp-energy [data-profile-tab].is-active {
+  border-color: rgba(250, 204, 21, 0.34);
+}
+
 [data-profile-panel] {
   animation: rbProfilePanelIn 0.28s ease both;
 }
@@ -578,6 +661,14 @@
   box-shadow:
     0 0 28px rgba(0, 0, 0, 0.28),
     inset 0 0 20px rgba(255, 255, 255, 0.02);
+}
+
+body.rb-orbit-xp-energy .rb-feed-card,
+body.rb-orbit-xp-energy .rb-mini-card,
+body.rb-orbit-xp-energy .rb-mini-empty,
+body.rb-orbit-xp-energy #profileEmpty,
+body.rb-orbit-xp-energy .rb-notification-card {
+  border-color: rgba(250, 204, 21, 0.2);
 }
 
 .rb-feed-card {
@@ -652,6 +743,14 @@
     inset 0 0 44px rgba(255, 255, 255, 0.02);
 }
 
+body.rb-orbit-xp-energy .rb-profile-meta-avatar-card {
+  border-color: rgba(250, 204, 21, 0.28);
+  box-shadow:
+    0 0 52px rgba(16, 185, 129, 0.18),
+    0 0 54px rgba(250, 204, 21, 0.1),
+    inset 0 0 48px rgba(255, 255, 255, 0.025);
+}
+
 .rb-profile-meta-avatar-stage {
   position: relative;
   min-height: 280px;
@@ -712,6 +811,16 @@
   filter: blur(18px);
   opacity: 0.72;
   animation: rbMetaAura 5s ease-in-out infinite;
+}
+
+body.rb-orbit-xp-energy .rb-profile-meta-orbit {
+  border-color: rgba(250, 204, 21, 0.36);
+  animation-duration: 12s;
+}
+
+body.rb-orbit-xp-energy .rb-profile-meta-aura {
+  opacity: 0.88;
+  filter: blur(20px) saturate(1.22) brightness(1.05);
 }
 
 .rb-profile-meta-avatar-copy h3 {
@@ -832,6 +941,18 @@
 #rb-profile-message[data-type="error"] {
   color: #fca5a5;
   border-color: rgba(239, 68, 68, 0.28);
+}
+
+[data-rb-profile-message][data-type="info"],
+#rb-profile-message[data-type="info"] {
+  color: #bae6fd;
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+[data-rb-profile-message][data-type="warning"],
+#rb-profile-message[data-type="warning"] {
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.28);
 }
 
 .is-loading {
