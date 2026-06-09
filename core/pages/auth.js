@@ -3,11 +3,14 @@
    /core/pages/auth.js
    AUTH PAGE CONTROLLER
    Sign In + Create ID
+   XP Gauge Enabled
 ========================================= */
 
 import {
   bootAuth,
   getUser,
+  getProfile,
+  refreshProfile,
   rbSignIn,
   rbSignUp
 } from "/core/shared/rb-auth.js";
@@ -16,9 +19,22 @@ import {
   RB_ROUTES
 } from "/core/shared/rb-config.js";
 
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl,
+  profileAvatar,
+  profileName
+} from "/core/shared/rb-profile.js";
+
+const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+
 const state = {
   isLoading: false,
-  mode: "signin"
+  mode: "signin",
+  user: null,
+  profile: null,
+  identity: null
 };
 
 const $ = (id) => document.getElementById(id);
@@ -28,8 +44,32 @@ const els = {
   message: $("rb-auth-message"),
   signinForm: $("rb-signin-form"),
   signupForm: $("rb-signup-form"),
-  tabs: document.querySelectorAll("[data-auth-mode]")
+  tabs: document.querySelectorAll("[data-auth-mode]"),
+
+  xpGauge: $("auth-xp-gauge"),
+  xpFill: $("auth-xp-gauge-fill"),
+  xpText: $("auth-xp-gauge-text"),
+  xpNext: $("auth-xp-gauge-next"),
+  xpLevel: $("auth-xp-level"),
+  xpRank: $("auth-xp-rank")
 };
+
+function safeImage(value = "", fallback = DEFAULT_AVATAR) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
 
 function getNextRoute() {
   const params = new URLSearchParams(window.location.search);
@@ -46,6 +86,136 @@ function setMessage(text = "", type = "info") {
   els.message.textContent = text;
   els.message.dataset.type = type;
 }
+
+function setText(el, value = "") {
+  if (el) el.textContent = value;
+}
+
+/* =========================
+   XP GAUGE
+========================================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rankTitle ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Member";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  state.user = getUser?.() || null;
+  state.profile = getProfile?.() || null;
+  state.identity = getProfileIdentity?.(state.profile) || null;
+
+  const model = getProfileXpModel(state.profile, state.identity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  document.body.dataset.rbXp = String(model.xp);
+  document.body.dataset.rbLevel = String(model.level);
+  document.body.dataset.rbRank = model.rank;
+  document.body.dataset.rbXpPercent = String(Math.round(model.percent));
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "auth",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+function syncAuthProfileLock() {
+  state.user = getUser?.() || null;
+  state.profile = getProfile?.() || null;
+  state.identity = getProfileIdentity?.(state.profile) || null;
+
+  document.body.dataset.rbPage = "auth";
+  document.body.dataset.rbRoute = "auth";
+  document.body.dataset.rbUserId = state.user?.id || "";
+  document.body.dataset.rbProfileId = state.identity?.id || "";
+  document.body.dataset.rbProfileLocked = state.identity?.id ? "true" : "false";
+
+  bindProfileShell?.();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl?.(state.profile) || RB_ROUTES.profile || "/profile";
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeImage(profileAvatar?.(state.profile), DEFAULT_AVATAR);
+    const name = profileName?.(state.profile) || "Rich Bizness";
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt = name;
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
+}
+
+/* =========================
+   UI
+========================================= */
 
 function toggleLoading(isLoading) {
   state.isLoading = isLoading;
@@ -90,6 +260,7 @@ function switchAuthMode(mode = "signin") {
 
   setFormVisibility(nextMode);
   setMessage("");
+  renderXpGauge();
 }
 
 function readForm(form) {
@@ -102,6 +273,10 @@ function readForm(form) {
     password: String(data.get("password") || "").trim()
   };
 }
+
+/* =========================
+   ACTIONS
+========================================= */
 
 async function onSignInSubmit(event) {
   event.preventDefault();
@@ -128,6 +303,7 @@ async function onSignInSubmit(event) {
     setMessage(error?.message || "Sign in failed.", "error");
   } finally {
     toggleLoading(false);
+    syncAuthProfileLock();
   }
 }
 
@@ -163,6 +339,9 @@ async function onSignUpSubmit(event) {
       displayName
     });
 
+    await refreshProfile?.().catch(() => {});
+    syncAuthProfileLock();
+
     if (data?.session || getUser()?.id) {
       window.location.href = getNextRoute();
       return;
@@ -182,8 +361,13 @@ async function onSignUpSubmit(event) {
     setMessage(error?.message || "Create ID failed.", "error");
   } finally {
     toggleLoading(false);
+    syncAuthProfileLock();
   }
 }
+
+/* =========================
+   BIND + BOOT
+========================================= */
 
 function bindAuthPage() {
   if (document.body.dataset.rbAuthBound === "true") return;
@@ -197,6 +381,9 @@ function bindAuthPage() {
       switchAuthMode(tab.dataset.authMode);
     });
   });
+
+  window.addEventListener("rb:profile-updated", syncAuthProfileLock);
+  window.addEventListener("rb:app-identity-refreshed", syncAuthProfileLock);
 }
 
 async function bootAuthPage() {
@@ -220,12 +407,20 @@ async function bootAuthPage() {
     await bootAuth();
 
     if (getUser()?.id) {
+      await refreshProfile?.().catch(() => {});
+      syncAuthProfileLock();
       window.location.href = getNextRoute();
       return;
     }
 
+    syncAuthProfileLock();
+
     document.body.classList.add("rb-auth-ready");
-    console.log("RB AUTH PAGE READY");
+    console.log("RB AUTH PAGE READY", {
+      profileLocked: !!state.identity?.id,
+      route: "auth",
+      xpGauge: true
+    });
   } catch (error) {
     console.error("[RB AUTH PAGE BOOT FAILED]", error);
     setMessage(error?.message || "Auth failed to boot.", "error");
