@@ -1,1 +1,801 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /games/money-road-runner/mrr-styles.css
 
+   MONEY ROAD RUNNER
+   Extreme Mobile Game Shell
+   Canvas Center Lock + HUD + Neon Road UI
+========================= */
+
+:root {
+  --mrr-black: #020402;
+  --mrr-deep: #03140b;
+  --mrr-green: #66ff99;
+  --mrr-green-2: #00ff88;
+  --mrr-emerald: #10b981;
+  --mrr-gold: #ffd86b;
+  --mrr-gold-2: #facc15;
+  --mrr-red: #ff3355;
+  --mrr-blue: #38bdf8;
+  --mrr-purple: #a855f7;
+  --mrr-white: #ffffff;
+
+  --mrr-safe-bottom: env(safe-area-inset-bottom);
+  --mrr-safe-top: env(safe-area-inset-top);
+
+  --mrr-shell-width: min(460px, calc(100vw - 18px));
+  --mrr-radius: 34px;
+  --mrr-shadow: 0 34px 110px rgba(0, 0, 0, 0.62);
+  --mrr-green-glow: 0 0 38px rgba(0, 255, 136, 0.22);
+  --mrr-gold-glow: 0 0 44px rgba(250, 204, 21, 0.16);
+}
+
+/* =========================
+   PAGE LOCK
+========================= */
+
+html,
+body {
+  min-height: 100%;
+  background: #000;
+}
+
+body.mrr-page,
+body.rb-money-road-runner-page,
+body[data-game="money-road-runner"] {
+  min-height: 100svh;
+  margin: 0;
+  color: var(--mrr-white);
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.22), transparent 34%),
+    radial-gradient(circle at 86% 14%, rgba(250, 204, 21, 0.18), transparent 30%),
+    radial-gradient(circle at 18% 78%, rgba(56, 189, 248, 0.12), transparent 34%),
+    linear-gradient(180deg, #03140b 0%, #020604 48%, #000 100%);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body.mrr-page::before,
+body.rb-money-road-runner-page::before,
+body[data-game="money-road-runner"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.92)),
+    url("/images/brand/gaming-hero.png.jpeg") center / cover no-repeat;
+  opacity: 0.18;
+  filter:
+    saturate(1.28)
+    contrast(1.12)
+    brightness(0.88);
+}
+
+body.mrr-page::after,
+body.rb-money-road-runner-page::after,
+body[data-game="money-road-runner"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 20%, transparent, rgba(0, 0, 0, 0.72) 64%, #000 100%),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.05), transparent 24%, transparent 76%, rgba(250, 204, 21, 0.05));
+}
+
+/* =========================
+   MAIN WRAP
+========================= */
+
+.money-road-runner-page,
+.mrr-game-page,
+#money-road-runner-page {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  min-height: 100svh;
+
+  display: grid;
+  place-items: center;
+
+  padding:
+    calc(18px + var(--mrr-safe-top))
+    10px
+    calc(18px + var(--mrr-safe-bottom));
+}
+
+.money-road-runner-shell,
+.mrr-shell,
+#money-road-runner {
+  position: relative;
+  z-index: 3;
+
+  width: var(--mrr-shell-width);
+  min-height: min(844px, calc(100svh - 28px));
+
+  display: grid;
+  grid-template-rows: auto minmax(560px, 1fr) auto;
+  gap: 12px;
+
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+/* =========================
+   TOP HUD / TITLE
+========================= */
+
+.mrr-topbar,
+.money-road-runner-topbar,
+.mrr-header {
+  position: relative;
+
+  min-height: 74px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  border-radius: 26px;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+
+  background:
+    radial-gradient(circle at 18% 16%, rgba(0, 255, 136, 0.14), transparent 42%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.84), rgba(0, 0, 0, 0.72));
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.46),
+    var(--mrr-green-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.mrr-brand,
+.money-road-runner-brand {
+  display: grid;
+  gap: 3px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.mrr-brand span,
+.money-road-runner-brand span {
+  color: var(--mrr-green);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 14px rgba(102, 255, 153, 0.32);
+}
+
+.mrr-brand strong,
+.money-road-runner-brand strong {
+  color: #fff;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+  text-shadow:
+    0 0 18px rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(0, 255, 136, 0.18);
+}
+
+.mrr-brand small,
+.money-road-runner-brand small {
+  color: var(--mrr-gold);
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+}
+
+.mrr-top-actions,
+.mrr-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mrr-icon-btn,
+.mrr-top-actions button,
+.mrr-header-actions button {
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+
+  font-weight: 1000;
+  cursor: pointer;
+
+  box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+/* =========================
+   CANVAS FRAME
+========================= */
+
+.mrr-canvas-frame,
+.money-road-runner-frame,
+.mrr-game-frame {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  min-height: 560px;
+  height: min(844px, calc(100svh - 118px));
+
+  border-radius: var(--mrr-radius);
+  border: 1px solid rgba(250, 204, 21, 0.24);
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.16), transparent 36%),
+    radial-gradient(circle at 50% 100%, rgba(250, 204, 21, 0.12), transparent 42%),
+    #020402;
+
+  box-shadow:
+    var(--mrr-shadow),
+    0 0 42px rgba(0, 255, 136, 0.14),
+    0 0 64px rgba(250, 204, 21, 0.08),
+    inset 0 0 32px rgba(255, 255, 255, 0.025);
+
+  isolation: isolate;
+}
+
+.mrr-canvas-frame::before,
+.money-road-runner-frame::before,
+.mrr-game-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 24%, transparent 72%, rgba(0, 255, 136, 0.1)),
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.1), transparent 34%);
+  mix-blend-mode: screen;
+  opacity: 0.62;
+}
+
+.mrr-canvas-frame::after,
+.money-road-runner-frame::after,
+.mrr-game-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.36) 100%);
+  background-size:
+    100% 4px,
+    42px 42px,
+    100% 100%;
+  opacity: 0.32;
+}
+
+#moneyRoadRunnerCanvas,
+canvas[data-money-road-runner] {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  border-radius: inherit;
+  background: #020402;
+
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* =========================
+   FLOATING HUD CARDS
+========================= */
+
+.mrr-floating-hud,
+.mrr-hud,
+.money-road-runner-hud {
+  position: absolute;
+  inset: 14px 14px auto;
+  z-index: 8;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  pointer-events: none;
+}
+
+.mrr-hud-card,
+.mrr-score-card,
+.mrr-coin-card,
+.mrr-level-card,
+.mrr-combo-card {
+  min-height: 42px;
+  padding: 8px 10px;
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background:
+    linear-gradient(145deg, rgba(0, 0, 0, 0.66), rgba(5, 12, 7, 0.52));
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  text-align: center;
+
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.32),
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+.mrr-hud-card span,
+.mrr-score-card span,
+.mrr-coin-card span,
+.mrr-level-card span,
+.mrr-combo-card span {
+  display: block;
+
+  color: rgba(255, 255, 255, 0.58);
+
+  font-size: 0.58rem;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mrr-hud-card strong,
+.mrr-score-card strong,
+.mrr-coin-card strong,
+.mrr-level-card strong,
+.mrr-combo-card strong {
+  display: block;
+  margin-top: 2px;
+
+  color: var(--mrr-gold);
+
+  font-size: 1rem;
+  font-weight: 1000;
+  line-height: 1;
+
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.28);
+}
+
+/* =========================
+   GAME CONTROLS
+========================= */
+
+.mrr-controls,
+.money-road-runner-controls,
+.mrr-bottom-controls {
+  position: relative;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.mrr-controls button,
+.money-road-runner-controls button,
+.mrr-bottom-controls button,
+.mrr-launch-btn,
+.mrr-action-btn {
+  min-height: 48px;
+  padding: 0 12px;
+
+  border: 0;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, var(--mrr-green), var(--mrr-gold));
+  color: #041006;
+
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 26px rgba(0, 255, 136, 0.24),
+    0 0 34px rgba(250, 204, 21, 0.1),
+    inset 0 0 16px rgba(255, 255, 255, 0.14);
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.mrr-controls button:hover,
+.money-road-runner-controls button:hover,
+.mrr-bottom-controls button:hover,
+.mrr-launch-btn:hover,
+.mrr-action-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.mrr-controls button:active,
+.money-road-runner-controls button:active,
+.mrr-bottom-controls button:active,
+.mrr-launch-btn:active,
+.mrr-action-btn:active {
+  transform: scale(0.96);
+}
+
+.mrr-controls button.secondary,
+.money-road-runner-controls button.secondary,
+.mrr-bottom-controls button.secondary,
+.mrr-action-btn.secondary {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.065);
+  color: #ffffff;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.3),
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+/* =========================
+   POWERUP / STATUS STRIP
+========================= */
+
+.mrr-status-strip,
+.mrr-power-strip,
+.money-road-runner-status {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 8;
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  pointer-events: none;
+}
+
+.mrr-status-pill,
+.mrr-power-pill {
+  min-height: 32px;
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+
+  background: rgba(0, 0, 0, 0.58);
+  color: #fff;
+
+  font-size: 0.66rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* =========================
+   START / GAME OVER PANELS
+========================= */
+
+.mrr-overlay,
+.mrr-start-screen,
+.mrr-game-over {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+
+  display: grid;
+  place-items: center;
+
+  padding: 18px;
+
+  pointer-events: none;
+}
+
+.mrr-overlay-card,
+.mrr-start-card,
+.mrr-game-over-card {
+  width: min(340px, 100%);
+
+  padding: 24px;
+
+  border-radius: 30px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+
+  background:
+    radial-gradient(circle at top, rgba(0, 255, 136, 0.15), transparent 48%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.9), rgba(0, 0, 0, 0.78));
+
+  text-align: center;
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.56),
+    0 0 38px rgba(0, 255, 136, 0.16),
+    0 0 48px rgba(250, 204, 21, 0.1);
+
+  pointer-events: auto;
+}
+
+.mrr-overlay-card h1,
+.mrr-start-card h1,
+.mrr-game-over-card h1,
+.mrr-overlay-card h2,
+.mrr-start-card h2,
+.mrr-game-over-card h2 {
+  margin: 0;
+
+  color: #fff;
+
+  font-size: clamp(2rem, 11vw, 3.6rem);
+  line-height: 0.88;
+  letter-spacing: -0.08em;
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 22px rgba(255, 255, 255, 0.12),
+    0 0 34px rgba(0, 255, 136, 0.18);
+}
+
+.mrr-overlay-card p,
+.mrr-start-card p,
+.mrr-game-over-card p {
+  margin: 14px auto 0;
+
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
+}
+
+.mrr-overlay-card .mrr-launch-btn,
+.mrr-start-card .mrr-launch-btn,
+.mrr-game-over-card .mrr-launch-btn {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* =========================
+   XP / PROFILE LOCK ENERGY
+========================= */
+
+body[data-rb-profile-locked="true"] .mrr-canvas-frame,
+body[data-rb-profile-locked="true"] .money-road-runner-frame,
+body[data-rb-profile-locked="true"] .mrr-game-frame,
+body[data-rb-profile-locked="true"] .mrr-topbar,
+body[data-rb-profile-locked="true"] .money-road-runner-topbar,
+body[data-rb-profile-locked="true"] .mrr-header {
+  border-color: rgba(0, 255, 157, 0.34);
+}
+
+body.rb-orbit-xp-energy .mrr-canvas-frame,
+body.rb-orbit-xp-energy .money-road-runner-frame,
+body.rb-orbit-xp-energy .mrr-game-frame {
+  border-color: rgba(250, 204, 21, 0.36);
+
+  box-shadow:
+    var(--mrr-shadow),
+    0 0 52px rgba(0, 255, 136, 0.2),
+    0 0 78px rgba(250, 204, 21, 0.14),
+    inset 0 0 34px rgba(255, 255, 255, 0.03);
+}
+
+body.rb-orbit-xp-energy .mrr-topbar,
+body.rb-orbit-xp-energy .money-road-runner-topbar,
+body.rb-orbit-xp-energy .mrr-header {
+  border-color: rgba(250, 204, 21, 0.28);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.46),
+    0 0 36px rgba(0, 255, 136, 0.14),
+    0 0 48px rgba(250, 204, 21, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+body.rb-orbit-xp-energy .mrr-brand strong,
+body.rb-orbit-xp-energy .money-road-runner-brand strong {
+  text-shadow:
+    0 0 18px rgba(255, 255, 255, 0.12),
+    0 0 34px rgba(0, 255, 136, 0.24),
+    0 0 40px rgba(250, 204, 21, 0.12);
+}
+
+/* =========================
+   FULLSCREEN MODE SUPPORT
+========================= */
+
+.mrr-fullscreen,
+body.mrr-fullscreen {
+  overflow: hidden;
+}
+
+body.mrr-fullscreen .money-road-runner-page,
+body.mrr-fullscreen .mrr-game-page,
+body.mrr-fullscreen #money-road-runner-page {
+  padding: 0;
+}
+
+body.mrr-fullscreen .money-road-runner-shell,
+body.mrr-fullscreen .mrr-shell,
+body.mrr-fullscreen #money-road-runner {
+  width: 100vw;
+  height: 100svh;
+  min-height: 100svh;
+  grid-template-rows: 1fr;
+}
+
+body.mrr-fullscreen .mrr-topbar,
+body.mrr-fullscreen .money-road-runner-topbar,
+body.mrr-fullscreen .mrr-header,
+body.mrr-fullscreen .mrr-controls,
+body.mrr-fullscreen .money-road-runner-controls,
+body.mrr-fullscreen .mrr-bottom-controls {
+  display: none;
+}
+
+body.mrr-fullscreen .mrr-canvas-frame,
+body.mrr-fullscreen .money-road-runner-frame,
+body.mrr-fullscreen .mrr-game-frame {
+  height: 100svh;
+  min-height: 100svh;
+  border-radius: 0;
+  border: 0;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 720px) {
+  :root {
+    --mrr-shell-width: min(430px, calc(100vw - 14px));
+    --mrr-radius: 28px;
+  }
+
+  .money-road-runner-page,
+  .mrr-game-page,
+  #money-road-runner-page {
+    padding:
+      calc(10px + var(--mrr-safe-top))
+      7px
+      calc(10px + var(--mrr-safe-bottom));
+  }
+
+  .money-road-runner-shell,
+  .mrr-shell,
+  #money-road-runner {
+    min-height: min(820px, calc(100svh - 20px));
+    gap: 10px;
+  }
+
+  .mrr-topbar,
+  .money-road-runner-topbar,
+  .mrr-header {
+    min-height: 66px;
+    padding: 12px;
+    border-radius: 22px;
+  }
+
+  .mrr-brand span,
+  .money-road-runner-brand span {
+    font-size: 0.58rem;
+  }
+
+  .mrr-brand strong,
+  .money-road-runner-brand strong {
+    font-size: 1.18rem;
+  }
+
+  .mrr-brand small,
+  .money-road-runner-brand small {
+    font-size: 0.54rem;
+  }
+
+  .mrr-icon-btn,
+  .mrr-top-actions button,
+  .mrr-header-actions button {
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+  }
+
+  .mrr-canvas-frame,
+  .money-road-runner-frame,
+  .mrr-game-frame {
+    min-height: 560px;
+    height: calc(100svh - 148px);
+    border-radius: var(--mrr-radius);
+  }
+
+  .mrr-controls,
+  .money-road-runner-controls,
+  .mrr-bottom-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mrr-controls button,
+  .money-road-runner-controls button,
+  .mrr-bottom-controls button,
+  .mrr-launch-btn,
+  .mrr-action-btn {
+    min-height: 46px;
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 390px) {
+  :root {
+    --mrr-shell-width: calc(100vw - 10px);
+  }
+
+  .mrr-canvas-frame,
+  .money-road-runner-frame,
+  .mrr-game-frame {
+    height: calc(100svh - 140px);
+  }
+
+  .mrr-overlay-card,
+  .mrr-start-card,
+  .mrr-game-over-card {
+    padding: 20px;
+    border-radius: 26px;
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
