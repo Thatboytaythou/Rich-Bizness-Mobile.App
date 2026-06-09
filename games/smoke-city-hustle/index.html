@@ -1,1 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Smoke City Hustle • Rich Bizness LLC</title>
+
+  <meta
+    name="description"
+    content="Smoke City Hustle by Rich Bizness LLC — dodge ops, collect cash, grab packs, trigger smoke powerups, and stack XP."
+  />
+
+  <meta name="theme-color" content="#020402" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/games/smoke-city-hustle/sch-styles.css" />
+</head>
+
+<body
+  class="rb-smoke-city-hustle-page sch-page rb-orbit-xp-energy"
+  data-game="smoke-city-hustle"
+  data-section="gaming"
+  data-rb-page="smoke-city-hustle"
+  data-rb-route="games/smoke-city-hustle"
+>
+  <main
+    id="smoke-city-hustle-page"
+    class="smoke-city-hustle-page sch-game-page"
+  >
+    <section
+      id="smoke-city-hustle"
+      class="smoke-city-hustle-shell sch-shell"
+      data-game="smoke-city-hustle"
+    >
+      <header class="sch-topbar smoke-city-hustle-topbar sch-header">
+        <a
+          class="sch-brand smoke-city-hustle-brand"
+          href="/gaming.html"
+          aria-label="Back to Rich Bizness Gaming"
+        >
+          <span>Rich Bizness LLC</span>
+          <strong>Smoke City</strong>
+          <small>Hustle</small>
+        </a>
+
+        <nav class="sch-top-actions sch-header-actions" aria-label="Game actions">
+          <button
+            id="schPauseBtn"
+            class="sch-icon-btn secondary"
+            type="button"
+            aria-label="Pause game"
+            title="Pause"
+          >
+            ⏸
+          </button>
+
+          <button
+            id="schRestartBtn"
+            class="sch-icon-btn secondary"
+            type="button"
+            aria-label="Restart game"
+            title="Restart"
+          >
+            ↻
+          </button>
+
+          <a
+            class="sch-icon-btn secondary"
+            href="/gaming.html"
+            aria-label="Back to gaming"
+            title="Back"
+          >
+            ←
+          </a>
+        </nav>
+      </header>
+
+      <div class="sch-canvas-frame smoke-city-hustle-frame sch-game-frame">
+        <canvas
+          id="smokeCityHustleCanvas"
+          data-smoke-city-hustle="true"
+          aria-label="Smoke City Hustle game canvas"
+        ></canvas>
+
+        <div class="sch-floating-hud sch-hud smoke-city-hustle-hud" aria-hidden="true">
+          <article class="sch-hud-card sch-score-card">
+            <span>High</span>
+            <strong id="schHighScore">0</strong>
+          </article>
+
+          <article class="sch-hud-card sch-cash-card">
+            <span>Total</span>
+            <strong id="schTotalCash">0</strong>
+          </article>
+
+          <article class="sch-hud-card sch-level-card">
+            <span>Level</span>
+            <strong id="schLevel">1</strong>
+          </article>
+
+          <article class="sch-hud-card sch-rank-card">
+            <span>Rank</span>
+            <strong id="schRank">Hustler</strong>
+          </article>
+        </div>
+
+        <div class="sch-status-strip sch-power-strip smoke-city-hustle-status" aria-hidden="true">
+          <span class="sch-status-pill sch-power-pill">Swipe</span>
+          <span class="sch-status-pill sch-power-pill">WASD</span>
+          <span class="sch-status-pill sch-power-pill">Arrows</span>
+          <span class="sch-status-pill sch-power-pill">Shift Dash</span>
+        </div>
+      </div>
+
+      <footer class="sch-controls smoke-city-hustle-controls sch-bottom-controls">
+        <button
+          id="schStartBtn"
+          class="sch-launch-btn"
+          type="button"
+        >
+          Start
+        </button>
+
+        <button
+          id="schDashBtn"
+          class="sch-action-btn"
+          type="button"
+        >
+          Dash
+        </button>
+
+        <button
+          id="schJumpBtn"
+          class="sch-action-btn secondary"
+          type="button"
+        >
+          Jump
+        </button>
+
+        <button
+          id="schSlideBtn"
+          class="sch-action-btn secondary"
+          type="button"
+        >
+          Slide
+        </button>
+      </footer>
+    </section>
+  </main>
+
+  <script src="/games/smoke-city-hustle/game.js" defer></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+
+      const buttons = {
+        start: $("schStartBtn"),
+        pause: $("schPauseBtn"),
+        restart: $("schRestartBtn"),
+        dash: $("schDashBtn"),
+        jump: $("schJumpBtn"),
+        slide: $("schSlideBtn")
+      };
+
+      const stats = {
+        high: $("schHighScore"),
+        total: $("schTotalCash"),
+        level: $("schLevel"),
+        rank: $("schRank")
+      };
+
+      function api() {
+        return window.RB_SMOKE_CITY_HUSTLE;
+      }
+
+      function updateHud() {
+        const game = api();
+        if (!game?.getState) return;
+
+        const state = game.getState();
+
+        if (stats.high) {
+          stats.high.textContent = Number(state.highScore || 0).toLocaleString();
+        }
+
+        if (stats.total) {
+          stats.total.textContent = Number(state.totalCash || 0).toLocaleString();
+        }
+
+        if (stats.level) {
+          stats.level.textContent = Number(state.level || 1).toLocaleString();
+        }
+
+        if (stats.rank) {
+          stats.rank.textContent = String(state.rank || "Hustler")
+            .replace("Smoke City ", "")
+            .replace("Runner ", "");
+        }
+      }
+
+      function pressKey(key, type = "keydown") {
+        window.dispatchEvent(
+          new KeyboardEvent(type, {
+            key,
+            bubbles: true,
+            cancelable: true
+          })
+        );
+      }
+
+      buttons.start?.addEventListener("click", () => {
+        api()?.start?.();
+        updateHud();
+      });
+
+      buttons.pause?.addEventListener("click", () => {
+        const game = api();
+        const state = game?.getState?.();
+
+        if (!game || !state) return;
+
+        if (state.paused) {
+          game.resume?.();
+          buttons.pause.textContent = "⏸";
+          buttons.pause.title = "Pause";
+        } else {
+          game.pause?.();
+          buttons.pause.textContent = "▶";
+          buttons.pause.title = "Resume";
+        }
+
+        updateHud();
+      });
+
+      buttons.restart?.addEventListener("click", () => {
+        api()?.restart?.();
+
+        if (buttons.pause) {
+          buttons.pause.textContent = "⏸";
+          buttons.pause.title = "Pause";
+        }
+
+        updateHud();
+      });
+
+      buttons.dash?.addEventListener("click", () => {
+        pressKey("Shift", "keydown");
+        setTimeout(() => pressKey("Shift", "keyup"), 90);
+      });
+
+      buttons.jump?.addEventListener("click", () => {
+        pressKey("ArrowUp", "keydown");
+        setTimeout(() => pressKey("ArrowUp", "keyup"), 90);
+      });
+
+      buttons.slide?.addEventListener("click", () => {
+        pressKey("ArrowDown", "keydown");
+        setTimeout(() => pressKey("ArrowDown", "keyup"), 90);
+      });
+
+      window.addEventListener("rb:xp-gauge-update", updateHud);
+      window.addEventListener("rb:game-run-complete", updateHud);
+
+      setInterval(updateHud, 700);
+      window.addEventListener("load", updateHud);
+    })();
+  </script>
+</body>
+</html>
