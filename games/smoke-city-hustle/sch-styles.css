@@ -1,1 +1,812 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /games/smoke-city-hustle/sch-styles.css
 
+   SMOKE CITY HUSTLE
+   Extreme Mobile Game Shell
+   Canvas Center Lock + HUD + Smoke City Neon UI
+========================= */
+
+:root {
+  --sch-black: #020402;
+  --sch-deep: #03140b;
+  --sch-green: #66ff99;
+  --sch-green-2: #00ff88;
+  --sch-emerald: #10b981;
+  --sch-gold: #ffd86b;
+  --sch-gold-2: #facc15;
+  --sch-red: #ff3355;
+  --sch-orange: #ff8a1f;
+  --sch-blue: #38bdf8;
+  --sch-purple: #a855f7;
+  --sch-white: #ffffff;
+
+  --sch-safe-bottom: env(safe-area-inset-bottom);
+  --sch-safe-top: env(safe-area-inset-top);
+
+  --sch-shell-width: min(460px, calc(100vw - 18px));
+  --sch-radius: 34px;
+  --sch-shadow: 0 34px 110px rgba(0, 0, 0, 0.62);
+  --sch-green-glow: 0 0 38px rgba(0, 255, 136, 0.22);
+  --sch-gold-glow: 0 0 44px rgba(250, 204, 21, 0.16);
+  --sch-smoke-glow: 0 0 52px rgba(102, 255, 153, 0.18);
+}
+
+/* =========================
+   PAGE LOCK
+========================= */
+
+html,
+body {
+  min-height: 100%;
+  background: #000;
+}
+
+body.sch-page,
+body.rb-smoke-city-hustle-page,
+body[data-game="smoke-city-hustle"] {
+  min-height: 100svh;
+  margin: 0;
+  color: var(--sch-white);
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.22), transparent 34%),
+    radial-gradient(circle at 86% 14%, rgba(250, 204, 21, 0.18), transparent 30%),
+    radial-gradient(circle at 18% 78%, rgba(168, 85, 247, 0.14), transparent 34%),
+    linear-gradient(180deg, #03140b 0%, #020604 48%, #000 100%);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body.sch-page::before,
+body.rb-smoke-city-hustle-page::before,
+body[data-game="smoke-city-hustle"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.92)),
+    url("/images/C54535CD-E2B2-481B-81C8-4CFA81CC2ACD.png") center / cover no-repeat;
+  opacity: 0.2;
+  filter:
+    saturate(1.32)
+    contrast(1.14)
+    brightness(0.86);
+}
+
+body.sch-page::after,
+body.rb-smoke-city-hustle-page::after,
+body[data-game="smoke-city-hustle"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 20%, transparent, rgba(0, 0, 0, 0.72) 64%, #000 100%),
+    radial-gradient(circle at 22% 64%, rgba(102, 255, 153, 0.08), transparent 32%),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.05), transparent 24%, transparent 76%, rgba(250, 204, 21, 0.05));
+}
+
+/* =========================
+   MAIN WRAP
+========================= */
+
+.smoke-city-hustle-page,
+.sch-game-page,
+#smoke-city-hustle-page {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  min-height: 100svh;
+
+  display: grid;
+  place-items: center;
+
+  padding:
+    calc(18px + var(--sch-safe-top))
+    10px
+    calc(18px + var(--sch-safe-bottom));
+}
+
+.smoke-city-hustle-shell,
+.sch-shell,
+#smoke-city-hustle {
+  position: relative;
+  z-index: 3;
+
+  width: var(--sch-shell-width);
+  min-height: min(844px, calc(100svh - 28px));
+
+  display: grid;
+  grid-template-rows: auto minmax(560px, 1fr) auto;
+  gap: 12px;
+
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+/* =========================
+   TOP HUD / TITLE
+========================= */
+
+.sch-topbar,
+.smoke-city-hustle-topbar,
+.sch-header {
+  position: relative;
+
+  min-height: 74px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  border-radius: 26px;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+
+  background:
+    radial-gradient(circle at 18% 16%, rgba(0, 255, 136, 0.14), transparent 42%),
+    radial-gradient(circle at 88% 16%, rgba(168, 85, 247, 0.12), transparent 38%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.84), rgba(0, 0, 0, 0.72));
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.46),
+    var(--sch-green-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.sch-brand,
+.smoke-city-hustle-brand {
+  display: grid;
+  gap: 3px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.sch-brand span,
+.smoke-city-hustle-brand span {
+  color: var(--sch-green);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 14px rgba(102, 255, 153, 0.32);
+}
+
+.sch-brand strong,
+.smoke-city-hustle-brand strong {
+  color: #fff;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+  text-shadow:
+    0 0 18px rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(0, 255, 136, 0.18);
+}
+
+.sch-brand small,
+.smoke-city-hustle-brand small {
+  color: var(--sch-gold);
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+}
+
+.sch-top-actions,
+.sch-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.sch-icon-btn,
+.sch-top-actions button,
+.sch-header-actions button {
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+
+  font-weight: 1000;
+  cursor: pointer;
+
+  box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+/* =========================
+   CANVAS FRAME
+========================= */
+
+.sch-canvas-frame,
+.smoke-city-hustle-frame,
+.sch-game-frame {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  min-height: 560px;
+  height: min(844px, calc(100svh - 118px));
+
+  border-radius: var(--sch-radius);
+  border: 1px solid rgba(250, 204, 21, 0.24);
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.16), transparent 36%),
+    radial-gradient(circle at 24% 80%, rgba(168, 85, 247, 0.12), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgba(250, 204, 21, 0.12), transparent 42%),
+    #020402;
+
+  box-shadow:
+    var(--sch-shadow),
+    0 0 42px rgba(0, 255, 136, 0.14),
+    0 0 64px rgba(250, 204, 21, 0.08),
+    inset 0 0 32px rgba(255, 255, 255, 0.025);
+
+  isolation: isolate;
+}
+
+.sch-canvas-frame::before,
+.smoke-city-hustle-frame::before,
+.sch-game-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 24%, transparent 72%, rgba(0, 255, 136, 0.1)),
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.1), transparent 34%),
+    radial-gradient(circle at 20% 70%, rgba(168, 85, 247, 0.12), transparent 36%);
+  mix-blend-mode: screen;
+  opacity: 0.66;
+}
+
+.sch-canvas-frame::after,
+.smoke-city-hustle-frame::after,
+.sch-game-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.36) 100%);
+  background-size:
+    100% 4px,
+    42px 42px,
+    100% 100%;
+  opacity: 0.32;
+}
+
+#smokeCityHustleCanvas,
+canvas[data-smoke-city-hustle] {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  border-radius: inherit;
+  background: #020402;
+
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* =========================
+   FLOATING HUD CARDS
+========================= */
+
+.sch-floating-hud,
+.sch-hud,
+.smoke-city-hustle-hud {
+  position: absolute;
+  inset: 14px 14px auto;
+  z-index: 8;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  pointer-events: none;
+}
+
+.sch-hud-card,
+.sch-score-card,
+.sch-cash-card,
+.sch-level-card,
+.sch-rank-card,
+.sch-combo-card {
+  min-height: 42px;
+  padding: 8px 10px;
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background:
+    linear-gradient(145deg, rgba(0, 0, 0, 0.66), rgba(5, 12, 7, 0.52));
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  text-align: center;
+
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.32),
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+.sch-hud-card span,
+.sch-score-card span,
+.sch-cash-card span,
+.sch-level-card span,
+.sch-rank-card span,
+.sch-combo-card span {
+  display: block;
+
+  color: rgba(255, 255, 255, 0.58);
+
+  font-size: 0.58rem;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sch-hud-card strong,
+.sch-score-card strong,
+.sch-cash-card strong,
+.sch-level-card strong,
+.sch-rank-card strong,
+.sch-combo-card strong {
+  display: block;
+  margin-top: 2px;
+
+  color: var(--sch-gold);
+
+  font-size: 1rem;
+  font-weight: 1000;
+  line-height: 1;
+
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.28);
+}
+
+/* =========================
+   GAME CONTROLS
+========================= */
+
+.sch-controls,
+.smoke-city-hustle-controls,
+.sch-bottom-controls {
+  position: relative;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.sch-controls button,
+.smoke-city-hustle-controls button,
+.sch-bottom-controls button,
+.sch-launch-btn,
+.sch-action-btn {
+  min-height: 48px;
+  padding: 0 12px;
+
+  border: 0;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, var(--sch-green), var(--sch-gold));
+  color: #041006;
+
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 26px rgba(0, 255, 136, 0.24),
+    0 0 34px rgba(250, 204, 21, 0.1),
+    inset 0 0 16px rgba(255, 255, 255, 0.14);
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.sch-controls button:hover,
+.smoke-city-hustle-controls button:hover,
+.sch-bottom-controls button:hover,
+.sch-launch-btn:hover,
+.sch-action-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.sch-controls button:active,
+.smoke-city-hustle-controls button:active,
+.sch-bottom-controls button:active,
+.sch-launch-btn:active,
+.sch-action-btn:active {
+  transform: scale(0.96);
+}
+
+.sch-controls button.secondary,
+.smoke-city-hustle-controls button.secondary,
+.sch-bottom-controls button.secondary,
+.sch-action-btn.secondary {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.065);
+  color: #ffffff;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.3),
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+/* =========================
+   POWERUP / STATUS STRIP
+========================= */
+
+.sch-status-strip,
+.sch-power-strip,
+.smoke-city-hustle-status {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 8;
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  pointer-events: none;
+}
+
+.sch-status-pill,
+.sch-power-pill {
+  min-height: 32px;
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+
+  background: rgba(0, 0, 0, 0.58);
+  color: #fff;
+
+  font-size: 0.66rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* =========================
+   START / GAME OVER PANELS
+========================= */
+
+.sch-overlay,
+.sch-start-screen,
+.sch-game-over {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+
+  display: grid;
+  place-items: center;
+
+  padding: 18px;
+
+  pointer-events: none;
+}
+
+.sch-overlay-card,
+.sch-start-card,
+.sch-game-over-card {
+  width: min(348px, 100%);
+
+  padding: 24px;
+
+  border-radius: 30px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+
+  background:
+    radial-gradient(circle at top, rgba(0, 255, 136, 0.15), transparent 48%),
+    radial-gradient(circle at 20% 88%, rgba(168, 85, 247, 0.14), transparent 42%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.9), rgba(0, 0, 0, 0.78));
+
+  text-align: center;
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.56),
+    0 0 38px rgba(0, 255, 136, 0.16),
+    0 0 48px rgba(250, 204, 21, 0.1);
+
+  pointer-events: auto;
+}
+
+.sch-overlay-card h1,
+.sch-start-card h1,
+.sch-game-over-card h1,
+.sch-overlay-card h2,
+.sch-start-card h2,
+.sch-game-over-card h2 {
+  margin: 0;
+
+  color: #fff;
+
+  font-size: clamp(2rem, 11vw, 3.6rem);
+  line-height: 0.88;
+  letter-spacing: -0.08em;
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 22px rgba(255, 255, 255, 0.12),
+    0 0 34px rgba(0, 255, 136, 0.18);
+}
+
+.sch-overlay-card p,
+.sch-start-card p,
+.sch-game-over-card p {
+  margin: 14px auto 0;
+
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
+}
+
+.sch-overlay-card .sch-launch-btn,
+.sch-start-card .sch-launch-btn,
+.sch-game-over-card .sch-launch-btn {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* =========================
+   XP / PROFILE LOCK ENERGY
+========================= */
+
+body[data-rb-profile-locked="true"] .sch-canvas-frame,
+body[data-rb-profile-locked="true"] .smoke-city-hustle-frame,
+body[data-rb-profile-locked="true"] .sch-game-frame,
+body[data-rb-profile-locked="true"] .sch-topbar,
+body[data-rb-profile-locked="true"] .smoke-city-hustle-topbar,
+body[data-rb-profile-locked="true"] .sch-header {
+  border-color: rgba(0, 255, 157, 0.34);
+}
+
+body.rb-orbit-xp-energy .sch-canvas-frame,
+body.rb-orbit-xp-energy .smoke-city-hustle-frame,
+body.rb-orbit-xp-energy .sch-game-frame {
+  border-color: rgba(250, 204, 21, 0.36);
+
+  box-shadow:
+    var(--sch-shadow),
+    0 0 52px rgba(0, 255, 136, 0.2),
+    0 0 78px rgba(250, 204, 21, 0.14),
+    0 0 84px rgba(168, 85, 247, 0.08),
+    inset 0 0 34px rgba(255, 255, 255, 0.03);
+}
+
+body.rb-orbit-xp-energy .sch-topbar,
+body.rb-orbit-xp-energy .smoke-city-hustle-topbar,
+body.rb-orbit-xp-energy .sch-header {
+  border-color: rgba(250, 204, 21, 0.28);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.46),
+    0 0 36px rgba(0, 255, 136, 0.14),
+    0 0 48px rgba(250, 204, 21, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+body.rb-orbit-xp-energy .sch-brand strong,
+body.rb-orbit-xp-energy .smoke-city-hustle-brand strong {
+  text-shadow:
+    0 0 18px rgba(255, 255, 255, 0.12),
+    0 0 34px rgba(0, 255, 136, 0.24),
+    0 0 40px rgba(250, 204, 21, 0.12);
+}
+
+/* =========================
+   FULLSCREEN MODE SUPPORT
+========================= */
+
+.sch-fullscreen,
+body.sch-fullscreen {
+  overflow: hidden;
+}
+
+body.sch-fullscreen .smoke-city-hustle-page,
+body.sch-fullscreen .sch-game-page,
+body.sch-fullscreen #smoke-city-hustle-page {
+  padding: 0;
+}
+
+body.sch-fullscreen .smoke-city-hustle-shell,
+body.sch-fullscreen .sch-shell,
+body.sch-fullscreen #smoke-city-hustle {
+  width: 100vw;
+  height: 100svh;
+  min-height: 100svh;
+  grid-template-rows: 1fr;
+}
+
+body.sch-fullscreen .sch-topbar,
+body.sch-fullscreen .smoke-city-hustle-topbar,
+body.sch-fullscreen .sch-header,
+body.sch-fullscreen .sch-controls,
+body.sch-fullscreen .smoke-city-hustle-controls,
+body.sch-fullscreen .sch-bottom-controls {
+  display: none;
+}
+
+body.sch-fullscreen .sch-canvas-frame,
+body.sch-fullscreen .smoke-city-hustle-frame,
+body.sch-fullscreen .sch-game-frame {
+  height: 100svh;
+  min-height: 100svh;
+  border-radius: 0;
+  border: 0;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 720px) {
+  :root {
+    --sch-shell-width: min(430px, calc(100vw - 14px));
+    --sch-radius: 28px;
+  }
+
+  .smoke-city-hustle-page,
+  .sch-game-page,
+  #smoke-city-hustle-page {
+    padding:
+      calc(10px + var(--sch-safe-top))
+      7px
+      calc(10px + var(--sch-safe-bottom));
+  }
+
+  .smoke-city-hustle-shell,
+  .sch-shell,
+  #smoke-city-hustle {
+    min-height: min(820px, calc(100svh - 20px));
+    gap: 10px;
+  }
+
+  .sch-topbar,
+  .smoke-city-hustle-topbar,
+  .sch-header {
+    min-height: 66px;
+    padding: 12px;
+    border-radius: 22px;
+  }
+
+  .sch-brand span,
+  .smoke-city-hustle-brand span {
+    font-size: 0.58rem;
+  }
+
+  .sch-brand strong,
+  .smoke-city-hustle-brand strong {
+    font-size: 1.18rem;
+  }
+
+  .sch-brand small,
+  .smoke-city-hustle-brand small {
+    font-size: 0.54rem;
+  }
+
+  .sch-icon-btn,
+  .sch-top-actions button,
+  .sch-header-actions button {
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+  }
+
+  .sch-canvas-frame,
+  .smoke-city-hustle-frame,
+  .sch-game-frame {
+    min-height: 560px;
+    height: calc(100svh - 148px);
+    border-radius: var(--sch-radius);
+  }
+
+  .sch-controls,
+  .smoke-city-hustle-controls,
+  .sch-bottom-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sch-controls button,
+  .smoke-city-hustle-controls button,
+  .sch-bottom-controls button,
+  .sch-launch-btn,
+  .sch-action-btn {
+    min-height: 46px;
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 390px) {
+  :root {
+    --sch-shell-width: calc(100vw - 10px);
+  }
+
+  .sch-canvas-frame,
+  .smoke-city-hustle-frame,
+  .sch-game-frame {
+    height: calc(100svh - 140px);
+  }
+
+  .sch-overlay-card,
+  .sch-start-card,
+  .sch-game-over-card {
+    padding: 20px;
+    border-radius: 26px;
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
