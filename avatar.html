@@ -20,7 +20,6 @@
     content="Rich Bizness Mobile cinematic avatar engine."
   />
 
-  <!-- CORE STYLES -->
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/main.css" />
   <link rel="stylesheet" href="/styles/mobile.css" />
@@ -31,135 +30,73 @@
   <link rel="stylesheet" href="/styles/omni-portal.css" />
 </head>
 
-<body class="rb-avatar-page rb-index-page">
-
-  <!-- BACKGROUND -->
+<body
+  class="rb-avatar-page rb-index-page rb-orbit-xp-energy"
+  data-page="avatar"
+  data-rb-page="avatar"
+  data-rb-route="avatar"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
   <div class="rb-bg-noise" aria-hidden="true"></div>
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
-  <!-- THREE CANVAS -->
   <div
     id="canvas-container"
     aria-hidden="true"
   ></div>
 
-  <!-- PROFILE CHIP -->
   <button
     class="rb-profile-chip"
     id="rb-profile-chip"
     type="button"
+    data-route="profile"
+    aria-label="Open profile"
   >
-
     <img
       id="rb-profile-avatar"
-      src="/images/brand/project-avatar.png.jpeg"
+      src="/images/brand/Avatar-hero-Banner.png.jpeg"
       alt="Profile Avatar"
+      data-rb-avatar
+      data-rb-profile-avatar
     />
 
-    <span id="rb-profile-name">
+    <span id="rb-profile-name" data-rb-name>
       RICH BIZNESS LLC
     </span>
-
   </button>
 
-  <!-- SIDE MENU BUTTON -->
   <button
     id="rb-tab-dropper"
     class="rb-tab-dropper"
     type="button"
     aria-label="Open navigation"
+    aria-controls="rb-slide-menu"
+    aria-expanded="false"
   >
     ☰
   </button>
 
-  <!-- SIDE MENU -->
   <aside
     id="rb-slide-menu"
     class="rb-slide-menu"
+    aria-label="Avatar quick navigation"
   >
-
-    <button
-      type="button"
-      data-route="/feed"
-      aria-label="Feed"
-    >
-      📰
-    </button>
-
-    <button
-      type="button"
-      data-route="/live"
-      class="rb-live-active"
-      data-count="9"
-      aria-label="Live"
-    >
-      🔴
-    </button>
-
-    <button
-      type="button"
-      data-route="/music"
-      aria-label="Music"
-    >
-      🎵
-    </button>
-
-    <button
-      type="button"
-      data-route="/gaming"
-      aria-label="Gaming"
-    >
-      🎮
-    </button>
-
-    <button
-      type="button"
-      data-route="/meta"
-      aria-label="Meta"
-    >
-      🌌
-    </button>
-
-    <button
-      type="button"
-      data-route="/gallery"
-      aria-label="Gallery"
-    >
-      🖼️
-    </button>
-
-    <button
-      type="button"
-      data-route="/store"
-      aria-label="Store"
-    >
-      💸
-    </button>
-
-    <button
-      type="button"
-      data-route="/upload"
-      aria-label="Upload"
-    >
-      ⬆️
-    </button>
-
-    <button
-      type="button"
-      data-route="/settings"
-      aria-label="Settings"
-    >
-      ⚙️
-    </button>
-
+    <button type="button" data-route="feed" aria-label="Feed">📰</button>
+    <button type="button" data-route="live" class="rb-live-active" data-count="9" aria-label="Live">🔴</button>
+    <button type="button" data-route="music" aria-label="Music">🎵</button>
+    <button type="button" data-route="podcast" aria-label="Podcast">🎙️</button>
+    <button type="button" data-route="radio" aria-label="Radio">📻</button>
+    <button type="button" data-route="gaming" aria-label="Gaming">🎮</button>
+    <button type="button" data-route="meta" aria-label="Meta">🌌</button>
+    <button type="button" data-route="gallery" aria-label="Gallery">🖼️</button>
+    <button type="button" data-route="store" aria-label="Store">💸</button>
+    <button type="button" data-route="upload" aria-label="Upload">⬆️</button>
+    <button type="button" data-route="settings" aria-label="Settings">⚙️</button>
   </aside>
 
-  <!-- BRAND HEADER -->
   <header class="rb-brand-header">
-
     <h1>
       RICH <span>BIZNESS</span>
     </h1>
@@ -167,48 +104,39 @@
     <p>
       AVATAR ENGINE • LIVE UNIVERSE • REALTIME IDENTITY
     </p>
-
   </header>
 
-  <!-- MODULE LABEL -->
   <div
     id="rb-module-label"
     class="rb-module-label active"
+    aria-live="polite"
   >
     AVATAR UNIVERSE ONLINE
   </div>
 
-  <!-- AVATAR PLAYER -->
   <section
     id="rb-avatar-player"
     class="rb-avatar-player is-live"
+    aria-label="Rich Bizness Avatar Player"
   >
-
     <div class="rb-avatar-3d-container">
-
       <canvas
         id="rb-avatar-canvas"
         aria-label="3D Avatar Canvas"
       ></canvas>
-
     </div>
-
   </section>
 
-  <!-- NOTIFICATIONS -->
   <div
     id="rb-notify-root"
     aria-live="polite"
   >
-
     <article class="rb-notify-toast is-visible">
-
       <div class="rb-avatar-mini">
         🔥
       </div>
 
       <div>
-
         <strong>
           AVATAR ONLINE
         </strong>
@@ -216,104 +144,102 @@
         <p>
           Rich Bizness universe synced successfully.
         </p>
-
       </div>
-
     </article>
-
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav
     class="rb-bottom-nav"
     aria-label="Bottom navigation"
   >
-
     <button
       type="button"
-      data-route="/"
-      class="is-active"
+      data-route="home"
     >
-
-      <span class="rb-nav-icon">
-        🏠
-      </span>
-
-      <span>
-        HOME
-      </span>
-
+      <span class="rb-nav-icon">🏠</span>
+      <span>HOME</span>
     </button>
 
     <button
       type="button"
-      data-route="/live"
+      data-route="live"
       class="rb-live-active"
       data-count="9"
     >
-
-      <span class="rb-nav-icon rb-live-nav-dot">
-        🔴
-      </span>
-
-      <span>
-        LIVE
-      </span>
-
+      <span class="rb-nav-icon rb-live-nav-dot">🔴</span>
+      <span>LIVE</span>
     </button>
 
     <button
       type="button"
-      data-route="/music"
+      data-route="music"
     >
-
-      <span class="rb-nav-icon">
-        🎵
-      </span>
-
-      <span>
-        MUSIC
-      </span>
-
+      <span class="rb-nav-icon">🎵</span>
+      <span>MUSIC</span>
     </button>
 
     <button
       type="button"
-      data-route="/gaming"
+      data-route="gaming"
     >
-
-      <span class="rb-nav-icon">
-        🎮
-      </span>
-
-      <span>
-        GAMING
-      </span>
-
+      <span class="rb-nav-icon">🎮</span>
+      <span>GAMING</span>
     </button>
 
     <button
       type="button"
-      data-route="/profile"
+      data-route="profile"
     >
-
-      <span class="rb-nav-icon">
-        👤
-      </span>
-
-      <span>
-        PROFILE
-      </span>
-
+      <span class="rb-nav-icon">👤</span>
+      <span>PROFILE</span>
     </button>
-
   </nav>
 
-  <!-- THREE -->
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+
+    const dropper = document.getElementById("rb-tab-dropper");
+    const menu = document.getElementById("rb-slide-menu");
+
+    function closeMenu() {
+      dropper?.classList.remove("is-open");
+      menu?.classList.remove("is-open");
+      dropper?.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleMenu() {
+      const isOpen = dropper?.classList.toggle("is-open");
+      menu?.classList.toggle("is-open", Boolean(isOpen));
+      dropper?.setAttribute("aria-expanded", String(Boolean(isOpen)));
+    }
+
+    dropper?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleMenu();
+    });
+
+    document.addEventListener("click", (event) => {
+      const clickedMenu = event.target.closest("#rb-slide-menu");
+      const clickedDropper = event.target.closest("#rb-tab-dropper");
+
+      if (!clickedMenu && !clickedDropper) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    });
+  </script>
+
   <script
     type="module"
     src="/core/pages/avatar.js"
   ></script>
-
 </body>
 </html>
