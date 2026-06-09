@@ -6,6 +6,7 @@
    Full page-owned profile render
    Supabase connected
    Meta world connected
+   XP Gauge Enabled
 
    Image Lock:
    - Profile avatar = profiles.avatar_url only
@@ -33,7 +34,10 @@ import {
   profileName,
   profileHandle,
   profileBadge,
-  profileLevel
+  profileLevel,
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
 const supabase = getSupabase();
@@ -122,10 +126,12 @@ const els = {
   sportsPanel: $("profileSportsPanel"),
   metaPanel: $("profileMetaPanel"),
 
-  xpGauge: $("profileXpGauge"),
-  xpGaugeFill: $("profileXpGaugeFill"),
-  xpGaugeText: $("profileXpGaugeText"),
-  xpGaugeNext: $("profileXpGaugeNext")
+  xpGauge: $("profileXpGauge") || $("profile-xp-gauge"),
+  xpGaugeFill: $("profileXpGaugeFill") || $("profile-xp-gauge-fill"),
+  xpGaugeText: $("profileXpGaugeText") || $("profile-xp-gauge-text"),
+  xpGaugeNext: $("profileXpGaugeNext") || $("profile-xp-gauge-next"),
+  xpLevel: $("profile-xp-level"),
+  xpRank: $("profile-xp-rank")
 };
 
 function table(key, fallback) {
@@ -157,7 +163,8 @@ function safePath(value = "") {
 
   if (
     src === "/images/brand/project-avatar.png.jpeg" ||
-    src.includes("/project-avatar")
+    src.includes("/project-avatar") ||
+    src.includes("project-avatar")
   ) {
     return "";
   }
@@ -237,6 +244,39 @@ function lockedProfileBanner(profile = {}, extras = {}) {
 }
 
 /* =========================
+   PROFILE LOCK
+========================= */
+
+function syncProfileLock() {
+  const user = getUser();
+  state.identity = getProfileIdentity?.(state.profile) || state.identity || null;
+
+  document.body.dataset.rbPage = "profile";
+  document.body.dataset.rbRoute = "profile";
+  document.body.dataset.rbUserId = user?.id || "";
+  document.body.dataset.rbProfileId = state.identity?.id || state.profile?.id || "";
+  document.body.dataset.rbProfileLocked = state.identity?.id || state.profile?.id ? "true" : "false";
+
+  bindProfileShell?.();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl?.(state.profile) || RB_ROUTES?.profile || "/profile";
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = lockedProfileAvatar(state.profile);
+    const name = profileName(state.profile || {});
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt = name;
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+}
+
+/* =========================
    BRAND ASSETS
 ========================= */
 
@@ -295,7 +335,10 @@ async function loadProfileDirect() {
     if (error) throw error;
 
     state.profile = data || null;
+    state.identity = getProfileIdentity?.(state.profile) || null;
     state.isMine = Boolean(user?.id && data?.id === user.id);
+
+    syncProfileLock();
 
     return state.profile;
   }
@@ -312,7 +355,10 @@ async function loadProfileDirect() {
     if (error) throw error;
 
     state.profile = data || null;
+    state.identity = getProfileIdentity?.(state.profile) || null;
     state.isMine = Boolean(user?.id && data?.id === user.id);
+
+    syncProfileLock();
 
     return state.profile;
   }
@@ -322,7 +368,11 @@ async function loadProfileDirect() {
 
     if (ensured?.id) {
       state.profile = ensured;
+      state.identity = getProfileIdentity?.(state.profile) || null;
       state.isMine = true;
+
+      syncProfileLock();
+
       return ensured;
     }
 
@@ -335,13 +385,19 @@ async function loadProfileDirect() {
     if (error) throw error;
 
     state.profile = data || null;
+    state.identity = getProfileIdentity?.(state.profile) || null;
     state.isMine = Boolean(data?.id === user.id);
+
+    syncProfileLock();
 
     return state.profile;
   }
 
   state.profile = null;
+  state.identity = null;
   state.isMine = false;
+
+  syncProfileLock();
 
   return null;
 }
@@ -526,7 +582,9 @@ function xpModel(profile = state.profile || {}, extras = state.extras || {}) {
     num(gamer.xp) ||
     num(levelRow.xp) ||
     num(levelRow.rich_points) ||
+    num(profile.xp) ||
     num(profile.rich_points) ||
+    num(profile.points) ||
     0;
 
   const rank =
@@ -542,12 +600,14 @@ function xpModel(profile = state.profile || {}, extras = state.extras || {}) {
   const inLevel = Math.max(0, xp - levelBase);
   const needed = Math.max(1, nextLevel - levelBase);
   const progress = Math.max(0, Math.min(100, (inLevel / needed) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
 
   return {
     level,
     xp,
     rank,
     nextLevel,
+    remaining,
     progress
   };
 }
@@ -558,6 +618,7 @@ function renderXpGauge() {
   if (els.xpGauge) {
     els.xpGauge.dataset.level = String(xp.level);
     els.xpGauge.dataset.rank = xp.rank;
+    els.xpGauge.dataset.xp = String(xp.xp);
   }
 
   if (els.xpGaugeFill) {
@@ -570,8 +631,30 @@ function renderXpGauge() {
 
   if (els.xpGaugeNext) {
     els.xpGaugeNext.textContent =
-      `${Math.max(0, xp.nextLevel - xp.xp).toLocaleString()} XP TO LVL ${xp.level + 1}`;
+      `${xp.remaining.toLocaleString()} XP TO LVL ${xp.level + 1}`;
   }
+
+  if (els.xpLevel) {
+    els.xpLevel.textContent = `LVL ${xp.level}`;
+  }
+
+  if (els.xpRank) {
+    els.xpRank.textContent = xp.rank;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "profile",
+        xp: xp.xp,
+        level: xp.level,
+        rank: xp.rank,
+        nextLevel: xp.nextLevel,
+        remaining: xp.remaining,
+        percent: xp.progress
+      }
+    })
+  );
 }
 
 /* =========================
@@ -630,6 +713,7 @@ function renderProfile() {
 
   setDisplay(els.editBtn, state.isMine, "inline-flex");
 
+  syncProfileLock();
   renderXpGauge();
   renderFollowButton();
   renderLinks(profile);
@@ -1006,6 +1090,7 @@ function subscribeRealtime(profileId) {
       async () => {
         await fetchPosts(profileId);
         renderPosts();
+        renderXpGauge();
       }
     )
     .on(
@@ -1094,7 +1179,17 @@ async function loadEverything() {
 function markReady() {
   document.body.classList.add("rb-page-ready");
   document.body.classList.remove("rb-page-error");
-  console.log("RB PROFILE PAGE READY");
+  document.body.dataset.rbPage = "profile";
+  document.body.dataset.rbRoute = "profile";
+  document.body.dataset.rbProfileLock = state.identity?.id || state.profile?.id ? "true" : "false";
+
+  renderXpGauge();
+
+  console.log("RB PROFILE PAGE READY", {
+    profileLocked: !!state.identity?.id || !!state.profile?.id,
+    route: "profile",
+    xpGauge: true
+  });
 }
 
 function markError(error) {
