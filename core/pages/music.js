@@ -7,12 +7,14 @@
    Tracks + Podcast + Radio + Playlists
    Profile Keys Locked
    Realtime Enabled
+   XP Gauge Enabled
 
    Flow:
    - No feature-engine dependency
    - Reads music_tracks / podcast_episodes / radio_stations / playlists
    - Plays real audio through page audio player
    - Profile lock stays tied to profiles
+   - XP gauge reads profile identity / level fields safely
 ========================= */
 
 import {
@@ -25,8 +27,7 @@ import {
 
 import {
   RB_TABLES,
-  RB_ROUTES,
-  RB_PROFILE_KEYS
+  RB_ROUTES
 } from "/core/shared/rb-config.js";
 
 import {
@@ -47,6 +48,7 @@ const $ = (id) => document.getElementById(id);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
+const FALLBACK_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const els = {
   nowCover: $("music-now-cover"),
@@ -62,7 +64,14 @@ const els = {
   tracksList: $("music-tracks-list"),
   podcastsList: $("music-podcasts-list"),
   radioList: $("music-radio-list"),
-  playlistsList: $("music-playlists-list")
+  playlistsList: $("music-playlists-list"),
+
+  xpGauge: $("music-xp-gauge"),
+  xpFill: $("music-xp-gauge-fill"),
+  xpText: $("music-xp-gauge-text"),
+  xpNext: $("music-xp-gauge-next"),
+  xpLevel: $("music-xp-level"),
+  xpRank: $("music-xp-rank")
 };
 
 let supabase = null;
@@ -100,7 +109,7 @@ function safeText(value, fallback = "") {
 function safeUrl(value = "", fallback = "") {
   const url = String(value || "").trim();
 
-  if (!url) return fallback;
+  if (!url || url.includes("project-avatar")) return fallback;
 
   if (
     url.startsWith("/") ||
@@ -120,7 +129,6 @@ function setText(el, value) {
 
 function setEmpty(target, text) {
   if (!target) return;
-
   target.innerHTML = `<p class="rb-empty">${escapeHtml(text)}</p>`;
 }
 
@@ -175,6 +183,86 @@ function titleOf(item = {}, fallback = "Untitled") {
 }
 
 /* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Music Creator";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, profileIdentity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "music",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
    PROFILE LOCK
 ========================= */
 
@@ -195,6 +283,25 @@ function syncProfileKeys() {
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeUrl(
+      currentProfile?.avatar_url || profileIdentity?.avatar_url,
+      FALLBACK_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
 }
 
 /* =========================
