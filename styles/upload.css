@@ -2,6 +2,9 @@
    RICH BIZNESS LLC
    /styles/upload.css
    UPLOAD PAGE ONLY
+
+   Centered upload layout
+   Profile Lock + XP Energy Sync Ready
 ========================================= */
 
 .rb-upload-page {
@@ -46,9 +49,20 @@
 /* SHELL */
 
 .rb-upload-shell {
-  width: min(1180px, 94vw);
+  width: min(980px, calc(100vw - 28px));
   margin: 0 auto;
-  padding: 110px 0 54px;
+  padding:
+    calc(92px + env(safe-area-inset-top))
+    0
+    calc(120px + env(safe-area-inset-bottom));
+
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+}
+
+.rb-upload-shell > * {
+  width: 100%;
 }
 
 /* HERO */
@@ -60,6 +74,7 @@
 
   display: grid;
   align-items: end;
+  justify-items: center;
 
   overflow: hidden;
 
@@ -73,8 +88,25 @@
   box-shadow: 0 35px 90px rgba(0, 0, 0, 0.6);
 }
 
+body[data-rb-profile-locked="true"].rb-upload-page .rb-section-hero,
+body[data-rb-profile-locked="true"].rb-upload-page .rb-upload-hero {
+  border-color: rgba(0, 255, 157, 0.34);
+}
+
+body.rb-orbit-xp-energy.rb-upload-page .rb-section-hero,
+body.rb-orbit-xp-energy.rb-upload-page .rb-upload-hero {
+  border-color: rgba(250, 204, 21, 0.34);
+
+  box-shadow:
+    0 35px 90px rgba(0, 0, 0, 0.6),
+    0 0 46px rgba(0, 255, 157, 0.16),
+    0 0 62px rgba(250, 204, 21, 0.1);
+}
+
 .rb-upload-page .rb-section-hero-copy {
   max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .rb-upload-page .rb-section-hero h1 {
@@ -88,6 +120,8 @@
 
 .rb-upload-page .rb-subtitle {
   max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
 
   color: rgba(255, 255, 255, 0.78);
   line-height: 1.55;
@@ -101,6 +135,8 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+
+  width: 100%;
 }
 
 .rb-upload-page .rb-mini-card {
@@ -115,6 +151,14 @@
 
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+}
+
+body.rb-orbit-xp-energy.rb-upload-page .rb-mini-card {
+  border-color: rgba(250, 204, 21, 0.24);
+
+  box-shadow:
+    0 0 24px rgba(0, 255, 157, 0.1),
+    0 0 34px rgba(250, 204, 21, 0.06);
 }
 
 .rb-upload-page .rb-mini-card strong {
@@ -158,13 +202,28 @@
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
 }
 
+body[data-rb-profile-locked="true"].rb-upload-page .rb-panel {
+  border-color: rgba(0, 255, 157, 0.28);
+}
+
+body.rb-orbit-xp-energy.rb-upload-page .rb-panel {
+  border-color: rgba(250, 204, 21, 0.26);
+
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.38),
+    0 0 36px rgba(0, 255, 157, 0.12),
+    0 0 48px rgba(250, 204, 21, 0.08);
+}
+
 .rb-upload-page .rb-panel-head {
   display: flex;
   align-items: end;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
 
   margin-bottom: 18px;
+
+  text-align: center;
 }
 
 .rb-upload-page .rb-panel-head h2 {
@@ -181,6 +240,9 @@
 .rb-upload-page .rb-form {
   display: grid;
   gap: 14px;
+
+  width: min(760px, 100%);
+  margin: 0 auto;
 }
 
 .rb-upload-page .rb-form label {
@@ -255,6 +317,15 @@
   box-shadow: 0 0 0 4px rgba(0, 255, 120, 0.1);
 }
 
+body.rb-orbit-xp-energy.rb-upload-page .rb-form input:focus,
+body.rb-orbit-xp-energy.rb-upload-page .rb-form textarea:focus,
+body.rb-orbit-xp-energy.rb-upload-page .rb-form select:focus {
+  border-color: rgba(250, 204, 21, 0.48);
+  box-shadow:
+    0 0 0 4px rgba(0, 255, 120, 0.1),
+    0 0 24px rgba(250, 204, 21, 0.08);
+}
+
 .rb-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -299,6 +370,14 @@
 .rb-upload-dropzone:hover .rb-upload-preview {
   border-color: rgba(124, 255, 170, 0.72);
   box-shadow: 0 0 34px rgba(0, 255, 120, 0.18);
+}
+
+body.rb-orbit-xp-energy.rb-upload-page .rb-upload-dropzone:hover .rb-upload-preview,
+body.rb-orbit-xp-energy.rb-upload-page .rb-upload-dropzone.is-dragging .rb-upload-preview {
+  border-color: rgba(250, 204, 21, 0.72);
+  box-shadow:
+    0 0 34px rgba(0, 255, 120, 0.18),
+    0 0 42px rgba(250, 204, 21, 0.1);
 }
 
 .upload-preview-empty,
@@ -369,6 +448,16 @@
   transition: width 0.22s ease;
 }
 
+body.rb-orbit-xp-energy.rb-upload-page .rb-upload-progress-track {
+  border-color: rgba(250, 204, 21, 0.18);
+}
+
+body.rb-orbit-xp-energy.rb-upload-page .rb-upload-progress-bar {
+  box-shadow:
+    0 0 22px rgba(0, 255, 120, 0.32),
+    0 0 34px rgba(250, 204, 21, 0.12);
+}
+
 #uploadProgressLabel {
   color: rgba(255, 255, 255, 0.68);
 
@@ -384,6 +473,7 @@
 .rb-upload-page .rb-form-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -408,13 +498,20 @@
   box-shadow: 0 0 28px rgba(0, 255, 120, 0.24);
 }
 
+body.rb-orbit-xp-energy.rb-upload-page .rb-main-launch {
+  box-shadow:
+    0 0 28px rgba(0, 255, 120, 0.26),
+    0 0 42px rgba(250, 204, 21, 0.16);
+}
+
 .rb-main-launch:disabled,
 .rb-form.is-loading .rb-main-launch {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.rb-form-note {
+.rb-form-note,
+#upload-status {
   min-height: 24px;
   margin: 0;
 
@@ -444,7 +541,7 @@
 
 @media (max-width: 920px) {
   .rb-upload-shell {
-    width: 92vw;
+    width: min(92vw, 820px);
     padding-top: 92px;
   }
 
@@ -469,12 +566,20 @@
 
 @media (max-width: 560px) {
   .rb-upload-shell {
-    width: 92vw;
-    padding-bottom: calc(44px + env(safe-area-inset-bottom));
+    width: calc(100vw - 24px);
+    padding-top: 90px;
+    padding-bottom: calc(116px + env(safe-area-inset-bottom));
   }
 
   .rb-upload-page .rb-profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .rb-upload-page .rb-section-hero,
+  .rb-upload-hero {
+    min-height: 330px;
+    padding: 20px 16px;
+    border-radius: 28px;
   }
 
   .rb-upload-page .rb-section-hero h1 {
@@ -484,6 +589,11 @@
   .rb-upload-preview,
   .rb-upload-dropzone {
     min-height: 220px;
+  }
+
+  .rb-upload-page .rb-panel-head {
+    align-items: center;
+    justify-content: center;
   }
 
   .rb-upload-page .rb-form-actions {
