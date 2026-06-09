@@ -5,6 +5,13 @@
    REALTIME NOTIFICATION ENGINE
    Uses locked rb-supabase.js client
    No duplicate Supabase client
+
+   Updates:
+   - Safe table fallbacks
+   - No duplicate channels on reboot
+   - No project-avatar fallback
+   - Realtime cleanup locked
+   - Notification badge sync protected
 ========================= */
 
 import {
@@ -32,8 +39,12 @@ const channels = [];
 
 let booted = false;
 
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
+}
+
 function escapeHtml(value = "") {
-  return String(value)
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -41,12 +52,25 @@ function escapeHtml(value = "") {
     .replace(/'/g, "&#039;");
 }
 
+function safeUrl(value = "", fallback = "") {
+  const url = String(value || "").trim();
+
+  if (!url || url.includes("project-avatar")) return fallback;
+
+  if (
+    url.startsWith("/") ||
+    url.startsWith("https://") ||
+    url.startsWith("http://") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
+  }
+
+  return fallback;
+}
+
 function notifyTable() {
-  return (
-    RB_TABLES.richNotifications ||
-    RB_TABLES.notifications ||
-    "rich_notifications"
-  );
+  return table("richNotifications", table("notifications", "rich_notifications"));
 }
 
 function ensureNotificationRoot() {
@@ -74,7 +98,7 @@ function createToast(payload = {}) {
   const icon = payload.icon || "⚡";
   const title = payload.title || "Rich Bizness Alert";
   const message = payload.message || payload.body || "";
-  const url = payload.url || null;
+  const url = safeUrl(payload.url || "", "");
 
   toast.innerHTML = `
     <div class="rb-notify-glow"></div>
@@ -136,6 +160,14 @@ async function updateUnreadBadge() {
     });
 
     document.body.dataset.rbUnreadNotifications = String(count);
+
+    window.dispatchEvent(
+      new CustomEvent("rb:notification-count-update", {
+        detail: {
+          unread: count
+        }
+      })
+    );
   } catch (error) {
     console.warn("[RB NOTIFICATION COUNT WARNING]", error?.message || error);
   }
@@ -186,52 +218,74 @@ function bindRichNotifications() {
 }
 
 function bindGlobalActivityNotifications() {
-  const liveChannel = createRealtimeChannel("rb-global-live-notifications")
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: RB_TABLES.liveStreams
-      },
-      (payload) => {
-        pushNotification({
-          icon: "🔴",
-          title: "LIVE NOW",
-          message:
-            payload.new?.title ||
-            "A creator just started streaming",
-          url: "/watch"
-        });
-      }
-    )
-    .subscribe();
+  const liveStreamsTable = table("liveStreams", "live_streams");
+  const uploadsTable = table("uploads", "uploads");
 
-  const uploadChannel = createRealtimeChannel("rb-global-upload-notifications")
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: RB_TABLES.uploads
-      },
-      () => {
-        pushNotification({
-          icon: "⬆️",
-          title: "NEW UPLOAD",
-          message: "Fresh content was uploaded",
-          url: "/feed"
-        });
-      }
-    )
-    .subscribe();
+  if (liveStreamsTable) {
+    const liveChannel = createRealtimeChannel("rb-global-live-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: liveStreamsTable
+        },
+        (payload) => {
+          pushNotification({
+            icon: "🔴",
+            title: "LIVE NOW",
+            message:
+              payload.new?.title ||
+              "A creator just started streaming",
+            url: "/watch"
+          });
+        }
+      )
+      .subscribe();
 
-  channels.push(liveChannel, uploadChannel);
+    channels.push(liveChannel);
+  }
+
+  if (uploadsTable) {
+    const uploadChannel = createRealtimeChannel("rb-global-upload-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: uploadsTable
+        },
+        (payload) => {
+          const section = payload.new?.section || "feed";
+
+          pushNotification({
+            icon: "⬆️",
+            title: "NEW UPLOAD",
+            message: "Fresh content was uploaded",
+            url:
+              section === "music"
+                ? "/music"
+                : section === "gallery"
+                  ? "/gallery"
+                  : section === "sports"
+                    ? "/sports"
+                    : section === "gaming"
+                      ? "/gaming"
+                      : "/feed"
+          });
+        }
+      )
+      .subscribe();
+
+    channels.push(uploadChannel);
+  }
 }
 
 function bindDirectMessageNotifications() {
   const user = getUser();
-  if (!user?.id) return;
+  const dmMessagesTable = table("dmMessages", "dm_messages");
+
+  if (!user?.id || !dmMessagesTable) return;
 
   const dmChannel = createRealtimeChannel(`rb-dm-notifications-${user.id}`)
     .on(
@@ -239,7 +293,7 @@ function bindDirectMessageNotifications() {
       {
         event: "INSERT",
         schema: "public",
-        table: RB_TABLES.dmMessages
+        table: dmMessagesTable
       },
       (payload) => {
         const message = payload.new || {};
@@ -264,17 +318,26 @@ export async function bootRealtimeNotifications() {
 
   booted = true;
 
-  await bootAuth();
+  try {
+    await bootAuth();
 
-  bindRichNotifications();
-  bindDirectMessageNotifications();
-  bindGlobalActivityNotifications();
+    await destroyRealtimeNotifications();
 
-  await updateUnreadBadge();
+    booted = true;
 
-  document.body.classList.add("rb-realtime-notifications-ready");
+    bindRichNotifications();
+    bindDirectMessageNotifications();
+    bindGlobalActivityNotifications();
 
-  console.log("RB REALTIME NOTIFICATIONS READY");
+    await updateUnreadBadge();
+
+    document.body.classList.add("rb-realtime-notifications-ready");
+
+    console.log("RB REALTIME NOTIFICATIONS READY");
+  } catch (error) {
+    booted = false;
+    console.warn("[RB REALTIME NOTIFICATIONS FAILED]", error?.message || error);
+  }
 }
 
 export async function destroyRealtimeNotifications() {
@@ -288,6 +351,8 @@ export async function destroyRealtimeNotifications() {
 
 window.RBNotify = pushNotification;
 window.RBUpdateNotificationBadge = updateUnreadBadge;
+window.RBBootRealtimeNotifications = bootRealtimeNotifications;
+window.RBDestroyRealtimeNotifications = destroyRealtimeNotifications;
 
 window.addEventListener("beforeunload", destroyRealtimeNotifications);
 
