@@ -6,6 +6,7 @@
    PORTAL AURA SUPPORT
    Canvas is the real portal.
    Safe overlay only — no dial/engine override.
+   XP Energy Sync Enabled
 ========================= */
 
 /* OLD HTML PORTAL DISABLED */
@@ -67,6 +68,31 @@
   opacity: 0.76;
 }
 
+.rb-index-page.rb-orbit-xp-energy::after {
+  opacity: 0.9;
+
+  filter:
+    saturate(1.36)
+    brightness(1.08)
+    blur(0.2px);
+
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.06), transparent 15%),
+    radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.22), transparent 28%),
+    radial-gradient(circle at 50% 54%, rgba(250, 204, 21, 0.14), transparent 42%),
+    radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.08), transparent 52%);
+}
+
+.rb-index-page.rb-orbit-live-energy.rb-orbit-xp-energy::after {
+  opacity: 0.96;
+
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.07), transparent 15%),
+    radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.26), transparent 28%),
+    radial-gradient(circle at 50% 54%, rgba(250, 204, 21, 0.16), transparent 42%),
+    radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.1), transparent 52%);
+}
+
 /* =========================
    THEME HOOKS
 ========================= */
@@ -96,6 +122,31 @@
     radial-gradient(circle at 50% 52%, rgba(0, 255, 157, 0.035), transparent 52%);
 }
 
+.rb-theme-blue.rb-index-page.rb-orbit-xp-energy::after {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.052), transparent 15%),
+    radial-gradient(circle at 50% 48%, rgba(34, 211, 238, 0.22), transparent 28%),
+    radial-gradient(circle at 50% 54%, rgba(147, 197, 253, 0.13), transparent 42%),
+    radial-gradient(circle at 50% 52%, rgba(59, 130, 246, 0.08), transparent 52%);
+}
+
+.rb-theme-purple.rb-index-page.rb-orbit-xp-energy::after {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.052), transparent 15%),
+    radial-gradient(circle at 50% 48%, rgba(168, 85, 247, 0.23), transparent 28%),
+    radial-gradient(circle at 50% 54%, rgba(244, 114, 182, 0.14), transparent 42%),
+    radial-gradient(circle at 50% 52%, rgba(192, 132, 252, 0.09), transparent 52%);
+}
+
+.rb-theme-black-gold.rb-index-page.rb-orbit-xp-energy::after,
+.rb-theme-gold.rb-index-page.rb-orbit-xp-energy::after {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.048), transparent 15%),
+    radial-gradient(circle at 50% 48%, rgba(250, 204, 21, 0.23), transparent 28%),
+    radial-gradient(circle at 50% 54%, rgba(255, 226, 122, 0.15), transparent 42%),
+    radial-gradient(circle at 50% 52%, rgba(0, 255, 157, 0.08), transparent 52%);
+}
+
 /* =========================
    SECTION BACKDROP MODE
 ========================= */
@@ -106,6 +157,15 @@
   filter:
     blur(1px)
     saturate(1.12);
+}
+
+.rb-portal-backdrop.rb-orbit-xp-energy::after {
+  opacity: 0.38;
+
+  filter:
+    blur(1px)
+    saturate(1.24)
+    brightness(1.04);
 }
 
 /* =========================
@@ -142,6 +202,16 @@
 
   .rb-index-page.rb-orbit-live-energy::after {
     opacity: 0.68;
+  }
+
+  .rb-index-page.rb-orbit-xp-energy::after {
+    opacity: 0.72;
+
+    background:
+      radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.038), transparent 16%),
+      radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.15), transparent 30%),
+      radial-gradient(circle at 50% 56%, rgba(250, 204, 21, 0.085), transparent 44%),
+      radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.05), transparent 54%);
   }
 }
 
