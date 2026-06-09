@@ -6,6 +6,15 @@
    Stations + Sessions + Likes
    Profile Keys Locked
    Safe Loader + Realtime Enabled
+   XP Gauge Enabled
+
+   Updates:
+   - No project-avatar fallback
+   - Safe URL handling
+   - Radio XP gauge connected
+   - Tab display fixed
+   - Direct table fallbacks
+   - Realtime cleanup locked
 ========================= */
 
 import {
@@ -15,8 +24,14 @@ import {
   markPageError
 } from "/core/app.js";
 
-import { RB_TABLES, RB_ROUTES } from "/core/shared/rb-config.js";
-import { getSupabase } from "/core/shared/rb-supabase.js";
+import {
+  RB_TABLES,
+  RB_ROUTES
+} from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   getProfileIdentity,
@@ -28,6 +43,7 @@ const $ = (id) => document.getElementById(id);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const FALLBACK_COVER = "/images/brand/hero-banner.png";
+const FALLBACK_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const els = {
   stationCount: $("radio-station-count"),
@@ -43,7 +59,14 @@ const els = {
   nowType: $("radio-now-type"),
   nowTitle: $("radio-now-title"),
   nowMeta: $("radio-now-meta"),
-  audioPlayer: $("radio-audio-player")
+  audioPlayer: $("radio-audio-player"),
+
+  xpGauge: $("radio-xp-gauge"),
+  xpFill: $("radio-xp-gauge-fill"),
+  xpText: $("radio-xp-gauge-text"),
+  xpNext: $("radio-xp-gauge-next"),
+  xpLevel: $("radio-xp-level"),
+  xpRank: $("radio-xp-rank")
 };
 
 let supabase = null;
@@ -54,6 +77,10 @@ let profileIdentity = null;
 let activeStation = null;
 let activeSessionId = null;
 let booted = false;
+
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
+}
 
 function escapeHtml(value = "") {
   return String(value ?? "")
@@ -66,6 +93,23 @@ function escapeHtml(value = "") {
 
 function safe(value, fallback = "") {
   return String(value || fallback || "").trim();
+}
+
+function safeUrl(value = "", fallback = FALLBACK_COVER) {
+  const url = String(value || "").trim();
+
+  if (!url || url.includes("project-avatar")) return fallback;
+
+  if (
+    url.startsWith("/") ||
+    url.startsWith("https://") ||
+    url.startsWith("http://") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
+  }
+
+  return fallback;
 }
 
 function setEmpty(target, text) {
@@ -109,11 +153,21 @@ function stationTitle(item = {}) {
 }
 
 function stationCover(item = {}) {
-  return item.cover_url || item.image_url || item.thumbnail_url || FALLBACK_COVER;
+  return safeUrl(
+    item.cover_url ||
+      item.image_url ||
+      item.thumbnail_url,
+    FALLBACK_COVER
+  );
 }
 
 function stationStream(item = {}) {
-  return item.stream_url || item.audio_url || item.url || "";
+  return safeUrl(
+    item.stream_url ||
+      item.audio_url ||
+      item.url,
+    ""
+  );
 }
 
 function stationListeners(item = {}) {
@@ -136,6 +190,101 @@ function isStationFeatured(item = {}) {
   return Boolean(item.is_featured || item.featured);
 }
 
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Radio Host";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, profileIdentity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  if (els.xpText) {
+    els.xpText.textContent = `${model.xp.toLocaleString()} XP`;
+  }
+
+  if (els.xpNext) {
+    els.xpNext.textContent = `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`;
+  }
+
+  if (els.xpLevel) {
+    els.xpLevel.textContent = `LVL ${model.level}`;
+  }
+
+  if (els.xpRank) {
+    els.xpRank.textContent = model.rank;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "radio",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   PROFILE LOCK
+========================= */
+
 function syncProfileKeys() {
   const state = getCurrentUserState?.() || {};
 
@@ -153,7 +302,30 @@ function syncProfileKeys() {
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeUrl(
+      currentProfile?.avatar_url || profileIdentity?.avatar_url,
+      FALLBACK_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
 }
+
+/* =========================
+   SESSION
+========================= */
 
 function deviceInfo() {
   return {
@@ -167,17 +339,19 @@ function deviceInfo() {
 }
 
 async function safeLoadTable({
-  table,
+  table: tableName,
   limit = 40,
   orderBy = "created_at",
   attempts = []
 }) {
+  if (!tableName) return [];
+
   let lastError = null;
 
   for (const attempt of attempts) {
     try {
       let query = supabase
-        .from(table)
+        .from(tableName)
         .select("*")
         .limit(limit);
 
@@ -197,15 +371,17 @@ async function safeLoadTable({
       return data || [];
     } catch (error) {
       lastError = error;
-      console.warn(`[RB RADIO SAFE QUERY FAILED] ${table}: ${attempt.name}`, error?.message || error);
+      console.warn(`[RB RADIO SAFE QUERY FAILED] ${tableName}: ${attempt.name}`, error?.message || error);
     }
   }
 
-  throw lastError || new Error(`Failed to load ${table}.`);
+  throw lastError || new Error(`Failed to load ${tableName}.`);
 }
 
 async function startRadioSession(station) {
-  if (!station?.id || !currentUser?.id || !RB_TABLES.radioSessions) return null;
+  const sessionsTable = table("radioSessions", "radio_sessions");
+
+  if (!station?.id || !currentUser?.id || !sessionsTable) return null;
 
   const payload = {
     station_id: station.id,
@@ -213,12 +389,13 @@ async function startRadioSession(station) {
     device_info: deviceInfo(),
     metadata: {
       station_name: stationTitle(station),
-      source: "radio_page_play"
+      source: "radio_page_play",
+      profile_id: profileIdentity?.id || currentUser.id
     }
   };
 
   const { data, error } = await supabase
-    .from(RB_TABLES.radioSessions)
+    .from(sessionsTable)
     .insert(payload)
     .select("*")
     .maybeSingle();
@@ -233,10 +410,12 @@ async function startRadioSession(station) {
 }
 
 async function endRadioSession() {
-  if (!activeSessionId || !RB_TABLES.radioSessions) return;
+  const sessionsTable = table("radioSessions", "radio_sessions");
+
+  if (!activeSessionId || !sessionsTable) return;
 
   const { error } = await supabase
-    .from(RB_TABLES.radioSessions)
+    .from(sessionsTable)
     .update({
       left_at: new Date().toISOString(),
       metadata: {
@@ -259,9 +438,18 @@ async function playStation(station) {
   const coverUrl = stationCover(station);
   const streamUrl = stationStream(station);
 
-  if (els.nowCover) els.nowCover.src = coverUrl;
-  if (els.nowType) els.nowType.textContent = isStationLive(station) ? "LIVE RADIO" : "RADIO";
-  if (els.nowTitle) els.nowTitle.textContent = title;
+  if (els.nowCover) {
+    els.nowCover.src = coverUrl;
+    els.nowCover.alt = title;
+  }
+
+  if (els.nowType) {
+    els.nowType.textContent = isStationLive(station) ? "LIVE RADIO" : "RADIO";
+  }
+
+  if (els.nowTitle) {
+    els.nowTitle.textContent = title;
+  }
 
   if (els.nowMeta) {
     els.nowMeta.textContent = [
@@ -289,10 +477,12 @@ async function likeStation(station) {
     return;
   }
 
-  if (!station?.id || !RB_TABLES.radioLikes) return;
+  const likesTable = table("radioLikes", "radio_likes");
+
+  if (!station?.id || !likesTable) return;
 
   const { error } = await supabase
-    .from(RB_TABLES.radioLikes)
+    .from(likesTable)
     .upsert(
       {
         station_id: station.id,
@@ -311,27 +501,34 @@ async function likeStation(station) {
   await loadRadioPage();
 }
 
+/* =========================
+   TABS
+========================= */
+
 function bindTabs() {
   $$("[data-radio-tab]").forEach((button) => {
     if (button.dataset.rbRadioTabBound === "true") return;
     button.dataset.rbRadioTabBound = "true";
 
     button.addEventListener("click", () => {
-      const tab = button.dataset.radioTab;
+      const tab = button.dataset.radioTab || "featured";
 
       $$("[data-radio-tab]").forEach((btn) => {
         btn.classList.toggle("is-active", btn === button);
       });
 
       $$("[data-radio-panel]").forEach((panel) => {
-        panel.classList.toggle(
-          "is-active",
-          panel.dataset.radioPanel === tab
-        );
+        const active = panel.dataset.radioPanel === tab;
+        panel.classList.toggle("is-active", active);
+        panel.style.display = active ? "block" : "none";
       });
     });
   });
 }
+
+/* =========================
+   RENDER
+========================= */
 
 function renderStationCard(item = {}) {
   const title = stationTitle(item);
@@ -424,10 +621,16 @@ function renderSessionCard(item = {}) {
   return card;
 }
 
+/* =========================
+   LOAD
+========================= */
+
 async function loadStations() {
+  const stationsTable = table("radioStations", "radio_stations");
+
   try {
     const stations = await safeLoadTable({
-      table: RB_TABLES.radioStations,
+      table: stationsTable,
       limit: 50,
       attempts: [
         {
@@ -500,21 +703,25 @@ async function loadStations() {
     }
   } catch (error) {
     console.error("[RB RADIO STATIONS FAILED]", error);
+
     setCount(els.stationCount, 0);
     setCount(els.liveCount, 0);
     setCount(els.listenerCount, 0);
     setCount(els.likeCount, 0);
+
     setEmpty(els.stationsList, error?.message || "Radio stations failed to load.");
     setEmpty(els.featuredList, error?.message || "Featured radio stations failed to load.");
   }
 }
 
 async function loadSessions() {
-  if (!els.sessionsList || !RB_TABLES.radioSessions) return;
+  const sessionsTable = table("radioSessions", "radio_sessions");
+
+  if (!els.sessionsList || !sessionsTable) return;
 
   try {
     const sessions = await safeLoadTable({
-      table: RB_TABLES.radioSessions,
+      table: sessionsTable,
       limit: 40,
       attempts: [
         {
@@ -558,6 +765,10 @@ async function loadRadioPage() {
   ]);
 }
 
+/* =========================
+   REALTIME
+========================= */
+
 function clearRealtime() {
   channels.forEach((channel) => {
     supabase?.removeChannel(channel);
@@ -566,17 +777,17 @@ function clearRealtime() {
   channels = [];
 }
 
-function watchTable(table) {
-  if (!table) return null;
+function watchTable(tableName) {
+  if (!tableName) return null;
 
   return supabase
-    .channel(`rb-radio-${table}`)
+    .channel(`rb-radio-${tableName}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
-        table
+        table: tableName
       },
       () => loadRadioPage().catch(console.error)
     )
@@ -587,11 +798,15 @@ function bindRealtime() {
   clearRealtime();
 
   channels = [
-    watchTable(RB_TABLES.radioStations),
-    watchTable(RB_TABLES.radioLikes),
-    watchTable(RB_TABLES.radioSessions)
+    watchTable(table("radioStations", "radio_stations")),
+    watchTable(table("radioLikes", "radio_likes")),
+    watchTable(table("radioSessions", "radio_sessions"))
   ].filter(Boolean);
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootRadioPage() {
   if (booted) return;
@@ -618,6 +833,9 @@ async function bootRadioPage() {
       clearRealtime();
     });
 
+    document.body.dataset.rbPage = "radio";
+    document.body.dataset.rbRoute = "radio";
+    document.body.dataset.rbProfileLock = profileIdentity?.id ? "true" : "false";
     document.body.classList.add("rb-radio-ready");
 
     markPageReady("radio");
