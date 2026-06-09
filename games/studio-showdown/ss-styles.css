@@ -1,1 +1,902 @@
+/* =========================
+   RICH BIZNESS MOBILE
+   /games/studio-showdown/ss-styles.css
 
+   STUDIO SHOWDOWN
+   Extreme Action Fighting Game Shell
+   Canvas Center Lock + Combat HUD + Studio Boss UI
+========================= */
+
+:root {
+  --ss-black: #020402;
+  --ss-deep: #03140b;
+  --ss-green: #66ff99;
+  --ss-green-2: #00ff88;
+  --ss-emerald: #10b981;
+  --ss-gold: #ffd86b;
+  --ss-gold-2: #facc15;
+  --ss-red: #ff3355;
+  --ss-orange: #ff8a1f;
+  --ss-blue: #38bdf8;
+  --ss-purple: #a855f7;
+  --ss-white: #ffffff;
+
+  --ss-safe-bottom: env(safe-area-inset-bottom);
+  --ss-safe-top: env(safe-area-inset-top);
+
+  --ss-shell-width: min(460px, calc(100vw - 18px));
+  --ss-radius: 34px;
+  --ss-shadow: 0 34px 110px rgba(0, 0, 0, 0.62);
+  --ss-green-glow: 0 0 38px rgba(0, 255, 136, 0.22);
+  --ss-gold-glow: 0 0 44px rgba(250, 204, 21, 0.16);
+  --ss-red-glow: 0 0 52px rgba(255, 51, 85, 0.16);
+}
+
+/* =========================
+   PAGE LOCK
+========================= */
+
+html,
+body {
+  min-height: 100%;
+  background: #000;
+}
+
+body.ss-page,
+body.rb-studio-showdown-page,
+body[data-game="studio-showdown"] {
+  min-height: 100svh;
+  margin: 0;
+  color: var(--ss-white);
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.2), transparent 34%),
+    radial-gradient(circle at 86% 14%, rgba(250, 204, 21, 0.18), transparent 30%),
+    radial-gradient(circle at 18% 78%, rgba(255, 51, 85, 0.12), transparent 34%),
+    radial-gradient(circle at 80% 78%, rgba(168, 85, 247, 0.14), transparent 34%),
+    linear-gradient(180deg, #03140b 0%, #020604 48%, #000 100%);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body.ss-page::before,
+body.rb-studio-showdown-page::before,
+body[data-game="studio-showdown"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.92)),
+    url("/images/D8F60174-7E0C-44AF-A4AB-496AB7ADEC52.png") center / cover no-repeat;
+  opacity: 0.2;
+  filter:
+    saturate(1.32)
+    contrast(1.14)
+    brightness(0.86);
+}
+
+body.ss-page::after,
+body.rb-studio-showdown-page::after,
+body[data-game="studio-showdown"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 20%, transparent, rgba(0, 0, 0, 0.74) 64%, #000 100%),
+    radial-gradient(circle at 22% 64%, rgba(102, 255, 153, 0.08), transparent 32%),
+    radial-gradient(circle at 80% 58%, rgba(255, 51, 85, 0.07), transparent 34%),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.05), transparent 24%, transparent 76%, rgba(250, 204, 21, 0.05));
+}
+
+/* =========================
+   MAIN WRAP
+========================= */
+
+.studio-showdown-page,
+.ss-game-page,
+#studio-showdown-page {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  min-height: 100svh;
+
+  display: grid;
+  place-items: center;
+
+  padding:
+    calc(18px + var(--ss-safe-top))
+    10px
+    calc(18px + var(--ss-safe-bottom));
+}
+
+.studio-showdown-shell,
+.ss-shell,
+#studio-showdown {
+  position: relative;
+  z-index: 3;
+
+  width: var(--ss-shell-width);
+  min-height: min(844px, calc(100svh - 28px));
+
+  display: grid;
+  grid-template-rows: auto minmax(560px, 1fr) auto;
+  gap: 12px;
+
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+/* =========================
+   TOP HUD / TITLE
+========================= */
+
+.ss-topbar,
+.studio-showdown-topbar,
+.ss-header {
+  position: relative;
+
+  min-height: 74px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  border-radius: 26px;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+
+  background:
+    radial-gradient(circle at 18% 16%, rgba(0, 255, 136, 0.14), transparent 42%),
+    radial-gradient(circle at 88% 16%, rgba(255, 51, 85, 0.12), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.1), transparent 46%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.84), rgba(0, 0, 0, 0.72));
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.46),
+    var(--ss-green-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.ss-brand,
+.studio-showdown-brand {
+  display: grid;
+  gap: 3px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.ss-brand span,
+.studio-showdown-brand span {
+  color: var(--ss-green);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 14px rgba(102, 255, 153, 0.32);
+}
+
+.ss-brand strong,
+.studio-showdown-brand strong {
+  color: #fff;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+  text-shadow:
+    0 0 18px rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(0, 255, 136, 0.18);
+}
+
+.ss-brand small,
+.studio-showdown-brand small {
+  color: var(--ss-gold);
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+}
+
+.ss-top-actions,
+.ss-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ss-icon-btn,
+.ss-top-actions button,
+.ss-header-actions button {
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+
+  font-weight: 1000;
+  cursor: pointer;
+
+  box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+/* =========================
+   CANVAS FRAME
+========================= */
+
+.ss-canvas-frame,
+.studio-showdown-frame,
+.ss-game-frame {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  min-height: 560px;
+  height: min(844px, calc(100svh - 118px));
+
+  border-radius: var(--ss-radius);
+  border: 1px solid rgba(250, 204, 21, 0.24);
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.16), transparent 36%),
+    radial-gradient(circle at 24% 80%, rgba(168, 85, 247, 0.12), transparent 38%),
+    radial-gradient(circle at 84% 72%, rgba(255, 51, 85, 0.1), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgba(250, 204, 21, 0.12), transparent 42%),
+    #020402;
+
+  box-shadow:
+    var(--ss-shadow),
+    0 0 42px rgba(0, 255, 136, 0.14),
+    0 0 64px rgba(250, 204, 21, 0.08),
+    inset 0 0 32px rgba(255, 255, 255, 0.025);
+
+  isolation: isolate;
+}
+
+.ss-canvas-frame::before,
+.studio-showdown-frame::before,
+.ss-game-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 24%, transparent 72%, rgba(0, 255, 136, 0.1)),
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.1), transparent 34%),
+    radial-gradient(circle at 20% 70%, rgba(168, 85, 247, 0.12), transparent 36%),
+    radial-gradient(circle at 84% 44%, rgba(255, 51, 85, 0.08), transparent 36%);
+  mix-blend-mode: screen;
+  opacity: 0.66;
+}
+
+.ss-canvas-frame::after,
+.studio-showdown-frame::after,
+.ss-game-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.36) 100%);
+  background-size:
+    100% 4px,
+    42px 42px,
+    100% 100%;
+  opacity: 0.32;
+}
+
+#studioShowdownCanvas,
+canvas[data-studio-showdown] {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  border-radius: inherit;
+  background: #020402;
+
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* =========================
+   FLOATING HUD CARDS
+========================= */
+
+.ss-floating-hud,
+.ss-hud,
+.studio-showdown-hud {
+  position: absolute;
+  inset: 14px 14px auto;
+  z-index: 8;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  pointer-events: none;
+}
+
+.ss-hud-card,
+.ss-score-card,
+.ss-cash-card,
+.ss-level-card,
+.ss-rank-card,
+.ss-wave-card,
+.ss-ko-card {
+  min-height: 42px;
+  padding: 8px 10px;
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background:
+    linear-gradient(145deg, rgba(0, 0, 0, 0.66), rgba(5, 12, 7, 0.52));
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  text-align: center;
+
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.32),
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+.ss-hud-card span,
+.ss-score-card span,
+.ss-cash-card span,
+.ss-level-card span,
+.ss-rank-card span,
+.ss-wave-card span,
+.ss-ko-card span {
+  display: block;
+
+  color: rgba(255, 255, 255, 0.58);
+
+  font-size: 0.58rem;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ss-hud-card strong,
+.ss-score-card strong,
+.ss-cash-card strong,
+.ss-level-card strong,
+.ss-rank-card strong,
+.ss-wave-card strong,
+.ss-ko-card strong {
+  display: block;
+  margin-top: 2px;
+
+  color: var(--ss-gold);
+
+  font-size: 1rem;
+  font-weight: 1000;
+  line-height: 1;
+
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.28);
+}
+
+/* =========================
+   COMBAT BAR UI
+========================= */
+
+.ss-combat-bars,
+.studio-showdown-combat-bars {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 106px;
+  z-index: 8;
+
+  display: grid;
+  gap: 8px;
+
+  pointer-events: none;
+}
+
+.ss-bar {
+  position: relative;
+  overflow: hidden;
+
+  height: 14px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background: rgba(0, 0, 0, 0.58);
+
+  box-shadow:
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+.ss-bar-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(90deg, var(--ss-green), var(--ss-gold));
+  box-shadow: 0 0 18px rgba(102, 255, 153, 0.24);
+}
+
+.ss-bar-fill.hp,
+.ss-hp-fill {
+  background: linear-gradient(90deg, var(--ss-red), var(--ss-orange));
+  box-shadow: 0 0 18px rgba(255, 51, 85, 0.22);
+}
+
+.ss-bar-fill.energy,
+.ss-energy-fill {
+  background: linear-gradient(90deg, var(--ss-blue), var(--ss-gold));
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.2);
+}
+
+/* =========================
+   GAME CONTROLS
+========================= */
+
+.ss-controls,
+.studio-showdown-controls,
+.ss-bottom-controls {
+  position: relative;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.ss-controls button,
+.studio-showdown-controls button,
+.ss-bottom-controls button,
+.ss-launch-btn,
+.ss-action-btn {
+  min-height: 48px;
+  padding: 0 12px;
+
+  border: 0;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, var(--ss-green), var(--ss-gold));
+  color: #041006;
+
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 26px rgba(0, 255, 136, 0.24),
+    0 0 34px rgba(250, 204, 21, 0.1),
+    inset 0 0 16px rgba(255, 255, 255, 0.14);
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ss-controls button:hover,
+.studio-showdown-controls button:hover,
+.ss-bottom-controls button:hover,
+.ss-launch-btn:hover,
+.ss-action-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.ss-controls button:active,
+.studio-showdown-controls button:active,
+.ss-bottom-controls button:active,
+.ss-launch-btn:active,
+.ss-action-btn:active {
+  transform: scale(0.96);
+}
+
+.ss-controls button.secondary,
+.studio-showdown-controls button.secondary,
+.ss-bottom-controls button.secondary,
+.ss-action-btn.secondary {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.065);
+  color: #ffffff;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.3),
+    inset 0 0 14px rgba(255, 255, 255, 0.025);
+}
+
+.ss-controls button.danger,
+.studio-showdown-controls button.danger,
+.ss-bottom-controls button.danger,
+.ss-action-btn.danger {
+  background: linear-gradient(135deg, var(--ss-red), var(--ss-orange));
+  color: #fff;
+  box-shadow:
+    0 0 26px rgba(255, 51, 85, 0.22),
+    0 0 34px rgba(250, 204, 21, 0.08),
+    inset 0 0 16px rgba(255, 255, 255, 0.12);
+}
+
+.ss-controls button.power,
+.studio-showdown-controls button.power,
+.ss-bottom-controls button.power,
+.ss-action-btn.power {
+  background: linear-gradient(135deg, var(--ss-purple), var(--ss-gold));
+  color: #fff;
+  box-shadow:
+    0 0 26px rgba(168, 85, 247, 0.22),
+    0 0 34px rgba(250, 204, 21, 0.1),
+    inset 0 0 16px rgba(255, 255, 255, 0.12);
+}
+
+/* =========================
+   POWERUP / STATUS STRIP
+========================= */
+
+.ss-status-strip,
+.ss-power-strip,
+.studio-showdown-status {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 8;
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  pointer-events: none;
+}
+
+.ss-status-pill,
+.ss-power-pill {
+  min-height: 32px;
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+
+  background: rgba(0, 0, 0, 0.58);
+  color: #fff;
+
+  font-size: 0.66rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* =========================
+   START / GAME OVER PANELS
+========================= */
+
+.ss-overlay,
+.ss-start-screen,
+.ss-game-over {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+
+  display: grid;
+  place-items: center;
+
+  padding: 18px;
+
+  pointer-events: none;
+}
+
+.ss-overlay-card,
+.ss-start-card,
+.ss-game-over-card {
+  width: min(356px, 100%);
+
+  padding: 24px;
+
+  border-radius: 30px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+
+  background:
+    radial-gradient(circle at top, rgba(0, 255, 136, 0.15), transparent 48%),
+    radial-gradient(circle at 20% 88%, rgba(168, 85, 247, 0.14), transparent 42%),
+    radial-gradient(circle at 92% 18%, rgba(255, 51, 85, 0.1), transparent 38%),
+    linear-gradient(145deg, rgba(5, 12, 7, 0.9), rgba(0, 0, 0, 0.78));
+
+  text-align: center;
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.56),
+    0 0 38px rgba(0, 255, 136, 0.16),
+    0 0 48px rgba(250, 204, 21, 0.1);
+
+  pointer-events: auto;
+}
+
+.ss-overlay-card h1,
+.ss-start-card h1,
+.ss-game-over-card h1,
+.ss-overlay-card h2,
+.ss-start-card h2,
+.ss-game-over-card h2 {
+  margin: 0;
+
+  color: #fff;
+
+  font-size: clamp(2rem, 11vw, 3.6rem);
+  line-height: 0.88;
+  letter-spacing: -0.08em;
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 22px rgba(255, 255, 255, 0.12),
+    0 0 34px rgba(0, 255, 136, 0.18);
+}
+
+.ss-overlay-card p,
+.ss-start-card p,
+.ss-game-over-card p {
+  margin: 14px auto 0;
+
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
+}
+
+.ss-overlay-card .ss-launch-btn,
+.ss-start-card .ss-launch-btn,
+.ss-game-over-card .ss-launch-btn {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* =========================
+   XP / PROFILE LOCK ENERGY
+========================= */
+
+body[data-rb-profile-locked="true"] .ss-canvas-frame,
+body[data-rb-profile-locked="true"] .studio-showdown-frame,
+body[data-rb-profile-locked="true"] .ss-game-frame,
+body[data-rb-profile-locked="true"] .ss-topbar,
+body[data-rb-profile-locked="true"] .studio-showdown-topbar,
+body[data-rb-profile-locked="true"] .ss-header {
+  border-color: rgba(0, 255, 157, 0.34);
+}
+
+body.rb-orbit-xp-energy .ss-canvas-frame,
+body.rb-orbit-xp-energy .studio-showdown-frame,
+body.rb-orbit-xp-energy .ss-game-frame {
+  border-color: rgba(250, 204, 21, 0.36);
+
+  box-shadow:
+    var(--ss-shadow),
+    0 0 52px rgba(0, 255, 136, 0.2),
+    0 0 78px rgba(250, 204, 21, 0.14),
+    0 0 84px rgba(255, 51, 85, 0.08),
+    0 0 84px rgba(168, 85, 247, 0.08),
+    inset 0 0 34px rgba(255, 255, 255, 0.03);
+}
+
+body.rb-orbit-xp-energy .ss-topbar,
+body.rb-orbit-xp-energy .studio-showdown-topbar,
+body.rb-orbit-xp-energy .ss-header {
+  border-color: rgba(250, 204, 21, 0.28);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.46),
+    0 0 36px rgba(0, 255, 136, 0.14),
+    0 0 48px rgba(250, 204, 21, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+body.rb-orbit-xp-energy .ss-brand strong,
+body.rb-orbit-xp-energy .studio-showdown-brand strong {
+  text-shadow:
+    0 0 18px rgba(255, 255, 255, 0.12),
+    0 0 34px rgba(0, 255, 136, 0.24),
+    0 0 40px rgba(250, 204, 21, 0.12);
+}
+
+/* =========================
+   FULLSCREEN MODE SUPPORT
+========================= */
+
+.ss-fullscreen,
+body.ss-fullscreen {
+  overflow: hidden;
+}
+
+body.ss-fullscreen .studio-showdown-page,
+body.ss-fullscreen .ss-game-page,
+body.ss-fullscreen #studio-showdown-page {
+  padding: 0;
+}
+
+body.ss-fullscreen .studio-showdown-shell,
+body.ss-fullscreen .ss-shell,
+body.ss-fullscreen #studio-showdown {
+  width: 100vw;
+  height: 100svh;
+  min-height: 100svh;
+  grid-template-rows: 1fr;
+}
+
+body.ss-fullscreen .ss-topbar,
+body.ss-fullscreen .studio-showdown-topbar,
+body.ss-fullscreen .ss-header,
+body.ss-fullscreen .ss-controls,
+body.ss-fullscreen .studio-showdown-controls,
+body.ss-fullscreen .ss-bottom-controls {
+  display: none;
+}
+
+body.ss-fullscreen .ss-canvas-frame,
+body.ss-fullscreen .studio-showdown-frame,
+body.ss-fullscreen .ss-game-frame {
+  height: 100svh;
+  min-height: 100svh;
+  border-radius: 0;
+  border: 0;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 720px) {
+  :root {
+    --ss-shell-width: min(430px, calc(100vw - 14px));
+    --ss-radius: 28px;
+  }
+
+  .studio-showdown-page,
+  .ss-game-page,
+  #studio-showdown-page {
+    padding:
+      calc(10px + var(--ss-safe-top))
+      7px
+      calc(10px + var(--ss-safe-bottom));
+  }
+
+  .studio-showdown-shell,
+  .ss-shell,
+  #studio-showdown {
+    min-height: min(820px, calc(100svh - 20px));
+    gap: 10px;
+  }
+
+  .ss-topbar,
+  .studio-showdown-topbar,
+  .ss-header {
+    min-height: 66px;
+    padding: 12px;
+    border-radius: 22px;
+  }
+
+  .ss-brand span,
+  .studio-showdown-brand span {
+    font-size: 0.58rem;
+  }
+
+  .ss-brand strong,
+  .studio-showdown-brand strong {
+    font-size: 1.18rem;
+  }
+
+  .ss-brand small,
+  .studio-showdown-brand small {
+    font-size: 0.54rem;
+  }
+
+  .ss-icon-btn,
+  .ss-top-actions button,
+  .ss-header-actions button {
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+  }
+
+  .ss-canvas-frame,
+  .studio-showdown-frame,
+  .ss-game-frame {
+    min-height: 560px;
+    height: calc(100svh - 148px);
+    border-radius: var(--ss-radius);
+  }
+
+  .ss-controls,
+  .studio-showdown-controls,
+  .ss-bottom-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ss-controls button,
+  .studio-showdown-controls button,
+  .ss-bottom-controls button,
+  .ss-launch-btn,
+  .ss-action-btn {
+    min-height: 46px;
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 390px) {
+  :root {
+    --ss-shell-width: calc(100vw - 10px);
+  }
+
+  .ss-canvas-frame,
+  .studio-showdown-frame,
+  .ss-game-frame {
+    height: calc(100svh - 140px);
+  }
+
+  .ss-overlay-card,
+  .ss-start-card,
+  .ss-game-over-card {
+    padding: 20px;
+    border-radius: 26px;
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
