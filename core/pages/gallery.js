@@ -6,6 +6,7 @@
    Profile Keys Locked
    Realtime Enabled
    Direct Supabase Gallery Controller
+   XP Gauge Enabled
 ========================= */
 
 import {
@@ -56,7 +57,14 @@ const els = {
   featuredList: $("gallery-featured-list"),
 
   uploadBtn: $("gallery-upload-btn"),
-  profileBtn: $("gallery-profile-btn")
+  profileBtn: $("gallery-profile-btn"),
+
+  xpGauge: $("gallery-xp-gauge"),
+  xpFill: $("gallery-xp-gauge-fill"),
+  xpText: $("gallery-xp-gauge-text"),
+  xpNext: $("gallery-xp-gauge-next"),
+  xpLevel: $("gallery-xp-level"),
+  xpRank: $("gallery-xp-rank")
 };
 
 let supabase = null;
@@ -104,6 +112,9 @@ function setText(el, value = "") {
 function niceDate(date) {
   if (!date) return "Just now";
 
+  const stamp = new Date(date).getTime();
+  if (!Number.isFinite(stamp)) return "Just now";
+
   return new Date(date).toLocaleDateString([], {
     month: "short",
     day: "numeric",
@@ -119,6 +130,91 @@ function creatorLine(item = {}) {
     "Rich Bizness Gallery"
   );
 }
+
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, profileIdentity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    profileIdentity?.xp ??
+    profileIdentity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    profileIdentity?.rich_level ??
+    profileIdentity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    profileIdentity?.rankTitle ||
+    profileIdentity?.rank_title ||
+    profileIdentity?.rank ||
+    "Gallery Creator";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, identity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "gallery",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   MEDIA
+========================= */
 
 function mediaKind(item = {}) {
   const type = String(item.media_type || item.mime_type || "").toLowerCase();
@@ -153,6 +249,10 @@ function mediaUrl(item = {}) {
     FALLBACK_COVER
   );
 }
+
+/* =========================
+   UI
+========================= */
 
 function setEmpty(target, text) {
   if (!target) return;
@@ -193,6 +293,8 @@ function syncProfileKeys() {
       el.style.backgroundImage = `url("${avatar}")`;
     }
   });
+
+  renderXpGauge();
 }
 
 function bindTabs() {
@@ -226,6 +328,10 @@ function bindGalleryActions() {
     window.location.href = buildProfileUrl(currentProfile || getProfile?.());
   });
 }
+
+/* =========================
+   RENDER
+========================= */
 
 function renderGalleryTile(item = {}) {
   const kind = mediaKind(item);
@@ -348,6 +454,10 @@ function renderPostCard(item = {}) {
   return card;
 }
 
+/* =========================
+   LOADERS
+========================= */
+
 async function loadUploads() {
   const { data, error } = await supabase
     .from(TABLES.uploads)
@@ -425,7 +535,23 @@ async function loadGalleryPage() {
     loadUploads(),
     loadPosts()
   ]);
+
+  renderXpGauge();
+
+  window.dispatchEvent(
+    new CustomEvent("rb:gallery-update", {
+      detail: {
+        route: "gallery",
+        profileLocked: !!identity?.id,
+        xpGauge: true
+      }
+    })
+  );
 }
+
+/* =========================
+   REALTIME
+========================= */
 
 function clearRealtime() {
   channels.forEach((channel) => {
@@ -458,6 +584,10 @@ function bindRealtime() {
       .subscribe()
   );
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootGalleryPage() {
   try {
