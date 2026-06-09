@@ -5,6 +5,7 @@
    VIEWER SIDE
    Live → Watch sync
    Uses locked live feature engines
+   XP Gauge Enabled
 ========================= */
 
 import {
@@ -22,6 +23,12 @@ import {
 import {
   getSupabase
 } from "/core/shared/rb-supabase.js";
+
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
+} from "/core/shared/rb-profile.js";
 
 import {
   initLiveAccess,
@@ -66,7 +73,7 @@ const $ = (id) => document.getElementById(id);
 const qs = (selector) => document.querySelector(selector);
 
 const DEFAULT_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
-const DEFAULT_BANNER = "/images/brand/Avatar-hero-Banner.png.jpeg";
+const DEFAULT_BANNER = "/images/brand/hero-banner.png";
 
 const els = {
   status: $("watchStatus") || $("liveStatus") || qs("[data-watch-status]"),
@@ -118,13 +125,21 @@ const els = {
   tipMessage: $("tipMessage") || qs("[data-tip-message]"),
   tipBtn: $("sendTipBtn") || qs("[data-send-tip]"),
 
-  streamList: $("watchStreamList") || qs("[data-watch-stream-list]")
+  streamList: $("watchStreamList") || qs("[data-watch-stream-list]"),
+
+  xpGauge: $("watch-xp-gauge"),
+  xpFill: $("watch-xp-gauge-fill"),
+  xpText: $("watch-xp-gauge-text"),
+  xpNext: $("watch-xp-gauge-next"),
+  xpLevel: $("watch-xp-level"),
+  xpRank: $("watch-xp-rank")
 };
 
 const WATCH = {
   supabase: null,
   user: null,
   profile: null,
+  identity: null,
   stream: null,
   booted: false,
   channels: [],
@@ -144,6 +159,23 @@ function escapeHtml(value = "") {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function safeUrl(value = "", fallback = DEFAULT_BANNER) {
+  const url = String(value || "").trim();
+
+  if (!url || url.includes("project-avatar")) return fallback;
+
+  if (
+    url.startsWith("/") ||
+    url.startsWith("https://") ||
+    url.startsWith("http://") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
+  }
+
+  return fallback;
 }
 
 function text(el, value) {
@@ -194,6 +226,124 @@ function username() {
   );
 }
 
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rankTitle ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Viewer";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  WATCH.identity = getProfileIdentity?.(WATCH.profile) || WATCH.identity || null;
+
+  const model = getProfileXpModel(WATCH.profile, WATCH.identity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  text(els.xpText, `${model.xp.toLocaleString()} XP`);
+  text(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  text(els.xpLevel, `LVL ${model.level}`);
+  text(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "watch",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+function syncWatchProfileLock() {
+  WATCH.identity = getProfileIdentity?.(WATCH.profile) || null;
+
+  document.body.dataset.rbRoute = "watch";
+  document.body.dataset.rbUserId = WATCH.user?.id || "";
+  document.body.dataset.rbProfileId = WATCH.identity?.id || "";
+  document.body.dataset.rbProfileLocked = WATCH.identity?.id ? "true" : "false";
+
+  bindProfileShell?.();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl?.(WATCH.profile) || RB_ROUTES.profile || "/profile";
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeUrl(
+      WATCH.profile?.avatar_url || WATCH.identity?.avatarUrl || WATCH.identity?.avatar_url,
+      DEFAULT_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt = displayName();
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
+}
+
+/* =========================
+   STREAM
+========================= */
+
 function watchUrl(stream = WATCH.stream) {
   const base = RB_ROUTES.watch || "/watch";
 
@@ -228,24 +378,32 @@ function normalizeStream(data = {}) {
       "Rich Bizness Creator",
 
     creator_avatar_url:
-      data.creator_avatar_url ||
-      profile?.avatar_url ||
-      DEFAULT_AVATAR,
+      safeUrl(
+        data.creator_avatar_url ||
+          profile?.avatar_url,
+        DEFAULT_AVATAR
+      ),
 
     creator_banner_url:
-      data.creator_banner_url ||
-      profile?.banner_url ||
-      DEFAULT_BANNER,
+      safeUrl(
+        data.creator_banner_url ||
+          profile?.banner_url,
+        DEFAULT_BANNER
+      ),
 
     thumbnail_url:
-      data.thumbnail_url ||
-      data.cover_url ||
-      DEFAULT_BANNER,
+      safeUrl(
+        data.thumbnail_url ||
+          data.cover_url,
+        DEFAULT_BANNER
+      ),
 
     cover_url:
-      data.cover_url ||
-      data.thumbnail_url ||
-      DEFAULT_BANNER,
+      safeUrl(
+        data.cover_url ||
+          data.thumbnail_url,
+        DEFAULT_BANNER
+      ),
 
     viewer_count: Number(data.viewer_count || 0),
     peak_viewers: Number(data.peak_viewers || 0),
@@ -278,6 +436,7 @@ function renderStream(stream = WATCH.stream) {
     if (els.empty) els.empty.style.display = "";
 
     setStatus("No stream loaded.");
+    renderXpGauge();
     return;
   }
 
@@ -316,6 +475,8 @@ function renderStream(stream = WATCH.stream) {
   if (els.payBtn) {
     els.payBtn.style.display = needsPayment ? "" : "none";
   }
+
+  renderXpGauge();
 }
 
 function renderViewerState(state = {}) {
@@ -341,6 +502,8 @@ function renderViewerState(state = {}) {
   } else if (state.joined) {
     setStatus("You are watching live.");
   }
+
+  renderXpGauge();
 }
 
 function renderChat(messages = []) {
@@ -447,6 +610,8 @@ async function initIdentity() {
 
   WATCH.user = state?.user || null;
   WATCH.profile = state?.profile || null;
+
+  syncWatchProfileLock();
 
   setStatus(WATCH.user?.id ? `Signed in as ${displayName()}` : "Watching as guest.");
 }
@@ -966,6 +1131,9 @@ async function bootWatchPage() {
         : "Stream loaded. Waiting for creator."
     );
 
+    document.body.dataset.rbPage = "watch";
+    document.body.dataset.rbRoute = "watch";
+    document.body.dataset.rbProfileLock = WATCH.identity?.id ? "true" : "false";
     document.body.classList.add("rb-watch-ready");
 
     markPageReady("watch");
