@@ -4,6 +4,7 @@
 
    SPORTS PAGE CONTROLLER
    Profile Keys Locked
+   XP Gauge Enabled
 
    Updates:
    - No project-avatar fallback
@@ -13,6 +14,7 @@
    - Realtime reload guarded
    - Video/audio media support for uploads/posts
    - Profile/meta-compatible activity detail
+   - Sports XP gauge connected
 ========================= */
 
 import {
@@ -62,7 +64,14 @@ const els = {
   uploadsList: $("sports-uploads-list"),
   broadcastsList: $("sports-broadcasts-list"),
   profilesList: $("sports-profiles-list"),
-  teamsList: $("sports-teams-list")
+  teamsList: $("sports-teams-list"),
+
+  xpGauge: $("sports-xp-gauge"),
+  xpFill: $("sports-xp-gauge-fill"),
+  xpText: $("sports-xp-gauge-text"),
+  xpNext: $("sports-xp-gauge-next"),
+  xpLevel: $("sports-xp-level"),
+  xpRank: $("sports-xp-rank")
 };
 
 let supabase = null;
@@ -104,6 +113,101 @@ function safePath(value = "", fallback = FALLBACK_COVER) {
   return fallback;
 }
 
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Sports Fan";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, profileIdentity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  if (els.xpText) {
+    els.xpText.textContent = `${model.xp.toLocaleString()} XP`;
+  }
+
+  if (els.xpNext) {
+    els.xpNext.textContent = `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`;
+  }
+
+  if (els.xpLevel) {
+    els.xpLevel.textContent = `LVL ${model.level}`;
+  }
+
+  if (els.xpRank) {
+    els.xpRank.textContent = model.rank;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "sports",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   PROFILE LOCK
+========================= */
+
 function syncProfileKeys() {
   const state = getCurrentUserState?.() || {};
 
@@ -121,10 +225,32 @@ function syncProfileKeys() {
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safePath(
+      currentProfile?.avatar_url || profileIdentity?.avatar_url,
+      FALLBACK_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
 }
 
 function niceDate(date) {
   if (!date) return "Just now";
+
+  const stamp = new Date(date).getTime();
+  if (!Number.isFinite(stamp)) return "Just now";
 
   return new Date(date).toLocaleDateString([], {
     month: "short",
@@ -154,7 +280,14 @@ function mediaImage(item = {}) {
 }
 
 function mediaMarkup(item = {}) {
-  const url = safePath(item.media_url || item.file_url || item.cover_url || item.thumbnail_url, "");
+  const url = safePath(
+    item.media_url ||
+      item.file_url ||
+      item.cover_url ||
+      item.thumbnail_url,
+    ""
+  );
+
   if (!url) return "";
 
   const lower = url.toLowerCase();
@@ -194,13 +327,17 @@ function mediaMarkup(item = {}) {
   `;
 }
 
+/* =========================
+   TABS
+========================= */
+
 function bindTabs() {
   if (tabsBound) return;
   tabsBound = true;
 
   $$("[data-sports-tab]").forEach((button) => {
     button.addEventListener("click", () => {
-      const tab = button.dataset.sportsTab;
+      const tab = button.dataset.sportsTab || "posts";
 
       $$("[data-sports-tab]").forEach((btn) => {
         btn.classList.toggle("is-active", btn === button);
@@ -214,6 +351,10 @@ function bindTabs() {
     });
   });
 }
+
+/* =========================
+   RENDER
+========================= */
 
 function cardTemplate({
   kicker = "SPORTS",
@@ -382,6 +523,10 @@ function paintList(target, data = [], renderer, emptyText) {
   data.forEach((item) => target.appendChild(renderer(item)));
 }
 
+/* =========================
+   LOADERS
+========================= */
+
 async function loadPosts() {
   const { data, error } = await supabase
     .from(TABLES.sportsPosts)
@@ -476,7 +621,8 @@ async function loadSportsPage() {
       new CustomEvent("rb:sports-update", {
         detail: {
           route: "sports",
-          profileLocked: !!profileIdentity?.id
+          profileLocked: !!profileIdentity?.id,
+          xpGauge: true
         }
       })
     );
@@ -484,6 +630,10 @@ async function loadSportsPage() {
     loading = false;
   }
 }
+
+/* =========================
+   REALTIME
+========================= */
 
 function clearRealtime() {
   channels.forEach((channel) => {
@@ -520,6 +670,10 @@ function bindRealtime() {
       .subscribe()
   );
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootSportsPage() {
   try {
