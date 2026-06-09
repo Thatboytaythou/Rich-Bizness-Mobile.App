@@ -10,7 +10,10 @@
    Supports:
    - data-route="profile"
    - data-route="/profile"
+   - data-route="upload?section=music"
+   - data-route="/upload?section=music"
    - href="/profile"
+   - href="/upload?section=music"
 
    Does not hijack:
    - external links
@@ -21,14 +24,49 @@
 ========================= */
 
 import {
-  RB_MODULES,
-  RB_ROUTES,
-  RB_PROFILE_KEYS
+  RB_MODULES = [],
+  RB_ROUTES = {},
+  RB_PROFILE_KEYS = {}
 } from "/core/shared/rb-config.js";
 
 import {
   getProfile
 } from "/core/shared/rb-supabase.js";
+
+const SAFE_PAGE_ROUTES = Object.freeze({
+  home: "/",
+  portal: "/",
+  index: "/",
+
+  feed: "/feed",
+  live: "/live",
+  watch: "/watch",
+  music: "/music",
+  podcast: "/podcast",
+  radio: "/radio",
+  gaming: "/gaming",
+  sports: "/sports",
+  gallery: "/gallery",
+  store: "/store",
+  upload: "/upload",
+  meta: "/meta",
+  avatar: "/avatar",
+  profile: "/profile",
+  edit: "/edit",
+  settings: "/settings",
+  auth: "/auth",
+  login: "/auth",
+  signup: "/auth",
+  messages: "/messages",
+  notifications: "/notifications",
+  admin: "/admin",
+  creator: "/creator",
+
+  "games/rich-chess": "/games/rich-chess",
+  "games/money-road-runner": "/games/money-road-runner",
+  "games/smoke-city-hustle": "/games/smoke-city-hustle",
+  "games/studio-showdown": "/games/studio-showdown"
+});
 
 let activeRoute = normalizePath(window.location.pathname || "/");
 let activeModule = null;
@@ -37,21 +75,79 @@ let activeModule = null;
    NORMALIZE
 ========================= */
 
+function splitPathAndSearch(value = "") {
+  const raw = String(value || "").trim();
+
+  if (!raw) {
+    return {
+      pathname: "/",
+      search: "",
+      hash: ""
+    };
+  }
+
+  try {
+    const url = raw.startsWith("http://") || raw.startsWith("https://")
+      ? new URL(raw)
+      : new URL(raw, window.location.origin);
+
+    return {
+      pathname: url.pathname || "/",
+      search: url.search || "",
+      hash: url.hash || ""
+    };
+  } catch {
+    const hashIndex = raw.indexOf("#");
+    const queryIndex = raw.indexOf("?");
+
+    let pathname = raw;
+    let search = "";
+    let hash = "";
+
+    if (hashIndex >= 0) {
+      hash = raw.slice(hashIndex);
+      pathname = raw.slice(0, hashIndex);
+    }
+
+    if (queryIndex >= 0) {
+      search = pathname.slice(queryIndex);
+      pathname = pathname.slice(0, queryIndex);
+    }
+
+    return {
+      pathname: pathname || "/",
+      search,
+      hash
+    };
+  }
+}
+
 export function normalizePath(path = "") {
   if (!path) return "/";
 
-  const clean = String(path).trim();
+  const { pathname } = splitPathAndSearch(path);
 
-  if (!clean) return "/";
-  if (clean === "/index.html") return "/";
+  const clean = String(pathname || "/")
+    .trim()
+    .replace(window.location.origin, "")
+    .replace(/\/index\.html$/, "/")
+    .replace(/\.html$/, "")
+    .replace(/\/+$/, "");
 
-  return (
-    clean
-      .replace(window.location.origin, "")
-      .replace(/\/index\.html$/, "/")
-      .replace(/\.html$/, "")
-      .replace(/\/$/, "") || "/"
-  );
+  return clean || "/";
+}
+
+export function normalizeRoute(path = "") {
+  if (!path) return "/";
+
+  const raw = String(path || "").trim();
+
+  if (!raw) return "/";
+
+  const { pathname, search, hash } = splitPathAndSearch(raw);
+  const cleanPath = normalizePath(pathname);
+
+  return `${cleanPath}${search || ""}${hash || ""}` || "/";
 }
 
 export function shouldIgnoreNavigation(value = "", element = null) {
@@ -68,8 +164,11 @@ export function shouldIgnoreNavigation(value = "", element = null) {
     raw.startsWith("mailto:") ||
     raw.startsWith("tel:") ||
     raw.startsWith("sms:") ||
-    raw.startsWith("http://") ||
-    raw.startsWith("https://")
+    raw.startsWith("javascript:") ||
+    (
+      (raw.startsWith("http://") || raw.startsWith("https://")) &&
+      !raw.startsWith(window.location.origin)
+    )
   );
 }
 
@@ -79,41 +178,58 @@ export function resolveRoute(value = "") {
   if (!raw) return "/";
 
   if (
-    raw.startsWith("http://") ||
-    raw.startsWith("https://") ||
     raw.startsWith("#") ||
     raw.startsWith("mailto:") ||
     raw.startsWith("tel:") ||
-    raw.startsWith("sms:")
+    raw.startsWith("sms:") ||
+    raw.startsWith("javascript:")
   ) {
     return raw;
   }
 
-  if (raw.startsWith("/")) {
-    return normalizePath(raw);
+  if (
+    (raw.startsWith("http://") || raw.startsWith("https://")) &&
+    !raw.startsWith(window.location.origin)
+  ) {
+    return raw;
   }
 
-  if (RB_ROUTES?.[raw]) {
-    const route = RB_ROUTES[raw];
+  const { pathname, search, hash } = splitPathAndSearch(raw);
+  const key = String(pathname || raw)
+    .trim()
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "")
+    .replace(/\.html$/, "");
+
+  if (raw.startsWith("/")) {
+    return normalizeRoute(raw);
+  }
+
+  if (SAFE_PAGE_ROUTES[key]) {
+    return normalizeRoute(`${SAFE_PAGE_ROUTES[key]}${search || ""}${hash || ""}`);
+  }
+
+  if (RB_ROUTES?.[key]) {
+    const route = RB_ROUTES[key];
 
     if (typeof route === "string") {
-      return normalizePath(route);
+      return normalizeRoute(`${route}${search || ""}${hash || ""}`);
     }
   }
 
-  const module = getModule(raw);
+  const module = getModule(key);
 
   if (module?.route) {
-    return normalizePath(module.route);
+    return normalizeRoute(`${module.route}${search || ""}${hash || ""}`);
   }
 
-  const secretRoute = RB_PROFILE_KEYS?.secretRoutes?.[raw];
+  const secretRoute = RB_PROFILE_KEYS?.secretRoutes?.[key];
 
   if (secretRoute) {
-    return normalizePath(secretRoute);
+    return normalizeRoute(`${secretRoute}${search || ""}${hash || ""}`);
   }
 
-  return normalizePath(`/${raw}`);
+  return normalizeRoute(`/${key}${search || ""}${hash || ""}`);
 }
 
 /* =========================
@@ -129,9 +245,13 @@ export function currentModule() {
 }
 
 export function routeExists(route = "") {
-  const resolved = resolveRoute(route);
+  const resolved = normalizePath(resolveRoute(route));
 
-  return Object.values(RB_ROUTES).some((value) => {
+  if (Object.values(SAFE_PAGE_ROUTES).some((value) => normalizePath(value) === resolved)) {
+    return true;
+  }
+
+  return Object.values(RB_ROUTES || {}).some((value) => {
     if (typeof value === "string") {
       return normalizePath(value) === resolved;
     }
@@ -147,7 +267,7 @@ export function routeExists(route = "") {
 }
 
 export function moduleExists(key = "") {
-  return RB_MODULES.some((module) => module.key === key);
+  return Array.isArray(RB_MODULES) && RB_MODULES.some((module) => module.key === key);
 }
 
 /* =========================
@@ -155,11 +275,15 @@ export function moduleExists(key = "") {
 ========================= */
 
 export function getModule(key = "") {
+  if (!Array.isArray(RB_MODULES)) return null;
+
   return RB_MODULES.find((module) => module.key === key) || null;
 }
 
 export function getModuleByRoute(route = "") {
-  const resolved = resolveRoute(route);
+  const resolved = normalizePath(resolveRoute(route));
+
+  if (!Array.isArray(RB_MODULES)) return null;
 
   return (
     RB_MODULES.find(
@@ -177,7 +301,7 @@ export function getActiveModule() {
 ========================= */
 
 export function isSecretRoute(route = "") {
-  const resolved = resolveRoute(route);
+  const resolved = normalizePath(resolveRoute(route));
   const secrets = RB_PROFILE_KEYS?.secretRoutes || {};
 
   return Object.values(secrets).some(
@@ -186,7 +310,13 @@ export function isSecretRoute(route = "") {
 }
 
 export function canAccessSecretRoute(route = "") {
-  const profile = getProfile();
+  let profile = null;
+
+  try {
+    profile = getProfile();
+  } catch {
+    profile = null;
+  }
 
   if (!isSecretRoute(route)) return true;
 
@@ -208,6 +338,11 @@ export function go(route = "/") {
 
   if (!resolved) return false;
 
+  if (shouldIgnoreNavigation(resolved)) {
+    window.location.href = resolved;
+    return true;
+  }
+
   if (
     isSecretRoute(resolved) &&
     !canAccessSecretRoute(resolved)
@@ -219,13 +354,13 @@ export function go(route = "/") {
   window.dispatchEvent(
     new CustomEvent("rb:route-before-change", {
       detail: {
-        from: normalizePath(window.location.pathname),
+        from: normalizeRoute(window.location.pathname + window.location.search + window.location.hash),
         to: resolved
       }
     })
   );
 
-  window.location.href = resolved;
+  window.location.assign(resolved);
   return true;
 }
 
@@ -316,6 +451,9 @@ export function updateActiveRoute() {
   activeRoute = normalizePath(window.location.pathname || "/");
   activeModule = getModuleByRoute(activeRoute);
 
+  document.documentElement?.setAttribute?.("data-rb-current-route", activeRoute);
+  document.body?.setAttribute?.("data-rb-current-route", activeRoute);
+
   window.dispatchEvent(
     new CustomEvent("rb:route-change", {
       detail: {
@@ -332,7 +470,7 @@ export function updateActiveRoute() {
 }
 
 export function isRoute(route = "") {
-  return currentRoute() === resolveRoute(route);
+  return currentRoute() === normalizePath(resolveRoute(route));
 }
 
 export function isModule(moduleKey = "") {
@@ -361,7 +499,8 @@ export function bindNavigation({
     element.addEventListener("click", (event) => {
       const route =
         element.dataset.route ||
-        element.getAttribute("href");
+        element.getAttribute("href") ||
+        "";
 
       if (shouldIgnoreNavigation(route, element)) return;
 
@@ -385,7 +524,7 @@ export function bindActiveNavigation({
 
     if (shouldIgnoreNavigation(rawRoute, element)) return;
 
-    const resolved = resolveRoute(rawRoute);
+    const resolved = normalizePath(resolveRoute(rawRoute));
     const active = resolved === current;
 
     element.classList.toggle(activeClass, active);
@@ -400,10 +539,20 @@ export function bindActiveNavigation({
 }
 
 export function bindGlobalNavigation(options = {}) {
+  updateActiveRoute();
   bindNavigation(options);
   bindActiveNavigation(options);
 
   document.body?.classList.add("rb-navigation-bound");
+
+  window.dispatchEvent(
+    new CustomEvent("rb:navigation-bound", {
+      detail: {
+        route: activeRoute,
+        module: activeModule
+      }
+    })
+  );
 }
 
 /* =========================
@@ -412,6 +561,8 @@ export function bindGlobalNavigation(options = {}) {
 
 export function buildModuleMenu() {
   const current = normalizePath(window.location.pathname);
+
+  if (!Array.isArray(RB_MODULES)) return [];
 
   return RB_MODULES.map((module) => ({
     key: module.key,
@@ -428,6 +579,11 @@ export function buildModuleMenu() {
 ========================= */
 
 window.addEventListener("popstate", () => {
+  updateActiveRoute();
+  bindActiveNavigation();
+});
+
+window.addEventListener("pageshow", () => {
   updateActiveRoute();
   bindActiveNavigation();
 });
