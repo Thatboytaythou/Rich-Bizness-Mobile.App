@@ -30,7 +30,12 @@
   ></script>
 </head>
 
-<body class="rb-body rb-profile-page" data-page="profile">
+<body
+  class="rb-body rb-profile-page rb-orbit-xp-energy"
+  data-page="profile"
+  data-rb-page="profile"
+  data-rb-route="profile"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -62,7 +67,7 @@
       <a href="/notifications" data-route="notifications">Alerts</a>
       <a href="/creator" data-route="creator">Creator</a>
       <a href="/admin" data-route="admin">Admin</a>
-      <a href="/profile" data-route="profile" class="is-active">Profile</a>
+      <a href="/profile" data-route="profile" class="is-active" data-rb-profile-link>Profile</a>
       <a href="/settings" data-route="settings">Settings</a>
     </nav>
   </header>
@@ -79,6 +84,7 @@
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Profile Avatar"
             data-rb-avatar
+            data-rb-profile-avatar
             data-rb-avatar-link
           />
 
@@ -94,7 +100,7 @@
             Rich Bizness User
           </h1>
 
-          <p id="profileUsername" class="rb-profile-username" data-rb-handle>
+          <p id="profileUsername" class="rb-profile-username" data-rb-handle data-rb-username>
             @richbizness
           </p>
 
@@ -149,7 +155,7 @@
           </section>
 
           <div class="rb-profile-actions">
-            <button id="profileEditBtn" class="rb-btn primary" type="button">
+            <button id="profileEditBtn" class="rb-btn primary" type="button" data-route="edit">
               Edit Profile
             </button>
 
@@ -157,7 +163,7 @@
               Follow
             </button>
 
-            <button id="profileMessageBtn" class="rb-btn ghost" type="button">
+            <button id="profileMessageBtn" class="rb-btn ghost" type="button" data-route="messages">
               Message
             </button>
 
@@ -266,6 +272,18 @@
         Sports
       </button>
 
+      <button data-profile-tab="music" type="button">
+        Music
+      </button>
+
+      <button data-profile-tab="podcast" type="button">
+        Podcast
+      </button>
+
+      <button data-profile-tab="radio" type="button">
+        Radio
+      </button>
+
       <button data-profile-tab="meta" type="button">
         Meta
       </button>
@@ -365,6 +383,69 @@
           </div>
 
           <div id="profileSportsPanel" class="rb-profile-grid"></div>
+        </div>
+      </div>
+
+      <div
+        class="rb-profile-panel"
+        data-profile-panel="music"
+        style="display:none;"
+      >
+        <div class="rb-panel rb-profile-module">
+          <div class="rb-module-head">
+            <div>
+              <p class="rb-kicker">MUSIC SYSTEM</p>
+              <h2>Music Drops</h2>
+            </div>
+
+            <a class="rb-btn ghost" href="/music" data-route="music">
+              Open Music
+            </a>
+          </div>
+
+          <div id="profileMusicPanel" class="rb-profile-grid"></div>
+        </div>
+      </div>
+
+      <div
+        class="rb-profile-panel"
+        data-profile-panel="podcast"
+        style="display:none;"
+      >
+        <div class="rb-panel rb-profile-module">
+          <div class="rb-module-head">
+            <div>
+              <p class="rb-kicker">PODCAST SYSTEM</p>
+              <h2>Podcast Hub</h2>
+            </div>
+
+            <a class="rb-btn ghost" href="/podcast" data-route="podcast">
+              Open Podcast
+            </a>
+          </div>
+
+          <div id="profilePodcastPanel" class="rb-profile-grid"></div>
+        </div>
+      </div>
+
+      <div
+        class="rb-profile-panel"
+        data-profile-panel="radio"
+        style="display:none;"
+      >
+        <div class="rb-panel rb-profile-module">
+          <div class="rb-module-head">
+            <div>
+              <p class="rb-kicker">RADIO SYSTEM</p>
+              <h2>Radio Station</h2>
+            </div>
+
+            <a class="rb-btn ghost" href="/radio" data-route="radio">
+              Open Radio
+            </a>
+          </div>
+
+          <div id="profileRadioPanel" class="rb-profile-grid"></div>
         </div>
       </div>
 
