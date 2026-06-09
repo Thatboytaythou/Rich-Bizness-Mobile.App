@@ -5,6 +5,7 @@
    3D AVATAR PAGE CONTROLLER
    Profile Lock + Meta Avatar Sync
    Avatar Builder → Meta World Gateway
+   XP Gauge Enabled
 
    Flow:
    - Profile identity stays locked to profiles
@@ -40,7 +41,8 @@ import {
 import {
   getProfileIdentity,
   refreshMyProfile,
-  bindProfileShell
+  bindProfileShell,
+  buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
 const $ = (id) => document.getElementById(id);
@@ -64,7 +66,14 @@ const els = {
 
   auraInput: $("avatarAura"),
   motionInput: $("avatarMotion"),
-  outfitInput: $("avatarOutfit")
+  outfitInput: $("avatarOutfit"),
+
+  xpGauge: $("avatar-xp-gauge"),
+  xpFill: $("avatar-xp-gauge-fill"),
+  xpText: $("avatar-xp-gauge-text"),
+  xpNext: $("avatar-xp-gauge-next"),
+  xpLevel: $("avatar-xp-level"),
+  xpRank: $("avatar-xp-rank")
 };
 
 let supabase = null;
@@ -123,26 +132,184 @@ function setStatus(value) {
   if (els.avatarStatus) els.avatarStatus.dataset.status = String(value || "");
 }
 
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}, meta = {}) {
+  const rawXp =
+    meta?.xp ??
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    meta?.level ??
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    meta?.rank ||
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rankTitle ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Meta Avatar";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(
+    currentProfile,
+    currentIdentity,
+    currentMetaAvatar
+  );
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  if (els.xpText) {
+    els.xpText.textContent = `${model.xp.toLocaleString()} XP`;
+  }
+
+  if (els.xpNext) {
+    els.xpNext.textContent = `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`;
+  }
+
+  if (els.xpLevel) {
+    els.xpLevel.textContent = `LVL ${model.level}`;
+  }
+
+  if (els.xpRank) {
+    els.xpRank.textContent = model.rank;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "avatar",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   PROFILE LOCK
+========================= */
+
 function syncState() {
   const state = getCurrentUserState?.() || {};
 
   currentUser = state.user || getUser?.() || null;
   currentProfile = state.profile || null;
   currentIdentity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbRoute = "avatar";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = currentIdentity?.id || "";
+  document.body.dataset.rbProfileLocked = currentIdentity?.id ? "true" : "false";
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeImage(
+      currentProfile?.avatar_url || currentIdentity?.avatarUrl || currentIdentity?.avatar_url,
+      DEFAULT_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
 }
 
 function paintIdentity() {
-  const identity = currentIdentity || getProfileIdentity();
+  const identity = currentIdentity || getProfileIdentity(currentProfile);
 
   const displayName = safeText(
     currentMetaAvatar?.display_name,
-    identity.displayName || "Rich User"
+    identity?.displayName ||
+      identity?.display_name ||
+      currentProfile?.display_name ||
+      "Rich User"
   );
 
-  const username = safeText(identity.username, "richuser");
-  const avatarUrl = safeImage(identity.avatarUrl, DEFAULT_AVATAR);
-  const rankTitle = safeText(currentMetaAvatar?.rank, identity.rankTitle || "Member");
-  const level = clean(currentMetaAvatar?.level, identity.richLevel || 1);
+  const username = safeText(
+    identity?.username || currentProfile?.username,
+    "richuser"
+  );
+
+  const avatarUrl = safeImage(
+    currentMetaAvatar?.avatar_url ||
+      identity?.avatarUrl ||
+      identity?.avatar_url ||
+      currentProfile?.avatar_url,
+    DEFAULT_AVATAR
+  );
+
+  const rankTitle = safeText(
+    currentMetaAvatar?.rank,
+    identity?.rankTitle ||
+      identity?.rank_title ||
+      currentProfile?.rank_title ||
+      "Member"
+  );
+
+  const level = clean(
+    currentMetaAvatar?.level,
+    identity?.richLevel ||
+      identity?.rich_level ||
+      currentProfile?.rich_level ||
+      1
+  );
 
   if (els.avatarImg) {
     els.avatarImg.src = avatarUrl;
@@ -152,9 +319,10 @@ function paintIdentity() {
   setText(els.avatarName, displayName);
   setText(els.avatarHandle, username ? `@${username}` : "@richuser");
   setText(els.avatarRank, `${rankTitle} • LVL ${level}`);
-  setStatus(currentMetaAvatar?.id ? "synced" : identity.onlineStatus || "online");
+  setStatus(currentMetaAvatar?.id ? "synced" : identity?.onlineStatus || "online");
 
   bindProfileShell?.();
+  renderXpGauge();
 }
 
 async function loadMetaAvatar() {
@@ -216,21 +384,53 @@ async function syncAvatarToMeta() {
 
   syncState();
 
-  const identity = currentIdentity || getProfileIdentity();
+  const identity = currentIdentity || getProfileIdentity(currentProfile);
   const settings = avatarSettings();
 
-  const avatarUrl = safeImage(identity.avatarUrl, DEFAULT_AVATAR);
-  const bannerUrl = safeImage(identity.bannerUrl, DEFAULT_BANNER);
+  const avatarUrl = safeImage(
+    identity?.avatarUrl ||
+      identity?.avatar_url ||
+      currentProfile?.avatar_url,
+    DEFAULT_AVATAR
+  );
+
+  const bannerUrl = safeImage(
+    identity?.bannerUrl ||
+      identity?.banner_url ||
+      currentProfile?.banner_url,
+    DEFAULT_BANNER
+  );
 
   const payload = {
     user_id: currentUser.id,
-    display_name: safeText(identity.displayName, "Rich User"),
+    display_name: safeText(
+      identity?.displayName ||
+        identity?.display_name ||
+        currentProfile?.display_name,
+      "Rich User"
+    ),
     avatar_url: avatarUrl,
     model_url: currentMetaAvatar?.model_url || null,
     aura: settings.aura,
-    rank: safeText(identity.rankTitle, "Traveler"),
-    level: Number(identity.richLevel || currentMetaAvatar?.level || 1),
-    xp: Number(currentMetaAvatar?.xp || currentProfile?.rich_points || 0),
+    rank: safeText(
+      identity?.rankTitle ||
+        identity?.rank_title ||
+        currentProfile?.rank_title,
+      "Traveler"
+    ),
+    level: Number(
+      identity?.richLevel ||
+        identity?.rich_level ||
+        currentProfile?.rich_level ||
+        currentMetaAvatar?.level ||
+        1
+    ),
+    xp: Number(
+      currentMetaAvatar?.xp ||
+        currentProfile?.rich_points ||
+        currentProfile?.xp ||
+        0
+    ),
     is_active: true,
     metadata: {
       ...(currentMetaAvatar?.metadata || {}),
@@ -263,6 +463,17 @@ async function syncAvatarToMeta() {
   applyAvatarVisualState();
 
   document.body.classList.add("rb-avatar-synced");
+
+  window.dispatchEvent(
+    new CustomEvent("rb:avatar-synced", {
+      detail: {
+        route: "avatar",
+        userId: currentUser.id,
+        metaAvatar: currentMetaAvatar,
+        xpGauge: true
+      }
+    })
+  );
 
   return currentMetaAvatar;
 }
@@ -430,6 +641,8 @@ function applyAvatarVisualState() {
       }
     }
   });
+
+  renderXpGauge();
 }
 
 function animateAvatar() {
@@ -505,7 +718,7 @@ function bindAvatarActions() {
   });
 
   els.profileBtn?.addEventListener("click", () => {
-    window.location.href = RB_ROUTES.profile || "/profile";
+    window.location.href = buildProfileUrl(currentProfile) || RB_ROUTES.profile || "/profile";
   });
 
   [els.auraInput, els.motionInput, els.outfitInput]
