@@ -19,8 +19,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-notifications-page" data-page="notifications">
-
+<body
+  class="rb-body rb-notifications-page rb-orbit-xp-energy"
+  data-page="notifications"
+  data-rb-page="notifications"
+  data-rb-route="notifications"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -37,17 +41,19 @@
     <nav class="rb-topnav" aria-label="Notifications navigation">
       <a href="/" data-route="home">Portal</a>
       <a href="/feed" data-route="feed">Feed</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
       <a href="/messages" data-route="messages">Messages</a>
       <a class="is-active" href="/notifications" data-route="notifications">Alerts</a>
-      <a href="/profile" data-route="profile">Profile</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
       <a href="/settings" data-route="settings">Settings</a>
     </nav>
   </header>
 
   <main class="rb-section-shell rb-notifications-shell">
-
     <section class="rb-profile-card">
-
       <p class="rb-kicker">RICH BIZNESS ALERTS</p>
 
       <h1 id="notifications-title">Notifications</h1>
@@ -57,7 +63,6 @@
       </p>
 
       <div class="rb-profile-actions">
-
         <button id="notifications-refresh-btn" class="rb-main-launch" type="button">
           REFRESH ALERTS
         </button>
@@ -69,13 +74,10 @@
         <button id="notifications-seen-btn" class="rb-btn gold" type="button">
           MARK SEEN
         </button>
-
       </div>
-
     </section>
 
     <section class="rb-profile-grid">
-
       <article class="rb-mini-card">
         <strong>Unread</strong>
         <span id="notifications-unread-count">0 unread alerts</span>
@@ -90,11 +92,9 @@
         <strong>Identity</strong>
         <span id="notifications-identity-status">Waiting for profile</span>
       </article>
-
     </section>
 
     <section class="rb-panel">
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">LATEST ALERT</p>
@@ -103,11 +103,9 @@
       </div>
 
       <div id="notifications-latest" class="rb-list-stack"></div>
-
     </section>
 
     <section class="rb-panel">
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">REALTIME ACTIVITY</p>
@@ -120,13 +118,11 @@
       </div>
 
       <section id="notifications-list" class="rb-profile-grid rb-notifications-grid"></section>
-
     </section>
 
     <a href="/" class="rb-auth-home" data-route="home">
       ← Back To Portal
     </a>
-
   </main>
 
   <script type="module">
@@ -135,6 +131,5 @@
   </script>
 
   <script type="module" src="/core/pages/notifications.js"></script>
-
 </body>
 </html>
