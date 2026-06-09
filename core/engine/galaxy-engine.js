@@ -5,6 +5,7 @@
    ULTRA SPACE GALAXY ENGINE
    Deep Space + Nebula + Star Depth + Portal Energy Sync
    Safer theme aliases + texture cleanup
+   XP Energy Sync Enabled
 ========================= */
 
 export function createGalaxyEngine(ctx) {
@@ -34,7 +35,12 @@ export function createGalaxyEngine(ctx) {
     pulse: 0,
     intensity: 1,
     target: 1,
-    touchEnergy: 0
+    touchEnergy: 0,
+    xpEnergy: 1,
+    xpPulse: 0,
+    xpPercent: 0,
+    level: 1,
+    rank: "Biz Legend"
   };
 
   const themes = {
@@ -146,8 +152,42 @@ export function createGalaxyEngine(ctx) {
       .toLowerCase();
   }
 
+  function clamp01(value) {
+    return Math.max(0, Math.min(1, Number(value) || 0));
+  }
+
+  function syncXpState(stateUpdate = activityState || {}) {
+    const percent =
+      stateUpdate.xpPercent ??
+      stateUpdate.percent ??
+      state.xpPercent ??
+      0;
+
+    const level =
+      stateUpdate.level ??
+      state.level ??
+      1;
+
+    state.xpPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    state.level = Math.max(1, Number(level) || 1);
+    state.rank = stateUpdate.rank || state.rank || "Biz Legend";
+
+    state.xpEnergy =
+      Number(stateUpdate.xpEnergy) ||
+      1 +
+        Math.min(0.45, state.xpPercent / 240) +
+        Math.min(0.25, state.level / 100);
+
+    if (stateUpdate.xp || stateUpdate.xpPercent || stateUpdate.level) {
+      state.xpPulse = Math.max(state.xpPulse, 0.42);
+      state.touchEnergy = Math.max(state.touchEnergy, 0.28);
+    }
+  }
+
   function mount() {
     if (mounted) return;
+
+    syncXpState(activityState);
 
     buildDeepStars();
     buildStarField();
@@ -589,6 +629,9 @@ export function createGalaxyEngine(ctx) {
     themeBound = true;
 
     window.addEventListener("rb:portal-theme-change", onPortalThemeChange);
+    window.addEventListener("rb:xp-gauge-update", onXpGaugeUpdate);
+    window.addEventListener("rb:app-xp-update", onXpGaugeUpdate);
+    window.addEventListener("rb:universe-preview-update", onUniverseUpdate);
   }
 
   function unbindThemeEvents() {
@@ -596,6 +639,9 @@ export function createGalaxyEngine(ctx) {
     themeBound = false;
 
     window.removeEventListener("rb:portal-theme-change", onPortalThemeChange);
+    window.removeEventListener("rb:xp-gauge-update", onXpGaugeUpdate);
+    window.removeEventListener("rb:app-xp-update", onXpGaugeUpdate);
+    window.removeEventListener("rb:universe-preview-update", onUniverseUpdate);
   }
 
   function onPortalThemeChange(event) {
@@ -608,112 +654,138 @@ export function createGalaxyEngine(ctx) {
     state.touchEnergy = 1;
   }
 
+  function onXpGaugeUpdate(event) {
+    syncXpState(event.detail || {});
+  }
+
+  function onUniverseUpdate(event) {
+    syncXpState(event.detail?.activityState || {});
+  }
+
   function update(t) {
+    syncXpState(activityState);
+
     state.target = activityState.liveActive ? 1.42 : 1;
     state.intensity += (state.target - state.intensity) * 0.035;
     state.touchEnergy *= 0.935;
+    state.xpPulse *= 0.945;
     state.pulse = Math.sin(t * 1.7) * 0.5 + 0.5;
+
+    const xpGlow = clamp01(state.xpPercent / 100);
+    const xpEnergy = state.xpEnergy || 1;
 
     const breathe =
       1 +
       state.pulse * 0.055 * state.intensity +
-      state.touchEnergy * 0.025;
+      state.touchEnergy * 0.025 +
+      state.xpPulse * 0.018;
 
     if (deepStars) {
-      deepStars.rotation.y -= 0.0001;
+      deepStars.rotation.y -= 0.0001 * xpEnergy;
       deepStars.rotation.x = Math.sin(t * 0.05) * 0.018;
-      deepStars.material.opacity = 0.24 + state.pulse * 0.08;
+      deepStars.material.opacity = 0.24 + state.pulse * 0.08 + xpGlow * 0.025;
     }
 
     if (starField) {
-      starField.rotation.y += 0.00042 * state.intensity;
+      starField.rotation.y += 0.00042 * state.intensity * xpEnergy;
       starField.rotation.z = Math.sin(t * 0.11) * 0.025;
       starField.material.opacity =
         0.68 +
         state.pulse * 0.18 +
-        state.touchEnergy * 0.08;
+        state.touchEnergy * 0.08 +
+        state.xpPulse * 0.08 +
+        xpGlow * 0.035;
     }
 
     if (microStars) {
-      microStars.rotation.y -= 0.00022;
-      microStars.material.opacity = 0.18 + state.pulse * 0.12;
+      microStars.rotation.y -= 0.00022 * xpEnergy;
+      microStars.material.opacity = 0.18 + state.pulse * 0.12 + xpGlow * 0.02;
     }
 
     if (galaxyCloud) {
-      galaxyCloud.rotation.y += 0.00105 * state.intensity;
+      galaxyCloud.rotation.y += 0.00105 * state.intensity * xpEnergy;
       galaxyCloud.rotation.z = Math.sin(t * 0.14) * 0.045;
       galaxyCloud.scale.setScalar(breathe);
       galaxyCloud.material.opacity =
         0.5 +
         state.pulse * 0.2 +
-        state.touchEnergy * 0.08;
+        state.touchEnergy * 0.08 +
+        state.xpPulse * 0.07;
     }
 
     if (galaxyGold) {
-      galaxyGold.rotation.y -= 0.00078 * state.intensity;
+      galaxyGold.rotation.y -= 0.00078 * state.intensity * xpEnergy;
       galaxyGold.rotation.z = Math.cos(t * 0.12) * 0.028;
       galaxyGold.scale.setScalar(
         1 +
           state.pulse * 0.04 +
-          state.touchEnergy * 0.025
+          state.touchEnergy * 0.025 +
+          state.xpPulse * 0.02
       );
       galaxyGold.material.opacity =
         0.34 +
         state.pulse * 0.16 +
-        state.touchEnergy * 0.08;
+        state.touchEnergy * 0.08 +
+        state.xpPulse * 0.07 +
+        xpGlow * 0.03;
     }
 
     if (nebulaBack) {
-      nebulaBack.rotation.z += 0.00018;
+      nebulaBack.rotation.z += 0.00018 * xpEnergy;
       nebulaBack.material.opacity =
         0.14 +
         state.pulse * 0.09 +
-        state.touchEnergy * 0.08;
+        state.touchEnergy * 0.08 +
+        state.xpPulse * 0.04;
       nebulaBack.scale.set(
-        270 + state.pulse * 14,
-        190 + Math.cos(t * 0.8) * 10,
+        270 + state.pulse * 14 + state.xpPulse * 7,
+        190 + Math.cos(t * 0.8) * 10 + state.xpPulse * 4,
         1
       );
     }
 
     if (nebulaMid) {
-      nebulaMid.rotation.z -= 0.00028;
+      nebulaMid.rotation.z -= 0.00028 * xpEnergy;
       nebulaMid.material.opacity =
         0.1 +
         state.pulse * 0.08 +
-        state.touchEnergy * 0.1;
+        state.touchEnergy * 0.1 +
+        state.xpPulse * 0.05;
       nebulaMid.scale.set(
-        210 + Math.sin(t * 0.9) * 12,
-        150 + state.pulse * 9,
+        210 + Math.sin(t * 0.9) * 12 + state.xpPulse * 6,
+        150 + state.pulse * 9 + state.xpPulse * 4,
         1
       );
     }
 
     if (portalAura) {
-      portalAura.rotation.y += 0.0009;
+      portalAura.rotation.y += 0.0009 * xpEnergy;
       portalAura.scale.setScalar(
         1 +
           state.pulse * 0.1 +
-          state.touchEnergy * 0.18
+          state.touchEnergy * 0.18 +
+          state.xpPulse * 0.08 +
+          xpGlow * 0.035
       );
       portalAura.material.opacity =
         0.032 +
         state.pulse * 0.035 +
-        state.touchEnergy * 0.07;
+        state.touchEnergy * 0.07 +
+        state.xpPulse * 0.04;
     }
 
     if (cosmicDust) {
-      cosmicDust.rotation.y += 0.00028;
-      cosmicDust.rotation.x += 0.00008;
-      cosmicDust.material.opacity = 0.16 + state.pulse * 0.08;
+      cosmicDust.rotation.y += 0.00028 * xpEnergy;
+      cosmicDust.rotation.x += 0.00008 * xpEnergy;
+      cosmicDust.material.opacity = 0.16 + state.pulse * 0.08 + xpGlow * 0.025;
     }
 
     if (spaceFog) {
       spaceFog.children.forEach((fog, index) => {
-        fog.position.x += fog.userData.speed * 5;
+        fog.position.x += fog.userData.speed * 5 * xpEnergy;
         fog.position.y += Math.sin(t * 0.4 + fog.userData.float + index) * 0.004;
         fog.position.z += fog.userData.drift;
-        fog.rotation.z += 0.0006;
+        fog.rotation.z += 0.0006 * xpEnergy;
 
         if (fog.position.x > 80) fog.position.x = -80;
         if (fog.position.z > -8) fog.position.z = -120;
@@ -721,31 +793,40 @@ export function createGalaxyEngine(ctx) {
         fog.material.opacity =
           0.035 +
           Math.sin(t * 0.55 + index) * 0.018 +
-          state.touchEnergy * 0.018;
+          state.touchEnergy * 0.018 +
+          state.xpPulse * 0.012;
       });
     }
 
     if (energyBands) {
       energyBands.children.forEach((ring, index) => {
-        ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1) * state.intensity;
-        ring.rotation.y += 0.00055;
+        ring.rotation.z +=
+          ring.userData.speed *
+          (index % 2 ? -1 : 1) *
+          state.intensity *
+          xpEnergy;
+
+        ring.rotation.y += 0.00055 * xpEnergy;
 
         ring.material.opacity =
           0.035 +
           Math.sin(t * 0.85 + index) * 0.02 +
-          state.touchEnergy * 0.025;
+          state.touchEnergy * 0.025 +
+          state.xpPulse * 0.02 +
+          xpGlow * 0.008;
       });
     }
 
     if (meteorField) {
       meteorField.children.forEach((meteor, index) => {
-        meteor.position.x -= meteor.userData.speed * (1 + state.touchEnergy);
+        meteor.position.x -= meteor.userData.speed * (1 + state.touchEnergy + state.xpPulse);
         meteor.position.y -= meteor.userData.speed * 0.42;
 
         meteor.material.opacity =
           0.08 +
           Math.sin(t * 2 + meteor.userData.glow + index) * 0.055 +
-          state.touchEnergy * 0.08;
+          state.touchEnergy * 0.08 +
+          state.xpPulse * 0.06;
 
         if (meteor.position.x < -95 || meteor.position.y < -60) {
           meteor.position.x = meteor.userData.resetX;
@@ -757,15 +838,27 @@ export function createGalaxyEngine(ctx) {
   }
 
   function onActivityUpdate(stateUpdate) {
+    syncXpState(stateUpdate);
+
     if (stateUpdate.liveActive) {
       state.touchEnergy = Math.max(state.touchEnergy, 0.45);
+    }
+
+    if (stateUpdate.xp || stateUpdate.xpPercent || stateUpdate.level) {
+      state.xpPulse = Math.max(state.xpPulse, 0.38);
     }
   }
 
   function onPresenceUpdate(stateUpdate) {
+    syncXpState(stateUpdate);
+
     if (stateUpdate.onlineCount > 0) {
       state.touchEnergy = Math.max(state.touchEnergy, 0.25);
     }
+  }
+
+  function setActivityState(stateUpdate = {}) {
+    syncXpState(stateUpdate);
   }
 
   function setTheme(theme = "green-gold") {
@@ -872,6 +965,7 @@ export function createGalaxyEngine(ctx) {
     resize,
     destroy,
     setTheme,
+    setActivityState,
     onActivityUpdate,
     onPresenceUpdate
   };
