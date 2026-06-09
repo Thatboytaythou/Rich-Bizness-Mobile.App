@@ -4,6 +4,7 @@
 
    GLOBAL ACTION ENGINE
    One event system for XP + money + analytics + notifications
+   XP Gauge Bridge Enabled
 ========================= */
 
 import { RB_TABLES } from "/core/shared/rb-config.js";
@@ -57,6 +58,81 @@ function safeIdentity() {
   } catch {
     return {};
   }
+}
+
+function getXpValue(xpResult = null, fallbackXp = 0) {
+  const value =
+    xpResult?.xp ??
+    xpResult?.total_xp ??
+    xpResult?.new_xp ??
+    xpResult?.profile?.xp ??
+    xpResult?.profile?.rich_points ??
+    fallbackXp ??
+    0;
+
+  return Math.max(0, Number(value) || 0);
+}
+
+function getLevelValue(xpResult = null, fallbackLevel = 1) {
+  const value =
+    xpResult?.level ??
+    xpResult?.new_level ??
+    xpResult?.profile?.rich_level ??
+    xpResult?.profile?.level ??
+    fallbackLevel ??
+    1;
+
+  return Math.max(1, Number(value) || 1);
+}
+
+function getRankValue(xpResult = null, fallbackRank = "Member") {
+  return (
+    xpResult?.rank ||
+    xpResult?.rank_title ||
+    xpResult?.profile?.rank_title ||
+    xpResult?.profile?.rank ||
+    fallbackRank ||
+    "Member"
+  );
+}
+
+function buildXpGaugePayload({
+  route = "global",
+  xpResult = null,
+  fallbackXp = 0,
+  fallbackLevel = 1,
+  fallbackRank = "Member"
+} = {}) {
+  const xp = getXpValue(xpResult, fallbackXp);
+  const level = getLevelValue(xpResult, fallbackLevel);
+  const rank = getRankValue(xpResult, fallbackRank);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    route,
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function dispatchXpGaugeUpdate(detail = {}) {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail
+    })
+  );
 }
 
 async function logAnalytics({
@@ -154,6 +230,15 @@ function dispatchRichAction(result) {
       detail: result
     })
   );
+
+  if (result?.xp) {
+    dispatchXpGaugeUpdate(
+      buildXpGaugePayload({
+        route: result.section || "global",
+        xpResult: result.xp
+      })
+    );
+  }
 }
 
 export async function runRichAction({
