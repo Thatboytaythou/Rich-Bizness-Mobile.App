@@ -7,6 +7,7 @@
    Safe mobile layer:
    - Keeps index/portal fullscreen locked
    - Keeps other pages scrollable
+   - Fixes fixed overlay freezing
    - Fixes bottom nav centering conflict with main.css
    - Adds mobile XP gauge sizing
    - Adds mobile profile lock helpers
@@ -27,15 +28,25 @@
     overflow-x: hidden;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     min-height: 100vh;
     min-height: 100svh;
     min-height: 100dvh;
     padding: 0;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
   body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) {
+    position: relative;
+    height: auto;
+    min-height: 100dvh;
     overflow-y: auto;
+    overscroll-behavior-y: auto;
   }
 
   body.rb-index-page,
@@ -49,12 +60,39 @@
     overscroll-behavior: none;
   }
 
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-layer,
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-grid,
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-vignette,
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-noise,
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-fx-smoke {
+    pointer-events: none;
+  }
+
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-layer,
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-grid,
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-vignette,
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-bg-noise {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+  }
+
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) .rb-fx-smoke {
+    position: fixed;
+    inset: 0;
+    z-index: -9;
+  }
+
   .rb-home-shell,
   .rb-app-shell,
   .rb-section-shell {
+    position: relative;
+    z-index: 2;
+
     width: 100%;
     max-width: 100%;
     min-height: 100svh;
+    min-height: 100dvh;
 
     padding:
       calc(12px + env(safe-area-inset-top))
@@ -64,11 +102,25 @@
     gap: var(--rb-mobile-gap);
   }
 
+  main,
+  header,
+  footer,
+  nav,
+  section,
+  article,
+  aside,
+  form {
+    max-width: 100%;
+  }
+
   /* HEADER */
 
   .rb-home-top,
   .rb-index-top,
   .rb-topbar {
+    position: relative;
+    z-index: 30;
+
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
@@ -87,6 +139,7 @@
     width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .rb-topnav::-webkit-scrollbar {
@@ -280,9 +333,11 @@
   /* BOTTOM NAV */
 
   .rb-bottom-nav {
+    position: fixed;
     left: 50%;
     right: auto;
     bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 80;
 
     width: calc(100vw - 18px);
     height: 82px;
