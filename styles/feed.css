@@ -9,6 +9,7 @@
    - Topbar-safe shell spacing
    - Better shared card compatibility
    - Feed media/audio/comment states locked
+   - Profile lock + XP energy states
 ========================================= */
 
 .rb-feed-page {
@@ -104,6 +105,28 @@
   z-index: 1;
 }
 
+body[data-rb-profile-locked="true"].rb-feed-page .rb-section-hero {
+  border-color: rgba(0, 255, 157, 0.34);
+}
+
+body.rb-orbit-xp-energy.rb-feed-page .rb-section-hero {
+  border-color: rgba(250, 204, 21, 0.34);
+
+  box-shadow:
+    0 35px 90px rgba(0, 0, 0, 0.6),
+    0 0 48px rgba(0, 255, 157, 0.16),
+    0 0 62px rgba(250, 204, 21, 0.1);
+}
+
+body.rb-orbit-xp-energy.rb-feed-page::before {
+  opacity: 0.17;
+
+  filter:
+    saturate(1.32)
+    contrast(1.18)
+    brightness(1.05);
+}
+
 .rb-back {
   width: max-content;
   min-height: 42px;
@@ -169,6 +192,16 @@
   -webkit-backdrop-filter: blur(18px);
 }
 
+body.rb-orbit-xp-energy.rb-feed-page .rb-panel,
+body.rb-orbit-xp-energy.rb-feed-page .feed-card {
+  border-color: rgba(250, 204, 21, 0.24);
+
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.42),
+    0 0 34px rgba(0, 255, 157, 0.12),
+    0 0 44px rgba(250, 204, 21, 0.08);
+}
+
 .rb-composer-card {
   position: sticky;
   top: calc(var(--rb-topbar-height, 82px) + 16px);
@@ -177,6 +210,10 @@
 
   border-radius: 28px;
   border-color: rgba(0, 255, 120, 0.18);
+}
+
+body[data-rb-profile-locked="true"].rb-feed-page .rb-composer-card {
+  border-color: rgba(0, 255, 157, 0.32);
 }
 
 .rb-user-strip {
@@ -200,6 +237,15 @@
     url("/images/brand/Avatar-hero-Banner.png.jpeg")
     center / cover
     no-repeat;
+}
+
+body.rb-orbit-xp-energy.rb-feed-page .rb-user-strip img,
+body.rb-orbit-xp-energy.rb-feed-page .feed-user img {
+  border-color: rgba(250, 204, 21, 0.86);
+
+  box-shadow:
+    0 0 16px rgba(0, 255, 157, 0.22),
+    0 0 24px rgba(250, 204, 21, 0.12);
 }
 
 .rb-user-strip strong {
@@ -320,6 +366,13 @@
   font-weight: 1000;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+body.rb-orbit-xp-energy.rb-feed-page .feed-chip {
+  background:
+    linear-gradient(135deg, rgba(0, 255, 157, 0.15), rgba(250, 204, 21, 0.12));
+
+  color: #fefce8;
 }
 
 .feed-card h2 {
@@ -479,6 +532,12 @@
   color: #041006;
   border-color: transparent;
   background: linear-gradient(135deg, #7cffaa, #ffd76b);
+}
+
+body.rb-orbit-xp-energy.rb-feed-page .is-liked {
+  box-shadow:
+    0 0 18px rgba(0, 255, 157, 0.18),
+    0 0 26px rgba(250, 204, 21, 0.12);
 }
 
 /* MOBILE */
