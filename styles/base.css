@@ -6,13 +6,15 @@
    GLOBAL BASE FOUNDATION
    App Shell + Reset + Index Lock
 
-   Updates:
+   Safe rules:
+   - Does not force normal pages into fullscreen lock
+   - Keeps index/avatar/base-test fullscreen only
+   - Keeps live/watch hologram scroll-safe unless their own live.css locks them
+   - Background layers stay behind UI and cannot freeze taps
    - No project-avatar fallback
    - Adds rb-empty-card alias
-   - Adds safe fixed background layering
    - Adds global XP gauge foundation
    - Adds universe XP energy classes
-   - Keeps index/avatar fullscreen lock untouched
 ========================= */
 
 :root {
@@ -67,9 +69,9 @@
   --rb-safe-left: env(safe-area-inset-left);
   --rb-safe-right: env(safe-area-inset-right);
 
-  --rb-z-bg: 0;
+  --rb-z-bg: -30;
   --rb-z-canvas: 1;
-  --rb-z-fx: 2;
+  --rb-z-fx: -20;
   --rb-z-ui: 20;
   --rb-z-nav: 30;
   --rb-z-modal: 100;
@@ -157,9 +159,7 @@ body.rb-offline::before {
 
 body.rb-index-page,
 body.rb-avatar-page,
-body.rb-base-test-page,
-body.rb-live-hologram-page,
-body.rb-watch-hologram-page {
+body.rb-base-test-page {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
@@ -167,6 +167,15 @@ body.rb-watch-hologram-page {
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: manipulation;
+}
+
+/* NORMAL PAGE SAFETY */
+
+body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) {
+  height: auto;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* MEDIA DEFAULTS */
@@ -590,6 +599,11 @@ body.rb-orbit-xp-energy .rb-bg-layer {
 @media (max-width: 720px) {
   body {
     min-height: 100dvh;
+  }
+
+  body:not(.rb-index-page):not(.rb-avatar-page):not(.rb-base-test-page) {
+    height: auto;
+    overflow-y: auto;
   }
 
   .rb-shell {
