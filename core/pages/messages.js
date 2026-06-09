@@ -5,12 +5,14 @@
    MESSAGES PAGE CONTROLLER
    Direct Supabase DM Shell
    Profile Lock + Realtime Messages
+   XP Gauge Enabled
 
    Flow:
    - Messages reads profile directly
    - No profile-state dependency
    - Realtime watches DM members/messages/profiles
    - Message composer/open thread can be expanded next
+   - No project-avatar fallback
 ========================= */
 
 import {
@@ -40,7 +42,9 @@ import {
   profileName,
   profileAvatar,
   profileHandle,
-  bindProfileShell
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
 import {
@@ -61,7 +65,14 @@ const els = {
   threadCount: $("messages-thread-count"),
   syncStatus: $("messages-sync-status"),
   identityStatus: $("messages-identity-status"),
-  threadsList: $("messages-threads-list")
+  threadsList: $("messages-threads-list"),
+
+  xpGauge: $("messages-xp-gauge"),
+  xpFill: $("messages-xp-gauge-fill"),
+  xpText: $("messages-xp-gauge-text"),
+  xpNext: $("messages-xp-gauge-next"),
+  xpLevel: $("messages-xp-level"),
+  xpRank: $("messages-xp-rank")
 };
 
 let supabase = null;
@@ -69,6 +80,7 @@ let channel = null;
 let actionsBound = false;
 let currentUser = null;
 let currentProfile = null;
+let identity = null;
 
 function table(key, fallback) {
   return RB_TABLES?.[key] || fallback || key;
@@ -114,11 +126,102 @@ function setEmpty(text) {
   `;
 }
 
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, profileIdentity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    profileIdentity?.xp ??
+    profileIdentity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    profileIdentity?.rich_level ??
+    profileIdentity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    profileIdentity?.rankTitle ||
+    profileIdentity?.rank_title ||
+    profileIdentity?.rank ||
+    "Rich Messenger";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, identity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "messages",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   IDENTITY
+========================= */
+
 function syncState() {
   const appState = getCurrentUserState?.() || {};
 
   currentUser = appState.user || getUser?.() || null;
   currentProfile = appState.profile || currentProfile || null;
+  identity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbRoute = "messages";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = identity?.id || "";
+  document.body.dataset.rbProfileLocked = identity?.id ? "true" : "false";
 }
 
 async function fetchMyProfile() {
@@ -127,6 +230,7 @@ async function fetchMyProfile() {
   if (!activeUser?.id) {
     currentUser = null;
     currentProfile = null;
+    identity = null;
     return null;
   }
 
@@ -140,6 +244,7 @@ async function fetchMyProfile() {
 
   currentUser = activeUser;
   currentProfile = data || null;
+  identity = getProfileIdentity(currentProfile);
 
   return currentProfile;
 }
@@ -147,6 +252,7 @@ async function fetchMyProfile() {
 function paintMessagesIdentity() {
   const activeUser = currentUser || getUser?.();
   const activeProfile = currentProfile || {};
+  identity = getProfileIdentity(activeProfile);
 
   const name = profileName(activeProfile);
   const handle = profileHandle(activeProfile);
@@ -164,6 +270,19 @@ function paintMessagesIdentity() {
     }
   }
 
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt = name;
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
   setText(
     els.status,
     activeUser?.id
@@ -178,7 +297,13 @@ function paintMessagesIdentity() {
       : "Waiting for profile lock"
   );
 
+  document.body.dataset.rbRoute = "messages";
+  document.body.dataset.rbUserId = activeUser?.id || "";
+  document.body.dataset.rbProfileId = identity?.id || "";
+  document.body.dataset.rbProfileLocked = identity?.id ? "true" : "false";
+
   bindProfileShell?.();
+  renderXpGauge();
 }
 
 async function refreshMessagesIdentity() {
@@ -199,6 +324,7 @@ async function loadThreads() {
     setText(els.threadCount, "0 active conversations");
     setText(els.syncStatus, "Sign in required");
     setEmpty("Sign in to see your Rich Bizness DMs.");
+    renderXpGauge();
     return;
   }
 
@@ -243,6 +369,18 @@ async function loadThreads() {
   setText(els.syncStatus, "Messages synced");
 
   renderThreads(rows);
+  renderXpGauge();
+
+  window.dispatchEvent(
+    new CustomEvent("rb:messages-update", {
+      detail: {
+        route: "messages",
+        threadCount: rows.length,
+        profileLocked: !!identity?.id,
+        xpGauge: true
+      }
+    })
+  );
 }
 
 function renderThreads(rows = []) {
@@ -523,7 +661,11 @@ async function bootMessagesPage() {
 
     markPageReady("messages");
 
-    console.log("RB MESSAGES READY");
+    console.log("RB MESSAGES READY", {
+      profileLocked: !!identity?.id,
+      route: "messages",
+      xpGauge: true
+    });
   } catch (error) {
     console.error("[RB MESSAGES BOOT FAILED]", error);
     markPageError(error);
