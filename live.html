@@ -27,8 +27,9 @@
 </head>
 
 <body
-  class="rb-body rb-live-page live-body rb-live-hologram-page"
+  class="rb-body rb-live-page live-body rb-live-hologram-page rb-orbit-xp-energy"
   data-page="live"
+  data-rb-page="live"
   data-rb-route="live"
 >
   <div class="rb-bg-layer" aria-hidden="true"></div>
@@ -50,7 +51,19 @@
           WATCH
         </a>
 
-        <a class="live-watch-link ghost" href="/profile" data-route="profile">
+        <a class="live-watch-link ghost" href="/music" data-route="music">
+          MUSIC
+        </a>
+
+        <a class="live-watch-link ghost" href="/podcast" data-route="podcast">
+          PODCAST
+        </a>
+
+        <a class="live-watch-link ghost" href="/radio" data-route="radio">
+          RADIO
+        </a>
+
+        <a class="live-watch-link ghost" href="/profile" data-route="profile" data-rb-profile-link>
           PROFILE
         </a>
       </nav>
@@ -154,12 +167,13 @@
         <select id="streamCategory">
           <option value="general">General</option>
           <option value="music">Music</option>
+          <option value="podcast">Podcast</option>
+          <option value="radio">Radio</option>
           <option value="gaming">Gaming</option>
           <option value="sports">Sports</option>
           <option value="store">Store</option>
           <option value="meta">Meta</option>
           <option value="gallery">Gallery</option>
-          <option value="podcast">Podcast</option>
         </select>
       </label>
 
@@ -275,6 +289,12 @@
       </button>
     </aside>
   </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
 
   <script type="module" src="/core/pages/live.js"></script>
 </body>
