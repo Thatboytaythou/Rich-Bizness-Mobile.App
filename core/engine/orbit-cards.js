@@ -6,6 +6,7 @@
    REAL PHONE ORBIT ENGINE
    Phones + Saturn Tilt + Tap Into Portal
    Safer cleanup + stronger routing event
+   XP Energy Sync Enabled
 ========================= */
 
 export function createOrbitCardsEngine(ctx) {
@@ -45,13 +46,66 @@ export function createOrbitCardsEngine(ctx) {
   const ORBIT_TILT_X = -0.48;
   const ORBIT_TILT_Z = 0.12;
 
+  const xpState = {
+    xp: 0,
+    level: 1,
+    rank: "Biz Legend",
+    percent: 0,
+    energy: 1,
+    pulse: 0
+  };
+
   function rememberTexture(texture) {
     if (texture) textures.add(texture);
     return texture;
   }
 
+  function safeImage(value = "", fallback = "/images/brand/hero-banner.png") {
+    const src = String(value || "").trim();
+
+    if (!src || src.includes("project-avatar")) return fallback;
+
+    if (
+      src.startsWith("/") ||
+      src.startsWith("https://") ||
+      src.startsWith("http://") ||
+      src.startsWith("blob:")
+    ) {
+      return src;
+    }
+
+    return fallback;
+  }
+
+  function syncXpState(stateUpdate = activityState || {}) {
+    const nextXp = Number(stateUpdate.xp ?? xpState.xp) || 0;
+    const nextLevel = Number(stateUpdate.level ?? xpState.level) || 1;
+    const nextPercent = Number(
+      stateUpdate.xpPercent ??
+      stateUpdate.percent ??
+      xpState.percent
+    ) || 0;
+
+    xpState.xp = Math.max(0, nextXp);
+    xpState.level = Math.max(1, nextLevel);
+    xpState.rank = stateUpdate.rank || xpState.rank || "Biz Legend";
+    xpState.percent = Math.max(0, Math.min(100, nextPercent));
+
+    xpState.energy =
+      Number(stateUpdate.xpEnergy) ||
+      1 +
+        Math.min(0.45, xpState.percent / 240) +
+        Math.min(0.25, xpState.level / 100);
+
+    if (stateUpdate.xp || stateUpdate.level || stateUpdate.xpPercent || stateUpdate.percent) {
+      xpState.pulse = Math.max(xpState.pulse, 0.45);
+    }
+  }
+
   function mount() {
     if (mounted) return;
+
+    syncXpState(activityState);
 
     ringRoot = new THREE.Group();
     ringRoot.rotation.x = ORBIT_TILT_X;
@@ -101,12 +155,22 @@ export function createOrbitCardsEngine(ctx) {
 
   function buildCards() {
     modules.forEach((mod, index) => {
-      const card = createPhoneCard(mod, index);
+      const card = createPhoneCard(
+        {
+          ...mod,
+          image: safeImage(mod.image)
+        },
+        index
+      );
 
-      card.userData.module = mod;
+      card.userData.module = {
+        ...mod,
+        image: safeImage(mod.image)
+      };
       card.userData.index = index;
       card.userData.isHot = false;
       card.userData.presenceBoost = 0;
+      card.userData.xpBoost = 0;
       card.userData.pushing = false;
       card.userData.depth = 0;
 
@@ -143,7 +207,7 @@ export function createOrbitCardsEngine(ctx) {
 
     const screenTexture = rememberTexture(
       textureLoader.load(
-        mod.image,
+        safeImage(mod.image),
         (texture) => {
           texture.colorSpace = THREE.SRGBColorSpace;
           texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -308,7 +372,14 @@ export function createOrbitCardsEngine(ctx) {
   function update(t) {
     if (!mounted) return;
 
-    targetOffset += (motion.orbit.speed || 0.00245) * activityState.orbitBoost;
+    syncXpState(activityState);
+
+    targetOffset +=
+      (motion.orbit.speed || 0.00245) *
+      activityState.orbitBoost *
+      xpState.energy;
+
+    xpState.pulse *= 0.94;
 
     updateRings(t);
     updateCards(t);
@@ -318,13 +389,20 @@ export function createOrbitCardsEngine(ctx) {
   function updateRings(t) {
     if (!ringRoot) return;
 
+    const xpGlow = Math.max(0, Math.min(1, xpState.percent / 100));
+
     ringRoot.children.forEach((ring, index) => {
-      ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1);
+      ring.rotation.z +=
+        ring.userData.speed *
+        (index % 2 ? -1 : 1) *
+        xpState.energy;
 
       ring.material.opacity =
         ring.userData.baseOpacity +
         Math.sin(t * 1.2 + index) * 0.018 +
-        (activityState.liveActive ? 0.025 : 0);
+        (activityState.liveActive ? 0.025 : 0) +
+        xpState.pulse * 0.02 +
+        xpGlow * 0.01;
     });
   }
 
@@ -360,12 +438,16 @@ export function createOrbitCardsEngine(ctx) {
         laneOffset * 0.18 +
         Math.sin(t * 1.4 + index) * 0.08;
 
+      const xpBoost = card.userData.xpBoost || 0;
+
       const scale =
         0.42 +
         frontPower * 0.5 +
         (card === hoveredCard ? 0.08 : 0) +
         (card.userData.isHot ? 0.06 : 0) +
-        card.userData.presenceBoost * 0.025;
+        card.userData.presenceBoost * 0.025 +
+        xpBoost * 0.035 +
+        xpState.pulse * 0.018;
 
       card.position.set(x, saturnY, z + 1.15);
 
@@ -387,12 +469,21 @@ export function createOrbitCardsEngine(ctx) {
     const backFade = 0.38 + depth * 0.62;
     const hot = card.userData.isHot;
     const presence = card.userData.presenceBoost || 0;
+    const xpBoost = card.userData.xpBoost || 0;
+    const xpGlow = Math.max(0, Math.min(1, xpState.percent / 100));
 
     card.children.forEach((child, index) => {
       if (!child.material) return;
 
       if (index === 0) child.material.opacity = 0.72 + depth * 0.26;
-      if (index === 1) child.material.opacity = 0.04 + depth * 0.12 + presence * 0.035;
+      if (index === 1) {
+        child.material.opacity =
+          0.04 +
+          depth * 0.12 +
+          presence * 0.035 +
+          xpBoost * 0.04 +
+          xpGlow * 0.015;
+      }
       if (index === 2) child.material.opacity = backFade;
       if (index === 3) child.material.opacity = 0.025 + depth * 0.075;
       if (index === 4) child.material.opacity = 0.035 + depth * 0.09;
@@ -401,14 +492,14 @@ export function createOrbitCardsEngine(ctx) {
       if (index === 7) {
         child.material.opacity = hot
           ? 0.12 + Math.sin(t * 5) * 0.045
-          : depth * 0.035 + presence * 0.035;
+          : depth * 0.035 + presence * 0.035 + xpBoost * 0.05 + xpState.pulse * 0.035;
       }
 
       if (child.userData?.isLabel) {
-        child.material.opacity = 0.12 + depth * 0.85;
+        child.material.opacity = 0.12 + depth * 0.85 + xpBoost * 0.04;
         child.scale.set(
-          4.6 + depth * 0.8,
-          1.35 + depth * 0.22,
+          4.6 + depth * 0.8 + xpBoost * 0.18,
+          1.35 + depth * 0.22 + xpBoost * 0.05,
           1
         );
       }
@@ -443,7 +534,7 @@ export function createOrbitCardsEngine(ctx) {
   function updatePortalPush() {
     if (!portalPush) return;
 
-    portalPushProgress += 0.034;
+    portalPushProgress += 0.034 * xpState.energy;
 
     const p = THREE.MathUtils.clamp(portalPushProgress, 0, 1);
     const ease = 1 - Math.pow(1 - p, 3);
@@ -584,17 +675,32 @@ export function createOrbitCardsEngine(ctx) {
     }
   }
 
-  function onActivityUpdate(state) {
+  function onActivityUpdate(state = {}) {
+    syncXpState(state);
+
     cards.forEach((card) => {
       if (card.userData.module?.key === "live") {
         card.userData.isHot = Boolean(state.liveActive);
       }
+
+      card.userData.xpBoost = Math.min(1, xpState.percent / 100);
     });
   }
 
-  function onPresenceUpdate(state) {
+  function onPresenceUpdate(state = {}) {
+    syncXpState(state);
+
     cards.forEach((card) => {
       card.userData.presenceBoost = state.onlineCount > 0 ? 1 : 0;
+      card.userData.xpBoost = Math.min(1, xpState.percent / 100);
+    });
+  }
+
+  function setActivityState(state = {}) {
+    syncXpState(state);
+
+    cards.forEach((card) => {
+      card.userData.xpBoost = Math.min(1, xpState.percent / 100);
     });
   }
 
@@ -652,6 +758,7 @@ export function createOrbitCardsEngine(ctx) {
     onPointerMove,
     onPointerUp,
     onActivityUpdate,
-    onPresenceUpdate
+    onPresenceUpdate,
+    setActivityState
   };
 }
