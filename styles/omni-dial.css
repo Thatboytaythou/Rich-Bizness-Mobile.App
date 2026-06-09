@@ -6,6 +6,7 @@
    HUB UI + DIAL OVERLAY
    HOLOGRAM GLASS UI
    Safe index/navigation overlay
+   XP Energy + Profile Lock Sync Enabled
 ========================= */
 
 /* =========================
@@ -54,7 +55,8 @@
   transition:
     transform 0.22s ease,
     border-color 0.22s ease,
-    box-shadow 0.22s ease;
+    box-shadow 0.22s ease,
+    filter 0.22s ease;
 }
 
 .rb-profile-chip::before {
@@ -153,6 +155,44 @@
 }
 
 /* =========================
+   PROFILE LOCK / XP CHIP ENERGY
+========================= */
+
+body[data-rb-profile-locked="true"] .rb-profile-chip {
+  border-color: rgba(0, 255, 157, 0.36);
+
+  box-shadow:
+    0 0 26px rgba(0, 255, 157, 0.18),
+    0 0 42px rgba(250, 204, 21, 0.08),
+    inset 0 0 22px rgba(255, 255, 255, 0.035);
+}
+
+body[data-rb-profile-locked="false"] .rb-profile-chip {
+  border-color: rgba(250, 204, 21, 0.2);
+}
+
+body.rb-orbit-xp-energy .rb-profile-chip {
+  border-color: rgba(250, 204, 21, 0.36);
+
+  filter:
+    drop-shadow(0 0 18px rgba(0, 255, 157, 0.16))
+    drop-shadow(0 0 22px rgba(250, 204, 21, 0.1));
+
+  box-shadow:
+    0 0 30px rgba(0, 255, 157, 0.18),
+    0 0 54px rgba(250, 204, 21, 0.12),
+    inset 0 0 24px rgba(255, 255, 255, 0.04);
+}
+
+body.rb-orbit-xp-energy .rb-profile-chip img {
+  border-color: rgba(250, 204, 21, 0.62);
+
+  box-shadow:
+    0 0 16px rgba(0, 255, 157, 0.28),
+    0 0 22px rgba(250, 204, 21, 0.16);
+}
+
+/* =========================
    TAB DROPPER
 ========================= */
 
@@ -189,7 +229,9 @@
   transition:
     transform 0.22s ease,
     background 0.22s ease,
-    color 0.22s ease;
+    color 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
 }
 
 .rb-tab-dropper:hover {
@@ -207,6 +249,15 @@
   box-shadow:
     0 0 22px rgba(0, 255, 157, 0.36),
     0 0 34px rgba(250, 204, 21, 0.22);
+}
+
+body.rb-orbit-xp-energy .rb-tab-dropper {
+  border-color: rgba(250, 204, 21, 0.38);
+
+  box-shadow:
+    0 0 24px rgba(0, 255, 157, 0.18),
+    0 0 38px rgba(250, 204, 21, 0.12),
+    0 0 38px rgba(0, 0, 0, 0.48);
 }
 
 /* =========================
@@ -308,6 +359,16 @@
   box-shadow:
     0 0 24px rgba(0, 255, 157, 0.16),
     0 0 34px rgba(250, 204, 21, 0.12);
+}
+
+body.rb-orbit-xp-energy .rb-slide-menu button,
+body.rb-orbit-xp-energy .rb-side-tabs button {
+  border-color: rgba(250, 204, 21, 0.24);
+
+  box-shadow:
+    0 0 18px rgba(0, 0, 0, 0.34),
+    0 0 24px rgba(16, 185, 129, 0.11),
+    0 0 28px rgba(250, 204, 21, 0.08);
 }
 
 /* =========================
@@ -436,7 +497,8 @@
     transform 0.22s ease,
     border-color 0.22s ease,
     background 0.22s ease,
-    color 0.22s ease;
+    color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .rb-bottom-nav button::before {
@@ -479,6 +541,26 @@
   opacity: 1;
 }
 
+body.rb-orbit-xp-energy .rb-bottom-nav {
+  border-color: rgba(250, 204, 21, 0.3);
+
+  box-shadow:
+    0 0 38px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(16, 185, 129, 0.16),
+    0 0 42px rgba(250, 204, 21, 0.1),
+    inset 0 0 28px rgba(255, 255, 255, 0.035);
+}
+
+body.rb-orbit-xp-energy .rb-bottom-nav button.is-active,
+body.rb-orbit-xp-energy .rb-bottom-nav button:hover {
+  border-color: rgba(250, 204, 21, 0.42);
+
+  box-shadow:
+    0 0 20px rgba(16, 185, 129, 0.2),
+    0 0 28px rgba(250, 204, 21, 0.13),
+    inset 0 0 18px rgba(255, 255, 255, 0.03);
+}
+
 .rb-nav-icon {
   position: relative;
   z-index: 2;
@@ -506,6 +588,13 @@
   filter:
     drop-shadow(0 0 14px rgba(0, 255, 157, 0.5))
     drop-shadow(0 0 16px rgba(250, 204, 21, 0.24));
+}
+
+body.rb-orbit-xp-energy .rb-bottom-nav button:hover .rb-nav-icon,
+body.rb-orbit-xp-energy .rb-bottom-nav button.is-active .rb-nav-icon {
+  filter:
+    drop-shadow(0 0 15px rgba(0, 255, 157, 0.52))
+    drop-shadow(0 0 18px rgba(250, 204, 21, 0.34));
 }
 
 .rb-bottom-nav button span:last-child {
@@ -610,6 +699,15 @@
     scale(1);
 }
 
+body.rb-orbit-xp-energy .rb-notify-toast {
+  border-color: rgba(250, 204, 21, 0.24);
+
+  box-shadow:
+    0 0 32px rgba(16, 185, 129, 0.14),
+    0 0 44px rgba(250, 204, 21, 0.09),
+    0 0 80px rgba(0, 0, 0, 0.42);
+}
+
 /* =========================
    PAGE TRANSITION
 ========================= */
@@ -632,6 +730,16 @@
   animation: rbFadeOut 0.24s ease forwards;
 
   pointer-events: none;
+}
+
+body.rb-orbit-xp-energy .rb-page-transition::before {
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(0, 255, 157, 0.2),
+      rgba(250, 204, 21, 0.08) 38%,
+      rgba(0, 0, 0, 0.92)
+    );
 }
 
 /* =========================
