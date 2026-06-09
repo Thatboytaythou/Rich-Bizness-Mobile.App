@@ -26,8 +26,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-sports-page" data-page="sports" data-rb-route="sports">
-
+<body
+  class="rb-body rb-sports-page rb-orbit-xp-energy"
+  data-page="sports"
+  data-rb-page="sports"
+  data-rb-route="sports"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -35,7 +39,6 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
     <a class="rb-brand" href="/" data-route="home">
       <span>RICH BIZNESS SPORTS</span>
       <strong>RICH BIZNESS</strong>
@@ -43,9 +46,12 @@
     </a>
 
     <nav class="rb-topnav" aria-label="Sports navigation">
+      <a href="/" data-route="home">Portal</a>
       <a href="/feed" data-route="feed">Feed</a>
       <a href="/live" data-route="live">Live</a>
       <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
       <a href="/gaming" data-route="gaming">Gaming</a>
       <a class="is-active" href="/sports" data-route="sports">Sports</a>
       <a href="/gallery" data-route="gallery">Gallery</a>
@@ -53,15 +59,11 @@
       <a href="/meta" data-route="meta">Meta</a>
       <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell rb-sports-shell">
-
     <section class="rb-section-hero rb-sports-hero">
-
       <div class="rb-section-hero-copy">
-
         <p class="rb-kicker">
           RICH BIZNESS SPORTS
         </p>
@@ -76,7 +78,6 @@
         </p>
 
         <div class="rb-form-actions">
-
           <a
             class="rb-main-launch"
             href="/upload?section=sports"
@@ -101,13 +102,10 @@
           >
             MY PROFILE
           </a>
-
         </div>
-
       </div>
 
       <div class="rb-stat-grid">
-
         <article>
           <strong id="sports-post-count">0</strong>
           <span>Posts</span>
@@ -127,15 +125,11 @@
           <strong id="sports-upload-count">0</strong>
           <span>Uploads</span>
         </article>
-
       </div>
-
     </section>
 
     <section class="rb-panel">
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">
             SPORTS NAVIGATION
@@ -145,11 +139,9 @@
             Explore Sports Universe
           </h2>
         </div>
-
       </div>
 
       <div class="rb-tabs rb-sports-tabs">
-
         <button
           class="is-active"
           type="button"
@@ -192,16 +184,13 @@
         >
           Teams
         </button>
-
       </div>
-
     </section>
 
     <section
       class="rb-panel is-active"
       data-sports-panel="posts"
     >
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">LOCKER ROOM</p>
@@ -212,7 +201,6 @@
       <div id="sports-posts-list" class="rb-card-grid">
         <div class="rb-empty">Loading sports posts...</div>
       </div>
-
     </section>
 
     <section
@@ -220,7 +208,6 @@
       data-sports-panel="picks"
       style="display:none;"
     >
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">PREDICTIONS</p>
@@ -231,7 +218,6 @@
       <div id="sports-picks-list" class="rb-card-grid">
         <div class="rb-empty">Loading sports picks...</div>
       </div>
-
     </section>
 
     <section
@@ -239,7 +225,6 @@
       data-sports-panel="uploads"
       style="display:none;"
     >
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">HIGHLIGHTS</p>
@@ -250,7 +235,6 @@
       <div id="sports-uploads-list" class="rb-card-grid">
         <div class="rb-empty">Loading sports uploads...</div>
       </div>
-
     </section>
 
     <section
@@ -258,7 +242,6 @@
       data-sports-panel="broadcasts"
       style="display:none;"
     >
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">LIVE SPORTS</p>
@@ -269,7 +252,6 @@
       <div id="sports-broadcasts-list" class="rb-card-grid">
         <div class="rb-empty">Loading broadcasts...</div>
       </div>
-
     </section>
 
     <section
@@ -277,7 +259,6 @@
       data-sports-panel="profiles"
       style="display:none;"
     >
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">FAN PROFILES</p>
@@ -288,7 +269,6 @@
       <div id="sports-profiles-list" class="rb-card-grid">
         <div class="rb-empty">Loading fan profiles...</div>
       </div>
-
     </section>
 
     <section
@@ -296,7 +276,6 @@
       data-sports-panel="teams"
       style="display:none;"
     >
-
       <div class="rb-panel-head">
         <div>
           <p class="rb-kicker">LEAGUES + TEAMS</p>
@@ -307,9 +286,7 @@
       <div id="sports-teams-list" class="rb-card-grid">
         <div class="rb-empty">Loading teams...</div>
       </div>
-
     </section>
-
   </main>
 
   <footer class="rb-footer">
@@ -323,6 +300,5 @@
   </script>
 
   <script type="module" src="/core/pages/sports.js"></script>
-
 </body>
 </html>
