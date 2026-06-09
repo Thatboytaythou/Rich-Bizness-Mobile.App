@@ -26,8 +26,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-gallery-page" data-page="gallery">
-
+<body
+  class="rb-body rb-gallery-page rb-orbit-xp-energy"
+  data-page="gallery"
+  data-rb-page="gallery"
+  data-rb-route="gallery"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -35,7 +39,6 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
     <a class="rb-brand" href="/" data-route="home">
       <span>RICH BIZNESS GALLERY</span>
       <strong>RICH BIZNESS</strong>
@@ -47,21 +50,19 @@
       <a href="/feed" data-route="feed">Feed</a>
       <a href="/live" data-route="live">Live</a>
       <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
       <a class="is-active" href="/gallery" data-route="gallery">Gallery</a>
       <a href="/store" data-route="store">Store</a>
       <a href="/upload" data-route="upload">Upload</a>
       <a href="/meta" data-route="meta">Meta</a>
       <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell rb-gallery-shell">
-
     <section class="rb-section-hero rb-gallery-hero">
-
       <div class="rb-section-hero-copy">
-
         <p class="rb-kicker">
           RICH BIZNESS VISUALS
         </p>
@@ -76,11 +77,11 @@
         </p>
 
         <div class="rb-form-actions">
-
           <button
             id="gallery-upload-btn"
             class="rb-main-launch"
             type="button"
+            data-route="upload"
           >
             UPLOAD TO GALLERY
           </button>
@@ -89,6 +90,7 @@
             id="gallery-profile-btn"
             class="rb-btn ghost"
             type="button"
+            data-route="profile"
           >
             MY PROFILE
           </button>
@@ -100,23 +102,19 @@
           >
             QUICK DROP
           </a>
-
         </div>
-
       </div>
 
       <div class="rb-gallery-identity-card">
-
         <div class="rb-profile-avatar-wrap">
-
           <img
             class="rb-profile-avatar"
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Current profile avatar"
             data-rb-current-avatar
             data-rb-avatar
+            data-rb-profile-avatar
           />
-
         </div>
 
         <p class="rb-kicker">
@@ -130,15 +128,11 @@
         <p>
           Gallery drops stay attached to your Rich Bizness profile key.
         </p>
-
       </div>
-
     </section>
 
     <section class="rb-panel rb-gallery-stats">
-
       <div class="rb-stat-grid">
-
         <article>
           <strong id="gallery-upload-count">0</strong>
           <span>Uploads</span>
@@ -158,15 +152,11 @@
           <strong id="gallery-video-count">0</strong>
           <span>Videos</span>
         </article>
-
       </div>
-
     </section>
 
     <section class="rb-panel">
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">
             GALLERY NAVIGATION
@@ -176,11 +166,9 @@
             Explore Visual Drops
           </h2>
         </div>
-
       </div>
 
       <div class="rb-tabs rb-gallery-tabs">
-
         <button
           class="is-active"
           type="button"
@@ -202,18 +190,14 @@
         >
           Posts
         </button>
-
       </div>
-
     </section>
 
     <section
       class="rb-panel is-active"
       data-gallery-panel="featured"
     >
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">
             FEATURED VISUALS
@@ -223,7 +207,6 @@
             Featured Gallery
           </h2>
         </div>
-
       </div>
 
       <div
@@ -234,7 +217,6 @@
           Loading featured gallery...
         </div>
       </div>
-
     </section>
 
     <section
@@ -242,9 +224,7 @@
       data-gallery-panel="uploads"
       style="display:none;"
     >
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">
             MEDIA UPLOADS
@@ -254,7 +234,6 @@
             Gallery Uploads
           </h2>
         </div>
-
       </div>
 
       <div
@@ -265,7 +244,6 @@
           Loading gallery uploads...
         </div>
       </div>
-
     </section>
 
     <section
@@ -273,9 +251,7 @@
       data-gallery-panel="posts"
       style="display:none;"
     >
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">
             VISUAL POSTS
@@ -285,7 +261,6 @@
             Gallery Posts
           </h2>
         </div>
-
       </div>
 
       <div
@@ -296,9 +271,7 @@
           Loading gallery posts...
         </div>
       </div>
-
     </section>
-
   </main>
 
   <footer class="rb-footer">
@@ -312,6 +285,5 @@
   </script>
 
   <script type="module" src="/core/pages/gallery.js"></script>
-
 </body>
 </html>
