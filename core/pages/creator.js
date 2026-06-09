@@ -5,12 +5,14 @@
    ADMIN PAGE CONTROLLER
    Direct Supabase Admin Dashboard
    Profile Lock + Admin Role Check + Realtime
+   XP Gauge Enabled
 
    Flow:
    - Reads current profile directly
    - Confirms admin through profiles.role OR admin_roles
    - Loads counts + audit logs
    - No profile-state dependency
+   - No project-avatar fallback
 ========================= */
 
 import {
@@ -40,7 +42,9 @@ import {
   profileAvatar,
   profileHandle,
   profileBadge,
-  bindProfileShell
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
 import {
@@ -72,13 +76,21 @@ const els = {
   profileBtn: $("admin-profile-btn"),
 
   auditList: $("admin-audit-list"),
-  empty: $("admin-empty")
+  empty: $("admin-empty"),
+
+  xpGauge: $("admin-xp-gauge"),
+  xpFill: $("admin-xp-gauge-fill"),
+  xpText: $("admin-xp-gauge-text"),
+  xpNext: $("admin-xp-gauge-next"),
+  xpLevel: $("admin-xp-level"),
+  xpRank: $("admin-xp-rank")
 };
 
 const state = {
   supabase: null,
   user: null,
   profile: null,
+  profileIdentity: null,
   adminRole: null,
   channel: null,
   actionsBound: false
@@ -118,11 +130,123 @@ function setText(el, value) {
   if (el) el.textContent = value ?? "";
 }
 
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    state.adminRole?.role_label ||
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Rich Admin";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(state.profile, state.profileIdentity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "admin",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   STATE + ADMIN CHECK
+========================= */
+
 function syncStateFromApp() {
   const appState = getCurrentUserState?.() || {};
 
   state.user = appState.user || getUser?.() || state.user || null;
   state.profile = appState.profile || state.profile || null;
+  state.profileIdentity = getProfileIdentity(state.profile);
+
+  document.body.dataset.rbRoute = "admin";
+  document.body.dataset.rbUserId = state.user?.id || "";
+  document.body.dataset.rbProfileId = state.profileIdentity?.id || "";
+  document.body.dataset.rbProfileLocked = state.profileIdentity?.id ? "true" : "false";
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(state.profile);
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeImage(
+      state.profile?.avatar_url || state.profileIdentity?.avatar_url,
+      DEFAULT_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        state.profile?.display_name ||
+        state.profile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
 }
 
 async function fetchMyProfile() {
@@ -131,6 +255,7 @@ async function fetchMyProfile() {
   if (!user?.id) {
     state.user = null;
     state.profile = null;
+    state.profileIdentity = null;
     return null;
   }
 
@@ -144,6 +269,7 @@ async function fetchMyProfile() {
 
   state.user = user;
   state.profile = data || null;
+  state.profileIdentity = getProfileIdentity(state.profile);
 
   return state.profile;
 }
@@ -189,6 +315,10 @@ function isAdmin(profile = state.profile, adminRole = state.adminRole) {
   ].includes(roleKey);
 }
 
+/* =========================
+   PAINT
+========================= */
+
 function paintIdentity() {
   const profile = state.profile || {};
   const name = profileName(profile);
@@ -215,6 +345,7 @@ function paintIdentity() {
   );
 
   bindProfileShell?.();
+  renderXpGauge();
 }
 
 async function countTable(tableName, match = {}) {
@@ -338,6 +469,10 @@ async function loadAuditLogs() {
   }
 }
 
+/* =========================
+   REALTIME
+========================= */
+
 function clearRealtime() {
   if (state.channel && state.supabase) {
     state.supabase.removeChannel(state.channel);
@@ -418,6 +553,10 @@ function bindRealtime() {
     .subscribe();
 }
 
+/* =========================
+   ACTIONS
+========================= */
+
 function bindActions() {
   if (state.actionsBound) return;
   state.actionsBound = true;
@@ -443,10 +582,15 @@ async function refreshAdmin() {
   syncStateFromApp();
   await fetchMyProfile();
   await fetchAdminRole();
+  syncStateFromApp();
   paintIdentity();
   await loadAdminCounts();
   await loadAuditLogs();
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootAdminPage() {
   try {
