@@ -7,6 +7,7 @@
    Avatar Sync Locked
    Meta World Engine Connected
    Realtime Enabled
+   XP Gauge Enabled
 
    Purpose:
    - Meta is the cinematic world wrapper
@@ -53,6 +54,13 @@ const els = {
   heroAvatar: $("heroAvatar"),
   heroName: $("heroName"),
   heroRank: $("heroRank"),
+
+  xpGauge: $("meta-xp-gauge"),
+  xpFill: $("meta-xp-gauge-fill"),
+  xpText: $("meta-xp-gauge-text"),
+  xpNext: $("meta-xp-gauge-next"),
+  xpLevel: $("meta-xp-level"),
+  xpRank: $("meta-xp-rank"),
 
   worldStage: $("metaWorldStage") || $("metaWorldCanvas") || $("metaPortalStage"),
 
@@ -108,7 +116,8 @@ function safePath(value = "", fallback = "") {
 
   if (
     src === "/images/brand/project-avatar.png.jpeg" ||
-    src.includes("/project-avatar")
+    src.includes("/project-avatar") ||
+    src.includes("project-avatar")
   ) {
     return fallback;
   }
@@ -137,8 +146,21 @@ function formatNumber(value) {
   return Number(value || 0).toLocaleString();
 }
 
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function setEmpty(target, message) {
-  if (target) target.innerHTML = `<div class="rb-empty">${message}</div>`;
+  if (target) target.innerHTML = `<div class="rb-empty">${escapeHtml(message)}</div>`;
+}
+
+function setText(el, value = "") {
+  if (el) el.textContent = value;
 }
 
 function table(key, fallback) {
@@ -152,6 +174,94 @@ function routeFor(key = "") {
 function isMobile() {
   return window.matchMedia?.("(max-width: 760px)")?.matches || window.innerWidth <= 760;
 }
+
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}, avatar = {}) {
+  const rawXp =
+    avatar?.xp ??
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    avatar?.level ??
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    avatar?.rank ||
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rankTitle ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Meta Traveler";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, profileIdentity, currentAvatar);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "meta",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   PROFILE LOCK
+========================= */
 
 function syncIdentityFromApp() {
   const appState = getCurrentUserState?.() || {};
@@ -174,6 +284,20 @@ function lockProfileKeys() {
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safePath(profileAvatar(currentProfile), DEFAULT_AVATAR);
+    const name = profileName(currentProfile);
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt = name || "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
 }
 
 function metaAvatarSrc() {
@@ -190,6 +314,7 @@ function paintProfile() {
     if (els.metaUserName) els.metaUserName.textContent = "Guest";
     if (els.heroName) els.heroName.textContent = "Guest Traveler";
     if (els.heroRank) els.heroRank.textContent = "Traveler • Level 1";
+    renderXpGauge();
     return;
   }
 
@@ -205,6 +330,8 @@ function paintProfile() {
     els.heroRank.textContent =
       `${clean(currentAvatar?.rank || currentProfile?.rank_title, "Traveler")} • Level ${clean(currentAvatar?.level || currentProfile?.rich_level, 1)}`;
   }
+
+  renderXpGauge();
 }
 
 /* =========================
@@ -249,7 +376,10 @@ function metaModules() {
       title: mod.title || mod.label || mod.key,
       tag: mod.tag || mod.icon || mod.key,
       route: mod.route || routeFor(mod.key),
-      image: safePath(mod.image || mod.cover || mod.thumbnail || "", fallbackModules.find((item) => item.key === mod.key)?.image || DEFAULT_BANNER)
+      image: safePath(
+        mod.image || mod.cover || mod.thumbnail || "",
+        fallbackModules.find((item) => item.key === mod.key)?.image || DEFAULT_BANNER
+      )
     }));
 }
 
@@ -321,7 +451,7 @@ async function mountWorldEngine() {
       activityState: {
         liveActive: worlds.some((world) => world.world_type === "live" || world.status === "active"),
         avatarReady: Boolean(currentAvatar?.id),
-        xp: Number(currentAvatar?.xp || currentProfile?.rich_points || 0)
+        xp: Number(currentAvatar?.xp || currentProfile?.rich_points || currentProfile?.xp || 0)
       },
       isMobile
     },
@@ -482,7 +612,7 @@ async function syncAvatar() {
     aura: currentAvatar?.aura || "green-gold",
     rank: clean(currentProfile?.rank_title, "Traveler"),
     level: clean(currentProfile?.rich_level, 1),
-    xp: currentAvatar?.xp || currentProfile?.rich_points || 0,
+    xp: currentAvatar?.xp || currentProfile?.rich_points || currentProfile?.xp || 0,
     is_active: true,
     metadata: {
       ...(currentAvatar?.metadata || {}),
@@ -501,6 +631,7 @@ async function syncAvatar() {
   if (error) throw error;
 
   await loadAvatar();
+  renderXpGauge();
 }
 
 async function loadWorlds() {
@@ -540,7 +671,7 @@ function renderWorlds() {
       const cover = safePath(world.cover_url || world.background_url, DEFAULT_BANNER);
 
       return `
-        <article class="meta-world-card" data-world-id="${world.id}">
+        <article class="meta-world-card" data-world-id="${escapeHtml(world.id)}">
           <div class="world-cover" style="background-image:url('${escapeHtml(cover)}')">
             <span>${escapeHtml(clean(world.world_type, "portal"))}</span>
             <strong>${escapeHtml(clean(world.access_type, "public"))}</strong>
@@ -557,8 +688,8 @@ function renderWorlds() {
             </div>
 
             <div class="world-actions">
-              <button class="rb-btn small primary" data-enter-world="${world.id}" type="button">Enter</button>
-              <button class="rb-btn small ghost" data-create-room="${world.id}" type="button">Room</button>
+              <button class="rb-btn small primary" data-enter-world="${escapeHtml(world.id)}" type="button">Enter</button>
+              <button class="rb-btn small ghost" data-create-room="${escapeHtml(world.id)}" type="button">Room</button>
             </div>
           </div>
         </article>
@@ -754,6 +885,7 @@ function bindEvents() {
     await loadWorlds();
     await loadRooms();
     resizeWorldEngine();
+    renderXpGauge();
   });
 
   els.createWorldBtn?.addEventListener("click", () => {
@@ -795,10 +927,14 @@ function bindRealtime() {
     .channel("rich-meta-worlds")
     .on("postgres_changes", { event: "*", schema: "public", table: table("metaWorlds", "meta_worlds") }, loadWorlds)
     .on("postgres_changes", { event: "*", schema: "public", table: table("metaRooms", "meta_rooms") }, loadRooms)
-    .on("postgres_changes", { event: "*", schema: "public", table: table("metaAvatars", "meta_avatars") }, loadAvatar)
+    .on("postgres_changes", { event: "*", schema: "public", table: table("metaAvatars", "meta_avatars") }, async () => {
+      await loadAvatar();
+      renderXpGauge();
+    })
     .on("postgres_changes", { event: "*", schema: "public", table: table("metaVisits", "meta_visits") }, () => {
       if (!els.visitCount) return;
       els.visitCount.textContent = String(Number(els.visitCount.textContent || 0) + 1);
+      renderXpGauge();
     })
     .subscribe();
 }
@@ -829,6 +965,9 @@ async function bootMetaPage() {
     bindEvents();
     bindRealtime();
 
+    document.body.dataset.rbPage = "meta";
+    document.body.dataset.rbRoute = "meta";
+    document.body.dataset.rbProfileLock = profileIdentity?.id ? "true" : "false";
     document.body.classList.add("rb-meta-ready");
 
     markPageReady("meta");
@@ -836,7 +975,8 @@ async function bootMetaPage() {
     console.log("RB META READY", {
       profileLocked: Boolean(profileIdentity?.id),
       route: "meta",
-      worldEngine: Boolean(metaEngine)
+      worldEngine: Boolean(metaEngine),
+      xpGauge: true
     });
   } catch (error) {
     console.error("[meta.js]", error);
