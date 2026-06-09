@@ -5,6 +5,7 @@
    POWERHOUSE OMNI FX ENGINE
    Breathing FX • Shockwaves • Trails • Atmosphere • Portal Reactions
    Safer cleanup + theme event sync
+   XP Energy Sync Enabled
 ========================= */
 
 export function createOmniFxEngine(ctx) {
@@ -36,6 +37,15 @@ export function createOmniFxEngine(ctx) {
   let breathePower = 1;
   let targetPower = 1;
   let touchPulse = 0;
+
+  const xpState = {
+    xp: 0,
+    level: 1,
+    rank: "Biz Legend",
+    percent: 0,
+    energy: 1,
+    pulse: 0
+  };
 
   const themes = {
     green: {
@@ -91,8 +101,36 @@ export function createOmniFxEngine(ctx) {
     return themes[theme] || themes.green;
   }
 
+  function syncXpState(stateUpdate = activityState || {}) {
+    const nextXp = Number(stateUpdate.xp ?? xpState.xp) || 0;
+    const nextLevel = Number(stateUpdate.level ?? xpState.level) || 1;
+    const nextPercent = Number(
+      stateUpdate.xpPercent ??
+      stateUpdate.percent ??
+      xpState.percent
+    ) || 0;
+
+    xpState.xp = Math.max(0, nextXp);
+    xpState.level = Math.max(1, nextLevel);
+    xpState.rank = stateUpdate.rank || xpState.rank || "Biz Legend";
+    xpState.percent = Math.max(0, Math.min(100, nextPercent));
+
+    xpState.energy =
+      Number(stateUpdate.xpEnergy) ||
+      1 +
+        Math.min(0.45, xpState.percent / 240) +
+        Math.min(0.25, xpState.level / 100);
+
+    if (stateUpdate.xp || stateUpdate.level || stateUpdate.xpPercent || stateUpdate.percent) {
+      xpState.pulse = Math.max(xpState.pulse, 0.55);
+      touchPulse = Math.max(touchPulse, 0.32);
+    }
+  }
+
   function mount() {
     if (mounted) return;
+
+    syncXpState(activityState);
 
     fxRoot = new THREE.Group();
     fxRoot.renderOrder = 110;
@@ -342,6 +380,9 @@ export function createOmniFxEngine(ctx) {
     window.addEventListener("rb:portal-card-push", handlePortalCardPush);
     window.addEventListener("rb:avatar-portal-jump", handleAvatarPortalJump);
     window.addEventListener("rb:portal-theme-change", handlePortalThemeChange);
+    window.addEventListener("rb:xp-gauge-update", handleXpGaugeUpdate);
+    window.addEventListener("rb:app-xp-update", handleXpGaugeUpdate);
+    window.addEventListener("rb:universe-preview-update", handleUniverseUpdate);
     window.addEventListener("pointerdown", handlePointerDown, { passive: true });
   }
 
@@ -352,6 +393,9 @@ export function createOmniFxEngine(ctx) {
     window.removeEventListener("rb:portal-card-push", handlePortalCardPush);
     window.removeEventListener("rb:avatar-portal-jump", handleAvatarPortalJump);
     window.removeEventListener("rb:portal-theme-change", handlePortalThemeChange);
+    window.removeEventListener("rb:xp-gauge-update", handleXpGaugeUpdate);
+    window.removeEventListener("rb:app-xp-update", handleXpGaugeUpdate);
+    window.removeEventListener("rb:universe-preview-update", handleUniverseUpdate);
     window.removeEventListener("pointerdown", handlePointerDown);
   }
 
@@ -368,6 +412,14 @@ export function createOmniFxEngine(ctx) {
   function handlePortalThemeChange(event) {
     setTheme(event.detail?.name || event.detail?.theme || "green");
     touchPulse = Math.max(touchPulse, 0.6);
+  }
+
+  function handleXpGaugeUpdate(event) {
+    syncXpState(event.detail || {});
+  }
+
+  function handleUniverseUpdate(event) {
+    syncXpState(event.detail?.activityState || {});
   }
 
   function handlePointerDown(event) {
@@ -393,7 +445,7 @@ export function createOmniFxEngine(ctx) {
     wave.visible = true;
     wave.position.set(x, y, z);
     wave.scale.setScalar(0.35);
-    wave.material.opacity = 0.22;
+    wave.material.opacity = 0.22 + xpState.pulse * 0.08;
     wave.material.color.setHex(colors().primary);
     wave.userData.life = 1;
 
@@ -411,7 +463,7 @@ export function createOmniFxEngine(ctx) {
         new THREE.SpriteMaterial({
           map: texture,
           transparent: true,
-          opacity: 0.55,
+          opacity: 0.55 + xpState.pulse * 0.12,
           depthWrite: false,
           blending: THREE.AdditiveBlending
         })
@@ -444,46 +496,60 @@ export function createOmniFxEngine(ctx) {
   function update(t) {
     if (!mounted) return;
 
+    syncXpState(activityState);
+
+    const xpBoost = xpState.energy || 1;
+    const xpGlow = Math.max(0, Math.min(1, xpState.percent / 100));
+
     targetPower = activityState.liveActive ? 1.35 : 1;
+    targetPower += Math.min(0.24, xpGlow * 0.18);
+
     breathePower += (targetPower - breathePower) * 0.025;
     touchPulse *= 0.92;
+    xpState.pulse *= 0.94;
 
-    updateAura(t);
-    updateComets(t);
-    updateMoneyDust(t);
-    updateShockwaves();
-    updateGrid(t);
-    updateLightLeaks(t);
-    updateBursts();
+    updateAura(t, xpBoost, xpGlow);
+    updateComets(t, xpBoost);
+    updateMoneyDust(t, xpBoost, xpGlow);
+    updateShockwaves(xpBoost);
+    updateGrid(t, xpBoost);
+    updateLightLeaks(t, xpBoost);
+    updateBursts(xpBoost);
   }
 
-  function updateAura(t) {
+  function updateAura(t, xpBoost = 1, xpGlow = 0) {
     auraField?.children.forEach((aura, index) => {
-      aura.rotation.y += aura.userData.speed * breathePower;
-      aura.rotation.z += aura.userData.speed * 0.6;
+      aura.rotation.y += aura.userData.speed * breathePower * xpBoost;
+      aura.rotation.z += aura.userData.speed * 0.6 * xpBoost;
 
       const pulse = Math.sin(t * 1.2 + aura.userData.offset) * 0.5 + 0.5;
 
       aura.scale.setScalar(
-        1 + pulse * 0.12 * breathePower + touchPulse * 0.18
+        1 +
+          pulse * 0.12 * breathePower +
+          touchPulse * 0.18 +
+          xpState.pulse * 0.08
       );
 
       aura.material.opacity =
         0.012 +
         pulse * 0.018 +
         touchPulse * 0.025 +
+        xpState.pulse * 0.018 +
+        xpGlow * 0.012 +
         (activityState.liveActive ? 0.01 : 0);
     });
   }
 
-  function updateComets(t) {
+  function updateComets(t, xpBoost = 1) {
     comets.forEach((comet, index) => {
-      comet.userData.angle += comet.userData.speed * breathePower;
+      comet.userData.angle += comet.userData.speed * breathePower * xpBoost;
 
       const r =
         comet.userData.radius +
         Math.sin(t * 0.8 + index) * 2.3 +
-        touchPulse * 3.2;
+        touchPulse * 3.2 +
+        xpState.pulse * 2.2;
 
       comet.position.set(
         Math.cos(comet.userData.angle) * r,
@@ -494,34 +560,38 @@ export function createOmniFxEngine(ctx) {
       comet.scale.setScalar(
         comet.userData.size +
           Math.sin(t * 2 + index) * 0.18 +
-          touchPulse * 0.24
+          touchPulse * 0.24 +
+          xpState.pulse * 0.16
       );
 
       comet.material.opacity =
         0.12 +
         Math.sin(t * 2.1 + index) * 0.06 +
-        touchPulse * 0.16;
+        touchPulse * 0.16 +
+        xpState.pulse * 0.08;
     });
   }
 
-  function updateMoneyDust(t) {
+  function updateMoneyDust(t, xpBoost = 1, xpGlow = 0) {
     if (!moneyDust) return;
 
-    moneyDust.rotation.y += 0.00045 * breathePower;
+    moneyDust.rotation.y += 0.00045 * breathePower * xpBoost;
     moneyDust.rotation.x = Math.sin(t * 0.08) * 0.035;
     moneyDust.material.opacity =
       0.28 +
       Math.sin(t * 1.1) * 0.05 +
-      touchPulse * 0.08;
+      touchPulse * 0.08 +
+      xpState.pulse * 0.06 +
+      xpGlow * 0.025;
   }
 
-  function updateShockwaves() {
+  function updateShockwaves(xpBoost = 1) {
     shockwaves.forEach((wave) => {
       if (!wave.visible) return;
 
       wave.userData.life -= 0.018;
-      wave.scale.multiplyScalar(1.035);
-      wave.rotation.z += 0.008;
+      wave.scale.multiplyScalar(1.035 + Math.min(0.012, (xpBoost - 1) * 0.01));
+      wave.rotation.z += 0.008 * xpBoost;
       wave.material.opacity *= 0.955;
 
       if (wave.userData.life <= 0 || wave.material.opacity <= 0.01) {
@@ -530,21 +600,22 @@ export function createOmniFxEngine(ctx) {
     });
   }
 
-  function updateGrid(t) {
+  function updateGrid(t, xpBoost = 1) {
     dimensionalGrid?.children.forEach((ring, index) => {
-      ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1);
-      ring.rotation.y += 0.00045 * (index + 1);
+      ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1) * xpBoost;
+      ring.rotation.y += 0.00045 * (index + 1) * xpBoost;
 
       ring.material.opacity =
         0.022 +
         Math.sin(t * 0.9 + index) * 0.014 +
-        touchPulse * 0.02;
+        touchPulse * 0.02 +
+        xpState.pulse * 0.014;
     });
   }
 
-  function updateLightLeaks(t) {
+  function updateLightLeaks(t, xpBoost = 1) {
     leaks.forEach((leak, index) => {
-      leak.position.x += leak.userData.speed * 4;
+      leak.position.x += leak.userData.speed * 4 * xpBoost;
 
       if (leak.position.x > 34) {
         leak.position.x = -34;
@@ -553,26 +624,28 @@ export function createOmniFxEngine(ctx) {
       leak.material.opacity =
         0.025 +
         Math.sin(t * 1.4 + leak.userData.offset) * 0.025 +
-        touchPulse * 0.035;
+        touchPulse * 0.035 +
+        xpState.pulse * 0.02;
 
       leak.scale.x =
         1 +
         Math.sin(t * 0.9 + index) * 0.12 +
-        touchPulse * 0.2;
+        touchPulse * 0.2 +
+        xpState.pulse * 0.12;
     });
   }
 
-  function updateBursts() {
+  function updateBursts(xpBoost = 1) {
     for (let i = reactionBursts.length - 1; i >= 0; i -= 1) {
       const burst = reactionBursts[i];
 
       burst.userData.life -= 0.015;
 
-      burst.position.x += Math.cos(burst.userData.angle) * burst.userData.speed;
+      burst.position.x += Math.cos(burst.userData.angle) * burst.userData.speed * xpBoost;
       burst.position.y +=
-        Math.sin(burst.userData.angle) * burst.userData.speed +
+        Math.sin(burst.userData.angle) * burst.userData.speed * xpBoost +
         burst.userData.lift;
-      burst.position.z += 0.025;
+      burst.position.z += 0.025 * xpBoost;
 
       burst.scale.x += burst.userData.grow;
       burst.scale.y += burst.userData.grow;
@@ -608,16 +681,28 @@ export function createOmniFxEngine(ctx) {
     });
   }
 
-  function onActivityUpdate(state) {
+  function onActivityUpdate(state = {}) {
+    syncXpState(state);
+
     if (state.liveActive) {
       touchPulse = Math.max(touchPulse, 0.45);
     }
+
+    if (state.xp || state.level || state.xpPercent) {
+      touchPulse = Math.max(touchPulse, 0.28);
+    }
   }
 
-  function onPresenceUpdate(state) {
+  function onPresenceUpdate(state = {}) {
+    syncXpState(state);
+
     if (state.onlineCount > 0) {
       touchPulse = Math.max(touchPulse, 0.25);
     }
+  }
+
+  function setActivityState(state = {}) {
+    syncXpState(state);
   }
 
   function resize() {
@@ -670,6 +755,7 @@ export function createOmniFxEngine(ctx) {
     breathePower = 1;
     targetPower = 1;
     touchPulse = 0;
+    xpState.pulse = 0;
     mounted = false;
   }
 
@@ -679,6 +765,7 @@ export function createOmniFxEngine(ctx) {
     resize,
     destroy,
     setTheme,
+    setActivityState,
     onActivityUpdate,
     onPresenceUpdate,
     triggerShockwave,
