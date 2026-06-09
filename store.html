@@ -1,1 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Store • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile store universe with products, digital drops, seller profiles, creator merch, realtime listings, and premium checkout."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/store.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body
+  class="rb-body rb-store-page rb-orbit-xp-energy"
+  data-page="store"
+  data-rb-page="store"
+  data-rb-route="store"
+>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/" data-route="home">
+      <span>RICH BIZNESS STORE</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Store navigation">
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
+      <a href="/gaming" data-route="gaming">Gaming</a>
+      <a href="/sports" data-route="sports">Sports</a>
+      <a href="/gallery" data-route="gallery">Gallery</a>
+      <a class="is-active" href="/store" data-route="store">Store</a>
+      <a href="/upload?section=store-product" data-route="upload">Upload</a>
+      <a href="/meta" data-route="meta">Meta</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
+    </nav>
+  </header>
+
+  <main class="rb-section-shell rb-store-shell">
+    <section class="rb-section-hero rb-store-hero">
+      <div class="rb-section-hero-copy">
+        <p class="rb-kicker">RICH BIZNESS MARKET</p>
+
+        <h1>Store Universe</h1>
+
+        <p class="rb-subtitle">
+          Physical products, digital drops, creator merch, seller media,
+          VIP items, collectibles, and realtime checkout systems.
+        </p>
+
+        <div class="rb-form-actions">
+          <a
+            class="rb-main-launch"
+            href="/upload?section=store-product"
+            data-route="upload"
+          >
+            ADD PRODUCT
+          </a>
+
+          <a
+            class="rb-btn gold"
+            href="/upload?section=store-digital"
+            data-route="upload"
+          >
+            DIGITAL DROP
+          </a>
+
+          <a
+            class="rb-btn ghost"
+            href="/upload?section=store-seller"
+            data-route="upload"
+          >
+            SELLER MEDIA
+          </a>
+
+          <a
+            class="rb-btn ghost"
+            href="/profile"
+            data-route="profile"
+            data-rb-profile-link
+          >
+            MY PROFILE
+          </a>
+        </div>
+      </div>
+
+      <article class="rb-profile-card rb-store-seller-card">
+        <div class="rb-profile-avatar-wrap">
+          <img
+            id="store-seller-avatar"
+            class="rb-profile-avatar"
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
+            alt="Seller avatar"
+            data-rb-avatar
+            data-rb-profile-avatar
+          />
+
+          <div class="rb-profile-online" aria-hidden="true"></div>
+        </div>
+
+        <p class="rb-kicker">SELLER PROFILE</p>
+
+        <h2 id="store-seller-name" data-rb-name>Rich Bizness Seller</h2>
+
+        <p
+          id="store-seller-handle"
+          class="rb-profile-handle"
+          data-rb-username
+        >
+          @richseller
+        </p>
+
+        <div class="rb-profile-meta">
+          <div id="store-seller-status" class="rb-meta-pill">
+            Store Ready
+          </div>
+
+          <div id="store-sync-status" class="rb-meta-pill">
+            Syncing...
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="rb-stat-grid">
+      <article>
+        <strong id="store-product-count">0</strong>
+        <span>Products</span>
+      </article>
+
+      <article>
+        <strong id="store-digital-count">0</strong>
+        <span>Digital</span>
+      </article>
+
+      <article>
+        <strong id="store-seller-count">0</strong>
+        <span>Sellers</span>
+      </article>
+
+      <article>
+        <strong id="store-order-count">0</strong>
+        <span>Orders</span>
+      </article>
+    </section>
+
+    <section class="rb-panel">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">STORE NAVIGATION</p>
+          <h2>Explore Marketplace</h2>
+        </div>
+      </div>
+
+      <div class="rb-tabs rb-store-tabs">
+        <button
+          class="is-active"
+          type="button"
+          data-store-tab="products"
+        >
+          Products
+        </button>
+
+        <button
+          type="button"
+          data-store-tab="digital"
+        >
+          Digital
+        </button>
+
+        <button
+          type="button"
+          data-store-tab="featured"
+        >
+          Featured
+        </button>
+
+        <button
+          type="button"
+          data-store-tab="sellers"
+        >
+          Sellers
+        </button>
+
+        <button
+          type="button"
+          data-store-tab="orders"
+        >
+          Orders
+        </button>
+      </div>
+    </section>
+
+    <section
+      class="rb-panel is-active"
+      data-store-panel="products"
+    >
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">MARKETPLACE</p>
+          <h2>Products</h2>
+        </div>
+
+        <a
+          class="rb-btn ghost"
+          href="/upload?section=store-product"
+          data-route="upload"
+        >
+          Add Product
+        </a>
+      </div>
+
+      <div
+        id="store-products-list"
+        class="rb-card-grid"
+      >
+        <div class="rb-empty">Loading products...</div>
+      </div>
+    </section>
+
+    <section
+      class="rb-panel"
+      data-store-panel="digital"
+      style="display:none;"
+    >
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">DIGITAL VAULT</p>
+          <h2>Digital Drops</h2>
+        </div>
+
+        <a
+          class="rb-btn ghost"
+          href="/upload?section=store-digital"
+          data-route="upload"
+        >
+          Add Digital
+        </a>
+      </div>
+
+      <div
+        id="store-digital-list"
+        class="rb-card-grid"
+      >
+        <div class="rb-empty">Loading digital drops...</div>
+      </div>
+    </section>
+
+    <section
+      class="rb-panel"
+      data-store-panel="featured"
+      style="display:none;"
+    >
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">PREMIUM PICKS</p>
+          <h2>Featured Store</h2>
+        </div>
+      </div>
+
+      <div
+        id="store-featured-list"
+        class="rb-card-grid"
+      >
+        <div class="rb-empty">Loading featured products...</div>
+      </div>
+    </section>
+
+    <section
+      class="rb-panel"
+      data-store-panel="sellers"
+      style="display:none;"
+    >
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">SELLER NETWORK</p>
+          <h2>Seller Profiles</h2>
+        </div>
+
+        <a
+          class="rb-btn ghost"
+          href="/upload?section=store-seller"
+          data-route="upload"
+        >
+          Seller Media
+        </a>
+      </div>
+
+      <div
+        id="store-sellers-list"
+        class="rb-card-grid"
+      >
+        <div class="rb-empty">Loading sellers...</div>
+      </div>
+    </section>
+
+    <section
+      class="rb-panel"
+      data-store-panel="orders"
+      style="display:none;"
+    >
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">CHECKOUT</p>
+          <h2>Orders</h2>
+        </div>
+      </div>
+
+      <div
+        id="store-orders-list"
+        class="rb-list-stack"
+      >
+        <div class="rb-empty">No orders loaded yet.</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="rb-bottom-nav" aria-label="Primary navigation">
+    <button data-route="feed" type="button" aria-label="Feed">
+      <span class="rb-nav-icon">🔥</span>
+      <span>Feed</span>
+    </button>
+
+    <button data-route="live" type="button" aria-label="Live">
+      <span class="rb-nav-icon">📡</span>
+      <span>Live</span>
+    </button>
+
+    <button data-route="music" type="button" aria-label="Music">
+      <span class="rb-nav-icon">🎵</span>
+      <span>Music</span>
+    </button>
+
+    <button data-route="gaming" type="button" aria-label="Gaming">
+      <span class="rb-nav-icon">🎮</span>
+      <span>Gaming</span>
+    </button>
+
+    <button data-route="upload" type="button" aria-label="Upload">
+      <span class="rb-nav-icon">⬆️</span>
+      <span>Upload</span>
+    </button>
+  </nav>
+
+  <footer class="rb-footer">
+    <span>© 2026 Rich Bizness LLC</span>
+  </footer>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+
+    document.querySelectorAll("[data-store-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const tab = button.dataset.storeTab;
+
+        document.querySelectorAll("[data-store-tab]").forEach((btn) => {
+          btn.classList.toggle("is-active", btn === button);
+        });
+
+        document.querySelectorAll("[data-store-panel]").forEach((panel) => {
+          const active = panel.dataset.storePanel === tab;
+
+          panel.classList.toggle("is-active", active);
+          panel.style.display = active ? "" : "none";
+        });
+      });
+    });
+  </script>
+
+  <script type="module" src="/core/pages/live-activity.js"></script>
+  <script type="module" src="/core/pages/online-presence.js"></script>
+  <script type="module" src="/core/pages/realtime-notifications.js"></script>
+  <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
+  <script type="module" src="/core/pages/store.js"></script>
+</body>
+</html>
