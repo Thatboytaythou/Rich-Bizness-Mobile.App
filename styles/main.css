@@ -7,6 +7,8 @@
    Safe shared layer:
    - Keeps portal/index classes intact
    - Adds missing shared route/nav helpers
+   - Adds XP gauge shared polish
+   - Adds profile lock shared states
    - Does not override omni dial/portal engines
 ========================================= */
 
@@ -27,6 +29,10 @@
 
   --rb-fast: 0.18s ease;
   --rb-med: 0.28s ease;
+
+  --rb-xp-track-bg: rgba(0, 0, 0, 0.46);
+  --rb-xp-fill: linear-gradient(90deg, #00ff9d, #facc15);
+  --rb-xp-shadow: 0 0 24px rgba(0, 255, 157, 0.22);
 }
 
 /* GLOBAL APP GLUE */
@@ -447,6 +453,170 @@ button:disabled,
   flex-wrap: wrap;
 }
 
+/* XP GAUGE SHARED COMPONENTS */
+
+.rb-xp-card,
+.rb-xp-panel,
+.rb-profile-xp,
+.rb-section-xp {
+  position: relative;
+  overflow: hidden;
+
+  padding: 14px;
+
+  border-radius: 22px;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+
+  background:
+    radial-gradient(circle at top left, rgba(0, 255, 157, 0.1), transparent 52%),
+    radial-gradient(circle at bottom right, rgba(250, 204, 21, 0.09), transparent 54%),
+    rgba(0, 0, 0, 0.38);
+
+  box-shadow:
+    0 0 24px rgba(0, 255, 157, 0.1),
+    inset 0 0 18px rgba(255, 255, 255, 0.025);
+}
+
+.rb-xp-top,
+.rb-xp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rb-xp-title,
+.rb-xp-level,
+.rb-xp-rank,
+.rb-xp-gauge-text,
+.rb-xp-gauge-next {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rb-xp-rank {
+  color: var(--rb-gold);
+}
+
+.rb-xp-gauge,
+.rb-xp-meter,
+[data-rb-xp-gauge],
+#profileXpGauge,
+#index-xp-gauge,
+#auth-xp-gauge,
+#feed-xp-gauge,
+#music-xp-gauge,
+#live-xp-gauge,
+#watch-xp-gauge,
+#gallery-xp-gauge,
+#gaming-xp-gauge,
+#sports-xp-gauge,
+#store-xp-gauge,
+#meta-xp-gauge,
+#upload-xp-gauge,
+#messages-xp-gauge,
+#settings-xp-gauge {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  min-height: 10px;
+  margin-top: 10px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    var(--rb-xp-track-bg);
+
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.56),
+    var(--rb-xp-shadow);
+}
+
+.rb-xp-gauge-fill,
+.rb-xp-meter-fill,
+[data-rb-xp-gauge-fill],
+#profileXpGaugeFill,
+#index-xp-gauge-fill,
+#auth-xp-gauge-fill,
+#feed-xp-gauge-fill,
+#music-xp-gauge-fill,
+#live-xp-gauge-fill,
+#watch-xp-gauge-fill,
+#gallery-xp-gauge-fill,
+#gaming-xp-gauge-fill,
+#sports-xp-gauge-fill,
+#store-xp-gauge-fill,
+#meta-xp-gauge-fill,
+#upload-xp-gauge-fill,
+#messages-xp-gauge-fill,
+#settings-xp-gauge-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+
+  width: 0%;
+  min-width: 0;
+
+  border-radius: inherit;
+
+  background:
+    radial-gradient(circle at right, rgba(255, 255, 255, 0.75), transparent 28%),
+    var(--rb-xp-fill);
+
+  box-shadow:
+    0 0 18px rgba(0, 255, 157, 0.42),
+    0 0 36px rgba(250, 204, 21, 0.18);
+
+  transition: width 0.42s cubic-bezier(0.22, 0.9, 0.24, 1);
+}
+
+.rb-xp-gauge::after,
+.rb-xp-meter::after,
+[data-rb-xp-gauge]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.22),
+      transparent
+    );
+
+  transform: translateX(-120%);
+  animation: rbXpSweep 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+body.rb-orbit-xp-energy .rb-xp-card,
+body.rb-orbit-xp-energy .rb-xp-panel,
+body.rb-orbit-xp-energy .rb-profile-pill {
+  border-color: rgba(250, 204, 21, 0.34);
+  box-shadow:
+    0 0 26px rgba(0, 255, 157, 0.14),
+    0 0 42px rgba(250, 204, 21, 0.12),
+    inset 0 0 18px rgba(255, 255, 255, 0.03);
+}
+
+/* PROFILE LOCK SHARED STATES */
+
+body[data-rb-profile-locked="true"] [data-rb-profile-lock],
+body[data-rb-profile-locked="true"] .rb-profile-lock {
+  color: var(--rb-green);
+}
+
+body[data-rb-profile-locked="false"] [data-rb-profile-lock],
+body[data-rb-profile-locked="false"] .rb-profile-lock {
+  color: rgba(255, 255, 255, 0.52);
+}
+
 /* NON-HUB PROFILE PILL ONLY */
 
 .rb-profile-pill {
@@ -728,6 +898,22 @@ button:disabled,
   }
 }
 
+@keyframes rbXpSweep {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
 /* MOBILE */
 
 @media (max-width: 760px) {
@@ -779,6 +965,22 @@ button:disabled,
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .rb-xp-card,
+  .rb-xp-panel,
+  .rb-profile-xp,
+  .rb-section-xp {
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .rb-xp-title,
+  .rb-xp-level,
+  .rb-xp-rank,
+  .rb-xp-gauge-text,
+  .rb-xp-gauge-next {
+    font-size: 0.62rem;
   }
 
   .rb-bottom-nav {
