@@ -11,6 +11,8 @@
    - Adds notification card support
    - Adds message thread support
    - Keeps topbar/mobile shell stable
+   - Centered shared section layout
+   - Profile Lock + XP Energy Ready
 ========================================= */
 
 :root {
@@ -172,6 +174,19 @@ button {
   mix-blend-mode: soft-light;
 }
 
+body.rb-orbit-xp-energy .rb-page-bg img,
+body.rb-orbit-xp-energy .rb-bg-layer {
+  opacity: 0.18;
+  filter:
+    saturate(1.28)
+    contrast(1.12)
+    brightness(0.96);
+}
+
+body.rb-orbit-xp-energy .rb-bg-grid {
+  opacity: 0.9;
+}
+
 .rb-page::before,
 .rb-body::before {
   content: "";
@@ -193,12 +208,12 @@ button {
 .meta-shell {
   position: relative;
   z-index: 2;
-  width: min(1240px, 94vw);
+  width: min(1040px, calc(100vw - 28px));
   margin: 0 auto;
   padding:
     calc(var(--rb-topbar-height) + 28px)
     0
-    calc(54px + env(safe-area-inset-bottom));
+    calc(110px + env(safe-area-inset-bottom));
 }
 
 .rb-section-shell.is-compact,
@@ -209,6 +224,11 @@ button {
 .rb-section-stack {
   display: grid;
   gap: 18px;
+  justify-items: center;
+}
+
+.rb-section-stack > * {
+  width: 100%;
 }
 
 /* GRIDS */
@@ -268,6 +288,14 @@ button {
   -webkit-backdrop-filter: blur(18px);
   box-shadow:
     0 18px 50px rgba(0, 0, 0, 0.36);
+}
+
+body.rb-orbit-xp-energy .rb-topbar {
+  border-bottom-color: rgba(255, 216, 107, 0.18);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.36),
+    0 0 32px rgba(0, 255, 136, 0.1),
+    0 0 40px rgba(255, 216, 107, 0.06);
 }
 
 .rb-brand {
@@ -364,6 +392,7 @@ button {
   box-shadow:
     var(--rb-shadow),
     var(--rb-glow);
+  text-align: center;
 }
 
 .rb-hero-panel::before,
@@ -383,6 +412,24 @@ button {
       rgba(16, 185, 129, 0.08)
     );
   pointer-events: none;
+}
+
+body[data-rb-profile-locked="true"] .rb-hero-panel,
+body[data-rb-profile-locked="true"] .rb-section-hero,
+body[data-rb-profile-locked="true"] .live-hero,
+body[data-rb-profile-locked="true"] .meta-hero {
+  border-color: rgba(102, 255, 153, 0.26);
+}
+
+body.rb-orbit-xp-energy .rb-hero-panel,
+body.rb-orbit-xp-energy .rb-section-hero,
+body.rb-orbit-xp-energy .live-hero,
+body.rb-orbit-xp-energy .meta-hero {
+  border-color: rgba(255, 216, 107, 0.3);
+  box-shadow:
+    var(--rb-shadow),
+    0 0 46px rgba(0, 255, 136, 0.16),
+    0 0 58px rgba(255, 216, 107, 0.1);
 }
 
 .rb-hero-panel > *,
@@ -430,6 +477,9 @@ button {
 .hero-copy,
 .rb-hero-panel p,
 .rb-section-hero p {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
   color: var(--rb-muted);
   line-height: 1.55;
 }
@@ -457,13 +507,29 @@ button {
   margin-top: 18px;
 }
 
+body[data-rb-profile-locked="true"] .rb-panel,
+body[data-rb-profile-locked="true"] .live-panel {
+  border-color: rgba(102, 255, 153, 0.22);
+}
+
+body.rb-orbit-xp-energy .rb-panel,
+body.rb-orbit-xp-energy .live-panel {
+  border-color: rgba(255, 216, 107, 0.24);
+  box-shadow:
+    var(--rb-shadow),
+    0 0 34px rgba(0, 255, 136, 0.1),
+    0 0 44px rgba(255, 216, 107, 0.07),
+    inset 0 0 24px rgba(255, 255, 255, 0.018);
+}
+
 .rb-panel-head,
 .rb-module-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   margin-bottom: 14px;
+  text-align: center;
 }
 
 .rb-panel-title,
@@ -475,8 +541,12 @@ button {
 }
 
 .rb-panel-copy {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
   color: var(--rb-muted);
   line-height: 1.55;
+  text-align: center;
 }
 
 .rb-stat-grid {
@@ -497,6 +567,16 @@ button {
     radial-gradient(circle at top, rgba(16, 185, 129, 0.1), transparent 60%),
     rgba(0, 0, 0, 0.4);
   box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.018);
+}
+
+body.rb-orbit-xp-energy .rb-stat-grid article,
+body.rb-orbit-xp-energy .rb-mini-card,
+body.rb-orbit-xp-energy .rb-empty-card {
+  border-color: rgba(255, 216, 107, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 255, 136, 0.08),
+    0 0 34px rgba(255, 216, 107, 0.05),
     inset 0 0 24px rgba(255, 255, 255, 0.018);
 }
 
@@ -556,6 +636,10 @@ button {
     inset 0 0 22px rgba(255, 255, 255, 0.018);
 }
 
+body.rb-orbit-xp-energy .rb-message-thread {
+  border-color: rgba(255, 216, 107, 0.22);
+}
+
 .rb-message-thread-avatar img {
   width: 58px;
   height: 58px;
@@ -604,6 +688,14 @@ button {
   border-color: rgba(102, 255, 153, 0.36);
   box-shadow:
     0 0 28px rgba(16, 185, 129, 0.15),
+    inset 0 0 22px rgba(16, 185, 129, 0.05);
+}
+
+body.rb-orbit-xp-energy .rb-notification-card.is-unread {
+  border-color: rgba(255, 216, 107, 0.34);
+  box-shadow:
+    0 0 28px rgba(16, 185, 129, 0.15),
+    0 0 34px rgba(255, 216, 107, 0.08),
     inset 0 0 22px rgba(16, 185, 129, 0.05);
 }
 
@@ -673,6 +765,15 @@ button {
     inset 0 0 16px rgba(255, 255, 255, 0.14);
 }
 
+body.rb-orbit-xp-energy .rb-btn.primary,
+body.rb-orbit-xp-energy .rb-main-launch,
+body.rb-orbit-xp-energy .rb-pill-btn {
+  box-shadow:
+    0 0 30px rgba(0, 255, 136, 0.3),
+    0 0 40px rgba(255, 216, 107, 0.14),
+    inset 0 0 16px rgba(255, 255, 255, 0.14);
+}
+
 .rb-btn.gold {
   color: #160e00;
   background:
@@ -712,6 +813,7 @@ button {
 .rb-tabs {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -749,6 +851,13 @@ button {
   transform: translateY(-2px);
 }
 
+body.rb-orbit-xp-energy .rb-tabs button.is-active,
+body.rb-orbit-xp-energy .rb-tab.is-active {
+  box-shadow:
+    0 0 24px rgba(0, 255, 136, 0.26),
+    0 0 34px rgba(255, 216, 107, 0.12);
+}
+
 /* EMPTY + FOOTER */
 
 .rb-empty {
@@ -760,6 +869,7 @@ button {
   color: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  text-align: center;
 }
 
 .rb-footer {
@@ -782,7 +892,7 @@ button {
   .rb-profile-shell,
   .live-shell,
   .meta-shell {
-    width: 92vw;
+    width: min(92vw, 920px);
   }
 
   .rb-topbar {
@@ -806,7 +916,7 @@ button {
   .rb-panel-head,
   .rb-module-head {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .rb-message-thread,
@@ -833,6 +943,7 @@ button {
   .meta-shell {
     width: min(100%, calc(100vw - 20px));
     padding-top: calc(var(--rb-topbar-height) + 16px);
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
   }
 
   .rb-hero-panel,
@@ -859,6 +970,7 @@ button {
   }
 
   .rb-tabs {
+    justify-content: flex-start;
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 2px;
