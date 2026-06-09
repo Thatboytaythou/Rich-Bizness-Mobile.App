@@ -5,6 +5,7 @@
 
    PORTAL ATMOSPHERE FX
    Safe shared FX layer
+   XP Energy Sync Enabled
 ========================= */
 
 .rb-fx-smoke {
@@ -198,6 +199,55 @@ body:not(.rb-index-page) .rb-space-haze {
 }
 
 /* =========================
+   XP ENERGY STATES
+========================= */
+
+.rb-orbit-xp-energy .rb-fx-smoke {
+  opacity: 0.7;
+
+  filter:
+    blur(62px)
+    saturate(1.42)
+    brightness(1.08);
+
+  background:
+    radial-gradient(circle at 18% 34%, rgba(0, 255, 157, 0.28), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(250, 204, 21, 0.18), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(16, 185, 129, 0.24), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.12), transparent 48%);
+}
+
+.rb-orbit-xp-energy .rb-bg-grid {
+  opacity: 0.07;
+
+  background-image:
+    linear-gradient(rgba(0, 255, 157, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250, 204, 21, 0.13) 1px, transparent 1px);
+}
+
+.rb-orbit-xp-energy .rb-bg-vignette {
+  opacity: 0.72;
+}
+
+.rb-orbit-xp-energy .rb-bg-noise {
+  opacity: 0.026;
+}
+
+.rb-orbit-xp-energy .rb-space-haze {
+  opacity: 0.6;
+
+  filter:
+    blur(52px)
+    saturate(1.28)
+    brightness(1.06);
+
+  background:
+    radial-gradient(circle at 50% 45%, rgba(0, 255, 157, 0.16), transparent 36%),
+    radial-gradient(circle at 36% 68%, rgba(250, 204, 21, 0.12), transparent 34%),
+    radial-gradient(circle at 70% 26%, rgba(34, 211, 238, 0.09), transparent 28%);
+}
+
+/* =========================
    PORTAL THEME BODY HOOKS
 ========================= */
 
@@ -221,6 +271,28 @@ body:not(.rb-index-page) .rb-space-haze {
     radial-gradient(circle at 18% 34%, rgba(250, 204, 21, 0.16), transparent 32%),
     radial-gradient(circle at 78% 28%, rgba(255, 226, 122, 0.12), transparent 30%),
     radial-gradient(circle at 50% 78%, rgba(0, 255, 157, 0.08), transparent 40%);
+}
+
+.rb-orbit-xp-energy.rb-theme-blue .rb-fx-smoke {
+  background:
+    radial-gradient(circle at 18% 34%, rgba(34, 211, 238, 0.26), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(147, 197, 253, 0.18), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(59, 130, 246, 0.18), transparent 40%);
+}
+
+.rb-orbit-xp-energy.rb-theme-purple .rb-fx-smoke {
+  background:
+    radial-gradient(circle at 18% 34%, rgba(168, 85, 247, 0.26), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(244, 114, 182, 0.18), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(192, 132, 252, 0.18), transparent 40%);
+}
+
+.rb-orbit-xp-energy.rb-theme-gold .rb-fx-smoke,
+.rb-orbit-xp-energy.rb-theme-black-gold .rb-fx-smoke {
+  background:
+    radial-gradient(circle at 18% 34%, rgba(250, 204, 21, 0.24), transparent 32%),
+    radial-gradient(circle at 78% 28%, rgba(255, 226, 122, 0.18), transparent 30%),
+    radial-gradient(circle at 50% 78%, rgba(0, 255, 157, 0.14), transparent 40%);
 }
 
 /* =========================
@@ -326,6 +398,28 @@ body:not(.rb-index-page) .rb-space-haze {
     filter: blur(34px);
     opacity: 0.34;
   }
+
+  .rb-orbit-xp-energy .rb-fx-smoke {
+    opacity: 0.56;
+
+    filter:
+      blur(46px)
+      saturate(1.25)
+      brightness(1.04);
+  }
+
+  .rb-orbit-xp-energy .rb-bg-grid {
+    opacity: 0.048;
+  }
+
+  .rb-orbit-xp-energy .rb-space-haze {
+    opacity: 0.46;
+
+    filter:
+      blur(38px)
+      saturate(1.18)
+      brightness(1.03);
+  }
 }
 
 /* =========================
@@ -340,6 +434,19 @@ body:not(.rb-index-page) .rb-space-haze {
 
   .rb-bg-grid {
     opacity: 0.026;
+  }
+
+  .rb-orbit-xp-energy .rb-fx-smoke {
+    filter:
+      blur(40px)
+      saturate(1.18)
+      brightness(1.03);
+
+    opacity: 0.5;
+  }
+
+  .rb-orbit-xp-energy .rb-bg-grid {
+    opacity: 0.04;
   }
 }
 
