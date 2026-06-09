@@ -5,12 +5,14 @@
    SETTINGS PAGE CONTROLLER
    Direct Supabase Settings Render
    Profile Lock + Auth + Realtime Settings
+   XP Gauge Enabled
 
    Flow:
    - Settings reads current user/profile
    - Settings does not depend on profile-state feature
    - Realtime watches profiles + optional user_settings
    - Sign out clears realtime first
+   - No project-avatar fallback
 ========================================= */
 
 import {
@@ -42,7 +44,9 @@ import {
   profileHandle,
   profileAvatar,
   profileBadge,
-  bindProfileShell
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
 import {
@@ -65,7 +69,14 @@ const els = {
   profileBtn: $("settings-profile-btn"),
   signOutBtn: $("settings-signout-btn"),
   syncStatus: $("settings-sync-status"),
-  profileLock: $("settings-profile-lock")
+  profileLock: $("settings-profile-lock"),
+
+  xpGauge: $("settings-xp-gauge"),
+  xpFill: $("settings-xp-gauge-fill"),
+  xpText: $("settings-xp-gauge-text"),
+  xpNext: $("settings-xp-gauge-next"),
+  xpLevel: $("settings-xp-level"),
+  xpRank: $("settings-xp-rank")
 };
 
 let supabase = null;
@@ -73,6 +84,7 @@ let channel = null;
 let actionsBound = false;
 let currentUser = null;
 let currentProfile = null;
+let identity = null;
 
 function table(key, fallback) {
   return RB_TABLES?.[key] || fallback || key;
@@ -113,11 +125,102 @@ function setImage(el, url, alt = "") {
   el.style.backgroundImage = `url("${finalUrl}")`;
 }
 
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, profileIdentity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    profileIdentity?.xp ??
+    profileIdentity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    profileIdentity?.rich_level ??
+    profileIdentity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    profileIdentity?.rankTitle ||
+    profileIdentity?.rank_title ||
+    profileIdentity?.rank ||
+    "Member";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, identity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "settings",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+/* =========================
+   IDENTITY
+========================= */
+
 function syncState() {
   const appState = getCurrentUserState?.() || {};
 
   currentUser = appState.user || getUser?.() || null;
   currentProfile = appState.profile || currentProfile || null;
+  identity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbRoute = "settings";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = identity?.id || "";
+  document.body.dataset.rbProfileLocked = identity?.id ? "true" : "false";
 }
 
 async function fetchMyProfile() {
@@ -126,6 +229,7 @@ async function fetchMyProfile() {
   if (!user?.id) {
     currentUser = null;
     currentProfile = null;
+    identity = null;
     return null;
   }
 
@@ -139,6 +243,7 @@ async function fetchMyProfile() {
 
   currentUser = user;
   currentProfile = data || null;
+  identity = getProfileIdentity(currentProfile);
 
   return currentProfile;
 }
@@ -146,6 +251,7 @@ async function fetchMyProfile() {
 function paintSettings() {
   const user = currentUser || getUser?.();
   const profile = currentProfile || {};
+  identity = getProfileIdentity(profile);
 
   const role = profile?.role || "user";
   const displayName = profileName(profile);
@@ -159,6 +265,14 @@ function paintSettings() {
   setText(els.role, String(role).toUpperCase());
 
   setImage(els.avatar, avatar, displayName);
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    setImage(el, avatar, displayName);
+  });
 
   if (els.status) {
     els.status.style.color = "";
@@ -190,7 +304,13 @@ function paintSettings() {
       : "Profile lock required"
   );
 
+  document.body.dataset.rbRoute = "settings";
+  document.body.dataset.rbUserId = user?.id || "";
+  document.body.dataset.rbProfileId = identity?.id || "";
+  document.body.dataset.rbProfileLocked = identity?.id ? "true" : "false";
+
   bindProfileShell?.();
+  renderXpGauge();
 }
 
 async function refreshSettingsIdentity() {
@@ -199,6 +319,10 @@ async function refreshSettingsIdentity() {
   await fetchMyProfile();
   paintSettings();
 }
+
+/* =========================
+   REALTIME
+========================= */
 
 function clearRealtime() {
   if (!channel || !supabase) return;
@@ -245,6 +369,10 @@ function bindRealtime() {
   channel.subscribe();
 }
 
+/* =========================
+   ACTIONS
+========================= */
+
 function bindSettingsActions() {
   if (actionsBound) return;
   actionsBound = true;
@@ -254,7 +382,7 @@ function bindSettingsActions() {
   });
 
   els.profileBtn?.addEventListener("click", () => {
-    window.location.href = RB_ROUTES.profile || "/profile";
+    window.location.href = buildProfileUrl(currentProfile) || RB_ROUTES.profile || "/profile";
   });
 
   els.signOutBtn?.addEventListener("click", async () => {
@@ -281,6 +409,10 @@ function bindSettingsActions() {
 
   window.addEventListener("beforeunload", clearRealtime);
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootSettingsPage() {
   try {
@@ -310,7 +442,11 @@ async function bootSettingsPage() {
 
     markPageReady("settings");
 
-    console.log("RB SETTINGS PAGE READY");
+    console.log("RB SETTINGS PAGE READY", {
+      profileLocked: !!identity?.id,
+      route: "settings",
+      xpGauge: true
+    });
   } catch (error) {
     console.error("[RB SETTINGS BOOT FAILED]", error);
     markPageError(error);
