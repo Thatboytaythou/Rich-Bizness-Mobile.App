@@ -21,11 +21,11 @@
     { "source": "/music", "destination": "/music.html" },
     { "source": "/music.html", "destination": "/music.html" },
 
-    { "source": "/podcast", "destination": "/music.html" },
-    { "source": "/podcast.html", "destination": "/music.html" },
+    { "source": "/podcast", "destination": "/podcast.html" },
+    { "source": "/podcast.html", "destination": "/podcast.html" },
 
-    { "source": "/radio", "destination": "/music.html" },
-    { "source": "/radio.html", "destination": "/music.html" },
+    { "source": "/radio", "destination": "/radio.html" },
+    { "source": "/radio.html", "destination": "/radio.html" },
 
     { "source": "/gaming", "destination": "/gaming.html" },
     { "source": "/gaming.html", "destination": "/gaming.html" },
@@ -71,30 +71,40 @@
 
     { "source": "/rb-secret-door", "destination": "/secret-door.html" },
     { "source": "/secret-door", "destination": "/secret-door.html" },
+    { "source": "/secret-door.html", "destination": "/secret-door.html" },
     { "source": "/secretDoor", "destination": "/secret-door.html" },
 
     { "source": "/rb-secret-meta2", "destination": "/secret-meta-2.html" },
     { "source": "/secret-meta-2", "destination": "/secret-meta-2.html" },
+    { "source": "/secret-meta-2.html", "destination": "/secret-meta-2.html" },
     { "source": "/secretMeta2", "destination": "/secret-meta-2.html" },
 
     { "source": "/rb-secret-meta3", "destination": "/secret-meta-3.html" },
     { "source": "/secret-meta-3", "destination": "/secret-meta-3.html" },
+    { "source": "/secret-meta-3.html", "destination": "/secret-meta-3.html" },
     { "source": "/secretMeta3", "destination": "/secret-meta-3.html" },
+
+    { "source": "/games", "destination": "/gaming.html" },
+    { "source": "/games/", "destination": "/gaming.html" },
 
     { "source": "/games/rich-chess", "destination": "/games/rich-chess/index.html" },
     { "source": "/games/rich-chess/", "destination": "/games/rich-chess/index.html" },
+    { "source": "/games/rich-chess/index", "destination": "/games/rich-chess/index.html" },
     { "source": "/games/rich-chess/index.html", "destination": "/games/rich-chess/index.html" },
 
     { "source": "/games/money-road-runner", "destination": "/games/money-road-runner/index.html" },
     { "source": "/games/money-road-runner/", "destination": "/games/money-road-runner/index.html" },
+    { "source": "/games/money-road-runner/index", "destination": "/games/money-road-runner/index.html" },
     { "source": "/games/money-road-runner/index.html", "destination": "/games/money-road-runner/index.html" },
 
     { "source": "/games/smoke-city-hustle", "destination": "/games/smoke-city-hustle/index.html" },
     { "source": "/games/smoke-city-hustle/", "destination": "/games/smoke-city-hustle/index.html" },
+    { "source": "/games/smoke-city-hustle/index", "destination": "/games/smoke-city-hustle/index.html" },
     { "source": "/games/smoke-city-hustle/index.html", "destination": "/games/smoke-city-hustle/index.html" },
 
     { "source": "/games/studio-showdown", "destination": "/games/studio-showdown/index.html" },
     { "source": "/games/studio-showdown/", "destination": "/games/studio-showdown/index.html" },
+    { "source": "/games/studio-showdown/index", "destination": "/games/studio-showdown/index.html" },
     { "source": "/games/studio-showdown/index.html", "destination": "/games/studio-showdown/index.html" }
   ],
   "headers": [
@@ -105,6 +115,12 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "Permissions-Policy", "value": "camera=*, microphone=*, fullscreen=*, payment=*" }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
@@ -126,7 +142,19 @@
       ]
     },
     {
+      "source": "/scripts/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
       "source": "/images/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
