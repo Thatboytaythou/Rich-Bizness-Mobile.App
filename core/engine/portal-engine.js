@@ -5,6 +5,7 @@
    UNIVERSAL ULTRA 4K LIVING PORTAL ENGINE
    Hollow Portal + Smoke Rim + Lightning + Touch Color Shift
    Safer cleanup + external theme support
+   XP Energy Sync Enabled
 ========================= */
 
 export function createPortalEngine(ctx) {
@@ -39,6 +40,15 @@ export function createPortalEngine(ctx) {
   let themeIndex = 0;
   let touchPower = 0;
   let targetTouchPower = 0;
+
+  const xpState = {
+    xp: 0,
+    level: 1,
+    rank: "Biz Legend",
+    percent: 0,
+    energy: 1,
+    pulse: 0
+  };
 
   const themes = [
     {
@@ -112,6 +122,32 @@ export function createPortalEngine(ctx) {
     return themes.findIndex((theme) => {
       return theme.name === key || theme.alias?.includes(key);
     });
+  }
+
+  function syncXpState(stateUpdate = activityState || {}) {
+    const nextXp = Number(stateUpdate.xp ?? xpState.xp) || 0;
+    const nextLevel = Number(stateUpdate.level ?? xpState.level) || 1;
+    const nextPercent = Number(
+      stateUpdate.xpPercent ??
+      stateUpdate.percent ??
+      xpState.percent
+    ) || 0;
+
+    xpState.xp = Math.max(0, nextXp);
+    xpState.level = Math.max(1, nextLevel);
+    xpState.rank = stateUpdate.rank || xpState.rank || "Biz Legend";
+    xpState.percent = Math.max(0, Math.min(100, nextPercent));
+
+    xpState.energy =
+      Number(stateUpdate.xpEnergy) ||
+      1 +
+        Math.min(0.45, xpState.percent / 240) +
+        Math.min(0.25, xpState.level / 100);
+
+    if (stateUpdate.xp || stateUpdate.level || stateUpdate.xpPercent || stateUpdate.percent) {
+      xpState.pulse = Math.max(xpState.pulse, 0.45);
+      targetTouchPower = Math.max(targetTouchPower, 0.32);
+    }
   }
 
   function makeGlowTexture(size = 512) {
@@ -201,6 +237,8 @@ export function createPortalEngine(ctx) {
 
   function mount() {
     if (mounted) return;
+
+    syncXpState(activityState);
 
     portal = new THREE.Group();
     portal.position.set(0, -1.12, -2);
@@ -557,6 +595,10 @@ export function createPortalEngine(ctx) {
     window.addEventListener("pointerdown", handlePortalPointerDown, {
       passive: true
     });
+
+    window.addEventListener("rb:xp-gauge-update", handleXpGaugeUpdate);
+    window.addEventListener("rb:app-xp-update", handleXpGaugeUpdate);
+    window.addEventListener("rb:universe-preview-update", handleUniverseUpdate);
   }
 
   function unbindTouch() {
@@ -564,6 +606,17 @@ export function createPortalEngine(ctx) {
     touchBound = false;
 
     window.removeEventListener("pointerdown", handlePortalPointerDown);
+    window.removeEventListener("rb:xp-gauge-update", handleXpGaugeUpdate);
+    window.removeEventListener("rb:app-xp-update", handleXpGaugeUpdate);
+    window.removeEventListener("rb:universe-preview-update", handleUniverseUpdate);
+  }
+
+  function handleXpGaugeUpdate(event) {
+    syncXpState(event.detail || {});
+  }
+
+  function handleUniverseUpdate(event) {
+    syncXpState(event.detail?.activityState || {});
   }
 
   function handlePortalPointerDown(event) {
@@ -656,85 +709,135 @@ export function createPortalEngine(ctx) {
   function update(t) {
     if (!portal) return;
 
+    syncXpState(activityState);
+
     const boost = activityState.portalBoost || 1;
+    const xpBoost = xpState.energy || 1;
+    const xpPulse = xpState.pulse || 0;
+    const xpGlow = Math.max(0, Math.min(1, xpState.percent / 100));
 
     targetTouchPower *= 0.92;
     touchPower += (targetTouchPower - touchPower) * 0.08;
+    xpState.pulse *= 0.94;
 
     const breathe =
       1 +
       Math.sin(t * 2.05) *
         (motion.portal?.scalePulse || 0.07) *
-        boost +
-      touchPower * 0.055;
+        boost *
+        xpBoost +
+      touchPower * 0.055 +
+      xpPulse * 0.032;
 
-    portal.rotation.y += 0.0025 * boost;
+    portal.rotation.y += 0.0025 * boost * xpBoost;
     portal.rotation.x = Math.sin(t * 0.38) * 0.04;
     portal.scale.setScalar(breathe);
 
     if (mist) {
-      mist.rotation.z += 0.0024 * boost;
-      mist.material.opacity = 0.6 + Math.sin(t * 1.7) * 0.12 + touchPower * 0.14;
+      mist.rotation.z += 0.0024 * boost * xpBoost;
+      mist.material.opacity =
+        0.6 +
+        Math.sin(t * 1.7) * 0.12 +
+        touchPower * 0.14 +
+        xpPulse * 0.08 +
+        xpGlow * 0.04;
       mist.scale.set(
-        36 + Math.sin(t * 1.3) * 3.4 + touchPower * 3,
-        36 + Math.cos(t * 1.1) * 3.1 + touchPower * 3,
+        36 + Math.sin(t * 1.3) * 3.4 + touchPower * 3 + xpPulse * 2,
+        36 + Math.cos(t * 1.1) * 3.1 + touchPower * 3 + xpPulse * 2,
         1
       );
     }
 
     if (storm) {
-      storm.rotation.z -= 0.0021 * boost;
-      storm.material.opacity = 0.1 + Math.sin(t * 2.6) * 0.035 + touchPower * 0.09;
+      storm.rotation.z -= 0.0021 * boost * xpBoost;
+      storm.material.opacity =
+        0.1 +
+        Math.sin(t * 2.6) * 0.035 +
+        touchPower * 0.09 +
+        xpPulse * 0.05;
     }
 
     if (blackVoid) {
-      blackVoid.rotation.y -= 0.004 * boost;
+      blackVoid.rotation.y -= 0.004 * boost * xpBoost;
       blackVoid.scale.set(
-        1.06 + Math.sin(t * 1.4) * 0.04,
-        1.06 + Math.cos(t * 1.2) * 0.04,
+        1.06 + Math.sin(t * 1.4) * 0.04 + xpPulse * 0.018,
+        1.06 + Math.cos(t * 1.2) * 0.04 + xpPulse * 0.018,
         0.42
       );
       blackVoid.material.opacity = 0.74 + Math.sin(t * 2.2) * 0.06;
     }
 
     if (eventHorizon) {
-      eventHorizon.rotation.z += 0.011 * boost;
-      eventHorizon.scale.setScalar(1 + Math.sin(t * 3.4) * 0.045 + touchPower * 0.09);
-      eventHorizon.material.opacity = 0.54 + Math.sin(t * 2.8) * 0.12 + touchPower * 0.2;
+      eventHorizon.rotation.z += 0.011 * boost * xpBoost;
+      eventHorizon.scale.setScalar(
+        1 +
+          Math.sin(t * 3.4) * 0.045 +
+          touchPower * 0.09 +
+          xpPulse * 0.055
+      );
+      eventHorizon.material.opacity =
+        0.54 +
+        Math.sin(t * 2.8) * 0.12 +
+        touchPower * 0.2 +
+        xpPulse * 0.1 +
+        xpGlow * 0.04;
     }
 
     if (mouth) {
-      mouth.rotation.z -= 0.008 * boost;
+      mouth.rotation.z -= 0.008 * boost * xpBoost;
       mouth.rotation.y = Math.sin(t * 0.62) * 0.08;
-      mouth.scale.setScalar(1 + Math.sin(t * 3.1) * 0.04 + touchPower * 0.065);
-      mouth.material.opacity = 0.58 + Math.sin(t * 2.5) * 0.1 + touchPower * 0.16;
+      mouth.scale.setScalar(
+        1 +
+          Math.sin(t * 3.1) * 0.04 +
+          touchPower * 0.065 +
+          xpPulse * 0.04
+      );
+      mouth.material.opacity =
+        0.58 +
+        Math.sin(t * 2.5) * 0.1 +
+        touchPower * 0.16 +
+        xpPulse * 0.08;
     }
 
     if (whiteCore) {
-      whiteCore.rotation.z += 0.003 * boost;
+      whiteCore.rotation.z += 0.003 * boost * xpBoost;
       whiteCore.scale.set(
-        8.2 + Math.sin(t * 4.4) * 0.8 + touchPower * 1.8,
-        8.2 + Math.cos(t * 3.8) * 0.8 + touchPower * 1.8,
+        8.2 + Math.sin(t * 4.4) * 0.8 + touchPower * 1.8 + xpPulse * 1.2,
+        8.2 + Math.cos(t * 3.8) * 0.8 + touchPower * 1.8 + xpPulse * 1.2,
         1
       );
-      whiteCore.material.opacity = 0.48 + Math.sin(t * 3.6) * 0.1 + touchPower * 0.22;
+      whiteCore.material.opacity =
+        0.48 +
+        Math.sin(t * 3.6) * 0.1 +
+        touchPower * 0.22 +
+        xpPulse * 0.11 +
+        xpGlow * 0.035;
     }
 
     if (tunnel) {
       tunnel.children.forEach((ring, index) => {
-        ring.rotation.z += (0.009 + index * 0.002) * (index % 2 ? -1 : 1) * boost;
+        ring.rotation.z +=
+          (0.009 + index * 0.002) *
+          (index % 2 ? -1 : 1) *
+          boost *
+          xpBoost;
         ring.position.z = -index * 0.55 + Math.sin(t * 1.7 + index) * 0.18;
-        ring.material.opacity = 0.075 + Math.sin(t * 2 + index) * 0.04 + touchPower * 0.04;
+        ring.material.opacity =
+          0.075 +
+          Math.sin(t * 2 + index) * 0.04 +
+          touchPower * 0.04 +
+          xpPulse * 0.025;
       });
     }
 
     rimFlames.forEach((flame, index) => {
-      flame.userData.angle += flame.userData.spin * boost;
+      flame.userData.angle += flame.userData.spin * boost * xpBoost;
 
       const r =
         flame.userData.radius +
         Math.sin(t * 1.4 + index) * 0.42 +
-        touchPower * 0.7;
+        touchPower * 0.7 +
+        xpPulse * 0.42;
 
       flame.position.set(
         Math.cos(flame.userData.angle) * r,
@@ -745,51 +848,59 @@ export function createPortalEngine(ctx) {
       const s =
         flame.userData.size +
         Math.sin(t * 1.8 + index) * 0.42 +
-        touchPower * 0.58;
+        touchPower * 0.58 +
+        xpPulse * 0.34;
 
       flame.scale.set(s * 1.45, s, 1);
 
       flame.material.opacity =
         flame.userData.baseOpacity +
         Math.sin(t * 1.6 + index) * 0.06 +
-        touchPower * 0.08;
+        touchPower * 0.08 +
+        xpPulse * 0.045;
     });
 
     rings.forEach((ring, index) => {
-      ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1) * boost;
-      ring.rotation.y += 0.00125 * (index + 1) * boost;
+      ring.rotation.z += ring.userData.speed * (index % 2 ? -1 : 1) * boost * xpBoost;
+      ring.rotation.y += 0.00125 * (index + 1) * boost * xpBoost;
 
       ring.scale.setScalar(
         1 +
           Math.sin(t * (1.2 + index * 0.15) + ring.userData.drift) * 0.04 +
-          touchPower * 0.04
+          touchPower * 0.04 +
+          xpPulse * 0.025
       );
 
       ring.material.opacity = Math.max(
         0.02,
         ring.userData.baseOpacity +
           Math.sin(t * 1.7 + index) * 0.04 +
-          touchPower * 0.04
+          touchPower * 0.04 +
+          xpPulse * 0.025 +
+          xpGlow * 0.012
       );
     });
 
     streams.forEach((stream, index) => {
-      stream.rotation.z += stream.userData.speed * (index % 2 ? -1 : 1) * boost;
-      stream.rotation.y += 0.0019 * boost;
+      stream.rotation.z += stream.userData.speed * (index % 2 ? -1 : 1) * boost * xpBoost;
+      stream.rotation.y += 0.0019 * boost * xpBoost;
 
       stream.material.opacity =
         0.5 +
         Math.sin(t * 2.4 + stream.userData.pulse) * 0.14 +
-        touchPower * 0.16;
+        touchPower * 0.16 +
+        xpPulse * 0.08 +
+        xpGlow * 0.03;
     });
 
     sparks.forEach((spark, index) => {
-      spark.userData.angle += spark.userData.speed * boost;
+      spark.userData.angle += spark.userData.speed * boost * xpBoost;
 
       const r =
         spark.userData.radius +
         Math.sin(t * 1.4 + index) * 1.6 +
-        touchPower * 2;
+        touchPower * 2 +
+        xpPulse * 1.2;
 
       spark.position.set(
         Math.cos(spark.userData.angle) * r,
@@ -800,34 +911,41 @@ export function createPortalEngine(ctx) {
       spark.scale.setScalar(
         spark.userData.size +
           Math.sin(t * 2 + index) * 0.16 +
-          touchPower * 0.25
+          touchPower * 0.25 +
+          xpPulse * 0.18
       );
 
       spark.material.opacity =
         0.13 +
         Math.sin(t * 2 + index) * 0.09 +
-        touchPower * 0.12;
+        touchPower * 0.12 +
+        xpPulse * 0.07;
     });
 
     waves.forEach((wave, index) => {
       const expand =
         1 +
         Math.sin(t * wave.userData.speed + wave.userData.offset) * 0.08 +
-        touchPower * 0.12;
+        touchPower * 0.12 +
+        xpPulse * 0.07;
 
       wave.scale.setScalar(expand);
-      wave.rotation.z += 0.003 * (index % 2 ? -1 : 1) * boost;
+      wave.rotation.z += 0.003 * (index % 2 ? -1 : 1) * boost * xpBoost;
 
       wave.material.opacity =
         0.055 +
         Math.sin(t * 1.3 + index) * 0.035 +
-        touchPower * 0.035;
+        touchPower * 0.035 +
+        xpPulse * 0.025;
     });
 
     lightning.forEach((bolt) => {
       bolt.userData.life -= 0.04;
 
-      if (bolt.userData.life <= 0 && Math.random() < 0.024 + touchPower * 0.04) {
+      if (
+        bolt.userData.life <= 0 &&
+        Math.random() < 0.024 + touchPower * 0.04 + xpPulse * 0.035
+      ) {
         bolt.userData.life = 1;
 
         const pts = [];
@@ -850,7 +968,7 @@ export function createPortalEngine(ctx) {
         bolt.geometry = new THREE.BufferGeometry().setFromPoints(pts);
       }
 
-      bolt.material.opacity = Math.max(0, bolt.userData.life * 0.52);
+      bolt.material.opacity = Math.max(0, bolt.userData.life * (0.52 + xpPulse * 0.2));
     });
 
     for (let i = touchBursts.length - 1; i >= 0; i -= 1) {
@@ -875,24 +993,37 @@ export function createPortalEngine(ctx) {
     }
 
     if (lens) {
-      lens.rotation.z += 0.0013;
+      lens.rotation.z += 0.0013 * xpBoost;
       lens.material.opacity =
         0.025 +
         Math.sin(t * 1.6) * 0.014 +
-        touchPower * 0.03;
+        touchPower * 0.03 +
+        xpPulse * 0.018;
     }
   }
 
-  function onActivityUpdate(state) {
-    if (state.liveActive) {
+  function onActivityUpdate(stateUpdate = {}) {
+    syncXpState(stateUpdate);
+
+    if (stateUpdate.liveActive) {
       targetTouchPower = Math.max(targetTouchPower, 0.7);
     }
+
+    if (stateUpdate.xp || stateUpdate.level || stateUpdate.xpPercent) {
+      targetTouchPower = Math.max(targetTouchPower, 0.42);
+    }
   }
 
-  function onPresenceUpdate(state) {
-    if (state.onlineCount > 0) {
+  function onPresenceUpdate(stateUpdate = {}) {
+    syncXpState(stateUpdate);
+
+    if (stateUpdate.onlineCount > 0) {
       targetTouchPower = Math.max(targetTouchPower, 0.35);
     }
+  }
+
+  function setActivityState(stateUpdate = {}) {
+    syncXpState(stateUpdate);
   }
 
   function resize() {
@@ -950,6 +1081,7 @@ export function createPortalEngine(ctx) {
     mounted = false;
     touchPower = 0;
     targetTouchPower = 0;
+    xpState.pulse = 0;
   }
 
   return {
@@ -968,6 +1100,7 @@ export function createPortalEngine(ctx) {
       }
     },
 
+    setActivityState,
     onActivityUpdate,
     onPresenceUpdate
   };
