@@ -8,6 +8,8 @@
    - Keeps index/portal fullscreen locked
    - Keeps other pages scrollable
    - Fixes bottom nav centering conflict with main.css
+   - Adds mobile XP gauge sizing
+   - Adds mobile profile lock helpers
 ========================================= */
 
 @media (max-width: 720px) {
@@ -119,6 +121,81 @@
   body:not(.rb-index-page) .rb-profile-chip {
     width: 100%;
     min-width: 0;
+  }
+
+  body[data-rb-profile-locked="true"] .rb-profile-pill,
+  body[data-rb-profile-locked="true"] .rb-profile-chip {
+    border-color: rgba(0, 255, 157, 0.42);
+    box-shadow:
+      0 0 18px rgba(0, 255, 157, 0.16),
+      inset 0 0 14px rgba(255, 255, 255, 0.025);
+  }
+
+  body[data-rb-profile-locked="false"] .rb-profile-pill,
+  body[data-rb-profile-locked="false"] .rb-profile-chip {
+    border-color: rgba(250, 204, 21, 0.18);
+  }
+
+  /* XP GAUGE */
+
+  .rb-xp-card,
+  .rb-xp-panel,
+  .rb-profile-xp,
+  .rb-section-xp {
+    width: 100%;
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .rb-xp-top,
+  .rb-xp-row {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .rb-xp-title,
+  .rb-xp-level,
+  .rb-xp-rank,
+  .rb-xp-gauge-text,
+  .rb-xp-gauge-next,
+  [data-rb-xp-text],
+  [data-rb-xp-next],
+  [data-rb-xp-level],
+  [data-rb-xp-rank] {
+    font-size: 0.62rem;
+    letter-spacing: 0.07em;
+  }
+
+  .rb-xp-gauge,
+  .rb-xp-meter,
+  [data-rb-xp-gauge],
+  #profileXpGauge,
+  #index-xp-gauge,
+  #auth-xp-gauge,
+  #feed-xp-gauge,
+  #music-xp-gauge,
+  #live-xp-gauge,
+  #watch-xp-gauge,
+  #gallery-xp-gauge,
+  #gaming-xp-gauge,
+  #sports-xp-gauge,
+  #store-xp-gauge,
+  #meta-xp-gauge,
+  #upload-xp-gauge,
+  #messages-xp-gauge,
+  #settings-xp-gauge {
+    min-height: 9px;
+    margin-top: 8px;
+  }
+
+  body.rb-orbit-xp-energy .rb-xp-card,
+  body.rb-orbit-xp-energy .rb-xp-panel,
+  body.rb-orbit-xp-energy .rb-profile-xp,
+  body.rb-orbit-xp-energy .rb-section-xp {
+    box-shadow:
+      0 0 18px rgba(0, 255, 157, 0.14),
+      0 0 28px rgba(250, 204, 21, 0.1),
+      inset 0 0 14px rgba(255, 255, 255, 0.025);
   }
 
   /* INDEX BRAND SAFE */
@@ -315,6 +392,18 @@
     font-size: 0.72rem;
   }
 
+  .rb-xp-title,
+  .rb-xp-level,
+  .rb-xp-rank,
+  .rb-xp-gauge-text,
+  .rb-xp-gauge-next,
+  [data-rb-xp-text],
+  [data-rb-xp-next],
+  [data-rb-xp-level],
+  [data-rb-xp-rank] {
+    font-size: 0.58rem;
+  }
+
   .rb-bottom-nav {
     height: 80px;
     min-height: 80px;
@@ -364,6 +453,14 @@
 
   .rb-index-page .rb-brand-header p {
     font-size: 0.52rem;
+  }
+
+  .rb-xp-card,
+  .rb-xp-panel,
+  .rb-profile-xp,
+  .rb-section-xp {
+    padding: 10px;
+    border-radius: 18px;
   }
 
   .rb-bottom-nav {
