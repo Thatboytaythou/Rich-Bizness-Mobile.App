@@ -5,6 +5,7 @@
    STORE PAGE CONTROLLER
    Products + Cart + Likes + Views + Checkout
    Profile Keys Locked
+   XP Gauge Enabled
 
    Updates:
    - No project-avatar fallback
@@ -13,6 +14,7 @@
    - Product likes upsert-safe
    - View tracking de-duped per session
    - Realtime cleanup locked
+   - Store XP gauge connected to profile keys
 ========================= */
 
 import {
@@ -47,6 +49,15 @@ const statusEl = $("storeStatus");
 const searchEl = $("storeSearch");
 const categoryEl = $("storeCategory");
 const typeEl = $("storeType");
+
+const els = {
+  xpGauge: $("store-xp-gauge"),
+  xpFill: $("store-xp-gauge-fill"),
+  xpText: $("store-xp-gauge-text"),
+  xpNext: $("store-xp-gauge-next"),
+  xpLevel: $("store-xp-level"),
+  xpRank: $("store-xp-rank")
+};
 
 let supabase = null;
 let currentUser = null;
@@ -98,24 +109,100 @@ function safePath(value = "", fallback = FALLBACK_IMAGE) {
   return fallback;
 }
 
-function imageFor(product = {}) {
-  return safePath(
-    product.image_url ||
-      product.cover_url ||
-      product.media_url ||
-      product.preview_url ||
-      product.digital_file_url,
-    FALLBACK_IMAGE
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Seller";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, profileIdentity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  if (els.xpText) {
+    els.xpText.textContent = `${model.xp.toLocaleString()} XP`;
+  }
+
+  if (els.xpNext) {
+    els.xpNext.textContent = `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`;
+  }
+
+  if (els.xpLevel) {
+    els.xpLevel.textContent = `LVL ${model.level}`;
+  }
+
+  if (els.xpRank) {
+    els.xpRank.textContent = model.rank;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "store",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
   );
 }
 
-function setStatus(message = "", type = "info") {
-  if (!statusEl) return;
-
-  statusEl.textContent = message;
-  statusEl.dataset.type = type;
-  statusEl.style.display = message ? "block" : "none";
-}
+/* =========================
+   PROFILE LOCK
+========================= */
 
 function syncProfileKeys() {
   const appState = getCurrentUserState?.() || {};
@@ -134,6 +221,48 @@ function syncProfileKeys() {
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
     el.href = buildProfileUrl(currentProfile);
   });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safePath(
+      currentProfile?.avatar_url || profileIdentity?.avatar_url,
+      FALLBACK_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
+}
+
+/* =========================
+   PRODUCT HELPERS
+========================= */
+
+function imageFor(product = {}) {
+  return safePath(
+    product.image_url ||
+      product.cover_url ||
+      product.media_url ||
+      product.preview_url ||
+      product.digital_file_url,
+    FALLBACK_IMAGE
+  );
+}
+
+function setStatus(message = "", type = "info") {
+  if (!statusEl) return;
+
+  statusEl.textContent = message;
+  statusEl.dataset.type = type;
+  statusEl.style.display = message ? "block" : "none";
 }
 
 function getAnonId() {
@@ -231,6 +360,10 @@ function isSoldOut(product = {}) {
     product.fulfillment_type === "shipping"
   );
 }
+
+/* =========================
+   RENDER
+========================= */
 
 function renderProducts() {
   if (!grid) return;
@@ -357,6 +490,10 @@ function bindProductButtons() {
   });
 }
 
+/* =========================
+   LOAD
+========================= */
+
 async function loadProducts() {
   setStatus("Loading marketplace...", "info");
 
@@ -388,6 +525,10 @@ async function loadProducts() {
   hydrateCategories(products);
   renderProducts();
 }
+
+/* =========================
+   ACTIONS
+========================= */
 
 async function buyProduct(productId, button) {
   const user = await requireUser();
@@ -508,6 +649,10 @@ async function trackView(productId) {
   } catch (_) {}
 }
 
+/* =========================
+   REALTIME
+========================= */
+
 function clearRealtime() {
   if (channel && supabase) {
     supabase.removeChannel(channel);
@@ -551,6 +696,10 @@ function bindRealtime() {
 
   window.addEventListener("beforeunload", clearRealtime);
 }
+
+/* =========================
+   BOOT
+========================= */
 
 async function bootStorePage() {
   try {
