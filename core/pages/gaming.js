@@ -6,6 +6,7 @@
    Profile Keys Locked
    Realtime Enabled
    Local Game Fallbacks Locked
+   XP Gauge Enabled
 ========================= */
 
 import {
@@ -51,7 +52,14 @@ const els = {
   clipsList: $("clips-list"),
   scoresList: $("scores-list"),
   tournamentsList: $("tournaments-list"),
-  challengesList: $("challenges-list")
+  challengesList: $("challenges-list"),
+
+  xpGauge: $("gaming-xp-gauge"),
+  xpFill: $("gaming-xp-gauge-fill"),
+  xpText: $("gaming-xp-gauge-text"),
+  xpNext: $("gaming-xp-gauge-next"),
+  xpLevel: $("gaming-xp-level"),
+  xpRank: $("gaming-xp-rank")
 };
 
 let supabase = null;
@@ -63,6 +71,7 @@ let identity = null;
 let channel = null;
 
 const fallbackCover = "/images/brand/hero-banner.png";
+const fallbackAvatar = "/images/brand/Avatar-hero-Banner.png.jpeg";
 
 const LOCAL_GAMES = [
   {
@@ -149,8 +158,105 @@ function money(cents = 0) {
   return `$${(Number(cents || 0) / 100).toFixed(2)}`;
 }
 
-function safeImage(url) {
-  return url || fallbackCover;
+function safeImage(url, fallback = fallbackCover) {
+  const src = String(url || "").trim();
+
+  if (!src || src.includes("project-avatar")) return fallback;
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
+
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel() {
+  const rawXp =
+    gamerProfile?.xp ??
+    currentProfile?.xp ??
+    currentProfile?.rich_points ??
+    currentProfile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    gamerProfile?.level ??
+    currentProfile?.rich_level ??
+    currentProfile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    gamerProfile?.rank_title ||
+    currentProfile?.rank_title ||
+    currentProfile?.rank ||
+    identity?.rankTitle ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Rich Gamer";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel();
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  setText(els.xpText, `${model.xp.toLocaleString()} XP`);
+  setText(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  setText(els.xpLevel, `LVL ${model.level}`);
+  setText(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "gaming",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
 }
 
 function gamePlayUrl(game = {}) {
@@ -198,13 +304,18 @@ function lockProfileKeys() {
   });
 
   document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeImage(profileAvatar(currentProfile), fallbackAvatar);
+    const name = profileName(currentProfile);
+
     if (el.tagName === "IMG") {
-      el.src = profileAvatar(currentProfile);
-      el.alt = profileName(currentProfile);
+      el.src = avatar;
+      el.alt = name;
     } else {
-      el.style.backgroundImage = `url("${profileAvatar(currentProfile)}")`;
+      el.style.backgroundImage = `url("${avatar}")`;
     }
   });
+
+  renderXpGauge();
 }
 
 function userIdentity() {
@@ -220,6 +331,9 @@ function userIdentity() {
 
 function bindTabs() {
   els.tabs.forEach((btn) => {
+    if (btn.dataset.rbGamingTabBound === "true") return;
+    btn.dataset.rbGamingTabBound = "true";
+
     btn.addEventListener("click", () => {
       const key = btn.dataset.tab;
 
@@ -228,7 +342,9 @@ function bindTabs() {
       });
 
       els.panels.forEach((panel) => {
-        panel.classList.toggle("is-active", panel.dataset.panel === key);
+        const active = panel.dataset.panel === key;
+        panel.classList.toggle("is-active", active);
+        panel.style.display = active ? "" : "none";
       });
 
       btn.classList.add("is-active");
@@ -240,12 +356,14 @@ async function loadGamerProfile() {
   if (!currentUser?.id) {
     setText(els.gamerName, "Guest Player");
     setText(els.gamerMeta, "Sign in to sync your gamer profile.");
+    renderXpGauge();
     return;
   }
 
   if (!RB_TABLES.gamerProfiles) {
     setText(els.gamerName, identity?.displayName || "Rich Gamer");
     setText(els.gamerMeta, "Gamer profile table not configured.");
+    renderXpGauge();
     return;
   }
 
@@ -262,6 +380,7 @@ async function loadGamerProfile() {
   if (!gamerProfile) {
     setText(els.gamerName, identity?.displayName || "Rich Gamer");
     setText(els.gamerMeta, "No gamer profile yet.");
+    renderXpGauge();
     return;
   }
 
@@ -287,6 +406,8 @@ async function loadGamerProfile() {
   if (els.platformInput) {
     els.platformInput.value = gamerProfile.platform_primary || "web";
   }
+
+  renderXpGauge();
 }
 
 async function saveGamerProfile(event) {
@@ -313,11 +434,9 @@ async function saveGamerProfile(event) {
     gamer_tag: tag || info.username || info.display_name,
     platform_primary: platform,
     avatar_url:
-      currentProfile?.avatar_url ||
-      "/images/brand/project-avatar.png.jpeg",
+      safeImage(currentProfile?.avatar_url, fallbackAvatar),
     banner_url:
-      currentProfile?.banner_url ||
-      "/images/brand/Avatar-hero-Banner.png.jpeg",
+      safeImage(currentProfile?.banner_url, fallbackCover),
     metadata: {
       source: "Rich Bizness Gaming",
       profile_locked: true
@@ -348,7 +467,7 @@ function renderGames(rows = []) {
   els.gamesList.innerHTML = games.map((game) => `
     <article class="rb-game-card" data-game-id="${escapeHtml(game.id || "")}">
       <img
-        src="${escapeHtml(safeImage(game.cover_url || game.thumbnail_url))}"
+        src="${escapeHtml(safeImage(game.cover_url || game.thumbnail_url, fallbackCover))}"
         alt=""
       />
 
@@ -386,9 +505,9 @@ function renderClips(rows = []) {
     <article class="rb-game-card" data-owner-id="${escapeHtml(clip.user_id || "")}">
       ${
         clip.thumbnail_url
-          ? `<img src="${escapeHtml(clip.thumbnail_url)}" alt="" />`
+          ? `<img src="${escapeHtml(safeImage(clip.thumbnail_url, fallbackCover))}" alt="" />`
           : clip.clip_url
-            ? `<video src="${escapeHtml(clip.clip_url)}" muted playsinline controls></video>`
+            ? `<video src="${escapeHtml(safeImage(clip.clip_url, ""))}" muted playsinline controls></video>`
             : `<img src="${escapeHtml(fallbackCover)}" alt="" />`
       }
 
@@ -446,7 +565,7 @@ function renderTournaments(rows = []) {
 
   els.tournamentsList.innerHTML = rows.map((item) => `
     <article class="rb-game-card">
-      <img src="${escapeHtml(safeImage(item.cover_url))}" alt="" />
+      <img src="${escapeHtml(safeImage(item.cover_url, fallbackCover))}" alt="" />
 
       <div>
         <p class="rb-kicker">
@@ -645,6 +764,18 @@ async function loadGamingPage() {
     loadTournaments(),
     loadChallenges()
   ]);
+
+  renderXpGauge();
+
+  window.dispatchEvent(
+    new CustomEvent("rb:gaming-update", {
+      detail: {
+        route: "gaming",
+        profileLocked: !!identity?.id,
+        xpGauge: true
+      }
+    })
+  );
 }
 
 function clearRealtime() {
@@ -762,13 +893,17 @@ async function bootGamingPage() {
 
     window.addEventListener("beforeunload", clearRealtime);
 
+    document.body.dataset.rbPage = "gaming";
+    document.body.dataset.rbRoute = "gaming";
+    document.body.dataset.rbProfileLock = identity?.id ? "true" : "false";
     document.body.classList.add("rb-gaming-ready");
 
     markPageReady("gaming");
 
     console.log("RB GAMING READY", {
       profileLocked: !!identity?.id,
-      route: "gaming"
+      route: "gaming",
+      xpGauge: true
     });
   } catch (error) {
     console.error("[gaming.js]", error);
