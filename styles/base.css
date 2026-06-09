@@ -10,6 +10,8 @@
    - No project-avatar fallback
    - Adds rb-empty-card alias
    - Adds safe fixed background layering
+   - Adds global XP gauge foundation
+   - Adds universe XP energy classes
    - Keeps index/avatar fullscreen lock untouched
 ========================= */
 
@@ -71,6 +73,10 @@
   --rb-z-ui: 20;
   --rb-z-nav: 30;
   --rb-z-modal: 100;
+
+  --rb-xp-percent: 0%;
+  --rb-xp-glow: rgba(0, 255, 157, 0.45);
+  --rb-xp-track: rgba(255, 255, 255, 0.08);
 }
 
 /* RESET */
@@ -285,6 +291,111 @@ select {
     calc(18px + env(safe-area-inset-top))
     0
     calc(var(--rb-bottom-nav-height) + env(safe-area-inset-bottom) + 24px);
+}
+
+/* GLOBAL XP GAUGE FOUNDATION */
+
+.rb-xp-gauge,
+[data-rb-xp-gauge],
+#profileXpGauge,
+#index-xp-gauge,
+#auth-xp-gauge,
+#feed-xp-gauge,
+#music-xp-gauge,
+#live-xp-gauge,
+#watch-xp-gauge,
+#gallery-xp-gauge,
+#gaming-xp-gauge,
+#sports-xp-gauge,
+#store-xp-gauge,
+#meta-xp-gauge,
+#upload-xp-gauge,
+#messages-xp-gauge,
+#settings-xp-gauge {
+  position: relative;
+  overflow: hidden;
+  min-height: 10px;
+  border-radius: var(--rb-radius-pill);
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
+    var(--rb-xp-track);
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.42),
+    0 0 22px rgba(0, 255, 157, 0.08);
+}
+
+.rb-xp-gauge-fill,
+[data-rb-xp-gauge-fill],
+#profileXpGaugeFill,
+#index-xp-gauge-fill,
+#auth-xp-gauge-fill,
+#feed-xp-gauge-fill,
+#music-xp-gauge-fill,
+#live-xp-gauge-fill,
+#watch-xp-gauge-fill,
+#gallery-xp-gauge-fill,
+#gaming-xp-gauge-fill,
+#sports-xp-gauge-fill,
+#store-xp-gauge-fill,
+#meta-xp-gauge-fill,
+#upload-xp-gauge-fill,
+#messages-xp-gauge-fill,
+#settings-xp-gauge-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--rb-xp-percent);
+  min-width: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(0, 255, 157, 0.94), rgba(250, 204, 21, 0.96)),
+    radial-gradient(circle at 100% 50%, rgba(255, 255, 255, 0.55), transparent 28%);
+  box-shadow:
+    0 0 18px rgba(0, 255, 157, 0.38),
+    0 0 30px rgba(250, 204, 21, 0.16);
+  transition: width 0.42s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.rb-xp-gauge-text,
+.rb-xp-gauge-next,
+.rb-xp-level,
+.rb-xp-rank,
+[data-rb-xp-text],
+[data-rb-xp-next],
+[data-rb-xp-level],
+[data-rb-xp-rank] {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rb-xp-rank,
+[data-rb-xp-rank] {
+  color: var(--rb-gold);
+}
+
+/* UNIVERSE XP ENERGY */
+
+body.rb-orbit-xp-energy .rb-bg-layer {
+  filter:
+    drop-shadow(0 0 22px rgba(0, 255, 157, 0.12))
+    drop-shadow(0 0 34px rgba(250, 204, 21, 0.08));
+}
+
+body.rb-orbit-xp-energy .rb-module-label {
+  border-color: rgba(250, 204, 21, 0.34);
+  box-shadow:
+    0 0 24px rgba(250, 204, 21, 0.14),
+    0 0 56px rgba(0, 255, 157, 0.16),
+    inset 0 0 20px rgba(255, 255, 255, 0.045);
+}
+
+body.rb-orbit-live-energy .rb-bg-layer,
+body.rb-orbit-presence-energy .rb-bg-layer,
+body.rb-orbit-xp-energy .rb-bg-layer {
+  opacity: 1;
 }
 
 /* GLOBAL BACKGROUND LAYERS */
