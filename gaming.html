@@ -28,7 +28,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-gaming-page">
+<body
+  class="rb-body rb-gaming-page rb-orbit-xp-energy"
+  data-page="gaming"
+  data-rb-page="gaming"
+  data-rb-route="gaming"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -36,20 +41,23 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/">
+    <a class="rb-brand" href="/" data-route="home">
       <span>ARCADE DISTRICT</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
     <nav class="rb-topnav" aria-label="Gaming navigation">
-      <a href="/feed">Feed</a>
-      <a href="/music">Music</a>
-      <a class="is-active" href="/gaming">Gaming</a>
-      <a href="/sports">Sports</a>
-      <a href="/gallery">Gallery</a>
-      <a href="/upload?section=gaming">Upload</a>
-      <a href="/profile">Profile</a>
+      <a href="/" data-route="home">Portal</a>
+      <a href="/feed" data-route="feed">Feed</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
+      <a class="is-active" href="/gaming" data-route="gaming">Gaming</a>
+      <a href="/sports" data-route="sports">Sports</a>
+      <a href="/gallery" data-route="gallery">Gallery</a>
+      <a href="/upload?section=gaming" data-route="upload">Upload</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
     </nav>
   </header>
 
@@ -65,15 +73,27 @@
         </p>
 
         <div class="rb-profile-actions">
-          <a class="rb-main-launch" href="/upload?section=gaming">
+          <a class="rb-main-launch" href="/upload?section=gaming" data-route="upload">
             UPLOAD CLIP
           </a>
 
-          <a class="rb-btn primary" href="/games/rich-chess">
+          <a class="rb-btn primary" href="/games/rich-chess" data-route="games/rich-chess">
             PLAY RICH CHESS
           </a>
 
-          <a class="rb-btn ghost" href="/">
+          <a class="rb-btn gold" href="/games/money-road-runner" data-route="games/money-road-runner">
+            MONEY ROAD RUNNER
+          </a>
+
+          <a class="rb-btn ghost" href="/games/smoke-city-hustle" data-route="games/smoke-city-hustle">
+            SMOKE CITY HUSTLE
+          </a>
+
+          <a class="rb-btn ghost" href="/games/studio-showdown" data-route="games/studio-showdown">
+            STUDIO SHOWDOWN
+          </a>
+
+          <a class="rb-btn ghost" href="/" data-route="home">
             ← Back To Portal
           </a>
         </div>
@@ -112,7 +132,7 @@
           </p>
         </div>
 
-        <a class="rb-pill-btn" href="/upload?section=gaming">
+        <a class="rb-pill-btn" href="/upload?section=gaming" data-route="upload">
           Upload Clip
         </a>
       </div>
@@ -243,6 +263,12 @@
       <div class="rb-card-grid" id="challenges-list"></div>
     </section>
   </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
 
   <script type="module" src="/core/pages/gaming.js"></script>
 </body>
