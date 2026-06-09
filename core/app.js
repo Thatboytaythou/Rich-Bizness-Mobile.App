@@ -6,6 +6,7 @@
    Safe boot lock
    Auth + profile-state synced
    Does not force profile binding on index
+   XP Gauge Event Bridge
 ========================= */
 
 import { RB_APP } from "/core/shared/rb-config.js";
@@ -126,6 +127,8 @@ async function bootApp({
       document.body.dataset.rbPage = pageName;
     }
 
+    syncAppXpDataset();
+
     window.dispatchEvent(
       new CustomEvent("rb:app-ready", {
         detail: getAppState()
@@ -178,6 +181,74 @@ async function bindProfileShellSafe() {
 }
 
 /* =========================
+   XP HELPERS
+========================= */
+
+function getProfileXpModel(profile = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    "Member";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function syncAppXpDataset() {
+  const profile = getProfile();
+  const model = getProfileXpModel(profile || {});
+
+  if (document.body) {
+    document.body.dataset.rbXp = String(model.xp);
+    document.body.dataset.rbLevel = String(model.level);
+    document.body.dataset.rbRank = model.rank;
+    document.body.dataset.rbXpPercent = String(Math.round(model.percent));
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:app-xp-update", {
+      detail: {
+        ...model,
+        profile
+      }
+    })
+  );
+
+  return model;
+}
+
+export function getCurrentXpState() {
+  return getProfileXpModel(getProfile() || {});
+}
+
+/* =========================
    STATE
 ========================= */
 
@@ -190,7 +261,8 @@ export function getAppState() {
     user: getUser(),
     profile: getProfile(),
     auth: getAuthState(),
-    supabase: getSupabase()
+    supabase: getSupabase(),
+    xp: getCurrentXpState()
   };
 }
 
@@ -202,7 +274,8 @@ export function getCurrentUserState() {
     user,
     profile: getProfile(),
     auth: getAuthState(),
-    authed: !!user?.id
+    authed: !!user?.id,
+    xp: getCurrentXpState()
   };
 }
 
@@ -227,6 +300,8 @@ export async function refreshAppIdentity({
   if (bindProfile) {
     await bindProfileShellSafe();
   }
+
+  syncAppXpDataset();
 
   window.dispatchEvent(
     new CustomEvent("rb:app-identity-refreshed", {
@@ -282,6 +357,17 @@ function bindRuntimeEvents() {
     }
   });
 
+  window.addEventListener("rb:xp-gauge-update", (event) => {
+    const detail = event.detail || {};
+
+    if (!document.body) return;
+
+    document.body.dataset.rbXp = String(detail.xp ?? document.body.dataset.rbXp ?? 0);
+    document.body.dataset.rbLevel = String(detail.level ?? document.body.dataset.rbLevel ?? 1);
+    document.body.dataset.rbRank = String(detail.rank ?? document.body.dataset.rbRank ?? "Member");
+    document.body.dataset.rbXpPercent = String(Math.round(Number(detail.percent || 0)));
+  });
+
   window.addEventListener("beforeunload", () => {
     unsubscribeAllChannels();
   });
@@ -299,6 +385,8 @@ export function markPageReady(pageName = "") {
     document.body.dataset.page = pageName;
     document.body.dataset.rbPage = pageName;
   }
+
+  syncAppXpDataset();
 
   window.dispatchEvent(
     new CustomEvent("rb:page-ready", {
