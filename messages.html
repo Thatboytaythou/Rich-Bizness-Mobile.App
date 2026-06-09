@@ -27,8 +27,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-messages-page" data-page="messages">
-
+<body
+  class="rb-body rb-messages-page rb-orbit-xp-energy"
+  data-page="messages"
+  data-rb-page="messages"
+  data-rb-route="messages"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -36,7 +40,6 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-
     <a class="rb-brand" href="/" data-route="home">
       <span>RICH DM’S</span>
       <strong>RICH BIZNESS</strong>
@@ -46,19 +49,19 @@
     <nav class="rb-topnav" aria-label="Messages navigation">
       <a href="/" data-route="home">Portal</a>
       <a href="/feed" data-route="feed">Feed</a>
-      <a href="/profile" data-route="profile">Profile</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
       <a href="/notifications" data-route="notifications">Alerts</a>
       <a href="/settings" data-route="settings">Settings</a>
     </nav>
-
   </header>
 
   <main class="rb-section-shell rb-messages-shell">
-
     <section class="rb-section-hero">
-
       <div class="rb-section-hero-copy">
-
         <p class="rb-kicker">RICH BIZNESS DIRECT</p>
 
         <h1>Messages</h1>
@@ -69,7 +72,6 @@
         </p>
 
         <div class="rb-profile-actions">
-
           <button
             id="messages-new-btn"
             class="rb-btn primary"
@@ -82,6 +84,7 @@
             class="rb-btn ghost"
             href="/profile"
             data-route="profile"
+            data-rb-profile-link
           >
             My Profile
           </a>
@@ -93,40 +96,36 @@
           >
             Alerts
           </a>
-
         </div>
-
       </div>
 
       <article class="rb-profile-card rb-message-card">
-
         <div class="rb-profile-avatar-wrap">
-
           <img
             id="messages-user-avatar"
             class="rb-profile-avatar"
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Messages user avatar"
             data-rb-avatar
+            data-rb-profile-avatar
           />
 
           <div class="rb-profile-online" aria-hidden="true"></div>
-
         </div>
 
-        <h2 id="messages-user-name">
+        <h2 id="messages-user-name" data-rb-name>
           Rich Bizness User
         </h2>
 
         <p
           id="messages-user-handle"
           class="rb-profile-handle"
+          data-rb-username
         >
           @richbizness
         </p>
 
         <div class="rb-profile-meta">
-
           <div
             id="messages-thread-count"
             class="rb-meta-pill"
@@ -140,26 +139,19 @@
           >
             Starting messages...
           </div>
-
         </div>
-
       </article>
-
     </section>
 
     <section class="rb-panel">
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">PROFILE LOCK</p>
           <h2 class="rb-panel-title">DM Identity</h2>
         </div>
-
       </div>
 
       <div class="rb-list-stack">
-
         <article class="rb-mini-card">
           <strong>Status</strong>
           <span id="messages-status">
@@ -180,20 +172,15 @@
             Smoke Cloud • Rich-DM’s • 💨
           </span>
         </article>
-
       </div>
-
     </section>
 
     <section class="rb-panel">
-
       <div class="rb-panel-head">
-
         <div>
           <p class="rb-kicker">REALTIME THREADS</p>
           <h2 class="rb-panel-title">Conversations</h2>
         </div>
-
       </div>
 
       <div
@@ -204,9 +191,7 @@
           Loading Rich Bizness DMs...
         </article>
       </div>
-
     </section>
-
   </main>
 
   <script type="module">
@@ -216,6 +201,5 @@
   </script>
 
   <script type="module" src="/core/pages/messages.js"></script>
-
 </body>
 </html>
