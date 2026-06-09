@@ -9,6 +9,7 @@
    Updates:
    - Supports #edit-status from edit.js
    - Supports form status data-type states
+   - Supports XP/profile lock energy states
    - Keeps auth/edit/settings/upload form styling aligned
 ========================================= */
 
@@ -171,6 +172,27 @@
   z-index: 2;
 }
 
+/* XP / PROFILE ENERGY */
+
+body.rb-orbit-xp-energy .rb-auth-hero,
+body.rb-orbit-xp-energy .rb-auth-panel,
+body.rb-orbit-xp-energy .rb-edit-shell .rb-panel,
+body.rb-orbit-xp-energy .rb-settings-shell .rb-panel,
+body.rb-orbit-xp-energy .rb-upload-shell .rb-panel {
+  border-color: rgba(250, 204, 21, 0.34);
+
+  box-shadow:
+    0 0 46px rgba(16, 185, 129, 0.22),
+    0 0 72px rgba(250, 204, 21, 0.12),
+    0 0 80px rgba(0, 0, 0, 0.42),
+    inset 0 0 54px rgba(250, 204, 21, 0.08);
+}
+
+body[data-rb-profile-locked="true"] .rb-auth-panel,
+body[data-rb-profile-locked="true"] .rb-form {
+  border-color: rgba(0, 255, 157, 0.34);
+}
+
 /* TABS */
 
 .rb-auth-tabs {
@@ -231,6 +253,15 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   box-shadow:
     0 0 24px rgba(16, 185, 129, 0.35),
     inset 0 0 18px rgba(255, 255, 255, 0.14);
+}
+
+body.rb-orbit-xp-energy .rb-auth-tabs button.is-active,
+body.rb-orbit-xp-energy body[data-auth-mode="signin"] [data-auth-mode="signin"],
+body.rb-orbit-xp-energy body[data-auth-mode="signup"] [data-auth-mode="signup"] {
+  box-shadow:
+    0 0 28px rgba(16, 185, 129, 0.38),
+    0 0 42px rgba(250, 204, 21, 0.18),
+    inset 0 0 18px rgba(255, 255, 255, 0.16);
 }
 
 /* FORMS */
@@ -346,6 +377,20 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   transform: translateY(-1px);
 }
 
+body.rb-orbit-xp-energy .rb-auth-form input:focus,
+body.rb-orbit-xp-energy .rb-auth-form textarea:focus,
+body.rb-orbit-xp-energy .rb-auth-form select:focus,
+body.rb-orbit-xp-energy .rb-form input:focus,
+body.rb-orbit-xp-energy .rb-form textarea:focus,
+body.rb-orbit-xp-energy .rb-form select:focus {
+  border-color: rgba(250, 204, 21, 0.52);
+
+  box-shadow:
+    0 0 22px rgba(16, 185, 129, 0.25),
+    0 0 34px rgba(250, 204, 21, 0.12),
+    inset 0 0 22px rgba(16, 185, 129, 0.1);
+}
+
 .rb-auth-form input:-webkit-autofill,
 .rb-form input:-webkit-autofill {
   -webkit-text-fill-color: #ffffff;
@@ -423,6 +468,24 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   background: rgba(239, 68, 68, 0.1);
 }
 
+.rb-form-note[data-type="warning"],
+#edit-status[data-type="warning"],
+#settings-sync-status[data-type="warning"],
+#upload-status[data-type="warning"] {
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.28);
+  background: rgba(250, 204, 21, 0.09);
+}
+
+body.rb-orbit-xp-energy .rb-form-note[data-type="success"],
+body.rb-orbit-xp-energy #edit-status[data-type="success"],
+body.rb-orbit-xp-energy #settings-sync-status[data-type="success"],
+body.rb-orbit-xp-energy #upload-status[data-type="success"] {
+  box-shadow:
+    0 0 18px rgba(16, 185, 129, 0.16),
+    0 0 28px rgba(250, 204, 21, 0.08);
+}
+
 /* MESSAGES */
 
 .rb-auth-message {
@@ -449,6 +512,20 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
 
   text-shadow:
     0 0 14px rgba(239, 68, 68, 0.24);
+}
+
+.rb-auth-message[data-type="info"] {
+  color: #bae6fd;
+
+  text-shadow:
+    0 0 14px rgba(56, 189, 248, 0.22);
+}
+
+.rb-auth-message[data-type="warning"] {
+  color: #fde68a;
+
+  text-shadow:
+    0 0 14px rgba(250, 204, 21, 0.22);
 }
 
 /* BUTTON OVERRIDES */
@@ -478,7 +555,8 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   transition:
     transform 0.22s ease,
     filter 0.22s ease,
-    opacity 0.22s ease;
+    opacity 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .rb-main-launch:hover {
@@ -494,6 +572,13 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   opacity: 0.6;
   cursor: wait;
   transform: none;
+}
+
+body.rb-orbit-xp-energy .rb-main-launch {
+  box-shadow:
+    0 0 28px rgba(16, 185, 129, 0.36),
+    0 0 46px rgba(250, 204, 21, 0.2),
+    inset 0 0 18px rgba(255, 255, 255, 0.2);
 }
 
 /* LINKS */
@@ -615,5 +700,13 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   .rb-form-actions > *,
   .rb-quick-actions > * {
     width: 100%;
+  }
+
+  .rb-form-note,
+  #edit-status,
+  #settings-sync-status,
+  #upload-status,
+  .rb-auth-message {
+    font-size: 0.78rem;
   }
 }
