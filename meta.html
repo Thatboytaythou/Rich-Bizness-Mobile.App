@@ -27,7 +27,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-meta-page meta-body" data-page="meta">
+<body
+  class="rb-body rb-meta-page meta-body rb-orbit-xp-energy"
+  data-page="meta"
+  data-rb-page="meta"
+  data-rb-route="meta"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -46,6 +51,8 @@
       <a href="/watch" data-route="watch">Watch</a>
       <a href="/live" data-route="live">Live</a>
       <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
       <a href="/gaming" data-route="gaming">Gaming</a>
       <a href="/sports" data-route="sports">Sports</a>
       <a href="/store" data-route="store">Store</a>
@@ -72,8 +79,10 @@
             id="metaUserAvatar"
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Profile avatar"
+            data-rb-avatar
+            data-rb-profile-avatar
           />
-          <span id="metaUserName">Guest</span>
+          <span id="metaUserName" data-rb-name>Guest</span>
         </div>
 
         <div class="meta-actions rb-profile-actions">
@@ -97,6 +106,7 @@
             id="heroAvatar"
             src="/images/brand/meta-avatar.png.jpeg"
             alt="Meta avatar"
+            data-rb-meta-avatar
           />
         </div>
 
@@ -171,6 +181,9 @@
               <option value="sports">Sports</option>
               <option value="gaming">Gaming</option>
               <option value="live">Live</option>
+              <option value="music">Music</option>
+              <option value="podcast">Podcast</option>
+              <option value="radio">Radio</option>
               <option value="custom">Custom</option>
             </select>
           </label>
@@ -228,6 +241,9 @@
           <option value="sports">Sports</option>
           <option value="gaming">Gaming</option>
           <option value="live">Live</option>
+          <option value="music">Music</option>
+          <option value="podcast">Podcast</option>
+          <option value="radio">Radio</option>
         </select>
       </div>
 
