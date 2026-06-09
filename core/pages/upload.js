@@ -5,23 +5,42 @@
    UPLOAD PAGE CONTROLLER
    Signed-in upload router
    Connects upload UI -> storage -> section router
+
+   Updates:
+   - Music files route to music_tracks, not only feed_posts
+   - Podcast files route to podcast_episodes
+   - Optional feed mirror for Music/Podcast with section:"music"
+   - Upload XP gauge enabled
+   - No project-avatar fallback
 ========================= */
 
 import {
   initApp,
+  getCurrentUserState,
   markPageReady,
   markPageError,
   refreshAppIdentity
 } from "/core/app.js";
 
 import {
+  RB_TABLES,
   RB_ROUTES
 } from "/core/shared/rb-config.js";
+
+import {
+  getSupabase
+} from "/core/shared/rb-supabase.js";
 
 import {
   getUser,
   ensureMyProfile
 } from "/core/shared/rb-auth.js";
+
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
+} from "/core/shared/rb-profile.js";
 
 import {
   refreshProfileState
@@ -62,6 +81,8 @@ import {
 
 const $ = (id) => document.getElementById(id);
 
+const FALLBACK_AVATAR = "/images/brand/Avatar-hero-Banner.png.jpeg";
+
 const els = {
   form: $("rb-upload-form"),
   routeKey: $("routeKey"),
@@ -85,13 +106,178 @@ const els = {
 
   message: $("uploadMessage"),
   submit: $("uploadSubmitBtn"),
-  reset: $("uploadResetBtn")
+  reset: $("uploadResetBtn"),
+
+  xpGauge: $("upload-xp-gauge"),
+  xpFill: $("upload-xp-gauge-fill"),
+  xpText: $("upload-xp-gauge-text"),
+  xpNext: $("upload-xp-gauge-next"),
+  xpLevel: $("upload-xp-level"),
+  xpRank: $("upload-xp-rank")
 };
 
 let booted = false;
 let cleanupDropzone = null;
 let cleanupProgress = null;
 let cleanupStatus = null;
+let supabase = null;
+let currentUser = null;
+let currentProfile = null;
+let profileIdentity = null;
+
+function table(key, fallback) {
+  return RB_TABLES?.[key] || fallback || key;
+}
+
+function safeText(value, fallback = "") {
+  return String(value || fallback || "").trim();
+}
+
+function safeUrl(value = "", fallback = "") {
+  const url = String(value || "").trim();
+
+  if (!url || url.includes("project-avatar")) return fallback;
+
+  if (
+    url.startsWith("/") ||
+    url.startsWith("https://") ||
+    url.startsWith("http://") ||
+    url.startsWith("blob:")
+  ) {
+    return url;
+  }
+
+  return fallback;
+}
+
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Uploader";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  const model = getProfileXpModel(currentProfile, profileIdentity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  if (els.xpText) {
+    els.xpText.textContent = `${model.xp.toLocaleString()} XP`;
+  }
+
+  if (els.xpNext) {
+    els.xpNext.textContent = `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`;
+  }
+
+  if (els.xpLevel) {
+    els.xpLevel.textContent = `LVL ${model.level}`;
+  }
+
+  if (els.xpRank) {
+    els.xpRank.textContent = model.rank;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "upload",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+function syncProfileKeys() {
+  const state = getCurrentUserState?.() || {};
+
+  currentUser = state.user || getUser?.() || null;
+  currentProfile = state.profile || null;
+  profileIdentity = getProfileIdentity(currentProfile);
+
+  document.body.dataset.rbRoute = "upload";
+  document.body.dataset.rbUserId = currentUser?.id || "";
+  document.body.dataset.rbProfileId = profileIdentity?.id || "";
+  document.body.dataset.rbProfileLocked = profileIdentity?.id ? "true" : "false";
+
+  bindProfileShell?.();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl(currentProfile);
+  });
+
+  document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
+    const avatar = safeUrl(
+      currentProfile?.avatar_url || profileIdentity?.avatar_url,
+      FALLBACK_AVATAR
+    );
+
+    if (el.tagName === "IMG") {
+      el.src = avatar;
+      el.alt =
+        currentProfile?.display_name ||
+        currentProfile?.username ||
+        "Rich Bizness Profile";
+    } else {
+      el.style.backgroundImage = `url("${avatar}")`;
+    }
+  });
+
+  renderXpGauge();
+}
 
 /* =========================
    ROUTE NORMALIZER
@@ -237,6 +423,7 @@ function buildRouteValues({
   uploaded
 }) {
   const mediaType = uploaded.mediaType || uploaded.media_type || "file";
+  const publicUrl = uploaded.publicUrl || uploaded.public_url || "";
 
   return {
     ...formValues,
@@ -249,9 +436,9 @@ function buildRouteValues({
     section: route.section || formValues.section || "feed",
 
     media_type: mediaType,
-    file_url: uploaded.publicUrl || uploaded.public_url || uploaded.path || "",
-    media_url: uploaded.publicUrl || uploaded.public_url || "",
-    public_url: uploaded.publicUrl || uploaded.public_url || "",
+    file_url: publicUrl || uploaded.path || "",
+    media_url: publicUrl,
+    public_url: publicUrl,
     storage_path: uploaded.path || "",
     bucket: uploaded.bucket || route.bucket || "",
 
@@ -266,6 +453,214 @@ function buildRouteValues({
       original_file_name: uploaded.fileName || uploaded.file_name || ""
     }
   };
+}
+
+/* =========================
+   MUSIC ROUTE FIX
+========================= */
+
+function isMusicRoute(routeKey = "", route = {}, file = null) {
+  const key = String(routeKey || "").toLowerCase();
+  const section = String(route?.section || "").toLowerCase();
+  const type = file?.type || "";
+
+  return (
+    key === "musictrack" ||
+    key === "music" ||
+    key === "music-track" ||
+    section === "music" ||
+    type.startsWith("audio/")
+  );
+}
+
+function isPodcastRoute(routeKey = "", route = {}) {
+  const key = String(routeKey || "").toLowerCase();
+  const section = String(route?.section || "").toLowerCase();
+
+  return (
+    key === "podcastaudio" ||
+    key === "podcast" ||
+    key === "podcast-audio" ||
+    section === "podcast"
+  );
+}
+
+async function routeMusicUpload({
+  user,
+  values,
+  uploaded,
+  routeKey
+}) {
+  const publicUrl = uploaded.publicUrl || uploaded.public_url || values.public_url;
+  const title = safeText(values.title, "Untitled Track");
+
+  const trackPayload = {
+    artist_user_id: user.id,
+    user_id: user.id,
+    title,
+    description: safeText(values.description, ""),
+    audio_url: publicUrl,
+    file_url: publicUrl,
+    cover_url: values.cover_url || null,
+    genre: values.category || values.genre || values.tag || null,
+    mood: values.tag || null,
+    is_published: true,
+    visibility: "public",
+    metadata: {
+      ...(values.metadata || {}),
+      source: "upload.js",
+      routed_to: "music_tracks",
+      upload_route: routeKey,
+      profile_id: profileIdentity?.id || user.id
+    }
+  };
+
+  const { data: track, error: trackError } = await supabase
+    .from(table("musicTracks", "music_tracks"))
+    .insert(trackPayload)
+    .select("*")
+    .single();
+
+  if (trackError) throw trackError;
+
+  const { data: feedPost, error: feedError } = await supabase
+    .from(table("feedPosts", "feed_posts"))
+    .insert({
+      user_id: user.id,
+      section: "music",
+      post_type: "music",
+      title,
+      body: safeText(values.description, ""),
+      media_url: publicUrl,
+      file_url: publicUrl,
+      cover_url: values.cover_url || null,
+      visibility: "public",
+      metadata: {
+        ...(values.metadata || {}),
+        source: "upload.js",
+        routed_to: "music_tracks",
+        music_track_id: track?.id || null,
+        upload_route: routeKey,
+        profile_id: profileIdentity?.id || user.id
+      }
+    })
+    .select("*")
+    .single();
+
+  if (feedError) {
+    console.warn("[RB MUSIC FEED MIRROR WARNING]", feedError?.message || feedError);
+  }
+
+  return {
+    table: "music_tracks",
+    track,
+    feedPost: feedPost || null
+  };
+}
+
+async function routePodcastUpload({
+  user,
+  values,
+  uploaded,
+  routeKey
+}) {
+  const publicUrl = uploaded.publicUrl || uploaded.public_url || values.public_url;
+  const title = safeText(values.title, "Untitled Episode");
+
+  const episodePayload = {
+    user_id: user.id,
+    creator_id: user.id,
+    title,
+    description: safeText(values.description, ""),
+    audio_url: publicUrl,
+    file_url: publicUrl,
+    cover_url: values.cover_url || null,
+    episode_number: Number(values.episode_number || values.episode || 0) || null,
+    is_published: true,
+    visibility: "public",
+    metadata: {
+      ...(values.metadata || {}),
+      source: "upload.js",
+      routed_to: "podcast_episodes",
+      upload_route: routeKey,
+      profile_id: profileIdentity?.id || user.id
+    }
+  };
+
+  const { data: episode, error: episodeError } = await supabase
+    .from(table("podcastEpisodes", "podcast_episodes"))
+    .insert(episodePayload)
+    .select("*")
+    .single();
+
+  if (episodeError) throw episodeError;
+
+  const { data: feedPost, error: feedError } = await supabase
+    .from(table("feedPosts", "feed_posts"))
+    .insert({
+      user_id: user.id,
+      section: "music",
+      post_type: "podcast",
+      title,
+      body: safeText(values.description, ""),
+      media_url: publicUrl,
+      file_url: publicUrl,
+      cover_url: values.cover_url || null,
+      visibility: "public",
+      metadata: {
+        ...(values.metadata || {}),
+        source: "upload.js",
+        routed_to: "podcast_episodes",
+        podcast_episode_id: episode?.id || null,
+        upload_route: routeKey,
+        profile_id: profileIdentity?.id || user.id
+      }
+    })
+    .select("*")
+    .single();
+
+  if (feedError) {
+    console.warn("[RB PODCAST FEED MIRROR WARNING]", feedError?.message || feedError);
+  }
+
+  return {
+    table: "podcast_episodes",
+    episode,
+    feedPost: feedPost || null
+  };
+}
+
+async function routeUploadLocked({
+  user,
+  routeKey,
+  route,
+  uploaded,
+  values,
+  file
+}) {
+  if (isPodcastRoute(routeKey, route)) {
+    return routePodcastUpload({
+      user,
+      values,
+      uploaded,
+      routeKey
+    });
+  }
+
+  if (isMusicRoute(routeKey, route, file)) {
+    return routeMusicUpload({
+      user,
+      values,
+      uploaded,
+      routeKey
+    });
+  }
+
+  return routeUploadedFile({
+    section: routeKey,
+    uploaded,
+    values
+  });
 }
 
 /* =========================
@@ -301,6 +696,9 @@ async function handleUpload(event) {
     setStatus("SYNCING IDENTITY");
 
     await ensureMyProfile();
+    await refreshAppIdentity();
+
+    syncProfileKeys();
 
     setStatus("UPLOADING TO STORAGE");
 
@@ -331,10 +729,13 @@ async function handleUpload(event) {
       uploaded
     });
 
-    const routed = await routeUploadedFile({
-      section: routeKey,
+    const routed = await routeUploadLocked({
+      user,
+      routeKey,
+      route,
       uploaded,
-      values
+      values,
+      file: state.file
     });
 
     setUploadProgress(95);
@@ -342,6 +743,8 @@ async function handleUpload(event) {
 
     await refreshProfileState();
     await refreshAppIdentity();
+
+    syncProfileKeys();
 
     if (
       ["profileAvatar", "profileBanner", "metaAvatar"].includes(routeKey)
@@ -353,7 +756,12 @@ async function handleUpload(event) {
       uploaded,
       routed,
       routeKey,
-      section: route.section || "feed"
+      section:
+        routed?.table === "music_tracks"
+          ? "music"
+          : routed?.table === "podcast_episodes"
+            ? "music"
+            : route.section || "feed"
     };
 
     setUploadResult(result);
@@ -367,6 +775,7 @@ async function handleUpload(event) {
     });
 
     syncRouteLabel();
+    renderXpGauge();
 
     window.dispatchEvent(
       new CustomEvent("rb:upload-complete", {
@@ -437,9 +846,13 @@ async function bootUploadPage() {
       toast: false
     });
 
+    supabase = getSupabase();
+
     await ensureMyProfile();
     await refreshProfileState();
     await refreshAppIdentity();
+
+    syncProfileKeys();
 
     applyQuerySection();
     bindUI();
