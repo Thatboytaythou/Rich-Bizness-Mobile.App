@@ -1,1 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Studio Showdown • Rich Bizness LLC</title>
+
+  <meta
+    name="description"
+    content="Studio Showdown by Rich Bizness LLC — combo fighting, boss waves, powers, parries, knockouts, and XP."
+  />
+
+  <meta name="theme-color" content="#020402" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/games/studio-showdown/ss-styles.css" />
+</head>
+
+<body
+  class="rb-studio-showdown-page ss-page rb-orbit-xp-energy"
+  data-game="studio-showdown"
+  data-section="gaming"
+  data-rb-page="studio-showdown"
+  data-rb-route="games/studio-showdown"
+>
+  <main
+    id="studio-showdown-page"
+    class="studio-showdown-page ss-game-page"
+  >
+    <section
+      id="studio-showdown"
+      class="studio-showdown-shell ss-shell"
+      data-game="studio-showdown"
+    >
+      <header class="ss-topbar studio-showdown-topbar ss-header">
+        <a
+          class="ss-brand studio-showdown-brand"
+          href="/gaming.html"
+          aria-label="Back to Rich Bizness Gaming"
+        >
+          <span>Rich Bizness LLC</span>
+          <strong>Studio</strong>
+          <small>Showdown</small>
+        </a>
+
+        <nav class="ss-top-actions ss-header-actions" aria-label="Game actions">
+          <button
+            id="ssPauseBtn"
+            class="ss-icon-btn secondary"
+            type="button"
+            aria-label="Pause game"
+            title="Pause"
+          >
+            ⏸
+          </button>
+
+          <button
+            id="ssRestartBtn"
+            class="ss-icon-btn secondary"
+            type="button"
+            aria-label="Restart game"
+            title="Restart"
+          >
+            ↻
+          </button>
+
+          <a
+            class="ss-icon-btn secondary"
+            href="/gaming.html"
+            aria-label="Back to gaming"
+            title="Back"
+          >
+            ←
+          </a>
+        </nav>
+      </header>
+
+      <div class="ss-canvas-frame studio-showdown-frame ss-game-frame">
+        <canvas
+          id="studioShowdownCanvas"
+          data-studio-showdown="true"
+          aria-label="Studio Showdown game canvas"
+        ></canvas>
+
+        <div class="ss-floating-hud ss-hud studio-showdown-hud" aria-hidden="true">
+          <article class="ss-hud-card ss-score-card">
+            <span>High</span>
+            <strong id="ssHighScore">0</strong>
+          </article>
+
+          <article class="ss-hud-card ss-cash-card">
+            <span>Total</span>
+            <strong id="ssTotalCash">0</strong>
+          </article>
+
+          <article class="ss-hud-card ss-level-card">
+            <span>Level</span>
+            <strong id="ssLevel">1</strong>
+          </article>
+
+          <article class="ss-hud-card ss-rank-card">
+            <span>Rank</span>
+            <strong id="ssRank">Fighter</strong>
+          </article>
+        </div>
+
+        <div class="ss-combat-bars studio-showdown-combat-bars" aria-hidden="true">
+          <div class="ss-bar">
+            <span
+              id="ssHpFill"
+              class="ss-bar-fill ss-hp-fill hp"
+            ></span>
+          </div>
+
+          <div class="ss-bar">
+            <span
+              id="ssEnergyFill"
+              class="ss-bar-fill ss-energy-fill energy"
+            ></span>
+          </div>
+        </div>
+
+        <div class="ss-status-strip ss-power-strip studio-showdown-status" aria-hidden="true">
+          <span class="ss-status-pill ss-power-pill">Move</span>
+          <span class="ss-status-pill ss-power-pill">J Attack</span>
+          <span class="ss-status-pill ss-power-pill">K Heavy</span>
+          <span class="ss-status-pill ss-power-pill">L Special</span>
+        </div>
+      </div>
+
+      <footer class="ss-controls studio-showdown-controls ss-bottom-controls">
+        <button
+          id="ssStartBtn"
+          class="ss-launch-btn"
+          type="button"
+        >
+          Start
+        </button>
+
+        <button
+          id="ssAttackBtn"
+          class="ss-action-btn"
+          type="button"
+        >
+          Attack
+        </button>
+
+        <button
+          id="ssHeavyBtn"
+          class="ss-action-btn danger"
+          type="button"
+        >
+          Heavy
+        </button>
+
+        <button
+          id="ssSpecialBtn"
+          class="ss-action-btn power"
+          type="button"
+        >
+          Special
+        </button>
+
+        <button
+          id="ssDashBtn"
+          class="ss-action-btn secondary"
+          type="button"
+        >
+          Dash
+        </button>
+
+        <button
+          id="ssJumpBtn"
+          class="ss-action-btn secondary"
+          type="button"
+        >
+          Jump
+        </button>
+
+        <button
+          id="ssBlockBtn"
+          class="ss-action-btn secondary"
+          type="button"
+        >
+          Block
+        </button>
+
+        <button
+          id="ssPauseBottomBtn"
+          class="ss-action-btn secondary"
+          type="button"
+        >
+          Pause
+        </button>
+      </footer>
+    </section>
+  </main>
+
+  <script src="/games/studio-showdown/game.js" defer></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+
+      const buttons = {
+        start: $("ssStartBtn"),
+        pause: $("ssPauseBtn"),
+        pauseBottom: $("ssPauseBottomBtn"),
+        restart: $("ssRestartBtn"),
+        attack: $("ssAttackBtn"),
+        heavy: $("ssHeavyBtn"),
+        special: $("ssSpecialBtn"),
+        dash: $("ssDashBtn"),
+        jump: $("ssJumpBtn"),
+        block: $("ssBlockBtn")
+      };
+
+      const stats = {
+        high: $("ssHighScore"),
+        total: $("ssTotalCash"),
+        level: $("ssLevel"),
+        rank: $("ssRank"),
+        hp: $("ssHpFill"),
+        energy: $("ssEnergyFill")
+      };
+
+      function api() {
+        return window.RB_STUDIO_SHOWDOWN;
+      }
+
+      function updateHud() {
+        const game = api();
+        if (!game?.getState) return;
+
+        const state = game.getState();
+        const player = state.player || {};
+        const hpPct = Math.max(0, Math.min(100, ((player.hp || 0) / (player.maxHp || 100)) * 100));
+        const energyPct = Math.max(0, Math.min(100, ((player.energy || 0) / (player.maxEnergy || 100)) * 100));
+
+        if (stats.high) {
+          stats.high.textContent = Number(state.highScore || 0).toLocaleString();
+        }
+
+        if (stats.total) {
+          stats.total.textContent = Number(state.totalCash || 0).toLocaleString();
+        }
+
+        if (stats.level) {
+          stats.level.textContent = Number(state.level || 1).toLocaleString();
+        }
+
+        if (stats.rank) {
+          stats.rank.textContent = String(state.rank || "Fighter")
+            .replace("Studio ", "")
+            .replace("Showdown ", "")
+            .replace("Beatdown ", "");
+        }
+
+        if (stats.hp) {
+          stats.hp.style.width = `${hpPct}%`;
+        }
+
+        if (stats.energy) {
+          stats.energy.style.width = `${energyPct}%`;
+        }
+      }
+
+      function pressKey(key, type = "keydown") {
+        window.dispatchEvent(
+          new KeyboardEvent(type, {
+            key,
+            bubbles: true,
+            cancelable: true
+          })
+        );
+      }
+
+      function togglePause() {
+        const game = api();
+        const state = game?.getState?.();
+
+        if (!game || !state) return;
+
+        if (state.paused) {
+          game.resume?.();
+
+          if (buttons.pause) {
+            buttons.pause.textContent = "⏸";
+            buttons.pause.title = "Pause";
+          }
+
+          if (buttons.pauseBottom) {
+            buttons.pauseBottom.textContent = "Pause";
+          }
+        } else {
+          game.pause?.();
+
+          if (buttons.pause) {
+            buttons.pause.textContent = "▶";
+            buttons.pause.title = "Resume";
+          }
+
+          if (buttons.pauseBottom) {
+            buttons.pauseBottom.textContent = "Resume";
+          }
+        }
+
+        updateHud();
+      }
+
+      buttons.start?.addEventListener("click", () => {
+        api()?.start?.();
+        updateHud();
+      });
+
+      buttons.pause?.addEventListener("click", togglePause);
+      buttons.pauseBottom?.addEventListener("click", togglePause);
+
+      buttons.restart?.addEventListener("click", () => {
+        api()?.restart?.();
+
+        if (buttons.pause) {
+          buttons.pause.textContent = "⏸";
+          buttons.pause.title = "Pause";
+        }
+
+        if (buttons.pauseBottom) {
+          buttons.pauseBottom.textContent = "Pause";
+        }
+
+        updateHud();
+      });
+
+      buttons.attack?.addEventListener("click", () => {
+        api()?.attack?.();
+        pressKey("j", "keydown");
+        setTimeout(() => pressKey("j", "keyup"), 70);
+      });
+
+      buttons.heavy?.addEventListener("click", () => {
+        api()?.heavyAttack?.();
+        pressKey("k", "keydown");
+        setTimeout(() => pressKey("k", "keyup"), 70);
+      });
+
+      buttons.special?.addEventListener("click", () => {
+        api()?.specialAttack?.();
+        pressKey("l", "keydown");
+        setTimeout(() => pressKey("l", "keyup"), 70);
+      });
+
+      buttons.dash?.addEventListener("click", () => {
+        api()?.dash?.();
+        pressKey("Shift", "keydown");
+        setTimeout(() => pressKey("Shift", "keyup"), 90);
+      });
+
+      buttons.jump?.addEventListener("click", () => {
+        api()?.jump?.();
+        pressKey("ArrowUp", "keydown");
+        setTimeout(() => pressKey("ArrowUp", "keyup"), 90);
+      });
+
+      buttons.block?.addEventListener("pointerdown", () => {
+        api()?.block?.(true);
+        pressKey("ArrowDown", "keydown");
+      });
+
+      buttons.block?.addEventListener("pointerup", () => {
+        api()?.block?.(false);
+        pressKey("ArrowDown", "keyup");
+      });
+
+      buttons.block?.addEventListener("pointercancel", () => {
+        api()?.block?.(false);
+        pressKey("ArrowDown", "keyup");
+      });
+
+      buttons.block?.addEventListener("mouseleave", () => {
+        api()?.block?.(false);
+        pressKey("ArrowDown", "keyup");
+      });
+
+      window.addEventListener("rb:xp-gauge-update", updateHud);
+      window.addEventListener("rb:game-run-complete", updateHud);
+
+      setInterval(updateHud, 500);
+      window.addEventListener("load", updateHud);
+    })();
+  </script>
+</body>
+</html>
