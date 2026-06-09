@@ -27,7 +27,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-creator-page">
+<body
+  class="rb-body rb-creator-page rb-orbit-xp-energy"
+  data-page="creator"
+  data-rb-page="creator"
+  data-rb-route="creator"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -35,18 +40,22 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/">
+    <a class="rb-brand" href="/" data-route="home">
       <span>CREATOR CENTER</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
     <nav class="rb-topnav" aria-label="Creator navigation">
-      <a href="/profile">Profile</a>
-      <a href="/upload">Upload</a>
-      <a href="/live">Live</a>
-      <a href="/store">Store</a>
-      <a href="/settings">Settings</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
+      <a href="/upload" data-route="upload">Upload</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
+      <a href="/gaming" data-route="gaming">Gaming</a>
+      <a href="/store" data-route="store">Store</a>
+      <a href="/settings" data-route="settings">Settings</a>
     </nav>
   </header>
 
@@ -59,12 +68,18 @@
           id="creator-user-avatar"
           src="/images/brand/Avatar-hero-Banner.png.jpeg"
           alt="Creator Avatar"
+          data-rb-avatar
+          data-rb-profile-avatar
         />
       </div>
 
-      <h1 id="creator-user-name">Rich Creator</h1>
+      <h1 id="creator-user-name" data-rb-name>Rich Creator</h1>
 
-      <p id="creator-user-handle" class="rb-profile-handle">
+      <p
+        id="creator-user-handle"
+        class="rb-profile-handle"
+        data-rb-username
+      >
         @richcreator
       </p>
 
@@ -133,19 +148,31 @@
         </div>
 
         <div class="rb-form-actions">
-          <button id="creator-profile-btn" class="rb-btn ghost" type="button">
+          <button id="creator-profile-btn" class="rb-btn ghost" type="button" data-route="profile">
             PROFILE
           </button>
 
-          <button id="creator-upload-btn" class="rb-main-launch" type="button">
+          <button id="creator-upload-btn" class="rb-main-launch" type="button" data-route="upload">
             UPLOAD
           </button>
 
-          <button id="creator-live-btn" class="rb-btn ghost" type="button">
+          <button id="creator-live-btn" class="rb-btn ghost" type="button" data-route="live">
             GO LIVE
           </button>
 
-          <button id="creator-store-btn" class="rb-btn ghost" type="button">
+          <button id="creator-music-btn" class="rb-btn ghost" type="button" data-route="music">
+            MUSIC
+          </button>
+
+          <button id="creator-podcast-btn" class="rb-btn ghost" type="button" data-route="podcast">
+            PODCAST
+          </button>
+
+          <button id="creator-radio-btn" class="rb-btn ghost" type="button" data-route="radio">
+            RADIO
+          </button>
+
+          <button id="creator-store-btn" class="rb-btn ghost" type="button" data-route="store">
             STORE
           </button>
         </div>
@@ -162,7 +189,8 @@
         <div id="creator-empty" class="rb-empty" style="display:none;">
           <h2>No Creator Activity Yet</h2>
           <p>
-            Upload, post, go live, or list a product to start building your creator empire.
+            Upload, post, go live, drop music, launch a podcast, start radio,
+            or list a product to start building your creator empire.
           </p>
         </div>
 
@@ -170,10 +198,16 @@
       </section>
     </section>
 
-    <a href="/" class="rb-auth-home">
+    <a href="/" class="rb-auth-home" data-route="home">
       ← Back To Portal
     </a>
   </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
 
   <script type="module" src="/core/pages/creator.js"></script>
 </body>
