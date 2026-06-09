@@ -1,1 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Settings • Rich Bizness Mobile</title>
+
+  <meta name="theme-color" content="#050805" />
+
+  <meta
+    name="description"
+    content="Rich Bizness Mobile settings, account controls, privacy, notifications, profile sync, and universe preferences."
+  />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/mobile.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
+  <link rel="stylesheet" href="/styles/omni-fx.css" />
+</head>
+
+<body
+  class="rb-body rb-settings-page rb-orbit-xp-energy"
+  data-page="settings"
+  data-rb-page="settings"
+  data-rb-route="settings"
+>
+  <div class="rb-bg-layer" aria-hidden="true"></div>
+  <div class="rb-bg-grid" aria-hidden="true"></div>
+  <div class="rb-bg-vignette" aria-hidden="true"></div>
+  <div class="rb-bg-noise" aria-hidden="true"></div>
+  <div class="rb-fx-smoke" aria-hidden="true"></div>
+
+  <header class="rb-topbar">
+    <a class="rb-brand" href="/" data-route="home">
+      <span>UNIVERSE SETTINGS</span>
+      <strong>RICH BIZNESS</strong>
+      <small>LLC</small>
+    </a>
+
+    <nav class="rb-topnav" aria-label="Settings navigation">
+      <a href="/" data-route="home">Portal</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
+      <a href="/edit" data-route="edit">Edit</a>
+      <a href="/messages" data-route="messages">Messages</a>
+      <a href="/notifications" data-route="notifications">Alerts</a>
+      <a href="/upload" data-route="upload">Upload</a>
+    </nav>
+  </header>
+
+  <main class="rb-section-shell rb-settings-shell">
+    <section class="rb-section-hero">
+      <div class="rb-section-hero-copy">
+        <p class="rb-kicker">RICH BIZNESS CONTROL</p>
+
+        <h1>Settings</h1>
+
+        <p class="rb-subtitle">
+          Control your account, profile lock, privacy, notifications, theme,
+          realtime presence, and Rich Bizness universe preferences.
+        </p>
+
+        <div class="rb-profile-actions">
+          <button
+            id="settings-refresh-btn"
+            class="rb-btn primary"
+            type="button"
+          >
+            Refresh Settings
+          </button>
+
+          <button
+            id="settings-profile-btn"
+            class="rb-btn gold"
+            type="button"
+            data-route="profile"
+          >
+            My Profile
+          </button>
+
+          <button
+            id="settings-logout-btn"
+            class="rb-btn ghost"
+            type="button"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <article class="rb-profile-card rb-settings-identity-card">
+        <div class="rb-profile-avatar-wrap">
+          <img
+            id="settings-user-avatar"
+            class="rb-profile-avatar"
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
+            alt="Settings avatar"
+            data-rb-avatar
+            data-rb-profile-avatar
+          />
+
+          <div class="rb-profile-online" aria-hidden="true"></div>
+        </div>
+
+        <h2 id="settings-user-name" data-rb-name>Rich Bizness User</h2>
+
+        <p
+          id="settings-user-handle"
+          class="rb-profile-handle"
+          data-rb-username
+        >
+          @richbizness
+        </p>
+
+        <div class="rb-profile-meta">
+          <div
+            id="settings-user-rank"
+            class="rb-meta-pill"
+          >
+            Biz Legend
+          </div>
+
+          <div
+            id="settings-user-level"
+            class="rb-meta-pill"
+          >
+            Level 1
+          </div>
+
+          <div
+            id="settings-sync-status"
+            class="rb-meta-pill"
+          >
+            Syncing settings...
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="rb-stat-grid">
+      <article>
+        <strong id="settings-rich-points">0</strong>
+        <span>Rich Points</span>
+      </article>
+
+      <article>
+        <strong id="settings-rich-level">1</strong>
+        <span>Level</span>
+      </article>
+
+      <article>
+        <strong id="settings-profile-lock">OFF</strong>
+        <span>Profile Lock</span>
+      </article>
+
+      <article>
+        <strong id="settings-presence">Offline</strong>
+        <span>Presence</span>
+      </article>
+    </section>
+
+    <section class="rb-card-grid">
+      <article class="rb-panel">
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">ACCOUNT</p>
+            <h2 class="rb-panel-title">Identity Controls</h2>
+          </div>
+        </div>
+
+        <div class="rb-form-actions">
+          <a class="rb-main-launch" href="/edit" data-route="edit">
+            Edit Profile
+          </a>
+
+          <a class="rb-btn ghost" href="/profile" data-route="profile" data-rb-profile-link>
+            View Profile
+          </a>
+
+          <a class="rb-btn ghost" href="/avatar" data-route="avatar">
+            Avatar Engine
+          </a>
+
+          <a class="rb-btn ghost" href="/creator" data-route="creator">
+            Creator Center
+          </a>
+        </div>
+      </article>
+
+      <article class="rb-panel">
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">PRIVACY</p>
+            <h2 class="rb-panel-title">Profile Lock</h2>
+          </div>
+        </div>
+
+        <form id="settings-privacy-form" class="rb-form">
+          <label for="settings-profile-visibility">
+            Profile Visibility
+            <select id="settings-profile-visibility" name="profile_visibility">
+              <option value="public">Public</option>
+              <option value="followers">Followers</option>
+              <option value="private">Private</option>
+            </select>
+          </label>
+
+          <label for="settings-online-status">
+            Online Status
+            <select id="settings-online-status" name="online_status">
+              <option value="online">Online</option>
+              <option value="away">Away</option>
+              <option value="busy">Busy</option>
+              <option value="invisible">Invisible</option>
+            </select>
+          </label>
+
+          <label for="settings-profile-lock-toggle">
+            Lock Profile Sync
+            <select id="settings-profile-lock-toggle" name="profile_locked">
+              <option value="false">Unlocked</option>
+              <option value="true">Locked</option>
+            </select>
+          </label>
+
+          <div class="rb-form-actions">
+            <button
+              id="settings-save-privacy-btn"
+              class="rb-main-launch"
+              type="submit"
+            >
+              Save Privacy
+            </button>
+          </div>
+        </form>
+      </article>
+
+      <article class="rb-panel">
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">NOTIFICATIONS</p>
+            <h2 class="rb-panel-title">Alert Settings</h2>
+          </div>
+        </div>
+
+        <form id="settings-notification-form" class="rb-form">
+          <label for="settings-alert-level">
+            Alert Level
+            <select id="settings-alert-level" name="alert_level">
+              <option value="all">All Alerts</option>
+              <option value="important">Important Only</option>
+              <option value="creator">Creator Alerts</option>
+              <option value="silent">Silent</option>
+            </select>
+          </label>
+
+          <label for="settings-message-alerts">
+            Message Alerts
+            <select id="settings-message-alerts" name="message_alerts">
+              <option value="on">On</option>
+              <option value="mentions">Mentions Only</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+
+          <label for="settings-live-alerts">
+            Live Alerts
+            <select id="settings-live-alerts" name="live_alerts">
+              <option value="on">On</option>
+              <option value="following">Following Only</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+
+          <div class="rb-form-actions">
+            <button
+              id="settings-save-notifications-btn"
+              class="rb-main-launch"
+              type="submit"
+            >
+              Save Alerts
+            </button>
+          </div>
+        </form>
+      </article>
+
+      <article class="rb-panel">
+        <div class="rb-panel-head">
+          <div>
+            <p class="rb-kicker">UNIVERSE</p>
+            <h2 class="rb-panel-title">Section Preferences</h2>
+          </div>
+        </div>
+
+        <div class="rb-form-actions">
+          <a class="rb-btn ghost" href="/music" data-route="music">
+            Music
+          </a>
+
+          <a class="rb-btn ghost" href="/podcast" data-route="podcast">
+            Podcast
+          </a>
+
+          <a class="rb-btn ghost" href="/radio" data-route="radio">
+            Radio
+          </a>
+
+          <a class="rb-btn ghost" href="/gaming" data-route="gaming">
+            Gaming
+          </a>
+
+          <a class="rb-btn ghost" href="/meta" data-route="meta">
+            Meta
+          </a>
+
+          <a class="rb-btn ghost" href="/store" data-route="store">
+            Store
+          </a>
+        </div>
+      </article>
+    </section>
+
+    <section class="rb-panel">
+      <div class="rb-panel-head">
+        <div>
+          <p class="rb-kicker">SYSTEM</p>
+          <h2 class="rb-panel-title">Settings Activity</h2>
+        </div>
+      </div>
+
+      <div
+        id="settings-empty"
+        class="rb-empty"
+        style="display:none;"
+      >
+        Settings activity waiting.
+      </div>
+
+      <div
+        id="settings-activity-list"
+        class="rb-list-stack"
+      ></div>
+    </section>
+
+    <a href="/" class="rb-auth-home" data-route="home">
+      ← Back To Portal
+    </a>
+  </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
+
+  <script type="module" src="/core/pages/settings.js"></script>
+</body>
+</html>
