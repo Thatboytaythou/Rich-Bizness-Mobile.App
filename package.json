@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vercel dev",
     "start": "vercel dev",
-    "build": "echo \"Rich Bizness Mobile Build Ready\"",
+    "build": "node -e \"console.log('Rich Bizness Mobile Build Ready')\"",
     "deploy": "vercel --prod",
     "dev:live": "vercel dev --listen 3000",
     "check": "node api/health.js"
@@ -19,6 +19,9 @@
     "livekit-client": "^2.13.3",
     "livekit-server-sdk": "^2.11.3",
     "stripe": "^18.1.1"
+  },
+  "devDependencies": {
+    "vercel": "^39.0.0"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -31,6 +34,8 @@
     "stripe",
     "gaming",
     "music",
+    "podcast",
+    "radio",
     "live-streaming",
     "creator-platform",
     "metaverse"
