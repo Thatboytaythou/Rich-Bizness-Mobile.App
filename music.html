@@ -27,7 +27,12 @@
   <link rel="stylesheet" href="/styles/music.css" />
 </head>
 
-<body class="rb-body rb-music-page" data-page="music" data-rb-route="music">
+<body
+  class="rb-body rb-music-page rb-orbit-xp-energy"
+  data-page="music"
+  data-rb-page="music"
+  data-rb-route="music"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -47,6 +52,8 @@
       <a href="/watch" data-route="watch">Watch</a>
       <a href="/live" data-route="live">Live</a>
       <a href="/music" data-route="music" class="is-active">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
       <a href="/upload" data-route="upload">Upload</a>
       <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
     </nav>
@@ -64,8 +71,16 @@
         </p>
 
         <div class="rb-section-actions">
-          <a class="rb-btn primary" href="/upload?section=music" data-route="/upload?section=music">
+          <a class="rb-btn primary" href="/upload?section=music" data-route="upload">
             Upload Music
+          </a>
+
+          <a class="rb-btn ghost" href="/upload?section=podcast" data-route="upload">
+            Drop Podcast
+          </a>
+
+          <a class="rb-btn ghost" href="/upload?section=radio" data-route="upload">
+            Add Radio
           </a>
 
           <a class="rb-btn ghost" href="/profile" data-route="profile" data-rb-profile-link>
@@ -181,7 +196,7 @@
             <h2 data-music-section-title>Music Tracks</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=music" data-route="/upload?section=music">
+          <a class="rb-btn ghost" href="/upload?section=music" data-route="upload">
             Drop Track
           </a>
         </div>
@@ -198,7 +213,7 @@
             <h2>Podcast Episodes</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=podcast" data-route="/upload?section=podcast">
+          <a class="rb-btn ghost" href="/upload?section=podcast" data-route="upload">
             Drop Podcast
           </a>
         </div>
@@ -215,7 +230,7 @@
             <h2>Radio Stations</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=radio" data-route="/upload?section=radio">
+          <a class="rb-btn ghost" href="/upload?section=radio" data-route="upload">
             Add Radio
           </a>
         </div>
@@ -232,7 +247,7 @@
             <h2>Playlist Vault</h2>
           </div>
 
-          <a class="rb-btn ghost" href="/upload?section=music" data-route="/upload?section=music">
+          <a class="rb-btn ghost" href="/upload?section=music" data-route="upload">
             Build Playlist
           </a>
         </div>
@@ -258,6 +273,16 @@
     <button data-route="music" class="is-active" type="button" aria-label="Music">
       <span class="rb-nav-icon">🎵</span>
       <span>Music</span>
+    </button>
+
+    <button data-route="podcast" type="button" aria-label="Podcast">
+      <span class="rb-nav-icon">🎙️</span>
+      <span>Podcast</span>
+    </button>
+
+    <button data-route="radio" type="button" aria-label="Radio">
+      <span class="rb-nav-icon">📻</span>
+      <span>Radio</span>
     </button>
 
     <button data-route="gaming" type="button" aria-label="Gaming">
