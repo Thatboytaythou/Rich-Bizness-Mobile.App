@@ -1,1 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>Money Road Runner • Rich Bizness LLC</title>
+
+  <meta
+    name="description"
+    content="Money Road Runner by Rich Bizness LLC — dodge traffic, collect cash, stack XP, and run the money road."
+  />
+
+  <meta name="theme-color" content="#020402" />
+
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/sections.css" />
+  <link rel="stylesheet" href="/styles/cards.css" />
+  <link rel="stylesheet" href="/games/money-road-runner/mrr-styles.css" />
+</head>
+
+<body
+  class="rb-money-road-runner-page mrr-page rb-orbit-xp-energy"
+  data-game="money-road-runner"
+  data-section="gaming"
+  data-rb-page="money-road-runner"
+  data-rb-route="games/money-road-runner"
+>
+  <main
+    id="money-road-runner-page"
+    class="money-road-runner-page mrr-game-page"
+  >
+    <section
+      id="money-road-runner"
+      class="money-road-runner-shell mrr-shell"
+      data-game="money-road-runner"
+    >
+      <header class="mrr-topbar money-road-runner-topbar mrr-header">
+        <a
+          class="mrr-brand money-road-runner-brand"
+          href="/gaming.html"
+          aria-label="Back to Rich Bizness Gaming"
+        >
+          <span>Rich Bizness LLC</span>
+          <strong>Money Road</strong>
+          <small>Runner</small>
+        </a>
+
+        <nav class="mrr-top-actions mrr-header-actions" aria-label="Game actions">
+          <button
+            id="mrrPauseBtn"
+            class="mrr-icon-btn secondary"
+            type="button"
+            aria-label="Pause game"
+            title="Pause"
+          >
+            ⏸
+          </button>
+
+          <button
+            id="mrrRestartBtn"
+            class="mrr-icon-btn secondary"
+            type="button"
+            aria-label="Restart game"
+            title="Restart"
+          >
+            ↻
+          </button>
+
+          <a
+            class="mrr-icon-btn secondary"
+            href="/gaming.html"
+            aria-label="Back to gaming"
+            title="Back"
+          >
+            ←
+          </a>
+        </nav>
+      </header>
+
+      <div class="mrr-canvas-frame money-road-runner-frame mrr-game-frame">
+        <canvas
+          id="moneyRoadRunnerCanvas"
+          data-money-road-runner="true"
+          aria-label="Money Road Runner game canvas"
+        ></canvas>
+
+        <div class="mrr-floating-hud mrr-hud money-road-runner-hud" aria-hidden="true">
+          <article class="mrr-hud-card mrr-score-card">
+            <span>High</span>
+            <strong id="mrrHighScore">0</strong>
+          </article>
+
+          <article class="mrr-hud-card mrr-coin-card">
+            <span>Total</span>
+            <strong id="mrrTotalCoins">0</strong>
+          </article>
+
+          <article class="mrr-hud-card mrr-level-card">
+            <span>Level</span>
+            <strong id="mrrLevel">1</strong>
+          </article>
+
+          <article class="mrr-hud-card mrr-combo-card">
+            <span>Rank</span>
+            <strong id="mrrRank">Runner</strong>
+          </article>
+        </div>
+
+        <div class="mrr-status-strip mrr-power-strip money-road-runner-status" aria-hidden="true">
+          <span class="mrr-status-pill mrr-power-pill">Swipe</span>
+          <span class="mrr-status-pill mrr-power-pill">WASD</span>
+          <span class="mrr-status-pill mrr-power-pill">Arrows</span>
+          <span class="mrr-status-pill mrr-power-pill">Shift Dash</span>
+        </div>
+      </div>
+
+      <footer class="mrr-controls money-road-runner-controls mrr-bottom-controls">
+        <button
+          id="mrrStartBtn"
+          class="mrr-launch-btn"
+          type="button"
+        >
+          Start
+        </button>
+
+        <button
+          id="mrrDashBtn"
+          class="mrr-action-btn"
+          type="button"
+        >
+          Dash
+        </button>
+
+        <button
+          id="mrrJumpBtn"
+          class="mrr-action-btn secondary"
+          type="button"
+        >
+          Jump
+        </button>
+
+        <button
+          id="mrrSlideBtn"
+          class="mrr-action-btn secondary"
+          type="button"
+        >
+          Slide
+        </button>
+      </footer>
+    </section>
+  </main>
+
+  <script src="/games/money-road-runner/game.js" defer></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+
+      const buttons = {
+        start: $("mrrStartBtn"),
+        pause: $("mrrPauseBtn"),
+        restart: $("mrrRestartBtn"),
+        dash: $("mrrDashBtn"),
+        jump: $("mrrJumpBtn"),
+        slide: $("mrrSlideBtn")
+      };
+
+      const stats = {
+        high: $("mrrHighScore"),
+        total: $("mrrTotalCoins"),
+        level: $("mrrLevel"),
+        rank: $("mrrRank")
+      };
+
+      function api() {
+        return window.RB_MONEY_ROAD_RUNNER;
+      }
+
+      function updateHud() {
+        const game = api();
+        if (!game?.getState) return;
+
+        const state = game.getState();
+
+        if (stats.high) {
+          stats.high.textContent = Number(state.highScore || 0).toLocaleString();
+        }
+
+        if (stats.total) {
+          stats.total.textContent = Number(state.totalCoins || 0).toLocaleString();
+        }
+
+        if (stats.level) {
+          stats.level.textContent = Number(state.level || 1).toLocaleString();
+        }
+
+        if (stats.rank) {
+          stats.rank.textContent = String(state.rank || "Runner").replace("Money Road ", "");
+        }
+      }
+
+      function pressKey(key, type = "keydown") {
+        window.dispatchEvent(
+          new KeyboardEvent(type, {
+            key,
+            bubbles: true,
+            cancelable: true
+          })
+        );
+      }
+
+      buttons.start?.addEventListener("click", () => {
+        api()?.start?.();
+        updateHud();
+      });
+
+      buttons.pause?.addEventListener("click", () => {
+        const game = api();
+        const state = game?.getState?.();
+
+        if (!game || !state) return;
+
+        if (state.paused) {
+          game.resume?.();
+          buttons.pause.textContent = "⏸";
+          buttons.pause.title = "Pause";
+        } else {
+          game.pause?.();
+          buttons.pause.textContent = "▶";
+          buttons.pause.title = "Resume";
+        }
+
+        updateHud();
+      });
+
+      buttons.restart?.addEventListener("click", () => {
+        api()?.restart?.();
+        if (buttons.pause) {
+          buttons.pause.textContent = "⏸";
+          buttons.pause.title = "Pause";
+        }
+        updateHud();
+      });
+
+      buttons.dash?.addEventListener("click", () => {
+        pressKey("Shift", "keydown");
+        setTimeout(() => pressKey("Shift", "keyup"), 90);
+      });
+
+      buttons.jump?.addEventListener("click", () => {
+        pressKey("ArrowUp", "keydown");
+        setTimeout(() => pressKey("ArrowUp", "keyup"), 90);
+      });
+
+      buttons.slide?.addEventListener("click", () => {
+        pressKey("ArrowDown", "keydown");
+        setTimeout(() => pressKey("ArrowDown", "keyup"), 90);
+      });
+
+      window.addEventListener("rb:xp-gauge-update", updateHud);
+      window.addEventListener("rb:game-run-complete", updateHud);
+
+      setInterval(updateHud, 700);
+      window.addEventListener("load", updateHud);
+    })();
+  </script>
+</body>
+</html>
