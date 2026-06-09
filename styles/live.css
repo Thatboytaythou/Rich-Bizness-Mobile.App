@@ -4,6 +4,7 @@
 
    LIVE + WATCH HOLOGRAM TV EXPERIENCE
    Live Studio + Watch Room Shared Styles
+   Profile Lock + XP Energy Sync Enabled
 ========================================= */
 
 .live-body {
@@ -119,6 +120,21 @@
   border-color: rgba(124, 255, 170, 0.22);
 }
 
+body[data-rb-profile-locked="true"].rb-live-hologram-page .live-watch-link,
+body[data-rb-profile-locked="true"].rb-watch-hologram-page .live-watch-link,
+body[data-rb-profile-locked="true"].live-body .live-watch-link {
+  border-color: rgba(0, 255, 157, 0.36);
+}
+
+body.rb-orbit-xp-energy.rb-live-hologram-page .live-watch-link,
+body.rb-orbit-xp-energy.rb-watch-hologram-page .live-watch-link,
+body.rb-orbit-xp-energy.live-body .live-watch-link {
+  border-color: rgba(250, 204, 21, 0.36);
+  box-shadow:
+    0 0 18px rgba(0, 255, 157, 0.14),
+    0 0 26px rgba(250, 204, 21, 0.1);
+}
+
 .holo-tv-wrap {
   position: absolute;
   inset: 100px 18px 120px;
@@ -181,6 +197,24 @@
   pointer-events: none;
 }
 
+body.rb-orbit-xp-energy.rb-live-hologram-page .holo-tv,
+body.rb-orbit-xp-energy.rb-watch-hologram-page .holo-tv,
+body.rb-orbit-xp-energy.live-body .holo-tv {
+  border-color: rgba(250, 204, 21, 0.42);
+
+  box-shadow:
+    0 0 90px rgba(0, 255, 157, 0.28),
+    0 0 160px rgba(250, 204, 21, 0.18),
+    inset 0 0 96px rgba(255, 255, 255, 0.055);
+}
+
+body.rb-orbit-xp-energy.rb-live-hologram-page .holo-tv::after,
+body.rb-orbit-xp-energy.rb-watch-hologram-page .holo-tv::after,
+body.rb-orbit-xp-energy.live-body .holo-tv::after {
+  background:
+    radial-gradient(circle, rgba(0, 255, 157, 0.48), rgba(250, 204, 21, 0.18), transparent 72%);
+}
+
 .holo-tv-glass {
   position: absolute;
   inset: 0;
@@ -190,6 +224,12 @@
     radial-gradient(circle at 28% 18%, rgba(255,255,255,.14), transparent 28%),
     linear-gradient(135deg, rgba(255,255,255,.08), transparent 34%, rgba(0,255,157,.08));
   mix-blend-mode: screen;
+}
+
+body.rb-orbit-xp-energy .holo-tv-glass {
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.16), transparent 28%),
+    linear-gradient(135deg, rgba(255,255,255,.1), transparent 34%, rgba(0,255,157,.1), rgba(250,204,21,.08));
 }
 
 .local-video,
@@ -270,6 +310,15 @@
     inset 0 0 30px rgba(255, 255, 255, 0.05);
 }
 
+body.rb-orbit-xp-energy .remote-video {
+  border-color: rgba(250, 204, 21, 0.38);
+
+  box-shadow:
+    0 0 34px rgba(0, 255, 157, 0.24),
+    0 0 42px rgba(250, 204, 21, 0.12),
+    inset 0 0 30px rgba(255, 255, 255, 0.06);
+}
+
 .we-lit-float {
   position: absolute;
   left: 50%;
@@ -288,6 +337,13 @@
     0 0 50px rgba(250, 204, 21, 0.34),
     0 10px 35px rgba(0, 0, 0, 0.9);
   animation: rbWeLitFloat 4.5s ease-in-out infinite;
+}
+
+body.rb-orbit-xp-energy .we-lit-float {
+  text-shadow:
+    0 0 22px rgba(0, 255, 157, 0.62),
+    0 0 58px rgba(250, 204, 21, 0.42),
+    0 10px 35px rgba(0, 0, 0, 0.9);
 }
 
 .holo-room-info {
@@ -364,6 +420,12 @@
   border: 1px solid rgba(124, 255, 170, 0.24);
 }
 
+body.rb-orbit-xp-energy .live-badge.access,
+body.rb-orbit-xp-energy #watchAccess {
+  color: #fefce8;
+  border-color: rgba(250, 204, 21, 0.32);
+}
+
 .holo-empty {
   position: absolute;
   left: 50%;
@@ -406,6 +468,15 @@
     0 0 36px rgba(0, 255, 157, 0.15),
     0 0 80px rgba(0, 0, 0, 0.62);
   pointer-events: auto;
+}
+
+body.rb-orbit-xp-energy .live-control-dock {
+  border-color: rgba(250, 204, 21, 0.34);
+
+  box-shadow:
+    0 0 38px rgba(0, 255, 157, 0.18),
+    0 0 52px rgba(250, 204, 21, 0.12),
+    0 0 80px rgba(0, 0, 0, 0.62);
 }
 
 .watch-control-dock {
@@ -606,6 +677,14 @@ button:disabled {
   pointer-events: none;
 }
 
+body.rb-orbit-xp-energy #liveStatus.live-status,
+body.rb-orbit-xp-energy .live-status {
+  border-color: rgba(250, 204, 21, 0.3);
+  box-shadow:
+    0 0 18px rgba(0, 255, 157, 0.14),
+    0 0 28px rgba(250, 204, 21, 0.08);
+}
+
 .chat-list,
 .tip-list,
 .mini-list {
@@ -679,6 +758,13 @@ button:disabled {
   animation: rbReaction 1.35s ease forwards;
 }
 
+body.rb-orbit-xp-energy .reaction-pop,
+body.rb-orbit-xp-energy .reaction-burst {
+  filter:
+    drop-shadow(0 0 16px rgba(0, 255, 157, 0.32))
+    drop-shadow(0 0 18px rgba(250, 204, 21, 0.18));
+}
+
 .watch-tip-box,
 .watch-tips-panel,
 .live-mini-lists {
@@ -688,6 +774,12 @@ button:disabled {
   border-radius: 20px;
   background: rgba(0,0,0,.38);
   border: 1px solid rgba(255,255,255,.08);
+}
+
+body.rb-orbit-xp-energy .watch-tip-box,
+body.rb-orbit-xp-energy .watch-tips-panel,
+body.rb-orbit-xp-energy .live-mini-lists {
+  border-color: rgba(250, 204, 21, 0.2);
 }
 
 .watch-tip-box .rb-form-grid {
@@ -721,6 +813,14 @@ button:disabled {
   background: rgba(0,0,0,.58);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+}
+
+body.rb-orbit-xp-energy .watch-stream-rail {
+  border-color: rgba(250, 204, 21, 0.28);
+
+  box-shadow:
+    0 0 24px rgba(0, 255, 157, 0.12),
+    0 0 34px rgba(250, 204, 21, 0.08);
 }
 
 .rb-module-head {
@@ -773,6 +873,10 @@ button:disabled {
   border-radius: 18px;
   background: rgba(0,0,0,.45);
   border: 1px solid rgba(255,255,255,.08);
+}
+
+body.rb-orbit-xp-energy .watch-card {
+  border-color: rgba(250, 204, 21, 0.18);
 }
 
 .watch-card-img {
