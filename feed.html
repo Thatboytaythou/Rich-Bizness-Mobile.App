@@ -14,7 +14,7 @@
 
   <meta
     name="description"
-    content="Realtime Rich Bizness social feed for posts, reactions, media, gaming, music, live, sports, and creator activity."
+    content="Realtime Rich Bizness social feed for posts, reactions, media, gaming, music, podcast, radio, live, sports, and creator activity."
   />
 
   <link rel="stylesheet" href="/styles/base.css" />
@@ -27,8 +27,12 @@
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 </head>
 
-<body class="rb-body rb-feed-page" data-page="feed">
-
+<body
+  class="rb-body rb-feed-page rb-orbit-xp-energy"
+  data-page="feed"
+  data-rb-page="feed"
+  data-rb-route="feed"
+>
   <div class="rb-bg-layer" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
@@ -36,24 +40,29 @@
   <div class="rb-fx-smoke" aria-hidden="true"></div>
 
   <header class="rb-topbar">
-    <a class="rb-brand" href="/" aria-label="Rich Bizness home">
+    <a class="rb-brand" href="/" data-route="home" aria-label="Rich Bizness home">
       <span>WELCOME BACK</span>
       <strong>RICH BIZNESS</strong>
       <small>LLC</small>
     </a>
 
     <nav class="rb-topnav" aria-label="Feed navigation">
-      <a href="/watch">Watch</a>
-      <a href="/live">Live</a>
-      <a href="/music">Music</a>
-      <a href="/gaming">Gaming</a>
-      <a href="/sports">Sports</a>
-      <a href="/profile">Profile</a>
+      <a href="/" data-route="home">Portal</a>
+      <a href="/watch" data-route="watch">Watch</a>
+      <a href="/live" data-route="live">Live</a>
+      <a href="/music" data-route="music">Music</a>
+      <a href="/podcast" data-route="podcast">Podcast</a>
+      <a href="/radio" data-route="radio">Radio</a>
+      <a href="/gaming" data-route="gaming">Gaming</a>
+      <a href="/sports" data-route="sports">Sports</a>
+      <a href="/gallery" data-route="gallery">Gallery</a>
+      <a href="/store" data-route="store">Store</a>
+      <a href="/meta" data-route="meta">Meta</a>
+      <a href="/profile" data-route="profile" data-rb-profile-link>Profile</a>
     </nav>
   </header>
 
   <main class="rb-section-shell rb-feed-shell">
-
     <section class="rb-section-hero">
       <div class="rb-section-hero-copy">
         <p class="rb-kicker">RICH BIZNESS LLC</p>
@@ -65,21 +74,22 @@
         </p>
       </div>
 
-      <a class="rb-back" href="/">← Back To Portal</a>
+      <a class="rb-back" href="/" data-route="home">← Back To Portal</a>
     </section>
 
     <section class="rb-feed-layout">
-
       <aside class="rb-panel rb-composer-card" aria-label="Create feed post">
         <div class="rb-user-strip">
           <img
             id="composerAvatar"
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Composer Avatar"
+            data-rb-avatar
+            data-rb-profile-avatar
           />
 
           <div>
-            <strong id="composerName">Guest Viewer</strong>
+            <strong id="composerName" data-rb-name>Guest Viewer</strong>
             <small id="feedStatus">Loading feed...</small>
           </div>
         </div>
@@ -188,10 +198,14 @@
           aria-live="polite"
         ></div>
       </section>
-
     </section>
-
   </main>
+
+  <script type="module">
+    import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
+
+    bindGlobalNavigation();
+  </script>
 
   <script type="module" src="/core/pages/feed.js"></script>
 </body>
