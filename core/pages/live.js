@@ -5,6 +5,7 @@
    LIVE PAGE CONTROLLER
    Creator studio: create → start → stream → chat → reactions
    Uses locked live feature engines
+   XP Gauge Enabled
 ========================= */
 
 import {
@@ -17,6 +18,12 @@ import {
 import {
   RB_ROUTES
 } from "/core/shared/rb-config.js";
+
+import {
+  getProfileIdentity,
+  bindProfileShell,
+  buildProfileUrl
+} from "/core/shared/rb-profile.js";
 
 import {
   initLiveRail
@@ -102,13 +109,21 @@ const els = {
   chatList: $("chatList"),
   chatForm: $("chatForm"),
   chatInput: $("chatInput"),
-  sendReactionBtn: $("sendReactionBtn")
+  sendReactionBtn: $("sendReactionBtn"),
+
+  xpGauge: $("live-xp-gauge"),
+  xpFill: $("live-xp-gauge-fill"),
+  xpText: $("live-xp-gauge-text"),
+  xpNext: $("live-xp-gauge-next"),
+  xpLevel: $("live-xp-level"),
+  xpRank: $("live-xp-rank")
 };
 
 const LIVE_PAGE = {
   booted: false,
   user: null,
   profile: null,
+  identity: null,
   stream: null,
   unsubscribers: []
 };
@@ -143,6 +158,110 @@ function profileName() {
     "Rich User"
   );
 }
+
+/* =========================
+   XP GAUGE
+========================= */
+
+function getProfileXpModel(profile = {}, identity = {}) {
+  const rawXp =
+    profile?.xp ??
+    profile?.rich_points ??
+    profile?.points ??
+    identity?.xp ??
+    identity?.rich_points ??
+    0;
+
+  const rawLevel =
+    profile?.rich_level ??
+    profile?.level ??
+    identity?.rich_level ??
+    identity?.level ??
+    1;
+
+  const rank =
+    profile?.rank_title ||
+    profile?.rank ||
+    identity?.rankTitle ||
+    identity?.rank_title ||
+    identity?.rank ||
+    "Live Creator";
+
+  const xp = Math.max(0, Number(rawXp) || 0);
+  const level = Math.max(1, Number(rawLevel) || 1);
+
+  const levelBase = Math.max(0, (level - 1) * 1000);
+  const nextLevel = level * 1000;
+  const span = Math.max(1, nextLevel - levelBase);
+  const currentIntoLevel = Math.max(0, xp - levelBase);
+  const percent = Math.max(0, Math.min(100, (currentIntoLevel / span) * 100));
+  const remaining = Math.max(0, nextLevel - xp);
+
+  return {
+    xp,
+    level,
+    rank,
+    nextLevel,
+    remaining,
+    percent
+  };
+}
+
+function renderXpGauge() {
+  LIVE_PAGE.identity = getProfileIdentity?.(LIVE_PAGE.profile) || LIVE_PAGE.identity || null;
+
+  const model = getProfileXpModel(LIVE_PAGE.profile, LIVE_PAGE.identity);
+
+  if (els.xpGauge) {
+    els.xpGauge.dataset.level = String(model.level);
+    els.xpGauge.dataset.rank = model.rank;
+    els.xpGauge.dataset.xp = String(model.xp);
+  }
+
+  if (els.xpFill) {
+    els.xpFill.style.width = `${model.percent}%`;
+  }
+
+  safeSet(els.xpText, `${model.xp.toLocaleString()} XP`);
+  safeSet(els.xpNext, `${model.remaining.toLocaleString()} XP TO LVL ${model.level + 1}`);
+  safeSet(els.xpLevel, `LVL ${model.level}`);
+  safeSet(els.xpRank, model.rank);
+
+  window.dispatchEvent(
+    new CustomEvent("rb:xp-gauge-update", {
+      detail: {
+        route: "live",
+        xp: model.xp,
+        level: model.level,
+        rank: model.rank,
+        nextLevel: model.nextLevel,
+        remaining: model.remaining,
+        percent: model.percent
+      }
+    })
+  );
+}
+
+function syncLiveProfileLock() {
+  LIVE_PAGE.identity = getProfileIdentity?.(LIVE_PAGE.profile) || null;
+
+  document.body.dataset.rbRoute = "live";
+  document.body.dataset.rbUserId = LIVE_PAGE.user?.id || "";
+  document.body.dataset.rbProfileId = LIVE_PAGE.identity?.id || "";
+  document.body.dataset.rbProfileLocked = LIVE_PAGE.identity?.id ? "true" : "false";
+
+  bindProfileShell?.();
+
+  document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
+    el.href = buildProfileUrl?.(LIVE_PAGE.profile) || RB_ROUTES.profile || "/profile";
+  });
+
+  renderXpGauge();
+}
+
+/* =========================
+   STREAM UI
+========================= */
 
 function watchUrl(stream = LIVE_PAGE.stream) {
   const base = RB_ROUTES.watch || "/watch";
@@ -181,6 +300,8 @@ function renderStream(stream = LIVE_PAGE.stream) {
 
     if (els.stageEmpty) els.stageEmpty.style.display = "grid";
 
+    renderXpGauge();
+
     return;
   }
 
@@ -216,6 +337,8 @@ function renderStream(stream = LIVE_PAGE.stream) {
       ? `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.75)), url("${stream.cover_url}")`
       : "";
   }
+
+  renderXpGauge();
 }
 
 function renderChat(messages = []) {
@@ -644,6 +767,8 @@ async function initIdentity() {
   LIVE_PAGE.user = state?.user || null;
   LIVE_PAGE.profile = state?.profile || null;
 
+  syncLiveProfileLock();
+
   if (!LIVE_PAGE.user?.id) {
     setStatus("Sign in required before going live.");
     return false;
@@ -681,6 +806,9 @@ async function bootLivePage() {
 
     await loadLatestDraftOrLive();
 
+    document.body.dataset.rbPage = "live";
+    document.body.dataset.rbRoute = "live";
+    document.body.dataset.rbProfileLock = LIVE_PAGE.identity?.id ? "true" : "false";
     document.body.classList.add("rb-live-ready");
 
     markPageReady("live");
