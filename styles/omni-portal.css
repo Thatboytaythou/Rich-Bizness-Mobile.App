@@ -1,226 +1,1293 @@
 /* =========================
    RICH BIZNESS MOBILE
-   styles/omni-portal.css
-   LAYER 7 / 22
+   /styles/omni-portal.css
 
-   PORTAL AURA SUPPORT
-   Canvas is the real portal.
-   Safe overlay only — no dial/engine override.
-   XP Energy Sync Enabled
+   LAYER 3 — INDEX CITY PORTAL WORLD
+
+   Locked purpose:
+   - index full-screen city world
+   - topbar / brand
+   - left HUD
+   - right HUD
+   - center city districts
+   - main portal placement
+   - center avatar placement
+   - bottom nav layout
+
+   Does NOT own:
+   - smoke/grid/noise animations
+   - generic base reset
+   - JS logic
 ========================= */
 
-/* OLD HTML PORTAL DISABLED */
+/* INDEX PAGE SHELL */
 
-.rb-portal-ui,
-.rb-portal-core,
-.rb-portal-ring,
-.rb-portal-center,
-.rb-portal-halo,
-.rb-portal-orb {
-  display: none !important;
+.rb-index-page {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(0, 255, 157, 0.18), transparent 30%),
+    radial-gradient(circle at 78% 20%, rgba(250, 204, 21, 0.11), transparent 26%),
+    linear-gradient(180deg, #06140d 0%, #030604 42%, #010201 100%);
 }
 
-/* =========================
-   CANVAS-CENTERED AURA
-========================= */
+.rb-universe-shell {
+  position: relative;
+  z-index: var(--rb-z-ui, 20);
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  height: calc(var(--rb-vh, 1vh) * 100);
+  overflow: hidden;
+}
 
-.rb-index-page::after {
+.rb-universe-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding:
+    calc(18px + var(--rb-safe-top, 0px))
+    calc(16px + var(--rb-safe-right, 0px))
+    calc(104px + var(--rb-safe-bottom, 0px))
+    calc(16px + var(--rb-safe-left, 0px));
+}
+
+/* CITY BACKDROP */
+
+.rb-universe-stage::before {
   content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  z-index: 1;
+  width: min(1180px, 118vw);
+  height: 72%;
+  transform: translateX(-50%);
 
-  position: fixed;
-  inset: 0;
-  z-index: 2;
+  background:
+    linear-gradient(180deg, transparent 0 16%, rgba(0, 0, 0, 0.22) 58%, rgba(0, 0, 0, 0.88) 100%),
+    radial-gradient(ellipse at 50% 82%, rgba(0, 255, 157, 0.2), transparent 46%),
+    linear-gradient(90deg, transparent 0 4%, rgba(0, 255, 157, 0.1) 4% 5%, transparent 5% 8%),
+    linear-gradient(90deg, transparent 0 8%, rgba(250, 204, 21, 0.09) 8% 9%, transparent 9% 14%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 100%);
 
+  background-size:
+    auto,
+    auto,
+    140px 100%,
+    210px 100%,
+    100% 48px;
+
+  clip-path: polygon(
+    0 100%,
+    0 48%,
+    5% 48%,
+    5% 28%,
+    11% 28%,
+    11% 52%,
+    16% 52%,
+    16% 20%,
+    23% 20%,
+    23% 46%,
+    29% 46%,
+    29% 11%,
+    37% 11%,
+    37% 40%,
+    43% 40%,
+    43% 4%,
+    53% 4%,
+    53% 38%,
+    59% 38%,
+    59% 15%,
+    67% 15%,
+    67% 48%,
+    72% 48%,
+    72% 24%,
+    80% 24%,
+    80% 54%,
+    86% 54%,
+    86% 32%,
+    94% 32%,
+    94% 58%,
+    100% 58%,
+    100% 100%
+  );
+
+  opacity: 0.82;
+  filter:
+    drop-shadow(0 0 28px rgba(0, 255, 157, 0.16))
+    drop-shadow(0 0 48px rgba(250, 204, 21, 0.08));
   pointer-events: none;
+}
+
+.rb-universe-stage::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  z-index: 2;
+  width: min(880px, 92vw);
+  height: 34%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 255, 157, 0.2), transparent 54%),
+    radial-gradient(ellipse at center, rgba(250, 204, 21, 0.1), transparent 70%);
+  filter: blur(18px);
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+/* TOP BAR */
+
+.rb-universe-topbar {
+  position: fixed;
+  top: calc(14px + var(--rb-safe-top, 0px));
+  left: calc(16px + var(--rb-safe-left, 0px));
+  right: calc(16px + var(--rb-safe-right, 0px));
+  z-index: 40;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  pointer-events: auto;
+}
+
+.rb-brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rb-brand-mark {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  border: 1px solid rgba(250, 204, 21, 0.34);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.26), transparent 60%),
+    rgba(0, 0, 0, 0.58);
+  color: var(--rb-gold, #facc15);
+  box-shadow:
+    0 0 22px rgba(250, 204, 21, 0.18),
+    0 0 32px rgba(0, 255, 157, 0.1);
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+}
+
+.rb-brand-mark strong {
+  font-size: 0.78rem;
+}
+
+.rb-brand-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.rb-brand-copy strong {
+  color: #ffffff;
+  font-size: clamp(1rem, 2.2vw, 1.34rem);
+  font-weight: 1000;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+}
+
+.rb-brand-copy small {
+  color: var(--rb-green-soft, #0cffb0);
+  font-size: 0.62rem;
+  font-weight: 950;
+  letter-spacing: 0.28em;
+}
+
+.rb-top-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.rb-pill,
+.rb-icon-btn,
+.rb-profile-chip {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025)),
+    rgba(0, 0, 0, 0.46);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.rb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border-radius: var(--rb-radius-pill, 999px);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.64rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rb-pill span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rb-green, #00ff9d);
+  box-shadow: 0 0 16px rgba(0, 255, 157, 0.75);
+}
+
+.rb-pill strong {
+  color: var(--rb-gold, #facc15);
+  font-size: 0.72rem;
+}
+
+.rb-pill-live {
+  border-color: rgba(0, 255, 157, 0.26);
+}
+
+.rb-pill-online {
+  border-color: rgba(250, 204, 21, 0.22);
+}
+
+.rb-icon-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+}
+
+.rb-icon-btn em {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+  background: var(--rb-gold, #facc15);
+  color: #050805;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 1000;
+}
+
+.rb-profile-chip {
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border-radius: 18px;
+  border-color: rgba(250, 204, 21, 0.3);
+  padding: 2px;
+}
+
+.rb-profile-chip img {
+  width: 100%;
+  height: 100%;
+  border-radius: 15px;
+  object-fit: cover;
+}
+
+/* HERO TITLE */
+
+.rb-hero-title {
+  position: fixed;
+  left: 50%;
+  top: calc(78px + var(--rb-safe-top, 0px));
+  z-index: 25;
+  width: min(760px, 92vw);
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.rb-hero-title h1 {
+  color: #ffffff;
+  font-size: clamp(2.15rem, 6.4vw, 5rem);
+  font-weight: 1000;
+  line-height: 0.82;
+  letter-spacing: -0.085em;
+  text-shadow:
+    0 0 22px rgba(255, 255, 255, 0.16),
+    0 0 52px rgba(0, 255, 157, 0.18);
+}
+
+.rb-hero-title p {
+  margin-top: 10px;
+  color: var(--rb-gold-soft, #ffe27a);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* HUD CARDS */
+
+.rb-left-hud,
+.rb-right-hud {
+  position: fixed;
+  top: calc(164px + var(--rb-safe-top, 0px));
+  bottom: calc(112px + var(--rb-safe-bottom, 0px));
+  z-index: 28;
+
+  width: min(270px, 24vw);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  pointer-events: auto;
+}
+
+.rb-left-hud {
+  left: calc(16px + var(--rb-safe-left, 0px));
+}
+
+.rb-right-hud {
+  right: calc(16px + var(--rb-safe-right, 0px));
+}
+
+.rb-hud-card,
+.rb-radio-card,
+.rb-profile-status-card,
+.rb-quick-access {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 157, 0.1), transparent 54%),
+    linear-gradient(145deg, rgba(5, 8, 5, 0.82), rgba(0, 0, 0, 0.58));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.rb-hud-card,
+.rb-quick-access {
+  padding: 16px;
+}
+
+.rb-hud-card h2,
+.rb-quick-access h2 {
+  color: var(--rb-gold, #facc15);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.rb-activity-graph {
+  position: relative;
+  height: 78px;
+  margin: 14px 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(0, 255, 157, 0.1), rgba(0, 0, 0, 0.18));
+}
+
+.rb-activity-graph span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  height: 40px;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(0, 255, 157, 0.72) 8% 10%, transparent 10% 18%),
+    linear-gradient(90deg, transparent 0 24%, rgba(250, 204, 21, 0.62) 24% 27%, transparent 27% 38%),
+    linear-gradient(90deg, transparent 0 48%, rgba(0, 255, 157, 0.7) 48% 51%, transparent 51% 64%),
+    linear-gradient(90deg, transparent 0 78%, rgba(250, 204, 21, 0.65) 78% 82%, transparent 82%);
+  filter: drop-shadow(0 0 12px rgba(0, 255, 157, 0.4));
+}
+
+.rb-hud-card dl {
+  display: grid;
+  gap: 10px;
+}
+
+.rb-hud-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.7rem;
+}
+
+.rb-hud-card dt {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.rb-hud-card dd {
+  color: #ffffff;
+  font-weight: 1000;
+}
+
+.rb-radio-card {
+  display: grid;
+  grid-template-columns: 48px 1fr 38px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.rb-radio-logo {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.34), transparent 60%),
+    rgba(0, 0, 0, 0.62);
+  color: var(--rb-gold, #facc15);
+  font-weight: 1000;
+}
+
+.rb-radio-card strong,
+.rb-profile-status-card strong {
+  color: #ffffff;
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 1000;
+}
+
+.rb-radio-card span,
+.rb-profile-status-card span,
+.rb-radio-card small,
+.rb-profile-status-card small {
+  display: block;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.66rem;
+  font-weight: 850;
+}
+
+.rb-radio-card button {
+  width: 38px;
+  height: 38px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(0, 255, 157, 0.82), rgba(250, 204, 21, 0.82));
+  color: #020302;
+  font-weight: 1000;
+}
+
+.rb-waveform {
+  grid-column: 1 / -1;
+  height: 28px;
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  opacity: 0.72;
+}
+
+.rb-waveform span {
+  flex: 1;
+  border-radius: 99px;
+  background: linear-gradient(180deg, var(--rb-green, #00ff9d), var(--rb-gold, #facc15));
+  height: 30%;
+}
+
+.rb-waveform span:nth-child(2n) {
+  height: 68%;
+}
+
+.rb-waveform span:nth-child(3n) {
+  height: 92%;
+}
+
+/* CITY WORLD */
+
+.rb-city-world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 12;
+
+  width: min(780px, 72vw);
+  height: min(620px, 66vh);
+
+  transform: translate(-50%, -42%);
+  pointer-events: auto;
+}
+
+.rb-space-orbit {
+  position: absolute;
+  inset: 8% 10%;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 157, 0.18);
+  box-shadow:
+    0 0 42px rgba(0, 255, 157, 0.14),
+    inset 0 0 54px rgba(250, 204, 21, 0.06);
+  transform: perspective(900px) rotateX(64deg);
+  pointer-events: none;
+}
+
+/* DISTRICTS */
+
+.rb-district {
+  position: absolute;
+  z-index: 14;
+  width: clamp(108px, 12vw, 150px);
+  min-height: 82px;
+  padding: 12px 10px;
+
+  display: grid;
+  align-content: center;
+  gap: 5px;
+
+  border: 1px solid rgba(0, 255, 157, 0.24);
+  border-radius: 24px;
 
   background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.035), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.13), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(250, 204, 21, 0.07), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.04), transparent 52%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 157, 0.16), transparent 70%),
+    rgba(0, 0, 0, 0.52);
 
-  mix-blend-mode: screen;
+  color: #ffffff;
+  text-align: center;
 
-  opacity: 0.68;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.34),
+    0 0 26px rgba(0, 255, 157, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  transform: translateZ(0);
+  transition:
+    transform var(--rb-med, 260ms ease),
+    border-color var(--rb-med, 260ms ease),
+    box-shadow var(--rb-med, 260ms ease);
+}
+
+.rb-district:hover,
+.rb-district:focus-visible {
+  transform: translateY(-4px) scale(1.035);
+  border-color: rgba(250, 204, 21, 0.42);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.42),
+    0 0 34px rgba(250, 204, 21, 0.18),
+    0 0 44px rgba(0, 255, 157, 0.16);
+}
+
+.rb-district strong {
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.rb-district span {
+  color: var(--rb-gold-soft, #ffe27a);
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rb-district-gallery {
+  left: 2%;
+  top: 20%;
+}
+
+.rb-district-podcast {
+  left: 16%;
+  top: 2%;
+}
+
+.rb-district-live {
+  left: 43%;
+  top: -4%;
+}
+
+.rb-district-music {
+  right: 16%;
+  top: 2%;
+}
+
+.rb-district-meta {
+  right: 2%;
+  top: 22%;
+}
+
+.rb-district-gaming {
+  left: 2%;
+  bottom: 18%;
+}
+
+.rb-district-sports {
+  left: 22%;
+  bottom: 2%;
+}
+
+.rb-district-store {
+  right: 22%;
+  bottom: 2%;
+}
+
+.rb-district-upload {
+  right: 2%;
+  bottom: 18%;
+}
+
+/* MAIN PORTAL */
+
+.rb-main-portal {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  z-index: 18;
+  width: clamp(210px, 28vw, 330px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  outline: none;
+}
+
+.rb-portal-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(250, 204, 21, 0.52);
+  background:
+    radial-gradient(circle at center, rgba(0, 255, 157, 0.22), transparent 52%),
+    conic-gradient(
+      from 0deg,
+      rgba(0, 255, 157, 0.95),
+      rgba(250, 204, 21, 0.95),
+      rgba(0, 255, 157, 0.9),
+      rgba(250, 204, 21, 0.95),
+      rgba(0, 255, 157, 0.95)
+    );
+  box-shadow:
+    0 0 34px rgba(0, 255, 157, 0.32),
+    0 0 80px rgba(250, 204, 21, 0.2),
+    inset 0 0 46px rgba(0, 0, 0, 0.72);
+  animation:
+    rbPortalSpin 14s linear infinite,
+    rbPortalPulse 5.4s ease-in-out infinite;
+}
+
+.rb-portal-ring::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at center, rgba(0, 0, 0, 0.72), rgba(0, 255, 157, 0.18) 50%, rgba(0, 0, 0, 0.82) 76%);
+  box-shadow:
+    inset 0 0 40px rgba(0, 255, 157, 0.26),
+    inset 0 0 70px rgba(250, 204, 21, 0.14);
+}
+
+.rb-portal-core {
+  position: relative;
+  z-index: 2;
+  width: 54%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(250, 204, 21, 0.42);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.24), transparent 62%),
+    rgba(0, 0, 0, 0.62);
+  color: #ffffff;
+  text-align: center;
+  box-shadow:
+    0 0 26px rgba(0, 255, 157, 0.22),
+    inset 0 0 28px rgba(255, 255, 255, 0.04);
+}
+
+.rb-portal-core strong {
+  display: block;
+  color: #ffffff;
+  font-size: clamp(2.1rem, 5vw, 3.6rem);
+  font-weight: 1000;
+  letter-spacing: -0.12em;
+  line-height: 0.72;
+}
+
+.rb-portal-core small {
+  display: block;
+  margin-top: 6px;
+  color: var(--rb-gold-soft, #ffe27a);
+  font-size: 0.52rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+}
+
+.rb-crown {
+  color: var(--rb-gold, #facc15);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* AVATAR CENTER STAGE */
+
+.rb-avatar-stage {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  z-index: 24;
+  width: 120px;
+  height: 210px;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: end center;
+}
+
+.rb-avatar-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 110px;
+  height: 28px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow:
+    0 0 34px rgba(0, 255, 157, 0.2),
+    0 0 46px rgba(250, 204, 21, 0.1);
+}
+
+.rb-avatar-body {
+  position: relative;
+  width: 78px;
+  height: 180px;
+  display: block;
   filter:
-    saturate(1.16)
-    blur(0.2px);
-
-  animation: rbPortalAuraBreathe 6.8s ease-in-out infinite;
+    drop-shadow(0 0 18px rgba(0, 255, 157, 0.18))
+    drop-shadow(0 14px 24px rgba(0, 0, 0, 0.58));
+  animation: rbAvatarIdle 4.8s ease-in-out infinite;
 }
 
-/* =========================
-   ENERGY STATES
-========================= */
+.rb-avatar-head {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 45% 28%, rgba(255, 255, 255, 0.45), transparent 18%),
+    linear-gradient(145deg, #9b6a38, #3f2416);
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.32),
+    0 0 22px rgba(250, 204, 21, 0.18);
+}
 
-.rb-index-page.rb-orbit-live-energy::after {
-  opacity: 0.86;
+.rb-avatar-head::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -13px;
+  width: 52px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 16px 16px 10px 10px;
+  background: #050805;
+  box-shadow: 0 0 14px rgba(0, 255, 157, 0.16);
+}
+
+.rb-avatar-jacket {
+  position: absolute;
+  left: 50%;
+  top: 52px;
+  width: 70px;
+  height: 84px;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  border-radius: 22px 22px 18px 18px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  background:
+    linear-gradient(145deg, rgba(0, 255, 157, 0.25), rgba(0, 0, 0, 0.88)),
+    #07110c;
+  color: var(--rb-gold, #facc15);
+  font-size: 1.2rem;
+  font-weight: 1000;
+}
+
+.rb-avatar-legs {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 62px;
+  height: 62px;
+  transform: translateX(-50%);
+}
+
+.rb-avatar-legs::before,
+.rb-avatar-legs::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 24px;
+  height: 62px;
+  border-radius: 12px;
+  background: #050805;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rb-avatar-legs::before {
+  left: 5px;
+}
+
+.rb-avatar-legs::after {
+  right: 5px;
+}
+
+/* PROFILE STATUS */
+
+.rb-profile-status-card {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 12px;
+  padding: 14px;
+}
+
+.rb-profile-status-card img {
+  width: 54px;
+  height: 54px;
+  border-radius: 19px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+}
+
+.rb-xp-line {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  margin: 9px 0 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rb-xp-line i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--rb-green, #00ff9d), var(--rb-gold, #facc15));
+  box-shadow: 0 0 16px rgba(0, 255, 157, 0.42);
+}
+
+.rb-profile-status-card em {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.rb-quick-access {
+  display: grid;
+  gap: 8px;
+}
+
+.rb-quick-access button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.rb-quick-access button:hover,
+.rb-quick-access button:focus-visible {
+  border-color: rgba(250, 204, 21, 0.28);
+  background: rgba(250, 204, 21, 0.08);
+}
+
+/* BOTTOM NAV */
+
+.rb-bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + var(--rb-safe-bottom, 0px));
+  z-index: 50;
+
+  width: min(1040px, calc(100vw - 28px));
+  min-height: 76px;
+  padding: 10px;
+
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  gap: 6px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
 
   background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.05), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.18), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(250, 204, 21, 0.1), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.07), transparent 52%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.026)),
+    rgba(0, 0, 0, 0.58);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  transform: translateX(-50%);
+
+  box-shadow:
+    0 22px 80px rgba(0, 0, 0, 0.52),
+    0 0 28px rgba(0, 255, 157, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  pointer-events: auto;
 }
 
-.rb-index-page.rb-orbit-presence-energy::after {
-  opacity: 0.76;
+.rb-bottom-nav button {
+  min-width: 0;
+  min-height: 56px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.62rem;
+  font-weight: 900;
+  transition:
+    background var(--rb-med, 260ms ease),
+    color var(--rb-med, 260ms ease),
+    transform var(--rb-med, 260ms ease);
 }
 
-.rb-index-page.rb-orbit-xp-energy::after {
-  opacity: 0.9;
-
-  filter:
-    saturate(1.36)
-    brightness(1.08)
-    blur(0.2px);
-
+.rb-bottom-nav button:hover,
+.rb-bottom-nav button:focus-visible,
+.rb-bottom-nav button.is-active {
   background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.06), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.22), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(250, 204, 21, 0.14), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.08), transparent 52%);
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.18), transparent 68%),
+    rgba(0, 255, 157, 0.08);
+  color: #ffffff;
+  transform: translateY(-2px);
 }
 
-.rb-index-page.rb-orbit-live-energy.rb-orbit-xp-energy::after {
-  opacity: 0.96;
-
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.07), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.26), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(250, 204, 21, 0.16), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.1), transparent 52%);
+.rb-nav-icon {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
-/* =========================
-   THEME HOOKS
-========================= */
-
-.rb-theme-blue.rb-index-page::after {
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.035), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(34, 211, 238, 0.14), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(147, 197, 253, 0.075), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(59, 130, 246, 0.05), transparent 52%);
+.rb-live-nav-dot {
+  color: var(--rb-green, #00ff9d);
+  text-shadow: 0 0 14px rgba(0, 255, 157, 0.72);
 }
 
-.rb-theme-purple.rb-index-page::after {
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.035), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(168, 85, 247, 0.15), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(244, 114, 182, 0.085), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(192, 132, 252, 0.055), transparent 52%);
+/* ANIMATIONS */
+
+@keyframes rbPortalSpin {
+  to {
+    rotate: 360deg;
+  }
 }
 
-.rb-theme-black-gold.rb-index-page::after,
-.rb-theme-gold.rb-index-page::after {
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.032), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(250, 204, 21, 0.14), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(255, 226, 122, 0.08), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(0, 255, 157, 0.035), transparent 52%);
-}
-
-.rb-theme-blue.rb-index-page.rb-orbit-xp-energy::after {
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.052), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(34, 211, 238, 0.22), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(147, 197, 253, 0.13), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(59, 130, 246, 0.08), transparent 52%);
-}
-
-.rb-theme-purple.rb-index-page.rb-orbit-xp-energy::after {
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.052), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(168, 85, 247, 0.23), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(244, 114, 182, 0.14), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(192, 132, 252, 0.09), transparent 52%);
-}
-
-.rb-theme-black-gold.rb-index-page.rb-orbit-xp-energy::after,
-.rb-theme-gold.rb-index-page.rb-orbit-xp-energy::after {
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.048), transparent 15%),
-    radial-gradient(circle at 50% 48%, rgba(250, 204, 21, 0.23), transparent 28%),
-    radial-gradient(circle at 50% 54%, rgba(255, 226, 122, 0.15), transparent 42%),
-    radial-gradient(circle at 50% 52%, rgba(0, 255, 157, 0.08), transparent 52%);
-}
-
-/* =========================
-   SECTION BACKDROP MODE
-========================= */
-
-.rb-portal-backdrop::after {
-  opacity: 0.28;
-
-  filter:
-    blur(1px)
-    saturate(1.12);
-}
-
-.rb-portal-backdrop.rb-orbit-xp-energy::after {
-  opacity: 0.38;
-
-  filter:
-    blur(1px)
-    saturate(1.24)
-    brightness(1.04);
-}
-
-/* =========================
-   ANIMATIONS
-========================= */
-
-@keyframes rbPortalAuraBreathe {
+@keyframes rbPortalPulse {
   0%,
   100% {
-    opacity: 0.56;
+    filter: brightness(1) saturate(1);
     transform: scale(1);
   }
 
   50% {
-    opacity: 0.82;
+    filter: brightness(1.12) saturate(1.2);
     transform: scale(1.025);
   }
 }
 
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 720px) {
-  .rb-index-page::after {
-    opacity: 0.5;
-
-    background:
-      radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.025), transparent 16%),
-      radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.085), transparent 30%),
-      radial-gradient(circle at 50% 56%, rgba(250, 204, 21, 0.048), transparent 44%),
-      radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.028), transparent 54%);
+@keyframes rbAvatarIdle {
+  0%,
+  100% {
+    transform: translateY(0);
   }
 
-  .rb-index-page.rb-orbit-live-energy::after {
-    opacity: 0.68;
-  }
-
-  .rb-index-page.rb-orbit-xp-energy::after {
-    opacity: 0.72;
-
-    background:
-      radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.038), transparent 16%),
-      radial-gradient(circle at 50% 48%, rgba(0, 255, 157, 0.15), transparent 30%),
-      radial-gradient(circle at 50% 56%, rgba(250, 204, 21, 0.085), transparent 44%),
-      radial-gradient(circle at 50% 52%, rgba(168, 85, 247, 0.05), transparent 54%);
+  50% {
+    transform: translateY(-5px);
   }
 }
 
-/* =========================
-   REDUCED MOTION
-========================= */
+/* TABLET */
+
+@media (max-width: 980px) {
+  .rb-left-hud,
+  .rb-right-hud {
+    width: 220px;
+  }
+
+  .rb-city-world {
+    width: 78vw;
+  }
+
+  .rb-bottom-nav {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    max-height: 154px;
+  }
+
+  .rb-bottom-nav button {
+    min-height: 48px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 720px) {
+  .rb-universe-stage {
+    padding:
+      calc(12px + var(--rb-safe-top, 0px))
+      calc(10px + var(--rb-safe-right, 0px))
+      calc(98px + var(--rb-safe-bottom, 0px))
+      calc(10px + var(--rb-safe-left, 0px));
+  }
+
+  .rb-universe-topbar {
+    top: calc(10px + var(--rb-safe-top, 0px));
+    left: calc(10px + var(--rb-safe-left, 0px));
+    right: calc(10px + var(--rb-safe-right, 0px));
+  }
+
+  .rb-brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 16px;
+  }
+
+  .rb-brand-copy strong {
+    font-size: 0.92rem;
+  }
+
+  .rb-brand-copy small {
+    font-size: 0.52rem;
+    letter-spacing: 0.2em;
+  }
+
+  .rb-pill {
+    display: none;
+  }
+
+  .rb-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 15px;
+  }
+
+  .rb-profile-chip {
+    width: 42px;
+    height: 42px;
+    border-radius: 16px;
+  }
+
+  .rb-hero-title {
+    top: calc(72px + var(--rb-safe-top, 0px));
+    width: min(92vw, 460px);
+  }
+
+  .rb-hero-title h1 {
+    font-size: clamp(2.1rem, 12vw, 3.35rem);
+  }
+
+  .rb-hero-title p {
+    font-size: 0.55rem;
+    letter-spacing: 0.16em;
+  }
+
+  .rb-left-hud,
+  .rb-right-hud {
+    display: none;
+  }
+
+  .rb-city-world {
+    width: 100%;
+    height: 70vh;
+    top: 54%;
+    transform: translate(-50%, -42%);
+  }
+
+  .rb-district {
+    width: 94px;
+    min-height: 64px;
+    padding: 9px 8px;
+    border-radius: 18px;
+  }
+
+  .rb-district strong {
+    font-size: 0.58rem;
+  }
+
+  .rb-district span {
+    font-size: 0.43rem;
+  }
+
+  .rb-district-gallery {
+    left: 2%;
+    top: 25%;
+  }
+
+  .rb-district-podcast {
+    left: 18%;
+    top: 10%;
+  }
+
+  .rb-district-live {
+    left: 50%;
+    top: 4%;
+    transform: translateX(-50%);
+  }
+
+  .rb-district-live:hover,
+  .rb-district-live:focus-visible {
+    transform: translateX(-50%) translateY(-4px) scale(1.035);
+  }
+
+  .rb-district-music {
+    right: 18%;
+    top: 10%;
+  }
+
+  .rb-district-meta {
+    right: 2%;
+    top: 25%;
+  }
+
+  .rb-district-gaming {
+    left: 2%;
+    bottom: 24%;
+  }
+
+  .rb-district-sports {
+    left: 18%;
+    bottom: 9%;
+  }
+
+  .rb-district-store {
+    right: 18%;
+    bottom: 9%;
+  }
+
+  .rb-district-upload {
+    right: 2%;
+    bottom: 24%;
+  }
+
+  .rb-main-portal {
+    width: min(240px, 58vw);
+    top: 52%;
+  }
+
+  .rb-avatar-stage {
+    bottom: 5%;
+    width: 92px;
+    height: 152px;
+  }
+
+  .rb-avatar-body {
+    width: 58px;
+    height: 132px;
+  }
+
+  .rb-avatar-head {
+    width: 36px;
+    height: 36px;
+  }
+
+  .rb-avatar-jacket {
+    top: 42px;
+    width: 54px;
+    height: 62px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+  }
+
+  .rb-avatar-legs {
+    width: 50px;
+    height: 44px;
+  }
+
+  .rb-avatar-legs::before,
+  .rb-avatar-legs::after {
+    width: 19px;
+    height: 44px;
+  }
+
+  .rb-bottom-nav {
+    width: calc(100vw - 18px);
+    min-height: 76px;
+    max-height: 76px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    grid-template-columns: repeat(11, 62px);
+    justify-content: start;
+    border-radius: 24px;
+    padding: 9px;
+    scroll-snap-type: x proximity;
+  }
+
+  .rb-bottom-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rb-bottom-nav button {
+    min-height: 56px;
+    border-radius: 18px;
+    scroll-snap-align: center;
+  }
+}
+
+/* SMALL MOBILE */
+
+@media (max-width: 420px) {
+  .rb-district {
+    width: 84px;
+    min-height: 58px;
+  }
+
+  .rb-district strong {
+    font-size: 0.52rem;
+  }
+
+  .rb-district span {
+    display: none;
+  }
+
+  .rb-main-portal {
+    width: min(218px, 62vw);
+  }
+
+  .rb-hero-title h1 {
+    font-size: 2.26rem;
+  }
+}
+
+/* REDUCED MOTION */
 
 @media (prefers-reduced-motion: reduce) {
-  .rb-index-page::after {
+  .rb-portal-ring,
+  .rb-avatar-body {
     animation: none !important;
+  }
+
+  .rb-district,
+  .rb-bottom-nav button {
+    transition: none !important;
   }
 }
