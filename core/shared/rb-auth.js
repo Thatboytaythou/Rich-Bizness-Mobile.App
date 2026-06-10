@@ -2,17 +2,20 @@
    RICH BIZNESS MOBILE
    /core/shared/rb-auth.js
 
-   AUTH SYSTEM
-   Synced To rb-supabase.js
-   Profile Upsert Locked
-   Auto Profile Ensure Enabled
-   Profile Keys Locked
+   AUTH WRAPPER
 
-   Identity Rules:
+   Locked purpose:
+   - wrap rb-supabase auth helpers
+   - keep page imports stable
+   - enforce auth when needed
+   - protect creator/admin/secret routes
+   - route after sign in/out
+
+   Identity rules:
    - profiles = account identity
-   - profile avatar = profiles.avatar_url
-   - profile banner = profiles.banner_url
-   - meta_avatars = synced starting avatar row only
+   - profiles.avatar_url = profile image
+   - profiles.banner_url = profile banner
+   - meta_avatars = starter 3D/avatar universe row
 ========================= */
 
 import {
@@ -22,6 +25,7 @@ import {
   getProfile,
   bootAuth,
   loadProfile,
+  refreshProfile,
   ensureProfile,
   ensureProfileIdentityRows,
   signUp,
@@ -32,12 +36,9 @@ import {
 
 import {
   RB_ROUTES,
-  RB_TABLES,
   RB_PROFILE_KEYS,
   RB_BRAND_ASSETS
 } from "/core/shared/rb-config.js";
-
-const supabase = getSupabase();
 
 const DEFAULT_AVATAR =
   RB_BRAND_ASSETS?.defaultProfileAvatar ||
@@ -47,6 +48,8 @@ const DEFAULT_BANNER =
   RB_BRAND_ASSETS?.defaultProfileBanner ||
   "/images/brand/hero-banner.png";
 
+const supabase = getSupabase();
+
 export {
   getSupabase,
   getSession,
@@ -54,10 +57,44 @@ export {
   getProfile,
   bootAuth,
   loadProfile,
+  refreshProfile,
   ensureProfile,
   ensureProfileIdentityRows,
   isAuthed
 };
+
+function cleanUsername(username = "") {
+  return String(username || "")
+    .trim()
+    .toLowerCase()
+    .replace("@", "")
+    .replace(/[^a-z0-9._-]/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 32);
+}
+
+function cleanText(value = "", fallback = "") {
+  return typeof value === "string" && value.trim()
+    ? value.trim()
+    : fallback;
+}
+
+function getNextRoute(fallback = RB_ROUTES.home || "/") {
+  const params = new URLSearchParams(window.location.search);
+  const next = params.get("next");
+
+  if (!next) return fallback;
+
+  if (next.startsWith("/") && !next.startsWith("//")) {
+    return next;
+  }
+
+  return fallback;
+}
+
+/* =========================
+   STATE
+========================= */
 
 export function getAuthState() {
   const user = getUser();
@@ -74,340 +111,114 @@ export function getAuthState() {
   };
 }
 
-function cleanUsername(username = "") {
-  return String(username || "")
-    .trim()
-    .toLowerCase()
-    .replace("@", "")
-    .replace(/[^a-z0-9_]/g, "")
-    .slice(0, 24);
+export function getAuthProfileId() {
+  const state = getAuthState();
+  return state.id || null;
 }
 
-function fallbackName(email = "") {
-  return (
-    String(email || "")
-      .split("@")[0]
-      .replace(/[^a-zA-Z0-9_ ]/g, "")
-      .trim() || "Rich User"
-  );
+export function getAuthUserId() {
+  return getUser()?.id || null;
 }
 
-function getMetadata(user) {
-  return user?.user_metadata || {};
-}
-
-function getAvatarFromUser(user, existingProfile = null) {
-  const metadata = getMetadata(user);
+export function getAuthProfileAvatar() {
+  const profile = getProfile();
+  const user = getUser();
+  const metadata = user?.user_metadata || {};
 
   return (
-    existingProfile?.avatar_url ||
+    profile?.avatar_url ||
     metadata.avatar_url ||
     metadata.picture ||
-    metadata.avatar ||
     DEFAULT_AVATAR
   );
 }
 
-function getBannerFromUser(user, existingProfile = null) {
-  const metadata = getMetadata(user);
+export function getAuthProfileBanner() {
+  const profile = getProfile();
+  const user = getUser();
+  const metadata = user?.user_metadata || {};
 
   return (
-    existingProfile?.banner_url ||
+    profile?.banner_url ||
     metadata.banner_url ||
     metadata.cover_url ||
     DEFAULT_BANNER
   );
 }
 
-async function getExistingProfile(userId) {
-  if (!userId) return null;
-
-  const { data, error } = await supabase
-    .from(RB_TABLES.profiles)
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("[RB PROFILE LOAD WARNING]", error.message);
-    return null;
-  }
-
-  return data || null;
-}
-
-async function safeUpsert(table, payload, onConflict = "user_id") {
-  if (!table || !payload) return null;
-
-  try {
-    const { data, error } = await supabase
-      .from(table)
-      .upsert(payload, { onConflict })
-      .select("*")
-      .maybeSingle();
-
-    if (error) {
-      console.warn(`[RB IDENTITY UPSERT SKIPPED: ${table}]`, error.message);
-      return null;
-    }
-
-    return data || null;
-  } catch (error) {
-    console.warn(`[RB IDENTITY UPSERT FAILED: ${table}]`, error?.message || error);
-    return null;
-  }
-}
-
-async function ensureProfileExtensionTables(profile) {
-  if (!profile?.id) return;
-
-  const now = new Date().toISOString();
-
-  const baseIdentity = {
-    user_id: profile.id,
-    username: profile.username || null,
-    display_name: profile.display_name || profile.username || "Rich User",
-    metadata: {
-      source: "rb-auth.js",
-      profile_locked: true
-    },
-    updated_at: now
-  };
-
-  const jobs = [
-    {
-      table: RB_TABLES.userSettings,
-      payload: {
-        user_id: profile.id,
-        updated_at: now
-      }
-    },
-    {
-      table: RB_TABLES.userLevels,
-      payload: {
-        user_id: profile.id,
-        updated_at: now
-      }
-    },
-    {
-      table: RB_TABLES.profileThemeSettings,
-      payload: {
-        user_id: profile.id,
-        background_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
-      }
-    },
-    {
-      table: RB_TABLES.metaAvatars,
-      payload: {
-        user_id: profile.id,
-        display_name: profile.display_name || profile.username || "Rich User",
-        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        updated_at: now,
-        metadata: {
-          source: "rb-auth.js",
-          profile_locked: true,
-          synced_from_profile: true
-        }
-      }
-    },
-    {
-      table: RB_TABLES.gamerProfiles,
-      payload: {
-        ...baseIdentity,
-        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        banner_url: profile.banner_url || DEFAULT_BANNER
-      }
-    },
-    {
-      table: RB_TABLES.sportsProfiles,
-      payload: {
-        ...baseIdentity
-      }
-    },
-    {
-      table: RB_TABLES.storeSellerProfiles,
-      payload: {
-        ...baseIdentity,
-        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        banner_url: profile.banner_url || DEFAULT_BANNER
-      }
-    },
-    {
-      table: RB_TABLES.creatorPageSettings,
-      payload: {
-        user_id: profile.id,
-        hero_background_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
-      }
-    }
-  ];
-
-  await Promise.allSettled(
-    jobs
-      .filter((job) => job.table)
-      .map((job) => safeUpsert(job.table, job.payload, "user_id"))
-  );
-}
-
-async function upsertProfileFromAuth({
-  user,
-  email,
-  username = "",
-  displayName = ""
-}) {
-  if (!user?.id) return null;
-
-  const metadata = getMetadata(user);
-  const existingProfile = await getExistingProfile(user.id);
-
-  const finalUsername =
-    existingProfile?.username ||
-    cleanUsername(username) ||
-    cleanUsername(metadata.username) ||
-    cleanUsername(String(email || user.email || "").split("@")[0]) ||
-    `rich_${user.id.slice(0, 8)}`;
-
-  const finalDisplayName =
-    existingProfile?.display_name ||
-    String(displayName || "").trim() ||
-    metadata.display_name ||
-    metadata.full_name ||
-    fallbackName(email || user.email);
-
-  const finalAvatar = getAvatarFromUser(user, existingProfile);
-  const finalBanner = getBannerFromUser(user, existingProfile);
-
-  const finalRole =
-    existingProfile?.role ||
-    metadata.role ||
-    "user";
-
-  const now = new Date().toISOString();
-
-  const payload = {
-    id: user.id,
-    username: finalUsername,
-    display_name: finalDisplayName,
-    full_name: existingProfile?.full_name || finalDisplayName,
-    avatar_url: finalAvatar,
-    banner_url: finalBanner,
-    role: finalRole,
-    online_status: "online",
-    last_seen_at: now,
-    updated_at: now,
-    metadata: {
-      ...(existingProfile?.metadata || {}),
-      profile_lock: true,
-      profile_source: RB_PROFILE_KEYS?.identitySource || "profiles",
-      auth_storage_key: "rich-bizness-mobile-auth",
-      secret_routes_enabled: true
-    }
-  };
-
-  if (!existingProfile?.created_at) {
-    payload.created_at = now;
-  }
-
-  const { data, error } = await supabase
-    .from(RB_TABLES.profiles)
-    .upsert(payload, { onConflict: "id" })
-    .select("*")
-    .maybeSingle();
-
-  if (error) {
-    console.warn("[RB PROFILE UPSERT WARNING]", error.message);
-    return existingProfile || null;
-  }
-
-  await ensureProfileExtensionTables(data);
-  await loadProfile(user.id);
-
-  return data;
-}
+/* =========================
+   PROFILE ENSURE
+========================= */
 
 export async function ensureMyProfile() {
   await bootAuth();
 
   const user = getUser();
-  if (!user?.id) return null;
 
-  const existingProfile = await getExistingProfile(user.id);
-
-  if (existingProfile) {
-    const now = new Date().toISOString();
-
-    const { data, error } = await supabase
-      .from(RB_TABLES.profiles)
-      .update({
-        online_status: "online",
-        last_seen_at: now,
-        updated_at: now,
-        metadata: {
-          ...(existingProfile.metadata || {}),
-          profile_lock: true,
-          profile_source: RB_PROFILE_KEYS?.identitySource || "profiles"
-        }
-      })
-      .eq("id", user.id)
-      .select("*")
-      .maybeSingle();
-
-    if (error) {
-      console.warn("[RB ENSURE PROFILE UPDATE WARNING]", error.message);
-    }
-
-    const profile = data || existingProfile;
-
-    await ensureProfileExtensionTables(profile);
-    await loadProfile(user.id);
-
-    return profile;
+  if (!user?.id) {
+    return null;
   }
 
-  return await upsertProfileFromAuth({
-    user,
-    email: user.email || "",
-    username: user.user_metadata?.username || "",
-    displayName:
-      user.user_metadata?.display_name ||
-      user.user_metadata?.full_name ||
-      ""
-  });
+  const profile = await ensureProfile(user);
+  await refreshProfile();
+
+  window.dispatchEvent(
+    new CustomEvent("rb:profile-updated", {
+      detail: {
+        user,
+        profile: getProfile() || profile
+      }
+    })
+  );
+
+  return getProfile() || profile;
 }
+
+/* =========================
+   AUTH ACTIONS
+========================= */
 
 export async function rbSignUp({
   email,
   password,
   username = "",
-  displayName = ""
+  displayName = "",
+  avatarUrl = DEFAULT_AVATAR,
+  bannerUrl = DEFAULT_BANNER,
+  redirectTo = RB_ROUTES.profile || "/profile"
 }) {
+  const cleanMetaUsername = cleanUsername(username);
+  const cleanDisplayName =
+    cleanText(displayName) ||
+    cleanMetaUsername ||
+    String(email || "").split("@")[0] ||
+    "Rich User";
+
   const data = await signUp({
     email,
     password,
     metadata: {
-      username: cleanUsername(username),
-      display_name: displayName,
-      avatar_url: DEFAULT_AVATAR,
-      banner_url: DEFAULT_BANNER
+      username: cleanMetaUsername,
+      display_name: cleanDisplayName,
+      full_name: cleanDisplayName,
+      avatar_url: avatarUrl || DEFAULT_AVATAR,
+      banner_url: bannerUrl || DEFAULT_BANNER,
+      starter_avatar: true,
+      avatar_source: "auth",
+      profile_lock: true
     }
   });
 
-  const user =
-    data?.user ||
-    data?.session?.user ||
-    getUser() ||
-    null;
+  await ensureMyProfile();
 
-  if (user?.id) {
-    await upsertProfileFromAuth({
-      user,
-      email,
-      username,
-      displayName
-    });
+  window.dispatchEvent(
+    new CustomEvent("rb:auth-signup-complete", {
+      detail: getAuthState()
+    })
+  );
 
-    await refreshProfile();
+  if (redirectTo) {
+    window.location.href = redirectTo;
   }
 
   return data;
@@ -416,53 +227,40 @@ export async function rbSignUp({
 export async function rbSignIn({
   email,
   password,
-  redirectTo = RB_ROUTES.home
+  redirectTo = null
 }) {
   const data = await signIn({ email, password });
 
-  const user =
-    data?.user ||
-    data?.session?.user ||
-    getUser();
+  await ensureMyProfile();
 
-  if (user?.id) {
-    await upsertProfileFromAuth({
-      user,
-      email,
-      username: user.user_metadata?.username || "",
-      displayName:
-        user.user_metadata?.display_name ||
-        user.user_metadata?.full_name ||
-        ""
-    });
+  window.dispatchEvent(
+    new CustomEvent("rb:auth-signin-complete", {
+      detail: getAuthState()
+    })
+  );
 
-    await refreshProfile();
-  }
+  const nextRoute = redirectTo || getNextRoute(RB_ROUTES.home || "/");
 
-  if (redirectTo) {
-    window.location.href = redirectTo;
+  if (nextRoute) {
+    window.location.href = nextRoute;
   }
 
   return data;
 }
 
 export async function rbSignOut({
-  redirectTo = RB_ROUTES.auth
+  redirectTo = RB_ROUTES.auth || "/auth"
 } = {}) {
-  const user = getUser();
-
-  if (user?.id) {
-    await supabase
-      .from(RB_TABLES.profiles)
-      .update({
-        online_status: "offline",
-        last_seen_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", user.id);
-  }
-
   await signOut();
+
+  window.dispatchEvent(
+    new CustomEvent("rb:auth-signout-complete", {
+      detail: {
+        authed: false,
+        isAuthed: false
+      }
+    })
+  );
 
   if (redirectTo) {
     window.location.href = redirectTo;
@@ -470,7 +268,8 @@ export async function rbSignOut({
 }
 
 export async function sendPasswordReset(email) {
-  const redirectTo = `${window.location.origin}${RB_ROUTES.settings}`;
+  const redirectTo =
+    `${window.location.origin}${RB_ROUTES.settings || "/settings"}`;
 
   const { data, error } =
     await supabase.auth.resetPasswordForEmail(email, {
@@ -478,6 +277,7 @@ export async function sendPasswordReset(email) {
     });
 
   if (error) throw error;
+
   return data;
 }
 
@@ -486,37 +286,33 @@ export async function updatePassword(password) {
     await supabase.auth.updateUser({ password });
 
   if (error) throw error;
+
   return data;
 }
 
-export async function signInWithProvider(provider = "google") {
+export async function signInWithProvider(
+  provider = "google",
+  redirectTo = `${window.location.origin}${RB_ROUTES.auth || "/auth"}`
+) {
   const { data, error } =
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}${RB_ROUTES.auth}`
+        redirectTo
       }
     });
 
   if (error) throw error;
+
   return data;
 }
 
-export async function refreshProfile() {
-  const user = getUser();
-  if (!user?.id) return null;
-
-  const profile = await loadProfile(user.id);
-
-  if (profile?.id) {
-    await ensureProfileExtensionTables(profile);
-  }
-
-  return await loadProfile(user.id);
-}
+/* =========================
+   REQUIRE / PROTECT
+========================= */
 
 export async function requireAuth({
-  redirectTo = RB_ROUTES.auth
+  redirectTo = RB_ROUTES.auth || "/auth"
 } = {}) {
   await bootAuth();
 
@@ -538,35 +334,48 @@ export function canAccessAdminCreatorRoute(routeKey = "") {
   const profile = getProfile();
   const allowedRoutes = RB_PROFILE_KEYS?.adminCreatorRoutes || [];
 
-  if (!allowedRoutes.includes(routeKey)) return true;
+  if (!allowedRoutes.includes(routeKey)) {
+    return true;
+  }
 
-  return !!(
+  return Boolean(
     profile?.role === "founder" ||
-    profile?.role === "admin" ||
-    profile?.role === "rich_admin" ||
-    profile?.is_creator ||
-    profile?.is_verified
+      profile?.role === "admin" ||
+      profile?.role === "rich_admin" ||
+      profile?.is_creator ||
+      profile?.is_verified
   );
 }
 
 export function protectRoute(routeKey = "") {
   const controlledRoutes = RB_PROFILE_KEYS?.controlledRoutes || [];
 
-  if (!controlledRoutes.includes(routeKey)) return true;
+  if (!controlledRoutes.includes(routeKey)) {
+    return true;
+  }
 
   if (!isAuthed()) {
     window.location.href =
-      `${RB_ROUTES.auth}?next=${encodeURIComponent(window.location.pathname)}`;
+      `${RB_ROUTES.auth || "/auth"}?next=${encodeURIComponent(window.location.pathname)}`;
     return false;
   }
 
   if (!canAccessAdminCreatorRoute(routeKey)) {
-    window.location.href = RB_ROUTES.profile;
+    window.location.href = RB_ROUTES.profile || "/profile";
     return false;
   }
 
   return true;
 }
+
+export async function protectRouteAsync(routeKey = "") {
+  await bootAuth();
+  return protectRoute(routeKey);
+}
+
+/* =========================
+   PAGE BINDINGS
+========================= */
 
 if (!window.__RB_AUTH_FOCUS_BOUND__) {
   window.__RB_AUTH_FOCUS_BOUND__ = true;
@@ -575,6 +384,12 @@ if (!window.__RB_AUTH_FOCUS_BOUND__) {
     if (getUser()?.id) {
       await ensureMyProfile();
       await refreshProfile();
+
+      window.dispatchEvent(
+        new CustomEvent("rb:app-identity-refreshed", {
+          detail: getAuthState()
+        })
+      );
     }
   });
 }
@@ -587,7 +402,7 @@ if (!window.__RB_AUTH_UNLOAD_BOUND__) {
 
     if (user?.id) {
       supabase
-        .from(RB_TABLES.profiles)
+        .from("profiles")
         .update({
           online_status: "away",
           last_seen_at: new Date().toISOString(),
