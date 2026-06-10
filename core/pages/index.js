@@ -9,7 +9,7 @@
    - route all data-route buttons
    - load auth/profile identity
    - paint profile avatar/name
-   - paint XP/level/rank
+   - paint XP/level safely inside Index only
    - paint live/online placeholders safely
    - connect portal/district clicks
    - no heavy page engines
@@ -27,7 +27,6 @@ import {
 
 import {
   getProfileIdentity,
-  bindProfileShell,
   buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
@@ -75,12 +74,12 @@ const quickRoutes = {
   search: RB_CONFIG?.routes?.search || "/feed"
 };
 
-function $(selector, root = document) {
-  return root.querySelector(selector);
+function root() {
+  return document.querySelector(".rb-universe-stage") || document;
 }
 
-function $all(selector, root = document) {
-  return Array.from(root.querySelectorAll(selector));
+function $all(selector, scope = root()) {
+  return Array.from(scope.querySelectorAll(selector));
 }
 
 function cleanRoute(route) {
@@ -164,6 +163,42 @@ function getProfileAvatar(profile, user) {
 }
 
 /* =========================
+   SAFE INDEX PAINT
+========================= */
+
+function paintText(selector, value) {
+  $all(selector).forEach((el) => {
+    el.textContent = value;
+  });
+}
+
+function paintAvatar(selector, src, name) {
+  $all(selector).forEach((el) => {
+    const tag = el.tagName?.toLowerCase();
+
+    if (tag === "img") {
+      el.src = src;
+      el.alt = name;
+      el.dataset.lockedProfileSrc = src;
+      return;
+    }
+
+    el.style.backgroundImage = `url("${src}")`;
+  });
+}
+
+function paintProfileShellLocal({ name, avatar, level, xp, nextLevel }) {
+  paintText("[data-rb-name]", name);
+  paintText("[data-rb-level]", String(level));
+  paintText("[data-rb-xp]", xp.toLocaleString());
+  paintText("[data-rb-xp-next]", nextLevel.toLocaleString());
+
+  paintAvatar("[data-rb-avatar]", avatar, name);
+  paintAvatar("[data-rb-profile-avatar]", avatar, name);
+  paintAvatar("[data-rb-current-avatar]", avatar, name);
+}
+
+/* =========================
    XP MODEL
 ========================= */
 
@@ -211,27 +246,6 @@ function getProfileXpModel(profile = {}, identity = {}) {
   };
 }
 
-function paintText(selector, value) {
-  $all(selector).forEach((el) => {
-    el.textContent = value;
-  });
-}
-
-function paintAvatar(selector, src, name) {
-  $all(selector).forEach((el) => {
-    const tag = el.tagName?.toLowerCase();
-
-    if (tag === "img") {
-      el.src = src;
-      el.alt = name;
-      el.dataset.lockedProfileSrc = src;
-      return;
-    }
-
-    el.style.backgroundImage = `url("${src}")`;
-  });
-}
-
 function renderIndexXpGauge() {
   const profile = getProfile?.() || {};
   profileIdentity = getProfileIdentity?.(profile) || profileIdentity || {};
@@ -251,7 +265,11 @@ function renderIndexXpGauge() {
   paintText("[data-rb-xp]", model.xp.toLocaleString());
   paintText("[data-rb-xp-next]", model.nextLevel.toLocaleString());
   paintText("[data-rb-level]", String(model.level));
-  paintText("[data-rb-rank]", model.rank);
+
+  /* IMPORTANT:
+     Do not paint [data-rb-rank] globally on Index.
+     That loose rank text is what was showing at top-left.
+  */
 
   $all("[data-rb-xp-gauge-fill], .rb-xp-gauge-fill").forEach((fill) => {
     fill.style.width = `${model.percent}%`;
@@ -270,6 +288,8 @@ function renderIndexXpGauge() {
       }
     })
   );
+
+  return model;
 }
 
 /* =========================
@@ -289,8 +309,6 @@ function syncIndexProfileKeys() {
   document.body.dataset.rbProfileLocked =
     profileIdentity?.id || profile?.id ? "true" : "false";
 
-  bindProfileShell?.();
-
   const profileUrl =
     buildProfileUrl?.(profile) ||
     quickRoutes.profile ||
@@ -300,7 +318,7 @@ function syncIndexProfileKeys() {
     el.href = profileUrl;
   });
 
-  renderIndexXpGauge();
+  return renderIndexXpGauge();
 }
 
 function updateProfileChip() {
@@ -313,20 +331,20 @@ function updateProfileChip() {
     ? getProfileAvatar(profile, user)
     : DEFAULT_PROFILE_AVATAR;
 
-  $all("[data-rb-name]").forEach((el) => {
-    el.textContent = name;
-  });
+  const model = syncIndexProfileKeys();
 
-  paintAvatar("[data-rb-avatar]", avatar, name);
-  paintAvatar("[data-rb-profile-avatar]", avatar, name);
-  paintAvatar("[data-rb-current-avatar]", avatar, name);
+  paintProfileShellLocal({
+    name,
+    avatar,
+    level: model?.level || 1,
+    xp: model?.xp || 0,
+    nextLevel: model?.nextLevel || 1000
+  });
 
   $all(".rb-profile-chip").forEach((chip) => {
     chip.dataset.route = authed ? "profile" : "auth";
     chip.classList.toggle("rb-profile-authed", authed);
   });
-
-  syncIndexProfileKeys();
 }
 
 async function bootIndexAuth() {
@@ -379,6 +397,7 @@ function bindRouteClicks() {
   document.addEventListener("click", async (event) => {
     const target = event.target;
     const routeEl = target.closest("[data-route]");
+
     if (!routeEl) return;
 
     const routeKey = routeEl.dataset.route;
@@ -514,6 +533,7 @@ window.RB_UPDATE_INDEX_XP = renderIndexXpGauge;
 window.RB_UPDATE_INDEX_COUNTERS = renderIndexCounters;
 
 window.addEventListener("resize", updateViewportHeight, { passive: true });
+
 window.addEventListener("orientationchange", updateViewportHeight, {
   passive: true
 });
