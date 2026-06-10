@@ -3,13 +3,21 @@
    /core/shared/rb-profile.js
 
    GLOBAL PROFILE + IDENTITY ENGINE
-   Profile Keys For All Systems
 
-   Identity Rules:
-   - Profile avatar = profiles.avatar_url
-   - Profile banner = profiles.banner_url
-   - Meta avatar = meta_avatars only
-   - Playable avatar = avatar engine only
+   Locked purpose:
+   - read profile identity
+   - profile avatar/banner helpers
+   - profile URL builder
+   - insert payload builders
+   - update profile
+   - load profile extension rows
+   - bind profile shell elements
+
+   Identity rules:
+   - profile avatar = profiles.avatar_url
+   - profile banner = profiles.banner_url
+   - meta avatar = meta_avatars row only
+   - playable avatar = avatar engine only
 ========================= */
 
 import {
@@ -37,13 +45,18 @@ const DEFAULT_BANNER =
   RB_BRAND_ASSETS?.defaultProfileBanner ||
   "/images/brand/hero-banner.png";
 
+const DEFAULT_META_AVATAR =
+  RB_BRAND_ASSETS?.defaultMetaAvatar ||
+  "/images/brand/meta-avatar.png.jpeg";
+
 function cleanUsername(username = "") {
   return String(username || "")
     .replace("@", "")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9_]/g, "")
-    .slice(0, 24);
+    .replace(/[^a-z0-9._-]/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 32);
 }
 
 function safeNumber(value, fallback = 0) {
@@ -51,27 +64,78 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function safeImage(value = "", fallback = DEFAULT_AVATAR) {
+  const src = String(value || "").trim();
+
+  if (!src || src.includes("project-avatar")) {
+    return fallback;
+  }
+
+  if (
+    src.startsWith("/") ||
+    src.startsWith("https://") ||
+    src.startsWith("http://") ||
+    src.startsWith("blob:")
+  ) {
+    return src;
+  }
+
+  return fallback;
+}
+
+function metadataFromUser() {
+  return getUser()?.user_metadata || {};
+}
+
+/* =========================
+   BASIC PROFILE VALUES
+========================= */
+
 export function profileAvatar(profile = null) {
   const active = profile || getProfile();
-  return active?.avatar_url || DEFAULT_AVATAR;
+  const metadata = metadataFromUser();
+
+  return safeImage(
+    active?.avatar_url ||
+      metadata.avatar_url ||
+      metadata.picture,
+    DEFAULT_AVATAR
+  );
 }
 
 export function profileBanner(profile = null) {
   const active = profile || getProfile();
-  return active?.banner_url || DEFAULT_BANNER;
+  const metadata = metadataFromUser();
+
+  return safeImage(
+    active?.banner_url ||
+      metadata.banner_url ||
+      metadata.cover_url,
+    DEFAULT_BANNER
+  );
+}
+
+export function profileMetaAvatar(profile = null, metaAvatar = null) {
+  return safeImage(
+    metaAvatar?.avatar_url ||
+      profile?.meta_avatar_url ||
+      DEFAULT_META_AVATAR,
+    DEFAULT_META_AVATAR
+  );
 }
 
 export function profileName(profile = null) {
   const user = getUser();
   const active = profile || getProfile();
+  const metadata = metadataFromUser();
 
   return (
     active?.display_name ||
     active?.full_name ||
     active?.username ||
-    user?.user_metadata?.display_name ||
-    user?.user_metadata?.full_name ||
-    user?.email?.split("@")[0] ||
+    metadata.display_name ||
+    metadata.full_name ||
+    user?.email?.split("@")?.[0] ||
     "Rich User"
   );
 }
@@ -79,11 +143,12 @@ export function profileName(profile = null) {
 export function profileUsername(profile = null) {
   const user = getUser();
   const active = profile || getProfile();
+  const metadata = metadataFromUser();
 
   return (
     active?.username ||
-    cleanUsername(user?.user_metadata?.username) ||
-    cleanUsername(user?.email?.split("@")[0]) ||
+    cleanUsername(metadata.username) ||
+    cleanUsername(user?.email?.split("@")?.[0]) ||
     "richuser"
   );
 }
@@ -105,30 +170,55 @@ export function profileBadge(profile = null) {
   if (active?.is_seller) return "SELLER";
   if (active?.is_creator) return "CREATOR";
 
-  return active?.rank_title || "MEMBER";
+  return active?.rank_title || active?.rank || "MEMBER";
 }
 
 export function profileLevel(profile = null) {
   const active = profile || getProfile();
-  return safeNumber(active?.rich_level, 1);
+
+  return safeNumber(
+    active?.rich_level ??
+      active?.level,
+    1
+  );
 }
 
 export function profileRank(profile = null) {
   const active = profile || getProfile();
-  return active?.rank_title || "Member";
+
+  return (
+    active?.rank_title ||
+    active?.rank ||
+    "Biz Legend"
+  );
 }
 
 export function profilePoints(profile = null) {
   const active = profile || getProfile();
-  return safeNumber(active?.rich_points, 0);
+
+  return safeNumber(
+    active?.rich_points ??
+      active?.points ??
+      active?.xp,
+    0
+  );
+}
+
+export function profileBalanceCents(profile = null) {
+  const active = profile || getProfile();
+  return safeNumber(active?.balance_cents, 0);
 }
 
 export function isProfileOwner(profile = null) {
   const user = getUser();
   const active = profile || getProfile();
 
-  return !!user?.id && !!active?.id && user.id === active.id;
+  return Boolean(user?.id && active?.id && user.id === active.id);
 }
+
+/* =========================
+   FULL IDENTITY
+========================= */
 
 export function getProfileIdentity(profileOverride = null) {
   const user = getUser();
@@ -146,7 +236,7 @@ export function getProfileIdentity(profileOverride = null) {
     profile?.username ||
     fromSupabase?.username ||
     cleanUsername(user?.user_metadata?.username) ||
-    cleanUsername(user?.email?.split("@")[0]) ||
+    cleanUsername(user?.email?.split("@")?.[0]) ||
     "";
 
   const displayName =
@@ -156,11 +246,16 @@ export function getProfileIdentity(profileOverride = null) {
     user?.user_metadata?.display_name ||
     user?.user_metadata?.full_name ||
     username ||
-    user?.email?.split("@")[0] ||
+    user?.email?.split("@")?.[0] ||
     "Rich User";
 
-  const avatar = profile?.avatar_url || fromSupabase?.avatar_url || DEFAULT_AVATAR;
-  const banner = profile?.banner_url || fromSupabase?.banner_url || DEFAULT_BANNER;
+  const avatar = profileAvatar(profile || fromSupabase);
+  const banner = profileBanner(profile || fromSupabase);
+
+  const richLevel = profileLevel(profile || fromSupabase);
+  const rankTitle = profileRank(profile || fromSupabase);
+  const richPoints = profilePoints(profile || fromSupabase);
+  const balanceCents = profileBalanceCents(profile || fromSupabase);
 
   return {
     id,
@@ -176,6 +271,8 @@ export function getProfileIdentity(profileOverride = null) {
     email: user?.email || "",
 
     username,
+    handle: username ? `@${username}` : "@richuser",
+
     display_name: displayName,
     displayName,
 
@@ -188,34 +285,39 @@ export function getProfileIdentity(profileOverride = null) {
     banner_url: banner,
     bannerUrl: banner,
 
-    role: profile?.role || "user",
+    meta_avatar_url: DEFAULT_META_AVATAR,
+    metaAvatarUrl: DEFAULT_META_AVATAR,
 
-    rich_level: profileLevel(profile),
-    richLevel: profileLevel(profile),
+    role: profile?.role || fromSupabase?.role || "user",
 
-    rank_title: profileRank(profile),
-    rankTitle: profileRank(profile),
+    rich_level: richLevel,
+    richLevel,
 
-    rich_points: profilePoints(profile),
-    richPoints: profilePoints(profile),
+    rank_title: rankTitle,
+    rankTitle,
 
-    balance_cents: safeNumber(profile?.balance_cents, 0),
-    balanceCents: safeNumber(profile?.balance_cents, 0),
+    rich_points: richPoints,
+    richPoints,
 
-    online_status: profile?.online_status || "offline",
-    onlineStatus: profile?.online_status || "offline",
+    xp: richPoints,
 
-    is_creator: !!profile?.is_creator,
-    isCreator: !!profile?.is_creator,
+    balance_cents: balanceCents,
+    balanceCents,
 
-    is_artist: !!profile?.is_artist,
-    isArtist: !!profile?.is_artist,
+    online_status: profile?.online_status || fromSupabase?.online_status || "offline",
+    onlineStatus: profile?.online_status || fromSupabase?.online_status || "offline",
 
-    is_seller: !!profile?.is_seller,
-    isSeller: !!profile?.is_seller,
+    is_creator: Boolean(profile?.is_creator),
+    isCreator: Boolean(profile?.is_creator),
 
-    is_verified: !!profile?.is_verified,
-    isVerified: !!profile?.is_verified
+    is_artist: Boolean(profile?.is_artist),
+    isArtist: Boolean(profile?.is_artist),
+
+    is_seller: Boolean(profile?.is_seller),
+    isSeller: Boolean(profile?.is_seller),
+
+    is_verified: Boolean(profile?.is_verified),
+    isVerified: Boolean(profile?.is_verified)
   };
 }
 
@@ -223,11 +325,27 @@ export function getProfileKey(profileOverride = null) {
   return getProfileIdentity(profileOverride).id;
 }
 
+/* =========================
+   PAYLOAD BUILDERS
+========================= */
+
 export function buildProfileInsert(values = {}, profileOverride = null) {
   const identity = getProfileIdentity(profileOverride);
 
   return {
     user_id: identity.user_id,
+    username: identity.username,
+    display_name: identity.display_name,
+    avatar_url: identity.avatar_url,
+    ...values
+  };
+}
+
+export function buildUserInsert(values = {}, profileOverride = null) {
+  const identity = getProfileIdentity(profileOverride);
+
+  return {
+    user_id: identity.id,
     username: identity.username,
     display_name: identity.display_name,
     avatar_url: identity.avatar_url,
@@ -242,6 +360,7 @@ export function buildCreatorInsert(values = {}, profileOverride = null) {
     creator_id: identity.id,
     username: identity.username,
     display_name: identity.display_name,
+    avatar_url: identity.avatar_url,
     ...values
   };
 }
@@ -253,6 +372,7 @@ export function buildOwnerInsert(values = {}, profileOverride = null) {
     owner_id: identity.id,
     username: identity.username,
     display_name: identity.display_name,
+    avatar_url: identity.avatar_url,
     ...values
   };
 }
@@ -264,6 +384,7 @@ export function buildSellerInsert(values = {}, profileOverride = null) {
     seller_id: identity.id,
     username: identity.username,
     display_name: identity.display_name,
+    avatar_url: identity.avatar_url,
     ...values
   };
 }
@@ -275,6 +396,7 @@ export function buildArtistInsert(values = {}, profileOverride = null) {
     artist_user_id: identity.id,
     username: identity.username,
     display_name: identity.display_name,
+    avatar_url: identity.avatar_url,
     ...values
   };
 }
@@ -294,6 +416,10 @@ export function buildLiveInsert(values = {}, profileOverride = null) {
   };
 }
 
+/* =========================
+   PROFILE LOAD / UPDATE
+========================= */
+
 export async function refreshMyProfile() {
   const user = getUser();
   if (!user?.id) return null;
@@ -311,6 +437,7 @@ export async function getProfileById(userId) {
     .maybeSingle();
 
   if (error) throw error;
+
   return data || null;
 }
 
@@ -325,12 +452,16 @@ export async function getProfileByUsername(username) {
     .maybeSingle();
 
   if (error) throw error;
+
   return data || null;
 }
 
 export async function updateMyProfile(values = {}) {
   const user = getUser();
-  if (!user?.id) throw new Error("You must be signed in.");
+
+  if (!user?.id) {
+    throw new Error("You must be signed in.");
+  }
 
   const cleanValues = {
     ...values,
@@ -344,6 +475,14 @@ export async function updateMyProfile(values = {}) {
     cleanValues.username = cleanUsername(cleanValues.username);
   }
 
+  if (cleanValues.avatar_url) {
+    cleanValues.avatar_url = safeImage(cleanValues.avatar_url, DEFAULT_AVATAR);
+  }
+
+  if (cleanValues.banner_url) {
+    cleanValues.banner_url = safeImage(cleanValues.banner_url, DEFAULT_BANNER);
+  }
+
   const { data, error } = await supabase
     .from(RB_TABLES.profiles)
     .update(cleanValues)
@@ -354,13 +493,19 @@ export async function updateMyProfile(values = {}) {
   if (error) throw error;
 
   await loadProfile(user.id);
-  window.dispatchEvent(new CustomEvent("rb:profile-updated", { detail: data || null }));
+
+  window.dispatchEvent(
+    new CustomEvent("rb:profile-updated", {
+      detail: data || null
+    })
+  );
 
   return data || null;
 }
 
 export async function updateOnlineStatus(status = "online") {
   const user = getUser();
+
   if (!user?.id) return null;
 
   const { data, error } = await supabase
@@ -377,11 +522,17 @@ export async function updateOnlineStatus(status = "online") {
   if (error) throw error;
 
   await loadProfile(user.id);
+
   return data || null;
 }
 
+/* =========================
+   EXTENSIONS
+========================= */
+
 export async function loadProfileExtensions(userId = null) {
   const id = userId || getProfileKey();
+
   if (!id) return {};
 
   const queries = {
@@ -466,6 +617,10 @@ export async function getProfileStats(userId = null) {
   };
 }
 
+/* =========================
+   URLS
+========================= */
+
 export function buildProfileUrl(profile = null) {
   const active = profile || getProfile();
 
@@ -477,23 +632,32 @@ export function buildProfileUrl(profile = null) {
     return `${RB_ROUTES.profile}?id=${encodeURIComponent(active.id)}`;
   }
 
-  return RB_ROUTES.profile;
+  return RB_ROUTES.profile || "/profile";
 }
+
+/* =========================
+   DOM BINDING
+========================= */
 
 function setImage(el, url, alt = "") {
   if (!el || !url) return;
 
+  const finalUrl = safeImage(url);
+
   if (el.tagName === "IMG") {
-    if (el.dataset.rbLockedSrc !== url) {
-      el.dataset.rbLockedSrc = url;
-      el.src = url;
+    if (el.dataset.rbLockedSrc !== finalUrl) {
+      el.dataset.rbLockedSrc = finalUrl;
+      el.src = finalUrl;
     }
 
-    if (alt) el.alt = alt;
+    if (alt) {
+      el.alt = alt;
+    }
+
     return;
   }
 
-  el.style.backgroundImage = `url("${url}")`;
+  el.style.backgroundImage = `url("${finalUrl}")`;
 }
 
 export function bindProfileShell({
@@ -503,17 +667,20 @@ export function bindProfileShell({
   handleSelector = "[data-rb-handle]",
   badgeSelector = "[data-rb-badge]",
   levelSelector = "[data-rb-level]",
-  pointsSelector = "[data-rb-points]"
+  pointsSelector = "[data-rb-points]",
+  rankSelector = "[data-rb-rank]",
+  balanceSelector = "[data-rb-balance]"
 } = {}) {
   const profile = getProfile();
-  const name = profileName(profile);
+  const identity = getProfileIdentity(profile);
+  const name = identity.display_name;
 
   document.querySelectorAll(avatarSelector).forEach((el) => {
-    setImage(el, profileAvatar(profile), name);
+    setImage(el, identity.avatar_url, name);
   });
 
   document.querySelectorAll(bannerSelector).forEach((el) => {
-    setImage(el, profileBanner(profile));
+    setImage(el, identity.banner_url);
   });
 
   document.querySelectorAll(nameSelector).forEach((el) => {
@@ -521,7 +688,7 @@ export function bindProfileShell({
   });
 
   document.querySelectorAll(handleSelector).forEach((el) => {
-    el.textContent = profileHandle(profile);
+    el.textContent = identity.handle;
   });
 
   document.querySelectorAll(badgeSelector).forEach((el) => {
@@ -529,16 +696,36 @@ export function bindProfileShell({
   });
 
   document.querySelectorAll(levelSelector).forEach((el) => {
-    el.textContent = `LVL ${profileLevel(profile)}`;
+    el.textContent = String(identity.rich_level);
   });
 
   document.querySelectorAll(pointsSelector).forEach((el) => {
-    el.textContent = `${profilePoints(profile)} pts`;
+    el.textContent = `${identity.rich_points.toLocaleString()} pts`;
+  });
+
+  document.querySelectorAll(rankSelector).forEach((el) => {
+    el.textContent = identity.rank_title;
+  });
+
+  document.querySelectorAll(balanceSelector).forEach((el) => {
+    const dollars = identity.balance_cents / 100;
+    el.textContent = dollars.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD"
+    });
   });
 }
 
+/* =========================
+   ROUTE PROFILE RULES
+========================= */
+
 export function routeRequiresProfile(routeKey = "") {
   return (RB_PROFILE_KEYS?.controlledRoutes || []).includes(routeKey);
+}
+
+export function routeRequiresAdminCreator(routeKey = "") {
+  return (RB_PROFILE_KEYS?.adminCreatorRoutes || []).includes(routeKey);
 }
 
 console.log("RB PROFILE READY");
