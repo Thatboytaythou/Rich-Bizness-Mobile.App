@@ -3,14 +3,21 @@
    /core/shared/rb-supabase.js
 
    SUPABASE ENGINE
-   Auth + Profile State + Storage + Realtime
-   Locked App URL Redirects
 
-   Identity Rules:
+   Locked purpose:
+   - one Supabase client
+   - auth/session state
+   - profile identity
+   - starter avatar row
+   - storage helpers
+   - realtime helpers
+   - safe CRUD wrappers
+
+   Identity rules:
    - profiles = account identity
-   - profiles.avatar_url = profile image
+   - profiles.avatar_url = profile chip image
    - profiles.banner_url = profile banner
-   - meta_avatars = synced avatar row, not profile chip source
+   - meta_avatars = 3D/avatar universe row synced from profile
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -27,6 +34,10 @@ const DEFAULT_AVATAR =
   RB_BRAND_ASSETS?.defaultProfileAvatar ||
   "/images/brand/Avatar-hero-Banner.png.jpeg";
 
+const DEFAULT_META_AVATAR =
+  RB_BRAND_ASSETS?.defaultMetaAvatar ||
+  "/images/brand/meta-avatar.png.jpeg";
+
 const DEFAULT_BANNER =
   RB_BRAND_ASSETS?.defaultProfileBanner ||
   "/images/brand/hero-banner.png";
@@ -34,29 +45,35 @@ const DEFAULT_BANNER =
 const APP_URL =
   RB_APP?.appUrl ||
   RB_APP?.siteUrl ||
-  "https://rich-bizness-mobile-app.vercel.app";
+  window.location.origin;
 
 const AUTH_REDIRECT_URL = `${APP_URL}/auth`;
 
-const supabase = createClient(RB_SUPABASE.url, RB_SUPABASE.publishableKey, {
-  auth: {
-    persistSession: RB_AUTH?.persistSession ?? true,
-    autoRefreshToken: RB_AUTH?.autoRefreshToken ?? true,
-    detectSessionInUrl: RB_AUTH?.detectSessionInUrl ?? true,
-    flowType: RB_AUTH?.flowType || "pkce",
-    storageKey: RB_AUTH?.sessionStorageKey || "rich-bizness-mobile-auth"
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 15
-    }
-  },
-  global: {
-    headers: {
-      "x-client-info": "rich-bizness-mobile"
+export const supabase = createClient(
+  RB_SUPABASE.url,
+  RB_SUPABASE.publishableKey,
+  {
+    auth: {
+      persistSession: RB_AUTH?.persistSession ?? true,
+      autoRefreshToken: RB_AUTH?.autoRefreshToken ?? true,
+      detectSessionInUrl: RB_AUTH?.detectSessionInUrl ?? true,
+      flowType: RB_AUTH?.flowType || "pkce",
+      storageKey: RB_AUTH?.sessionStorageKey || "rich-bizness-mobile-auth"
+    },
+
+    realtime: {
+      params: {
+        eventsPerSecond: 15
+      }
+    },
+
+    global: {
+      headers: {
+        "x-client-info": "rich-bizness-mobile"
+      }
     }
   }
-});
+);
 
 let currentSession = null;
 let currentUser = null;
@@ -69,7 +86,9 @@ function nowIso() {
 }
 
 function cleanText(value, fallback = "") {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+  return typeof value === "string" && value.trim()
+    ? value.trim()
+    : fallback;
 }
 
 function cleanUsername(value = "") {
@@ -78,6 +97,7 @@ function cleanUsername(value = "") {
     .toLowerCase()
     .replace("@", "")
     .replace(/[^a-z0-9._-]/g, "_")
+    .replace(/_+/g, "_")
     .slice(0, 32);
 }
 
@@ -208,10 +228,33 @@ function profilePayloadFromUser(user, existingProfile = null) {
       auth_email: user.email || null,
       auth_origin: window.location.origin,
       locked_app_url: APP_URL,
-      profile_lock: true
+      profile_lock: true,
+      starter_avatar_created: true
     }
   };
 }
+
+function getStarterAvatarConfig(profile) {
+  return {
+    style: "rich_bizness_portal_city",
+    body: "starter",
+    outfit: "black_green_gold",
+    aura: "emerald_gold",
+    movement: {
+      idle: true,
+      walk: true,
+      run: false
+    },
+    unlocked_worlds: ["index"],
+    current_world: "index",
+    profile_avatar_url: profile?.avatar_url || DEFAULT_AVATAR,
+    meta_avatar_url: DEFAULT_META_AVATAR
+  };
+}
+
+/* =========================
+   STATE GETTERS
+========================= */
 
 export function getSupabase() {
   return supabase;
@@ -234,13 +277,13 @@ export function getCurrentUserState() {
     session: currentSession,
     user: currentUser,
     profile: currentProfile,
-    authed: !!currentUser,
-    isAuthed: !!currentUser
+    authed: Boolean(currentUser),
+    isAuthed: Boolean(currentUser)
   };
 }
 
 export function isAuthed() {
-  return !!currentUser;
+  return Boolean(currentUser);
 }
 
 export function getProfileKey() {
@@ -273,9 +316,28 @@ export function getProfileIdentity() {
 
     role:
       currentProfile?.role ||
-      "user"
+      "user",
+
+    rich_level:
+      currentProfile?.rich_level ||
+      currentProfile?.level ||
+      1,
+
+    rich_points:
+      currentProfile?.rich_points ||
+      currentProfile?.xp ||
+      0,
+
+    rank_title:
+      currentProfile?.rank_title ||
+      currentProfile?.rank ||
+      "Biz Legend"
   };
 }
+
+/* =========================
+   PROFILE + STARTER AVATAR
+========================= */
 
 export async function ensureProfile(user = currentUser) {
   if (!user?.id) return null;
@@ -310,7 +372,7 @@ export async function ensureProfile(user = currentUser) {
 }
 
 export async function ensureProfileIdentityRows(profile = currentProfile) {
-  if (!profile?.id) return;
+  if (!profile?.id) return null;
 
   const now = nowIso();
 
@@ -321,6 +383,8 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     updated_at: now
   };
 
+  const starterAvatarConfig = getStarterAvatarConfig(profile);
+
   const jobs = [
     {
       table: RB_TABLES.userSettings,
@@ -329,13 +393,18 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
         updated_at: now
       }
     },
+
     {
       table: RB_TABLES.userLevels,
       payload: {
         user_id: profile.id,
+        level: profile.rich_level || profile.level || 1,
+        xp: profile.rich_points || profile.xp || 0,
+        rank_title: profile.rank_title || profile.rank || "Biz Legend",
         updated_at: now
       }
     },
+
     {
       table: RB_TABLES.profileThemeSettings,
       payload: {
@@ -344,17 +413,24 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
         updated_at: now
       }
     },
+
     {
       table: RB_TABLES.metaAvatars,
       payload: {
         ...baseIdentity,
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
+        presence_state: "online",
+        aura: "emerald_gold",
+        level: profile.rich_level || profile.level || 1,
+        avatar_config: starterAvatarConfig,
         metadata: {
           source: "rb-supabase.js",
-          synced_from_profile: true
+          synced_from_profile: true,
+          index_portal_avatar: true
         }
       }
     },
+
     {
       table: RB_TABLES.gamerProfiles,
       payload: {
@@ -363,12 +439,14 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
         banner_url: profile.banner_url || DEFAULT_BANNER
       }
     },
+
     {
       table: RB_TABLES.sportsProfiles,
       payload: {
         ...baseIdentity
       }
     },
+
     {
       table: RB_TABLES.storeSellerProfiles,
       payload: {
@@ -377,6 +455,7 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
         banner_url: profile.banner_url || DEFAULT_BANNER
       }
     },
+
     {
       table: RB_TABLES.creatorPageSettings,
       payload: {
@@ -387,12 +466,18 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     }
   ];
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     jobs
       .filter((job) => Boolean(job.table))
       .map((job) => safeUpsert(job.table, job.payload, "user_id"))
   );
+
+  return results;
 }
+
+/* =========================
+   AUTH BOOT
+========================= */
 
 export async function bootAuth() {
   if (authBooted) return currentUser;
@@ -481,6 +566,21 @@ export async function loadProfile(userId) {
   return currentProfile;
 }
 
+export async function refreshProfile() {
+  await bootAuth();
+
+  if (!currentUser?.id) {
+    currentProfile = null;
+    return null;
+  }
+
+  return await loadProfile(currentUser.id);
+}
+
+/* =========================
+   AUTH ACTIONS
+========================= */
+
 export async function signUp({ email, password, metadata = {} }) {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -488,8 +588,11 @@ export async function signUp({ email, password, metadata = {} }) {
     options: {
       data: {
         ...metadata,
+        username: metadata.username || metadata.display_name || metadata.name,
+        display_name: metadata.display_name || metadata.name || metadata.username,
         avatar_url: metadata.avatar_url || DEFAULT_AVATAR,
-        banner_url: metadata.banner_url || DEFAULT_BANNER
+        banner_url: metadata.banner_url || DEFAULT_BANNER,
+        starter_avatar: true
       },
       emailRedirectTo: AUTH_REDIRECT_URL
     }
@@ -548,6 +651,12 @@ export async function signOut() {
   authBooting = null;
 }
 
+export const rbSignOut = signOut;
+
+/* =========================
+   AUTH STATE LISTENER
+========================= */
+
 supabase.auth.onAuthStateChange((_event, session) => {
   currentSession = session || null;
   currentUser = session?.user || null;
@@ -570,6 +679,10 @@ supabase.auth.onAuthStateChange((_event, session) => {
     })
   );
 });
+
+/* =========================
+   STORAGE HELPERS
+========================= */
 
 export function getPublicFileUrl(bucket, path) {
   if (!bucket || !path) return null;
@@ -598,6 +711,10 @@ export async function deleteFile({ bucket, paths = [] }) {
   return data;
 }
 
+/* =========================
+   REALTIME HELPERS
+========================= */
+
 export function createRealtimeChannel(channelName, config = {}) {
   return supabase.channel(channelName, config);
 }
@@ -606,6 +723,10 @@ export async function removeRealtimeChannel(channel) {
   if (!channel) return null;
   return await supabase.removeChannel(channel);
 }
+
+/* =========================
+   CRUD HELPERS
+========================= */
 
 export async function rbSelect({
   table,
@@ -686,6 +807,10 @@ export async function rbDelete({ table, match = {} }) {
   return data;
 }
 
+/* =========================
+   REQUIRE HELPERS
+========================= */
+
 export async function rbRequireUser() {
   await bootAuth();
 
@@ -730,7 +855,9 @@ export async function rbTouchOnline() {
     .select("*")
     .maybeSingle();
 
-  if (!error && data) currentProfile = data;
+  if (!error && data) {
+    currentProfile = data;
+  }
 
   return data || null;
 }
