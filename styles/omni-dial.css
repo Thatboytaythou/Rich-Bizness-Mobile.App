@@ -12,12 +12,12 @@
    - nav active/hover polish
    - notification toasts
    - page transition
+   - index mobile lock patch
 
    Does NOT own:
    - base reset
    - city layout
    - HUD positioning
-   - bottom nav grid structure
 ========================= */
 
 /* INTERACTIVE FOCUS SAFETY */
@@ -713,6 +713,126 @@ body.rb-orbit-xp-energy .rb-page-transition::before {
     top: calc(var(--rb-safe-top, 0px) + 76px);
     right: 10px;
     width: calc(100vw - 20px);
+  }
+}
+
+/* =========================
+   INDEX PORTAL CITY LOCK PATCH
+   Stops mobile nav from becoming top dock
+   Centers districts inside the iPhone viewport
+========================= */
+
+body.rb-index-page .rb-bottom-nav {
+  top: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  transform: translateX(-50%) !important;
+  width: min(760px, calc(100vw - 24px)) !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  z-index: 80 !important;
+}
+
+body.rb-index-page .rb-universe-shell,
+body.rb-index-page .rb-universe-stage {
+  width: 100vw !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+body.rb-index-page .rb-hero-title {
+  top: calc(env(safe-area-inset-top) + 86px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(92vw, 760px) !important;
+  text-align: center !important;
+  z-index: 30 !important;
+}
+
+body.rb-index-page .rb-city-world {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+  transform: none !important;
+}
+
+@media (max-width: 720px) {
+  body.rb-index-page .rb-bottom-nav {
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    width: calc(100vw - 18px) !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    padding: 8px !important;
+  }
+
+  body.rb-index-page .rb-bottom-nav button {
+    height: 52px !important;
+  }
+
+  body.rb-index-page .rb-bottom-nav button span:last-child {
+    font-size: 8px !important;
+  }
+
+  body.rb-index-page .rb-hero-title {
+    top: calc(env(safe-area-inset-top) + 96px) !important;
+  }
+
+  body.rb-index-page .rb-hero-title h1 {
+    font-size: clamp(3rem, 15vw, 4.9rem) !important;
+    line-height: 0.82 !important;
+    letter-spacing: -0.08em !important;
+  }
+
+  body.rb-index-page .rb-district {
+    transform: scale(0.78) !important;
+  }
+
+  body.rb-index-page .rb-district-gallery {
+    left: 6vw !important;
+    top: 40vh !important;
+  }
+
+  body.rb-index-page .rb-district-podcast {
+    left: 25vw !important;
+    top: 36vh !important;
+  }
+
+  body.rb-index-page .rb-district-live {
+    left: 54vw !important;
+    top: 40vh !important;
+  }
+
+  body.rb-index-page .rb-district-gaming {
+    left: 4vw !important;
+    top: 46vh !important;
+  }
+
+  body.rb-index-page .rb-district-sports {
+    left: 28vw !important;
+    top: 63vh !important;
+  }
+
+  body.rb-index-page .rb-district-upload {
+    left: 2vw !important;
+    top: 70vh !important;
+  }
+
+  body.rb-index-page .rb-district-meta {
+    left: 2vw !important;
+    top: 78vh !important;
+  }
+
+  body.rb-index-page .rb-main-portal {
+    left: 50% !important;
+    top: 62vh !important;
+    transform: translate(-50%, -50%) scale(0.86) !important;
+  }
+
+  body.rb-index-page .rb-avatar-stage {
+    left: 50% !important;
+    top: 82vh !important;
+    transform: translateX(-50%) scale(0.9) !important;
   }
 }
 
