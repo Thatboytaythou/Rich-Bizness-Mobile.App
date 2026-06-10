@@ -17,199 +17,290 @@
     content="Rich Bizness Mobile — cinematic universe portal hub."
   />
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-
   <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/main.css" />
-  <link rel="stylesheet" href="/styles/mobile.css" />
-
-  <link rel="stylesheet" href="/styles/three.css" />
-  <link rel="stylesheet" href="/styles/three-avatar.css" />
-  <link rel="stylesheet" href="/styles/avatar.css" />
-
   <link rel="stylesheet" href="/styles/omni-fx.css" />
   <link rel="stylesheet" href="/styles/omni-portal.css" />
   <link rel="stylesheet" href="/styles/omni-dial.css" />
 </head>
 
 <body
-  class="rb-index-page rb-orbit-xp-energy"
+  class="rb-index-page rb-universe-home rb-orbit-xp-energy"
   data-page="index"
   data-rb-page="index"
   data-rb-route="home"
 >
-
-  <div id="canvas-container" aria-hidden="true"></div>
-
   <div class="rb-fx-smoke" aria-hidden="true"></div>
   <div class="rb-bg-grid" aria-hidden="true"></div>
   <div class="rb-bg-vignette" aria-hidden="true"></div>
   <div class="rb-bg-noise" aria-hidden="true"></div>
 
-  <header class="rb-brand-header">
-    <h1>
-      RICH <span>BIZNESS</span>
-    </h1>
+  <main class="rb-universe-shell" aria-label="Rich Bizness Universe">
+    <section class="rb-universe-stage" aria-label="Rich Bizness Universe Portal City">
+      <header class="rb-universe-topbar">
+        <a class="rb-brand-lockup" href="/" aria-label="Rich Bizness Home">
+          <span class="rb-brand-mark">♛<strong>RB</strong></span>
 
-    <p>
-      LLC • SMOKE &amp; EMPIRE
-    </p>
-  </header>
+          <span class="rb-brand-copy">
+            <strong>RICH BIZNESS</strong>
+            <small>UNIVERSE</small>
+          </span>
+        </a>
 
-  <button
-    id="rbProfileChip"
-    class="rb-profile-chip"
-    data-route="profile"
-    type="button"
-    aria-label="Open profile"
-  >
-    <img
-      src="/images/brand/Avatar-hero-Banner.png.jpeg"
-      alt="Profile"
-      data-rb-avatar
-      data-rb-profile-avatar
-    />
+        <div class="rb-top-status" aria-label="Universe status">
+          <button class="rb-pill rb-pill-live" data-route="live" type="button">
+            <span></span>
+            LIVE NOW
+            <strong data-rb-live-count>1,248</strong>
+          </button>
 
-    <span data-rb-name>
-      Tap In
-    </span>
-  </button>
+          <button class="rb-pill rb-pill-online" type="button">
+            <span></span>
+            ONLINE
+            <strong data-rb-online-count>24,893</strong>
+          </button>
 
-  <button
-    class="rb-tab-dropper"
-    id="tabDropper"
-    type="button"
-    aria-label="Open quick tabs"
-    aria-controls="slideTabs"
-    aria-expanded="false"
-  >
-    ☰
-  </button>
+          <button class="rb-icon-btn" data-route="search" type="button" aria-label="Search">
+            🔎
+          </button>
 
-  <nav
-    class="rb-side-tabs rb-slide-tabs"
-    id="slideTabs"
-    aria-label="Quick actions"
-  >
-    <button data-route="auth" type="button" aria-label="Auth">🔑</button>
-    <button data-route="profile" type="button" aria-label="Profile">👤</button>
-    <button data-route="avatar" type="button" aria-label="Avatar">🧍</button>
-    <button data-route="messages" type="button" aria-label="Messages">💬</button>
-    <button data-route="notifications" type="button" aria-label="Notifications">🔔</button>
-    <button data-route="settings" type="button" aria-label="Settings">⚙️</button>
-    <button data-route="edit" type="button" aria-label="Edit">✒️</button>
-    <button data-route="watch" type="button" aria-label="Watch">📺</button>
-    <button data-route="creator" type="button" aria-label="Creator">👑</button>
-    <button data-route="admin" type="button" aria-label="Admin">🛡️</button>
-    <button data-route="secretDoor" type="button" aria-label="Secret Door">🔐</button>
-    <button data-route="secretMeta2" type="button" aria-label="Secret Meta 2">🪐</button>
-    <button data-route="secretMeta3" type="button" aria-label="Secret Meta 3">🌌</button>
-  </nav>
+          <button class="rb-icon-btn" data-route="notifications" type="button" aria-label="Notifications">
+            🔔
+            <em data-rb-notification-count>5</em>
+          </button>
 
-  <main class="rb-universe-shell">
-    <section
-      class="rb-universe-stage"
-      aria-label="Rich Bizness Universe Hub"
-    >
-      <div
-        id="module-label"
-        class="rb-module-label active"
-        aria-live="polite"
-      >
-        RICH BIZNESS ONLINE
-      </div>
+          <button
+            id="rbProfileChip"
+            class="rb-profile-chip"
+            data-route="profile"
+            type="button"
+            aria-label="Open profile"
+          >
+            <img
+              src="/images/brand/Avatar-hero-Banner.png.jpeg"
+              alt="Profile"
+              data-rb-avatar
+              data-rb-profile-avatar
+            />
+          </button>
+        </div>
+      </header>
+
+      <section class="rb-hero-title" aria-label="Universe title">
+        <h1>RICH BIZNESS UNIVERSE</h1>
+        <p>YOUR WORLD. YOUR RULES. YOUR EMPIRE.</p>
+      </section>
+
+      <aside class="rb-left-hud" aria-label="Live activity and profile stats">
+        <article class="rb-hud-card rb-live-activity-card">
+          <h2>LIVE ACTIVITY</h2>
+
+          <div class="rb-activity-graph" aria-hidden="true">
+            <span></span>
+          </div>
+
+          <dl>
+            <div>
+              <dt>LIVE CHANNELS</dt>
+              <dd data-rb-live-channels>1,248</dd>
+            </div>
+
+            <div>
+              <dt>ACTIVE USERS</dt>
+              <dd data-rb-active-users>24,893</dd>
+            </div>
+
+            <div>
+              <dt>VIBES</dt>
+              <dd>ENERGY HIGH</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="rb-radio-card">
+          <div class="rb-radio-logo">RB</div>
+
+          <div>
+            <strong>RB RADIO</strong>
+            <span>Rich Bizness Radio</span>
+            <small>Live 24/7</small>
+          </div>
+
+          <button data-route="radio" type="button" aria-label="Open radio">
+            ▶
+          </button>
+
+          <div class="rb-waveform" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </article>
+      </aside>
+
+      <section class="rb-city-world" aria-label="Universe district portals">
+        <div class="rb-space-orbit" aria-hidden="true"></div>
+
+        <button class="rb-district rb-district-gallery" data-route="gallery" type="button">
+          <strong>GALLERY DISTRICT</strong>
+          <span>VISUAL DROPS</span>
+        </button>
+
+        <button class="rb-district rb-district-podcast" data-route="podcast" type="button">
+          <strong>PODCAST ARENA</strong>
+          <span>REAL CONVERSATIONS</span>
+        </button>
+
+        <button class="rb-district rb-district-live" data-route="live" type="button">
+          <strong>LIVE UNIVERSE</strong>
+          <span>BROADCAST SOUND</span>
+        </button>
+
+        <button class="rb-district rb-district-music" data-route="music" type="button">
+          <strong>MUSIC DISTRICT</strong>
+          <span>PLAY. STREAM. VIBE.</span>
+        </button>
+
+        <button class="rb-district rb-district-meta" data-route="meta" type="button">
+          <strong>META WORLD</strong>
+          <span>ENTER THE METAVERSE</span>
+        </button>
+
+        <button class="rb-district rb-district-gaming" data-route="gaming" type="button">
+          <strong>GAMING ZONE</strong>
+          <span>PLAY. COMPETE. WIN.</span>
+        </button>
+
+        <button class="rb-district rb-district-sports" data-route="sports" type="button">
+          <strong>SPORTS ARENA</strong>
+          <span>LIVE THE GAME</span>
+        </button>
+
+        <button class="rb-district rb-district-store" data-route="store" type="button">
+          <strong>STORE MARKET</strong>
+          <span>BUY. SELL. SUPPORT.</span>
+        </button>
+
+        <button class="rb-district rb-district-upload" data-route="upload" type="button">
+          <strong>UPLOAD ZONE</strong>
+          <span>SHARE YOUR CONTENT</span>
+        </button>
+
+        <div class="rb-main-portal" data-route="meta" role="button" tabindex="0" aria-label="Enter Meta World">
+          <div class="rb-portal-ring"></div>
+
+          <div class="rb-portal-core">
+            <span class="rb-crown">♛</span>
+            <strong>RB</strong>
+            <small>META WORLD</small>
+          </div>
+        </div>
+
+        <button class="rb-avatar-stage" data-route="profile" type="button" aria-label="Open avatar profile">
+          <span class="rb-avatar-shadow"></span>
+
+          <span class="rb-avatar-body">
+            <span class="rb-avatar-head"></span>
+            <span class="rb-avatar-jacket">RB</span>
+            <span class="rb-avatar-legs"></span>
+          </span>
+        </button>
+      </section>
+
+      <aside class="rb-right-hud" aria-label="Profile and quick access">
+        <article class="rb-profile-status-card">
+          <img
+            src="/images/brand/Avatar-hero-Banner.png.jpeg"
+            alt="Profile avatar"
+            data-rb-profile-avatar
+          />
+
+          <div>
+            <span>WELCOME BACK</span>
+            <strong data-rb-name>RICH BIZNESS ELITE</strong>
+            <small>LEVEL <b data-rb-level>7</b></small>
+
+            <div class="rb-xp-line" aria-label="XP progress">
+              <i style="width: 72%"></i>
+            </div>
+
+            <em>
+              <span data-rb-xp>7,250</span> /
+              <span data-rb-xp-next>10,000</span> XP
+            </em>
+          </div>
+        </article>
+
+        <nav class="rb-quick-access" aria-label="Quick access">
+          <h2>QUICK ACCESS</h2>
+
+          <button data-route="profile" type="button">👤 Profile</button>
+          <button data-route="messages" type="button">✉️ Messages</button>
+          <button data-route="notifications" type="button">🔔 Notifications</button>
+          <button data-route="watch" type="button">▶ Watch</button>
+          <button data-route="settings" type="button">⚙️ Settings</button>
+          <button data-route="creator" type="button">♛ Creator</button>
+          <button data-route="admin" type="button">🛡️ Admin</button>
+        </nav>
+      </aside>
+
+      <nav class="rb-bottom-nav" aria-label="Primary navigation">
+        <button class="is-active" data-route="home" type="button" aria-label="Home">
+          <span class="rb-nav-icon">⌂</span>
+          <span>Home</span>
+        </button>
+
+        <button data-route="feed" type="button" aria-label="Feed">
+          <span class="rb-nav-icon">▤</span>
+          <span>Feed</span>
+        </button>
+
+        <button data-route="live" type="button" aria-label="Live">
+          <span class="rb-nav-icon rb-live-nav-dot">◉</span>
+          <span>Live</span>
+        </button>
+
+        <button data-route="music" type="button" aria-label="Music">
+          <span class="rb-nav-icon">♪</span>
+          <span>Music</span>
+        </button>
+
+        <button data-route="podcast" type="button" aria-label="Podcast">
+          <span class="rb-nav-icon">🎙</span>
+          <span>Podcast</span>
+        </button>
+
+        <button data-route="radio" type="button" aria-label="Radio">
+          <span class="rb-nav-icon">◌</span>
+          <span>Radio</span>
+        </button>
+
+        <button data-route="gaming" type="button" aria-label="Gaming">
+          <span class="rb-nav-icon">🎮</span>
+          <span>Gaming</span>
+        </button>
+
+        <button data-route="sports" type="button" aria-label="Sports">
+          <span class="rb-nav-icon">◎</span>
+          <span>Sports</span>
+        </button>
+
+        <button data-route="store" type="button" aria-label="Store">
+          <span class="rb-nav-icon">🛒</span>
+          <span>Store</span>
+        </button>
+
+        <button data-route="meta" type="button" aria-label="Meta">
+          <span class="rb-nav-icon">⬡</span>
+          <span>Meta</span>
+        </button>
+
+        <button data-route="profile" type="button" aria-label="Profile">
+          <span class="rb-nav-icon">♙</span>
+          <span>Profile</span>
+        </button>
+      </nav>
     </section>
   </main>
 
-  <nav class="rb-bottom-nav" aria-label="Primary navigation">
-    <button data-route="feed" type="button" aria-label="Feed">
-      <span class="rb-nav-icon">🔥</span>
-      <span>Feed</span>
-    </button>
-
-    <button data-route="live" type="button" aria-label="Live">
-      <span class="rb-nav-icon rb-live-nav-dot">📡</span>
-      <span>Live</span>
-    </button>
-
-    <button data-route="music" type="button" aria-label="Music">
-      <span class="rb-nav-icon">🎵</span>
-      <span>Music</span>
-    </button>
-
-    <button data-route="podcast" type="button" aria-label="Podcast">
-      <span class="rb-nav-icon">🎙️</span>
-      <span>Podcast</span>
-    </button>
-
-    <button data-route="radio" type="button" aria-label="Radio">
-      <span class="rb-nav-icon">📻</span>
-      <span>Radio</span>
-    </button>
-
-    <button data-route="gaming" type="button" aria-label="Gaming">
-      <span class="rb-nav-icon">🎮</span>
-      <span>Gaming</span>
-    </button>
-
-    <button data-route="upload" type="button" aria-label="Upload">
-      <span class="rb-nav-icon">⬆️</span>
-      <span>Upload</span>
-    </button>
-  </nav>
-
-  <script type="module" src="/core/engine/universe-preview.js"></script>
-
-  <script type="module" src="/core/pages/live-activity.js"></script>
-  <script type="module" src="/core/pages/online-presence.js"></script>
-  <script type="module" src="/core/pages/realtime-notifications.js"></script>
-  <script type="module" src="/core/pages/bottom-dock-realtime.js"></script>
-
-  <script type="module">
-    import {
-      bindGlobalNavigation
-    } from "/core/shared/rb-navigation.js";
-
-    bindGlobalNavigation();
-
-    const dropper = document.getElementById("tabDropper");
-    const tabs = document.getElementById("slideTabs");
-
-    function closeTabs() {
-      dropper?.classList.remove("is-open");
-      tabs?.classList.remove("is-open");
-      dropper?.setAttribute("aria-expanded", "false");
-    }
-
-    function toggleTabs() {
-      const isOpen = dropper?.classList.toggle("is-open");
-      tabs?.classList.toggle("is-open", Boolean(isOpen));
-      dropper?.setAttribute("aria-expanded", String(Boolean(isOpen)));
-    }
-
-    dropper?.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      toggleTabs();
-    });
-
-    document.addEventListener("click", (event) => {
-      const clickedInsideMenu = event.target.closest("#slideTabs");
-      const clickedDropper = event.target.closest("#tabDropper");
-
-      if (!clickedInsideMenu && !clickedDropper) {
-        closeTabs();
-      }
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closeTabs();
-      }
-    });
-  </script>
-
   <script type="module" src="/core/pages/index.js"></script>
-
 </body>
 </html>
