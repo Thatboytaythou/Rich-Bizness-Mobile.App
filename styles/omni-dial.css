@@ -1,166 +1,97 @@
 /* =========================
    RICH BIZNESS MOBILE
-   styles/omni-dial.css
-   LAYER 8 / 22
+   /styles/omni-dial.css
 
-   HUB UI + DIAL OVERLAY
-   HOLOGRAM GLASS UI
-   Safe index/navigation overlay
-   XP Energy + Profile Lock Sync Enabled
+   LAYER 4 — HUB UI POLISH
+
+   Locked purpose:
+   - profile chip polish
+   - quick buttons polish
+   - district hover polish
+   - portal interaction polish
+   - nav active/hover polish
+   - notification toasts
+   - page transition
+
+   Does NOT own:
+   - base reset
+   - city layout
+   - HUD positioning
+   - bottom nav grid structure
 ========================= */
 
-/* =========================
-   PROFILE CHIP
-========================= */
+/* INTERACTIVE FOCUS SAFETY */
 
-.rb-profile-chip {
-  position: fixed;
-
-  top: max(16px, env(safe-area-inset-top));
-  left: 18px;
-
-  z-index: 28;
-
-  min-height: 64px;
-  max-width: min(390px, calc(100vw - 94px));
-
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  padding: 9px 18px 9px 9px;
-
-  border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.22);
-
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 70%),
-    linear-gradient(145deg, rgba(8, 12, 9, 0.92), rgba(0, 0, 0, 0.76));
-
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-
-  overflow: hidden;
-
-  color: #fefce8;
-
-  cursor: pointer;
-  pointer-events: auto;
-
-  box-shadow:
-    0 0 26px rgba(0, 0, 0, 0.42),
-    0 0 22px rgba(16, 185, 129, 0.12),
-    inset 0 0 22px rgba(255, 255, 255, 0.03);
-
-  transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease,
-    filter 0.22s ease;
+.rb-index-page button:focus-visible,
+.rb-index-page [role="button"]:focus-visible,
+.rb-index-page a:focus-visible {
+  outline: 2px solid rgba(250, 204, 21, 0.78);
+  outline-offset: 4px;
 }
 
-.rb-profile-chip::before {
-  content: "";
+/* SHARED SHINE */
 
+.rb-profile-chip,
+.rb-icon-btn,
+.rb-pill,
+.rb-district,
+.rb-main-portal,
+.rb-radio-card,
+.rb-profile-status-card,
+.rb-quick-access,
+.rb-bottom-nav,
+.rb-bottom-nav button {
+  position: relative;
+}
+
+.rb-profile-chip::before,
+.rb-icon-btn::before,
+.rb-pill::before,
+.rb-district::before,
+.rb-radio-card::before,
+.rb-profile-status-card::before,
+.rb-quick-access::before,
+.rb-bottom-nav::before {
+  content: "";
   position: absolute;
   inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
 
   background:
     linear-gradient(
       115deg,
       transparent 10%,
-      rgba(255, 255, 255, 0.12) 48%,
+      rgba(255, 255, 255, 0.1) 48%,
       transparent 82%
     );
 
-  transform: translateX(-120%);
-  animation: rbChipSweep 5.4s linear infinite;
-
-  pointer-events: none;
+  transform: translateX(-125%);
+  opacity: 0.56;
+  animation: rbDialSweep 6.8s linear infinite;
 }
 
-.rb-profile-chip:hover {
-  transform:
-    translateY(-2px)
-    scale(1.02);
+/* PROFILE CHIP POLISH */
 
-  border-color: rgba(0, 255, 157, 0.38);
-
-  box-shadow:
-    0 0 32px rgba(0, 255, 157, 0.16),
-    0 0 48px rgba(250, 204, 21, 0.1);
+.rb-profile-chip {
+  transition:
+    transform var(--rb-med, 260ms ease),
+    border-color var(--rb-med, 260ms ease),
+    box-shadow var(--rb-med, 260ms ease),
+    filter var(--rb-med, 260ms ease);
 }
 
-.rb-profile-chip img {
-  position: relative;
-  z-index: 2;
-
-  width: 46px;
-  height: 46px;
-
-  border-radius: 50%;
-  object-fit: cover;
-
-  border: 2px solid rgba(250, 204, 21, 0.42);
-
-  box-shadow:
-    0 0 14px rgba(0, 255, 157, 0.22);
+.rb-profile-chip:hover,
+.rb-profile-chip:focus-visible {
+  transform: translateY(-2px) scale(1.035);
+  border-color: rgba(0, 255, 157, 0.42);
+  filter:
+    drop-shadow(0 0 16px rgba(0, 255, 157, 0.22))
+    drop-shadow(0 0 22px rgba(250, 204, 21, 0.12));
 }
-
-.rb-profile-chip span {
-  position: relative;
-  z-index: 2;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  color: #fefce8;
-
-  font-size: 12px;
-  font-weight: 1000;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-
-  text-shadow:
-    0 0 12px rgba(0, 255, 157, 0.22);
-}
-
-.rb-profile-chip[data-online]::after {
-  content: attr(data-online);
-
-  position: absolute;
-  right: 4px;
-  top: 4px;
-  z-index: 3;
-
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 999px;
-
-  background: linear-gradient(135deg, #10b981, #facc15);
-  color: #020403;
-
-  font-size: 10px;
-  font-weight: 1000;
-
-  box-shadow:
-    0 0 16px rgba(16, 185, 129, 0.5),
-    0 0 24px rgba(250, 204, 21, 0.2);
-}
-
-/* =========================
-   PROFILE LOCK / XP CHIP ENERGY
-========================= */
 
 body[data-rb-profile-locked="true"] .rb-profile-chip {
   border-color: rgba(0, 255, 157, 0.36);
-
   box-shadow:
     0 0 26px rgba(0, 255, 157, 0.18),
     0 0 42px rgba(250, 204, 21, 0.08),
@@ -172,12 +103,7 @@ body[data-rb-profile-locked="false"] .rb-profile-chip {
 }
 
 body.rb-orbit-xp-energy .rb-profile-chip {
-  border-color: rgba(250, 204, 21, 0.36);
-
-  filter:
-    drop-shadow(0 0 18px rgba(0, 255, 157, 0.16))
-    drop-shadow(0 0 22px rgba(250, 204, 21, 0.1));
-
+  border-color: rgba(250, 204, 21, 0.38);
   box-shadow:
     0 0 30px rgba(0, 255, 157, 0.18),
     0 0 54px rgba(250, 204, 21, 0.12),
@@ -186,208 +112,370 @@ body.rb-orbit-xp-energy .rb-profile-chip {
 
 body.rb-orbit-xp-energy .rb-profile-chip img {
   border-color: rgba(250, 204, 21, 0.62);
-
   box-shadow:
     0 0 16px rgba(0, 255, 157, 0.28),
     0 0 22px rgba(250, 204, 21, 0.16);
 }
 
-/* =========================
-   TAB DROPPER
-========================= */
+/* STATUS PILLS */
 
-.rb-tab-dropper {
-  position: fixed;
-
-  right: 18px;
-  top: calc(env(safe-area-inset-top) + 86px);
-
-  z-index: 34;
-
-  width: 56px;
-  height: 56px;
-
-  border-radius: 20px;
-  border: 1px solid rgba(250, 204, 21, 0.24);
-
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 70%),
-    linear-gradient(145deg, rgba(8, 12, 9, 0.92), rgba(0, 0, 0, 0.76));
-
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-
-  color: #fefce8;
-
-  font-size: 28px;
-  font-weight: 1000;
-
-  box-shadow:
-    0 0 24px rgba(0, 255, 157, 0.12),
-    0 0 38px rgba(0, 0, 0, 0.48);
-
-  transition:
-    transform 0.22s ease,
-    background 0.22s ease,
-    color 0.22s ease,
-    box-shadow 0.22s ease,
-    border-color 0.22s ease;
-}
-
-.rb-tab-dropper:hover {
-  transform:
-    scale(1.05)
-    rotate(4deg);
-}
-
-.rb-tab-dropper.is-open {
-  color: #041006;
-
-  background:
-    linear-gradient(135deg, var(--rb-green), var(--rb-gold));
-
-  box-shadow:
-    0 0 22px rgba(0, 255, 157, 0.36),
-    0 0 34px rgba(250, 204, 21, 0.22);
-}
-
-body.rb-orbit-xp-energy .rb-tab-dropper {
-  border-color: rgba(250, 204, 21, 0.38);
-
-  box-shadow:
-    0 0 24px rgba(0, 255, 157, 0.18),
-    0 0 38px rgba(250, 204, 21, 0.12),
-    0 0 38px rgba(0, 0, 0, 0.48);
-}
-
-/* =========================
-   SIDE TABS
-========================= */
-
-.rb-slide-menu,
-.rb-side-tabs {
-  position: fixed;
-
-  right: 18px;
-  top: calc(env(safe-area-inset-top) + 154px);
-
-  z-index: 33;
-
-  display: grid;
-  gap: 10px;
-
-  max-height: calc(100dvh - 250px);
-
-  overflow-y: auto;
-  padding-right: 2px;
-
-  transform:
-    translateY(-18px)
-    scale(0.94);
-
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-
-  transition:
-    opacity 0.24s ease,
-    transform 0.24s ease,
-    visibility 0.24s ease;
-}
-
-.rb-slide-menu.is-open,
-.rb-side-tabs.is-open {
-  transform:
-    translateY(0)
-    scale(1);
-
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.rb-slide-menu button,
-.rb-side-tabs button {
-  position: relative;
-
-  width: 56px;
-  height: 56px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 18px;
-  border: 1px solid rgba(250, 204, 21, 0.18);
-
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.1), transparent 70%),
-    linear-gradient(145deg, rgba(8, 12, 9, 0.88), rgba(0, 0, 0, 0.72));
-
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-
-  color: #fefce8;
-  font-size: 20px;
-
+.rb-pill {
   overflow: hidden;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 0 18px rgba(0, 0, 0, 0.34),
-    0 0 24px rgba(16, 185, 129, 0.08);
-
   transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
+    transform var(--rb-med, 260ms ease),
+    border-color var(--rb-med, 260ms ease),
+    box-shadow var(--rb-med, 260ms ease);
 }
 
-.rb-slide-menu button::before,
-.rb-side-tabs button::before {
-  pointer-events: none;
+.rb-pill:hover,
+.rb-pill:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(250, 204, 21, 0.4);
+  box-shadow:
+    0 0 22px rgba(0, 255, 157, 0.14),
+    0 0 34px rgba(250, 204, 21, 0.1);
 }
 
-.rb-slide-menu button:hover,
-.rb-side-tabs button:hover {
-  transform:
-    translateY(-2px)
-    scale(1.06);
+.rb-pill-live span,
+.rb-live-nav-dot {
+  animation: rbLiveNavPulse 1.35s ease-in-out infinite;
+}
 
-  border-color: rgba(0, 255, 157, 0.42);
+/* ICON BUTTON POLISH */
 
+.rb-icon-btn {
+  overflow: hidden;
+  transition:
+    transform var(--rb-med, 260ms ease),
+    border-color var(--rb-med, 260ms ease),
+    box-shadow var(--rb-med, 260ms ease),
+    background var(--rb-med, 260ms ease);
+}
+
+.rb-icon-btn:hover,
+.rb-icon-btn:focus-visible {
+  transform: translateY(-2px) scale(1.05);
+  border-color: rgba(0, 255, 157, 0.38);
   box-shadow:
     0 0 24px rgba(0, 255, 157, 0.16),
-    0 0 34px rgba(250, 204, 21, 0.12);
+    0 0 34px rgba(250, 204, 21, 0.1);
 }
 
-body.rb-orbit-xp-energy .rb-slide-menu button,
-body.rb-orbit-xp-energy .rb-side-tabs button {
-  border-color: rgba(250, 204, 21, 0.24);
+/* DISTRICT POLISH */
 
-  box-shadow:
-    0 0 18px rgba(0, 0, 0, 0.34),
-    0 0 24px rgba(16, 185, 129, 0.11),
-    0 0 28px rgba(250, 204, 21, 0.08);
+.rb-district {
+  overflow: hidden;
+  isolation: isolate;
 }
 
-/* =========================
-   LIVE COUNTS
-========================= */
-
-.rb-slide-menu button.rb-live-active::after,
-.rb-side-tabs button.rb-live-active::after,
-.rb-bottom-nav button.rb-live-active::after {
-  content: attr(data-count);
-
+.rb-district::after {
+  content: "";
   position: absolute;
+  left: 50%;
+  bottom: -22px;
+  z-index: -1;
 
+  width: 72%;
+  height: 32px;
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+  background: rgba(0, 255, 157, 0.18);
+  filter: blur(16px);
+  opacity: 0.62;
+  pointer-events: none;
+
+  transition:
+    opacity var(--rb-med, 260ms ease),
+    background var(--rb-med, 260ms ease),
+    transform var(--rb-med, 260ms ease);
+}
+
+.rb-district:hover::after,
+.rb-district:focus-visible::after {
+  opacity: 1;
+  background: rgba(250, 204, 21, 0.24);
+  transform: translateX(-50%) scale(1.16);
+}
+
+.rb-district strong,
+.rb-district span {
+  position: relative;
+  z-index: 2;
+}
+
+/* SPECIAL DISTRICT COLORS */
+
+.rb-district-gallery {
+  border-color: rgba(168, 85, 247, 0.26);
+}
+
+.rb-district-music,
+.rb-district-podcast,
+.rb-district-radio {
+  border-color: rgba(250, 204, 21, 0.3);
+}
+
+.rb-district-live,
+.rb-district-watch {
+  border-color: rgba(0, 255, 157, 0.34);
+}
+
+.rb-district-store {
+  border-color: rgba(250, 204, 21, 0.34);
+}
+
+.rb-district-meta {
+  border-color: rgba(0, 255, 157, 0.42);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.34),
+    0 0 30px rgba(0, 255, 157, 0.2),
+    0 0 52px rgba(250, 204, 21, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* PORTAL POLISH */
+
+.rb-main-portal {
+  filter:
+    drop-shadow(0 0 28px rgba(0, 255, 157, 0.22))
+    drop-shadow(0 0 54px rgba(250, 204, 21, 0.12));
+
+  transition:
+    transform var(--rb-med, 260ms ease),
+    filter var(--rb-med, 260ms ease);
+}
+
+.rb-main-portal:hover,
+.rb-main-portal:focus-visible {
+  transform: translate(-50%, -50%) scale(1.035);
+  filter:
+    drop-shadow(0 0 38px rgba(0, 255, 157, 0.34))
+    drop-shadow(0 0 76px rgba(250, 204, 21, 0.2));
+}
+
+.rb-main-portal::before {
+  content: "";
+  position: absolute;
+  inset: -16%;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(0, 255, 157, 0.22), transparent 52%),
+    radial-gradient(circle at center, rgba(250, 204, 21, 0.1), transparent 68%);
+  filter: blur(24px);
+  opacity: 0.7;
+  animation: rbPortalGlowBreathe 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.rb-portal-core {
+  overflow: hidden;
+}
+
+.rb-portal-core::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.18) 46%,
+      transparent 76%
+    );
+  transform: translateX(-130%) rotate(12deg);
+  animation: rbCoreSweep 4.8s linear infinite;
+  pointer-events: none;
+}
+
+/* AVATAR POLISH */
+
+.rb-avatar-stage {
+  transition:
+    transform var(--rb-med, 260ms ease),
+    filter var(--rb-med, 260ms ease);
+}
+
+.rb-avatar-stage:hover,
+.rb-avatar-stage:focus-visible {
+  transform: translateX(-50%) translateY(-4px) scale(1.035);
+  filter:
+    drop-shadow(0 0 18px rgba(0, 255, 157, 0.24))
+    drop-shadow(0 0 30px rgba(250, 204, 21, 0.12));
+}
+
+.rb-avatar-jacket::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 14%;
+  width: 34%;
+  height: 64%;
+  transform: translateX(-50%);
+  border-radius: 99px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 72%);
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+/* HUD POLISH */
+
+.rb-hud-card,
+.rb-radio-card,
+.rb-profile-status-card,
+.rb-quick-access {
+  overflow: hidden;
+}
+
+.rb-hud-card:hover,
+.rb-radio-card:hover,
+.rb-profile-status-card:hover,
+.rb-quick-access:hover {
+  border-color: rgba(250, 204, 21, 0.24);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.48),
+    0 0 28px rgba(0, 255, 157, 0.1),
+    0 0 44px rgba(250, 204, 21, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.rb-waveform span {
+  animation: rbWaveBounce 1.2s ease-in-out infinite;
+}
+
+.rb-waveform span:nth-child(2n) {
+  animation-delay: 0.12s;
+}
+
+.rb-waveform span:nth-child(3n) {
+  animation-delay: 0.24s;
+}
+
+/* QUICK ACCESS */
+
+.rb-quick-access button {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--rb-med, 260ms ease),
+    border-color var(--rb-med, 260ms ease),
+    background var(--rb-med, 260ms ease),
+    color var(--rb-med, 260ms ease);
+}
+
+.rb-quick-access button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 0% 50%, rgba(0, 255, 157, 0.18), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--rb-med, 260ms ease);
+  pointer-events: none;
+}
+
+.rb-quick-access button:hover::before,
+.rb-quick-access button:focus-visible::before {
+  opacity: 1;
+}
+
+.rb-quick-access button:hover,
+.rb-quick-access button:focus-visible {
+  transform: translateX(3px);
+  color: #ffffff;
+}
+
+/* BOTTOM NAV POLISH */
+
+.rb-bottom-nav {
+  overflow: hidden;
+}
+
+.rb-bottom-nav button {
+  overflow: hidden;
+}
+
+.rb-bottom-nav button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(0, 255, 157, 0.14),
+      transparent 72%
+    );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--rb-med, 260ms ease);
+}
+
+.rb-bottom-nav button:hover::before,
+.rb-bottom-nav button:focus-visible::before,
+.rb-bottom-nav button.is-active::before,
+.rb-bottom-nav button.rb-live-active::before {
+  opacity: 1;
+}
+
+.rb-nav-icon {
+  position: relative;
+  z-index: 2;
+  display: block;
+
+  filter:
+    drop-shadow(0 0 10px rgba(0, 255, 157, 0.34))
+    drop-shadow(0 0 10px rgba(250, 204, 21, 0.18));
+
+  transition:
+    transform var(--rb-med, 260ms ease),
+    filter var(--rb-med, 260ms ease);
+}
+
+.rb-bottom-nav button:hover .rb-nav-icon,
+.rb-bottom-nav button:focus-visible .rb-nav-icon,
+.rb-bottom-nav button.is-active .rb-nav-icon {
+  transform: translateY(-1px) scale(1.08);
+  filter:
+    drop-shadow(0 0 14px rgba(0, 255, 157, 0.5))
+    drop-shadow(0 0 16px rgba(250, 204, 21, 0.24));
+}
+
+body.rb-orbit-xp-energy .rb-bottom-nav {
+  border-color: rgba(250, 204, 21, 0.3);
+  box-shadow:
+    0 0 38px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(16, 185, 129, 0.16),
+    0 0 42px rgba(250, 204, 21, 0.1),
+    inset 0 0 28px rgba(255, 255, 255, 0.035);
+}
+
+body.rb-orbit-xp-energy .rb-bottom-nav button.is-active,
+body.rb-orbit-xp-energy .rb-bottom-nav button:hover,
+body.rb-orbit-xp-energy .rb-bottom-nav button:focus-visible {
+  border-color: rgba(250, 204, 21, 0.42);
+  box-shadow:
+    0 0 20px rgba(16, 185, 129, 0.2),
+    0 0 28px rgba(250, 204, 21, 0.13),
+    inset 0 0 18px rgba(255, 255, 255, 0.03);
+}
+
+/* LIVE COUNTS */
+
+.rb-bottom-nav button.rb-live-active::after,
+.rb-side-tabs button.rb-live-active::after,
+.rb-slide-menu button.rb-live-active::after {
+  content: attr(data-count);
+  position: absolute;
   top: -6px;
   right: -5px;
+  z-index: 4;
 
   min-width: 22px;
   height: 22px;
-
   padding: 0 6px;
 
   display: flex;
@@ -395,10 +483,7 @@ body.rb-orbit-xp-energy .rb-side-tabs button {
   justify-content: center;
 
   border-radius: 999px;
-
-  background:
-    linear-gradient(145deg, #10b981, #fbbf24);
-
+  background: linear-gradient(145deg, #10b981, #fbbf24);
   color: #020403;
 
   font-size: 10px;
@@ -409,229 +494,28 @@ body.rb-orbit-xp-energy .rb-side-tabs button {
     0 0 28px rgba(250, 204, 21, 0.34);
 }
 
-/* =========================
-   BOTTOM NAV
-========================= */
+/* OPTIONAL SIDE TABS SUPPORT */
 
-.rb-bottom-nav {
-  position: fixed;
-
-  left: 50%;
-  right: auto;
-  bottom: max(14px, env(safe-area-inset-bottom));
-
-  z-index: 28;
-
-  width: min(700px, calc(100vw - 24px));
-
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-
-  gap: 8px;
-
-  padding: 10px;
-
-  border-radius: 30px;
-  border: 1px solid rgba(250, 204, 21, 0.18);
-
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 70%),
-    linear-gradient(145deg, rgba(8, 12, 9, 0.92), rgba(0, 0, 0, 0.78));
-
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-
-  transform: translateX(-50%);
-
-  overflow: hidden;
-
-  box-shadow:
-    0 0 38px rgba(0, 0, 0, 0.5),
-    0 0 24px rgba(16, 185, 129, 0.1),
-    inset 0 0 28px rgba(255, 255, 255, 0.025);
+.rb-tab-dropper,
+.rb-slide-menu,
+.rb-side-tabs {
+  display: none;
 }
 
-.rb-bottom-nav::before {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-
-  background:
-    linear-gradient(
-      115deg,
-      transparent 10%,
-      rgba(255, 255, 255, 0.08) 48%,
-      transparent 82%
-    );
-
-  transform: translateX(-120%);
-  animation: rbNavSweep 7s linear infinite;
-
-  pointer-events: none;
-}
-
-.rb-bottom-nav button {
-  position: relative;
-
-  min-width: 0;
-  height: 58px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  gap: 3px;
-
-  border-radius: 20px;
-  border: 1px solid transparent;
-
-  background: rgba(255, 255, 255, 0.025);
-
-  color: rgba(254, 252, 232, 0.78);
-
-  overflow: hidden;
-
-  transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    background 0.22s ease,
-    color 0.22s ease,
-    box-shadow 0.22s ease;
-}
-
-.rb-bottom-nav button::before {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(0, 255, 157, 0.14),
-      transparent 72%
-    );
-
-  opacity: 0;
-
-  transition: opacity 0.22s ease;
-}
-
-.rb-bottom-nav button:hover,
-.rb-bottom-nav button.is-active,
-.rb-bottom-nav button.rb-live-active {
-  transform: translateY(-2px);
-
-  color: #fefce8;
-
-  border-color: rgba(16, 185, 129, 0.42);
-
-  background: rgba(255, 255, 255, 0.045);
-
-  box-shadow:
-    0 0 20px rgba(16, 185, 129, 0.18),
-    inset 0 0 18px rgba(255, 255, 255, 0.025);
-}
-
-.rb-bottom-nav button:hover::before,
-.rb-bottom-nav button.is-active::before,
-.rb-bottom-nav button.rb-live-active::before {
-  opacity: 1;
-}
-
-body.rb-orbit-xp-energy .rb-bottom-nav {
-  border-color: rgba(250, 204, 21, 0.3);
-
-  box-shadow:
-    0 0 38px rgba(0, 0, 0, 0.5),
-    0 0 28px rgba(16, 185, 129, 0.16),
-    0 0 42px rgba(250, 204, 21, 0.1),
-    inset 0 0 28px rgba(255, 255, 255, 0.035);
-}
-
-body.rb-orbit-xp-energy .rb-bottom-nav button.is-active,
-body.rb-orbit-xp-energy .rb-bottom-nav button:hover {
-  border-color: rgba(250, 204, 21, 0.42);
-
-  box-shadow:
-    0 0 20px rgba(16, 185, 129, 0.2),
-    0 0 28px rgba(250, 204, 21, 0.13),
-    inset 0 0 18px rgba(255, 255, 255, 0.03);
-}
-
-.rb-nav-icon {
-  position: relative;
-  z-index: 2;
-
-  display: block;
-
-  font-size: 22px;
-  line-height: 1;
-
-  filter:
-    drop-shadow(0 0 10px rgba(0, 255, 157, 0.34))
-    drop-shadow(0 0 10px rgba(250, 204, 21, 0.18));
-
-  transition:
-    transform 0.22s ease,
-    filter 0.22s ease;
-}
-
-.rb-bottom-nav button:hover .rb-nav-icon,
-.rb-bottom-nav button.is-active .rb-nav-icon {
-  transform:
-    translateY(-1px)
-    scale(1.08);
-
-  filter:
-    drop-shadow(0 0 14px rgba(0, 255, 157, 0.5))
-    drop-shadow(0 0 16px rgba(250, 204, 21, 0.24));
-}
-
-body.rb-orbit-xp-energy .rb-bottom-nav button:hover .rb-nav-icon,
-body.rb-orbit-xp-energy .rb-bottom-nav button.is-active .rb-nav-icon {
-  filter:
-    drop-shadow(0 0 15px rgba(0, 255, 157, 0.52))
-    drop-shadow(0 0 18px rgba(250, 204, 21, 0.34));
-}
-
-.rb-bottom-nav button span:last-child {
-  position: relative;
-  z-index: 2;
-
-  display: block;
-
-  font-size: 10px;
-  font-weight: 1000;
-
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.rb-live-nav-dot {
-  animation: rbLiveNavPulse 1.35s ease-in-out infinite;
-}
-
-/* =========================
-   NOTIFICATIONS
-========================= */
+/* NOTIFICATION TOASTS */
 
 #rb-notify-root {
   position: fixed;
+  top: calc(var(--rb-safe-top, 0px) + 88px);
+  right: calc(var(--rb-safe-right, 0px) + 18px);
+  z-index: var(--rb-z-modal, 100);
 
-  top: calc(env(safe-area-inset-top) + 148px);
-  right: 18px;
-
-  z-index: 40;
+  width: 320px;
+  max-width: calc(100vw - 24px);
 
   display: flex;
   flex-direction: column;
   gap: 12px;
-
-  width: 320px;
-  max-width: calc(100vw - 24px);
 
   pointer-events: none;
 }
@@ -656,10 +540,7 @@ body.rb-orbit-xp-energy .rb-bottom-nav button.is-active .rb-nav-icon {
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
 
-  transform:
-    translateX(120%)
-    scale(0.92);
-
+  transform: translateX(120%) scale(0.92);
   opacity: 0;
 
   transition:
@@ -673,10 +554,8 @@ body.rb-orbit-xp-energy .rb-bottom-nav button.is-active .rb-nav-icon {
 
 .rb-notify-toast::before {
   content: "";
-
   position: absolute;
   inset: 0;
-
   background:
     linear-gradient(
       115deg,
@@ -684,40 +563,30 @@ body.rb-orbit-xp-energy .rb-bottom-nav button.is-active .rb-nav-icon {
       rgba(255, 255, 255, 0.08) 48%,
       transparent 82%
     );
-
   transform: translateX(-120%);
   animation: rbToastSweep 5s linear infinite;
-
   pointer-events: none;
 }
 
 .rb-notify-toast.is-visible {
   opacity: 1;
-
-  transform:
-    translateX(0)
-    scale(1);
+  transform: translateX(0) scale(1);
 }
 
 body.rb-orbit-xp-energy .rb-notify-toast {
   border-color: rgba(250, 204, 21, 0.24);
-
   box-shadow:
     0 0 32px rgba(16, 185, 129, 0.14),
     0 0 44px rgba(250, 204, 21, 0.09),
     0 0 80px rgba(0, 0, 0, 0.42);
 }
 
-/* =========================
-   PAGE TRANSITION
-========================= */
+/* PAGE TRANSITION */
 
 .rb-page-transition::before {
   content: "";
-
   position: fixed;
   inset: 0;
-
   z-index: 999;
 
   background:
@@ -728,7 +597,6 @@ body.rb-orbit-xp-energy .rb-notify-toast {
     );
 
   animation: rbFadeOut 0.24s ease forwards;
-
   pointer-events: none;
 }
 
@@ -742,9 +610,7 @@ body.rb-orbit-xp-energy .rb-page-transition::before {
     );
 }
 
-/* =========================
-   ANIMATIONS
-========================= */
+/* ANIMATIONS */
 
 @keyframes rbLiveNavPulse {
   0%,
@@ -769,23 +635,23 @@ body.rb-orbit-xp-energy .rb-page-transition::before {
   }
 }
 
-@keyframes rbChipSweep {
+@keyframes rbDialSweep {
   from {
-    transform: translateX(-120%);
+    transform: translateX(-125%);
   }
 
   to {
-    transform: translateX(140%);
+    transform: translateX(145%);
   }
 }
 
-@keyframes rbNavSweep {
+@keyframes rbCoreSweep {
   from {
-    transform: translateX(-120%);
+    transform: translateX(-130%) rotate(12deg);
   }
 
   to {
-    transform: translateX(140%);
+    transform: translateX(130%) rotate(12deg);
   }
 }
 
@@ -799,116 +665,73 @@ body.rb-orbit-xp-energy .rb-page-transition::before {
   }
 }
 
-/* =========================
-   MOBILE
-========================= */
+@keyframes rbPortalGlowBreathe {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes rbWaveBounce {
+  0%,
+  100% {
+    transform: scaleY(0.58);
+    opacity: 0.62;
+  }
+
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* MOBILE */
 
 @media (max-width: 720px) {
-  .rb-profile-chip {
-    top: calc(env(safe-area-inset-top) + 12px);
-    left: 12px;
-
-    max-width: 250px;
-    min-height: 60px;
-
-    padding: 8px 14px 8px 8px;
+  .rb-profile-chip:hover,
+  .rb-profile-chip:focus-visible {
+    transform: translateY(-1px) scale(1.025);
   }
 
-  .rb-profile-chip img {
-    width: 42px;
-    height: 42px;
+  .rb-main-portal:hover,
+  .rb-main-portal:focus-visible {
+    transform: translate(-50%, -50%) scale(1.025);
   }
 
-  .rb-profile-chip span {
-    font-size: 11px;
-    letter-spacing: 0.14em;
-  }
-
-  .rb-tab-dropper {
-    right: 12px;
-    top: calc(env(safe-area-inset-top) + 78px);
-
-    width: 50px;
-    height: 50px;
-
-    border-radius: 16px;
-  }
-
-  .rb-slide-menu,
-  .rb-side-tabs {
-    right: 12px;
-    top: calc(env(safe-area-inset-top) + 138px);
-
-    max-height: calc(100dvh - 230px);
-  }
-
-  .rb-slide-menu button,
-  .rb-side-tabs button {
-    width: 50px;
-    height: 50px;
-
-    border-radius: 16px;
-
-    font-size: 18px;
-  }
-
-  .rb-module-label {
-    bottom: calc(94px + env(safe-area-inset-bottom));
-
-    padding: 12px 18px;
-
-    font-size: 11px;
-    letter-spacing: 0.16em;
-  }
-
-  .rb-bottom-nav {
-    left: 50%;
-    right: auto;
-
-    width: calc(100vw - 18px);
-
-    bottom: max(10px, env(safe-area-inset-bottom));
-
-    padding: 8px;
-
-    border-radius: 24px;
-
-    gap: 5px;
-
-    transform: translateX(-50%);
-  }
-
-  .rb-bottom-nav button {
-    height: 54px;
-    border-radius: 18px;
-  }
-
-  .rb-nav-icon {
-    font-size: 19px;
-  }
-
-  .rb-bottom-nav button span:last-child {
-    font-size: 9px;
-    letter-spacing: 0.05em;
+  .rb-avatar-stage:hover,
+  .rb-avatar-stage:focus-visible {
+    transform: translateX(-50%) translateY(-2px) scale(1.025);
   }
 
   #rb-notify-root {
-    top: calc(env(safe-area-inset-top) + 132px);
+    top: calc(var(--rb-safe-top, 0px) + 76px);
     right: 10px;
-
     width: calc(100vw - 20px);
   }
 }
 
-/* =========================
-   REDUCED MOTION
-========================= */
+/* REDUCED MOTION */
 
 @media (prefers-reduced-motion: reduce) {
   .rb-profile-chip::before,
+  .rb-icon-btn::before,
+  .rb-pill::before,
+  .rb-district::before,
+  .rb-radio-card::before,
+  .rb-profile-status-card::before,
+  .rb-quick-access::before,
   .rb-bottom-nav::before,
+  .rb-portal-core::after,
   .rb-notify-toast::before,
-  .rb-live-nav-dot {
+  .rb-live-nav-dot,
+  .rb-waveform span,
+  .rb-main-portal::before {
     animation: none !important;
   }
 }
