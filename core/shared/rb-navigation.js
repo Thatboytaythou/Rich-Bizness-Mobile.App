@@ -661,18 +661,22 @@ export function buildModuleMenu() {
 
 /* =========================
    STARTUP
+   Safe import only.
+   Pages call bindGlobalNavigation() when ready.
 ========================= */
 
-window.addEventListener("popstate", () => {
-  updateActiveRoute();
-  bindActiveNavigation();
-});
+if (!window.__RB_NAVIGATION_EVENTS_BOUND__) {
+  window.__RB_NAVIGATION_EVENTS_BOUND__ = true;
 
-window.addEventListener("pageshow", () => {
-  updateActiveRoute();
-  bindActiveNavigation();
-});
+  window.addEventListener("popstate", () => {
+    updateActiveRoute();
+    bindActiveNavigation();
+  });
 
-updateActiveRoute();
+  window.addEventListener("pageshow", () => {
+    updateActiveRoute();
+    bindActiveNavigation();
+  });
+}
 
 console.log("RB NAVIGATION READY");
