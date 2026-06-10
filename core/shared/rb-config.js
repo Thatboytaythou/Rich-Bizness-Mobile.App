@@ -3,9 +3,9 @@
    /core/shared/rb-config.js
 
    SINGLE SOURCE OF TRUTH
+
    Routes + Tables + Buckets
-   Motion + Visual System
-   Profile Lock + Avatar Lock + Secret Worlds
+   Portal City + Avatar + XP + Store Flow
    No secrets in this file.
 ========================= */
 
@@ -20,20 +20,20 @@ const RB_CONFIG = Object.freeze({
 
     build: {
       platform: "web-mobile",
-      engine: "universe-preview",
-      renderer: "threejs",
-      mode: "cinematic",
-    },
+      engine: "world-engine",
+      renderer: "css-3d-webgl-ready",
+      mode: "portal-city-home"
+    }
   },
 
   supabase: {
     projectRef: "xfsrqomsiulswbalgknx",
     url: "https://xfsrqomsiulswbalgknx.supabase.co",
-    publishableKey: "sb_publishable_pW8c7eWAX1GPi5HbncKjpg_CicEceV8",
+    publishableKey: "sb_publishable_pW8c7eWAX1GPi5HbncKjpg_CicEceV8"
   },
 
   livekit: {
-    url: "wss://rich-bizness-mobile-app-ww6cieid.livekit.cloud",
+    url: "wss://rich-bizness-mobile-app-ww6cieid.livekit.cloud"
   },
 
   auth: {
@@ -43,32 +43,16 @@ const RB_CONFIG = Object.freeze({
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: "pkce",
-  },
 
-  system: {
-    schemas: {
-      public: "public",
-      auth: "auth",
-      storage: "storage",
-      realtime: "realtime",
-    },
-
-    auth: {
-      users: "auth.users",
-      sessions: "auth.sessions",
-      identities: "auth.identities",
-      refreshTokens: "auth.refresh_tokens",
-    },
-
-    storage: {
-      buckets: "storage.buckets",
-      objects: "storage.objects",
-    },
-
-    realtime: {
-      messages: "realtime.messages",
-      subscriptions: "realtime.subscription",
-    },
+    avatarCreation: {
+      enabled: true,
+      routeAfterAuth: "/profile",
+      fallbackRoute: "/",
+      createsProfile: true,
+      createsMetaAvatar: true,
+      starterLevel: 1,
+      starterXp: 0
+    }
   },
 
   brandAssets: {
@@ -81,51 +65,229 @@ const RB_CONFIG = Object.freeze({
     avatarHeroBanner: "/images/brand/Avatar-hero-Banner.png.jpeg",
     metaLogo: "/images/brand/meta-verse-elite.png.jpeg",
 
-    tabIconImage: "/images/brand/hero-banner.png",
+    tabIconImage: "/images/brand/hero-banner.png"
+  },
+
+  universe: {
+    home: {
+      key: "index",
+      label: "Rich Bizness Universe",
+      route: "/",
+      visualMode: "portal-city",
+      avatarOnPortal: true,
+      xpVisible: true,
+      liveVisible: true,
+      onlineVisible: true,
+      storeCheckoutLinked: true
+    },
+
+    identityFlow: {
+      authCreatesAvatar: true,
+      profileUpgradesAvatar: true,
+      indexShowsAvatar: true,
+      metaUsesAvatar: true
+    },
+
+    metaUnlocks: {
+      enabled: true,
+      primaryRoute: "/meta",
+      secretDoor: "/rb-secret-door",
+      secretMeta2: "/rb-secret-meta2",
+      secretMeta3: "/rb-secret-meta3",
+      unlockBy: ["profile", "creator", "admin", "xp"]
+    },
+
+    xp: {
+      enabled: true,
+      maxStarterGoalLevel: 999,
+      levelStep: 1000,
+      ledgerTable: "user_xp_ledger",
+      eventsTable: "xp_events",
+      levelsTable: "user_levels",
+      rankRulesTable: "rank_rules",
+      defaultRank: "Biz Legend"
+    },
+
+    commerce: {
+      storeOwnsCheckout: true,
+      checkoutRoute: "/store",
+      cartRoute: "/store",
+      sellableSections: [
+        "music",
+        "podcast",
+        "gallery",
+        "gaming",
+        "sports",
+        "live",
+        "meta",
+        "store"
+      ]
+    }
   },
 
   modules: [
-    { key: "feed", label: "FEED", icon: "🔥", route: "/feed", color: "#00ffae" },
-    { key: "watch", label: "WATCH", icon: "📺", route: "/watch", color: "#00ffd5" },
-    { key: "live", label: "LIVE", icon: "📡", route: "/live", color: "#00ffcc" },
-    { key: "music", label: "MUSIC", icon: "🎵", route: "/music", color: "#ffe066" },
-    { key: "podcast", label: "PODCAST", icon: "🎙️", route: "/podcast", color: "#ffb347" },
-    { key: "radio", label: "RADIO", icon: "📻", route: "/radio", color: "#7ad7ff" },
-    { key: "gaming", label: "GAMING", icon: "🎮", route: "/gaming", color: "#7c5cff" },
-    { key: "sports", label: "SPORTS", icon: "🏆", route: "/sports", color: "#00c2ff" },
-    { key: "gallery", label: "GALLERY", icon: "🖼️", route: "/gallery", color: "#ff9f43" },
-    { key: "store", label: "STORE", icon: "🛒", route: "/store", color: "#ffd700" },
-    { key: "upload", label: "UPLOAD", icon: "⬆️", route: "/upload", color: "#00ffaa" },
-    { key: "meta", label: "META", icon: "🌌", route: "/meta", color: "#9d4dff" },
-    { key: "avatar", label: "AVATAR", icon: "🧍", route: "/avatar", color: "#00ffae" },
+    {
+      key: "feed",
+      label: "FEED",
+      district: "Feed Plaza",
+      icon: "🔥",
+      route: "/feed",
+      color: "#00ffae",
+      xpAction: "feed_visit"
+    },
+    {
+      key: "watch",
+      label: "WATCH",
+      district: "Watch Tower",
+      icon: "📺",
+      route: "/watch",
+      color: "#00ffd5",
+      xpAction: "watch_visit",
+      protected: true
+    },
+    {
+      key: "live",
+      label: "LIVE",
+      district: "Live Universe",
+      icon: "📡",
+      route: "/live",
+      color: "#00ffcc",
+      xpAction: "live_visit",
+      protected: true
+    },
+    {
+      key: "music",
+      label: "MUSIC",
+      district: "Music District",
+      icon: "🎵",
+      route: "/music",
+      color: "#ffe066",
+      xpAction: "music_visit",
+      storeLinked: true
+    },
+    {
+      key: "podcast",
+      label: "PODCAST",
+      district: "Podcast Arena",
+      icon: "🎙️",
+      route: "/podcast",
+      color: "#ffb347",
+      xpAction: "podcast_visit",
+      storeLinked: true
+    },
+    {
+      key: "radio",
+      label: "RADIO",
+      district: "RB Radio",
+      icon: "📻",
+      route: "/radio",
+      color: "#7ad7ff",
+      xpAction: "radio_visit"
+    },
+    {
+      key: "gaming",
+      label: "GAMING",
+      district: "Gaming Zone",
+      icon: "🎮",
+      route: "/gaming",
+      color: "#7c5cff",
+      xpAction: "gaming_visit",
+      storeLinked: true
+    },
+    {
+      key: "sports",
+      label: "SPORTS",
+      district: "Sports Arena",
+      icon: "🏆",
+      route: "/sports",
+      color: "#00c2ff",
+      xpAction: "sports_visit",
+      storeLinked: true
+    },
+    {
+      key: "gallery",
+      label: "GALLERY",
+      district: "Gallery District",
+      icon: "🖼️",
+      route: "/gallery",
+      color: "#ff9f43",
+      xpAction: "gallery_visit",
+      storeLinked: true
+    },
+    {
+      key: "store",
+      label: "STORE",
+      district: "Store Market",
+      icon: "🛒",
+      route: "/store",
+      color: "#ffd700",
+      xpAction: "store_visit",
+      checkoutOwner: true
+    },
+    {
+      key: "upload",
+      label: "UPLOAD",
+      district: "Upload Zone",
+      icon: "⬆️",
+      route: "/upload",
+      color: "#00ffaa",
+      xpAction: "upload_visit"
+    },
+    {
+      key: "meta",
+      label: "META",
+      district: "Meta World",
+      icon: "🌌",
+      route: "/meta",
+      color: "#9d4dff",
+      xpAction: "meta_visit",
+      secretLinked: true
+    },
+    {
+      key: "avatar",
+      label: "AVATAR",
+      district: "Avatar HQ",
+      icon: "🧍",
+      route: "/avatar",
+      color: "#00ffae",
+      xpAction: "avatar_visit"
+    }
   ],
 
   routes: {
     home: "/",
     auth: "/auth",
+
     feed: "/feed",
     watch: "/watch",
     live: "/live",
+
     music: "/music",
     podcast: "/podcast",
     radio: "/radio",
+
     gaming: "/gaming",
     sports: "/sports",
     gallery: "/gallery",
+
     upload: "/upload",
     store: "/store",
     meta: "/meta",
+
     avatar: "/avatar",
     messages: "/messages",
     notifications: "/notifications",
+
     profile: "/profile",
     edit: "/edit",
     settings: "/settings",
+
     creator: "/creator",
     admin: "/admin",
-    search: "/search",
-    monetization: "/monetization",
-    xp: "/xp",
+
+    search: "/feed",
+    monetization: "/store",
+    xp: "/profile",
 
     secretDoor: "/rb-secret-door",
     secretMeta2: "/rb-secret-meta2",
@@ -135,8 +297,34 @@ const RB_CONFIG = Object.freeze({
       richChess: "/games/rich-chess",
       moneyRoadRunner: "/games/money-road-runner",
       smokeCityHustle: "/games/smoke-city-hustle",
-      studioShowdown: "/games/studio-showdown",
+      studioShowdown: "/games/studio-showdown"
+    }
+  },
+
+  system: {
+    schemas: {
+      public: "public",
+      auth: "auth",
+      storage: "storage",
+      realtime: "realtime"
     },
+
+    auth: {
+      users: "auth.users",
+      sessions: "auth.sessions",
+      identities: "auth.identities",
+      refreshTokens: "auth.refresh_tokens"
+    },
+
+    storage: {
+      buckets: "storage.buckets",
+      objects: "storage.objects"
+    },
+
+    realtime: {
+      messages: "realtime.messages",
+      subscriptions: "realtime.subscription"
+    }
   },
 
   tables: {
@@ -192,10 +380,12 @@ const RB_CONFIG = Object.freeze({
     musicPlayEvents: "music_play_events",
     playlists: "playlists",
     playlistTracks: "playlist_tracks",
+
     podcastShows: "podcast_shows",
     podcastEpisodes: "podcast_episodes",
     podcastComments: "podcast_comments",
     podcastLikes: "podcast_likes",
+
     radioStations: "radio_stations",
     radioLikes: "radio_likes",
     radioSessions: "radio_sessions",
@@ -278,7 +468,7 @@ const RB_CONFIG = Object.freeze({
     rankRules: "rank_rules",
 
     platformAnalyticsEvents: "platform_analytics_events",
-    platformAnnouncements: "platform_announcements",
+    platformAnnouncements: "platform_announcements"
   },
 
   profileKeys: {
@@ -295,7 +485,7 @@ const RB_CONFIG = Object.freeze({
       "gamer_profiles",
       "sports_profiles",
       "store_seller_profiles",
-      "creator_page_settings",
+      "creator_page_settings"
     ],
 
     controlledRoutes: [
@@ -321,7 +511,7 @@ const RB_CONFIG = Object.freeze({
       "admin",
       "secretDoor",
       "secretMeta2",
-      "secretMeta3",
+      "secretMeta3"
     ],
 
     adminCreatorRoutes: [
@@ -329,14 +519,14 @@ const RB_CONFIG = Object.freeze({
       "admin",
       "secretDoor",
       "secretMeta2",
-      "secretMeta3",
+      "secretMeta3"
     ],
 
     secretRoutes: {
       secretDoor: "/rb-secret-door",
       secretMeta2: "/rb-secret-meta2",
-      secretMeta3: "/rb-secret-meta3",
-    },
+      secretMeta3: "/rb-secret-meta3"
+    }
   },
 
   buckets: {
@@ -361,7 +551,7 @@ const RB_CONFIG = Object.freeze({
     sportsCovers: "sports-covers",
     storeProducts: "store-products",
     storeSellerMedia: "store-seller-media",
-    storeDigital: "store-digital",
+    storeDigital: "store-digital"
   },
 
   storage: {
@@ -385,13 +575,13 @@ const RB_CONFIG = Object.freeze({
       "sports-clips",
       "sports-covers",
       "store-products",
-      "store-seller-media",
+      "store-seller-media"
     ],
 
     privateBuckets: [
       "store-digital",
-      "live-recordings",
-    ],
+      "live-recordings"
+    ]
   },
 
   uploadRoutes: {
@@ -399,143 +589,174 @@ const RB_CONFIG = Object.freeze({
       bucket: "avatars",
       table: "profiles",
       column: "avatar_url",
+      alsoUpdate: ["meta_avatars.avatar_url"]
     },
 
     profileBanner: {
       bucket: "profile-banners",
       table: "profiles",
-      column: "banner_url",
+      column: "banner_url"
     },
 
     metaAvatar: {
       bucket: "meta-avatars",
       table: "meta_avatars",
-      column: "avatar_url",
+      column: "avatar_url"
     },
 
     metaWorld: {
       bucket: "meta-worlds",
       table: "meta_worlds",
       column: "cover_url",
+      feedSection: "meta"
     },
 
     generalUpload: {
       bucket: "general-uploads",
       table: "uploads",
       column: "public_url",
+      feedSection: "feed"
     },
 
     feedPost: {
       bucket: "general-uploads",
       table: "feed_posts",
       column: "media_url",
+      feedSection: "feed"
     },
 
     galleryMedia: {
       bucket: "gallery-media",
       table: "uploads",
       column: "public_url",
+      feedSection: "gallery",
+      storeEligible: true
     },
 
     musicTrack: {
       bucket: "music-audio",
       table: "music_tracks",
       column: "audio_url",
+      feedSection: "music",
+      storeEligible: true
     },
 
     musicCover: {
       bucket: "music-covers",
       table: "music_tracks",
       column: "cover_url",
+      feedSection: "music"
     },
 
     podcastAudio: {
       bucket: "podcast-audio",
       table: "podcast_episodes",
       column: "audio_url",
+      feedSection: "podcast",
+      storeEligible: true
     },
 
     podcastCover: {
       bucket: "podcast-covers",
       table: "podcast_episodes",
       column: "cover_url",
+      feedSection: "podcast"
     },
 
     radioCover: {
       bucket: "radio-covers",
       table: "radio_stations",
-      column: "cover_url",
+      column: "cover_url"
     },
 
     liveThumbnail: {
       bucket: "live-thumbnails",
       table: "live_streams",
       column: "thumbnail_url",
+      feedSection: "live"
     },
 
     liveRecording: {
       bucket: "live-recordings",
       table: "live_streams",
       column: "recording_url",
+      feedSection: "live",
+      storeEligible: true
     },
 
     gameAsset: {
       bucket: "game-assets",
       table: "games",
       column: "play_url",
+      feedSection: "gaming",
+      storeEligible: true
     },
 
     gameClip: {
       bucket: "game-clips",
       table: "game_clips",
       column: "clip_url",
+      feedSection: "gaming"
     },
 
     gameCover: {
       bucket: "game-covers",
       table: "games",
       column: "cover_url",
+      feedSection: "gaming"
     },
 
     sportsMedia: {
       bucket: "sports-media",
       table: "sports_uploads",
       column: "file_url",
+      feedSection: "sports"
     },
 
     sportsClip: {
       bucket: "sports-clips",
       table: "sports_uploads",
       column: "file_url",
+      feedSection: "sports"
     },
 
     sportsCover: {
       bucket: "sports-covers",
       table: "sports_posts",
       column: "cover_url",
+      feedSection: "sports"
     },
 
     storeProduct: {
       bucket: "store-products",
       table: "products",
       column: "image_url",
+      feedSection: "store",
+      checkoutRoute: "/store"
     },
 
     storeSellerMedia: {
       bucket: "store-seller-media",
       table: "store_seller_profiles",
       column: "banner_url",
+      feedSection: "store"
     },
 
     storeDigital: {
       bucket: "store-digital",
       table: "products",
       column: "digital_file_url",
-    },
+      checkoutRoute: "/store"
+    }
   },
 
   realtime: {
     enabled: true,
+
+    protectedPages: [
+      "live",
+      "watch"
+    ],
 
     tables: [
       "profiles",
@@ -572,16 +793,19 @@ const RB_CONFIG = Object.freeze({
       "meta_worlds",
       "meta_rooms",
       "meta_chat_messages",
-    ],
+      "user_levels",
+      "user_xp_ledger",
+      "xp_events"
+    ]
   },
 
   visuals: {
     theme: "black-green-gold",
     mode: "ultra-hd-cinematic",
-    homeStyle: "rotating-tv-screens-around-portal",
-    brandMood: "luxury-futuristic-reality-changers",
-    tabIconImage: "/images/brand/hero-banner.png",
+    homeStyle: "portal-city-world",
+    brandMood: "luxury-futuristic-community-empire",
 
+    tabIconImage: "/images/brand/hero-banner.png",
     heroBanner: "/images/brand/hero-banner.png",
     avatarHeroBanner: "/images/brand/Avatar-hero-Banner.png.jpeg",
     defaultProfileBanner: "/images/brand/hero-banner.png",
@@ -599,10 +823,20 @@ const RB_CONFIG = Object.freeze({
     portalFX: true,
     glassFX: true,
     galaxyBackground: true,
+    cityTowers: true,
+    avatarOnIndex: true
   },
 
   motion: {
     mobileBreakpoint: 720,
+
+    city: {
+      enabled: true,
+      parallax: true,
+      towerPulse: true,
+      avatarIdle: true,
+      portalSpin: true
+    },
 
     orbit: {
       desktopRadiusX: 210,
@@ -611,27 +845,27 @@ const RB_CONFIG = Object.freeze({
       mobileRadiusY: 92,
       rotationLerp: 0.055,
       pointerLerp: 0.04,
-      speed: 0.00055,
+      speed: 0.00055
     },
 
     portal: {
       floatAmount: 5,
       scalePulse: 0.012,
       glowStrength: 1.2,
-      rotationSpeed: 0.0008,
+      rotationSpeed: 0.0008
     },
 
     camera: {
       depth: 900,
-      tilt: 0.12,
+      tilt: 0.12
     },
 
     transitions: {
       routeFade: 260,
       modalFade: 180,
-      panelSlide: 240,
-    },
-  },
+      panelSlide: 240
+    }
+  }
 });
 
 export default RB_CONFIG;
@@ -642,6 +876,7 @@ export const RB_LIVEKIT = RB_CONFIG.livekit;
 export const RB_AUTH = RB_CONFIG.auth;
 export const RB_SYSTEM = RB_CONFIG.system;
 export const RB_BRAND_ASSETS = RB_CONFIG.brandAssets;
+export const RB_UNIVERSE = RB_CONFIG.universe;
 export const RB_MODULES = RB_CONFIG.modules;
 export const RB_ROUTES = RB_CONFIG.routes;
 export const RB_TABLES = RB_CONFIG.tables;
