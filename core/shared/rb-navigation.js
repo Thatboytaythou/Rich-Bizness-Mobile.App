@@ -3,9 +3,15 @@
    /core/shared/rb-navigation.js
 
    GLOBAL NAVIGATION ENGINE
-   Route Lock
-   Secret Routes
-   Active Module Tracking
+
+   Locked purpose:
+   - resolve route keys
+   - support data-route buttons
+   - support href links
+   - support query strings
+   - protect secret routes
+   - update active states
+   - keep Index/Profile/Meta path clean
 
    Supports:
    - data-route="profile"
@@ -18,8 +24,9 @@
    Does not hijack:
    - external links
    - hash links
-   - mail/tel links
+   - mail/tel/sms links
    - target="_blank"
+   - downloads
    - data-nav-ignore="true"
 ========================= */
 
@@ -38,29 +45,51 @@ const SAFE_PAGE_ROUTES = Object.freeze({
   portal: "/",
   index: "/",
 
+  auth: "/auth",
+  login: "/auth",
+  signup: "/auth",
+
   feed: "/feed",
   live: "/live",
   watch: "/watch",
+
   music: "/music",
   podcast: "/podcast",
   radio: "/radio",
+
   gaming: "/gaming",
+  games: "/gaming",
   sports: "/sports",
   gallery: "/gallery",
-  store: "/store",
+
   upload: "/upload",
+  store: "/store",
   meta: "/meta",
+
   avatar: "/avatar",
   profile: "/profile",
   edit: "/edit",
   settings: "/settings",
-  auth: "/auth",
-  login: "/auth",
-  signup: "/auth",
+
   messages: "/messages",
+  inbox: "/messages",
   notifications: "/notifications",
+  alerts: "/notifications",
+
   admin: "/admin",
   creator: "/creator",
+
+  search: "/feed",
+  monetization: "/store",
+  xp: "/profile",
+
+  secretDoor: "/rb-secret-door",
+  secretMeta2: "/rb-secret-meta2",
+  secretMeta3: "/rb-secret-meta3",
+
+  "rb-secret-door": "/rb-secret-door",
+  "rb-secret-meta2": "/rb-secret-meta2",
+  "rb-secret-meta3": "/rb-secret-meta3",
 
   "games/rich-chess": "/games/rich-chess",
   "games/money-road-runner": "/games/money-road-runner",
@@ -87,9 +116,10 @@ function splitPathAndSearch(value = "") {
   }
 
   try {
-    const url = raw.startsWith("http://") || raw.startsWith("https://")
-      ? new URL(raw)
-      : new URL(raw, window.location.origin);
+    const url =
+      raw.startsWith("http://") || raw.startsWith("https://")
+        ? new URL(raw)
+        : new URL(raw, window.location.origin);
 
     return {
       pathname: url.pathname || "/",
@@ -150,6 +180,19 @@ export function normalizeRoute(path = "") {
   return `${cleanPath}${search || ""}${hash || ""}` || "/";
 }
 
+function getRouteKey(rawValue = "") {
+  const raw = String(rawValue || "").trim();
+
+  const { pathname } = splitPathAndSearch(raw);
+
+  return String(pathname || raw)
+    .trim()
+    .replace(window.location.origin, "")
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "")
+    .replace(/\.html$/, "");
+}
+
 export function shouldIgnoreNavigation(value = "", element = null) {
   const raw = String(value || "").trim();
 
@@ -194,12 +237,8 @@ export function resolveRoute(value = "") {
     return raw;
   }
 
-  const { pathname, search, hash } = splitPathAndSearch(raw);
-  const key = String(pathname || raw)
-    .trim()
-    .replace(/^\/+/, "")
-    .replace(/\/+$/, "")
-    .replace(/\.html$/, "");
+  const { search, hash } = splitPathAndSearch(raw);
+  const key = getRouteKey(raw);
 
   if (raw.startsWith("/")) {
     return normalizeRoute(raw);
@@ -247,7 +286,11 @@ export function currentModule() {
 export function routeExists(route = "") {
   const resolved = normalizePath(resolveRoute(route));
 
-  if (Object.values(SAFE_PAGE_ROUTES).some((value) => normalizePath(value) === resolved)) {
+  if (
+    Object.values(SAFE_PAGE_ROUTES).some(
+      (value) => normalizePath(value) === resolved
+    )
+  ) {
     return true;
   }
 
@@ -267,7 +310,8 @@ export function routeExists(route = "") {
 }
 
 export function moduleExists(key = "") {
-  return Array.isArray(RB_MODULES) && RB_MODULES.some((module) => module.key === key);
+  return Array.isArray(RB_MODULES) &&
+    RB_MODULES.some((module) => module.key === key);
 }
 
 /* =========================
@@ -318,14 +362,16 @@ export function canAccessSecretRoute(route = "") {
     profile = null;
   }
 
-  if (!isSecretRoute(route)) return true;
+  if (!isSecretRoute(route)) {
+    return true;
+  }
 
-  return !!(
+  return Boolean(
     profile?.role === "founder" ||
-    profile?.role === "admin" ||
-    profile?.role === "rich_admin" ||
-    profile?.is_creator ||
-    profile?.is_verified
+      profile?.role === "admin" ||
+      profile?.role === "rich_admin" ||
+      profile?.is_creator ||
+      profile?.is_verified
   );
 }
 
@@ -348,13 +394,26 @@ export function go(route = "/") {
     !canAccessSecretRoute(resolved)
   ) {
     console.warn("[RB NAV] Secret route blocked:", resolved);
+
+    window.dispatchEvent(
+      new CustomEvent("rb:secret-route-blocked", {
+        detail: {
+          route: resolved
+        }
+      })
+    );
+
     return false;
   }
 
   window.dispatchEvent(
     new CustomEvent("rb:route-before-change", {
       detail: {
-        from: normalizeRoute(window.location.pathname + window.location.search + window.location.hash),
+        from: normalizeRoute(
+          window.location.pathname +
+            window.location.search +
+            window.location.hash
+        ),
         to: resolved
       }
     })
@@ -451,8 +510,30 @@ export function updateActiveRoute() {
   activeRoute = normalizePath(window.location.pathname || "/");
   activeModule = getModuleByRoute(activeRoute);
 
-  document.documentElement?.setAttribute?.("data-rb-current-route", activeRoute);
-  document.body?.setAttribute?.("data-rb-current-route", activeRoute);
+  document.documentElement?.setAttribute?.(
+    "data-rb-current-route",
+    activeRoute
+  );
+
+  document.body?.setAttribute?.(
+    "data-rb-current-route",
+    activeRoute
+  );
+
+  if (activeModule?.key) {
+    document.documentElement?.setAttribute?.(
+      "data-rb-current-module",
+      activeModule.key
+    );
+
+    document.body?.setAttribute?.(
+      "data-rb-current-module",
+      activeModule.key
+    );
+  } else {
+    document.documentElement?.removeAttribute?.("data-rb-current-module");
+    document.body?.removeAttribute?.("data-rb-current-module");
+  }
 
   window.dispatchEvent(
     new CustomEvent("rb:route-change", {
@@ -567,10 +648,14 @@ export function buildModuleMenu() {
   return RB_MODULES.map((module) => ({
     key: module.key,
     label: module.label,
+    district: module.district || module.label,
     icon: module.icon,
     route: normalizePath(module.route),
     color: module.color,
-    active: normalizePath(module.route) === current
+    active: normalizePath(module.route) === current,
+    xpAction: module.xpAction || null,
+    storeLinked: Boolean(module.storeLinked),
+    protected: Boolean(module.protected)
   }));
 }
 
