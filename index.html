@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Rich Bizness Universe</title>
   <meta name="theme-color" content="#050805" />
 
@@ -749,40 +752,43 @@
     @media (max-width: 900px) {
       .rb-world-art {
         background-image:
-          linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.1) 54%, rgba(0, 0, 0, 0.5)),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.08) 52%, rgba(0, 0, 0, 0.42)),
           url("/images/brand/IMG_5997.png"),
           url("/images/0E886281-8F03-4288-B3CA-C45369B7B58E.png");
-        background-size: auto 100%;
+        background-size: auto 100dvh;
         background-position: center center;
         background-repeat: no-repeat;
       }
 
       .rb-topbar {
-        left: 16px;
-        right: 16px;
-        top: max(18px, calc(var(--safeTop) + 12px));
+        left: 14px;
+        right: 14px;
+        top: max(14px, calc(var(--safeTop) + 8px));
       }
 
       .rb-brand {
-        gap: 10px;
-      }
-
-      .rb-brand-copy strong {
-        font-size: 1rem;
-      }
-
-      .rb-brand-copy span {
-        font-size: .56rem;
-        letter-spacing: .38em;
+        gap: 9px;
       }
 
       .rb-logo {
-        width: 50px;
-        height: 50px;
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        font-size: .95rem;
+      }
+
+      .rb-brand-copy strong {
+        font-size: .95rem;
+      }
+
+      .rb-brand-copy span {
+        margin-top: 5px;
+        font-size: .52rem;
+        letter-spacing: .34em;
       }
 
       .rb-top-actions {
-        gap: 10px;
+        gap: 8px;
       }
 
       .rb-stat-pill {
@@ -790,32 +796,38 @@
       }
 
       .rb-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.1rem;
+        width: 46px;
+        height: 46px;
+        font-size: 1rem;
+      }
+
+      .rb-icon em {
+        width: 19px;
+        height: 19px;
+        font-size: .66rem;
       }
 
       .rb-avatar-chip {
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
       }
 
       .rb-title {
-        top: max(102px, calc(var(--safeTop) + 94px));
-        width: calc(100vw - 26px);
+        top: max(104px, calc(var(--safeTop) + 94px));
+        width: calc(100vw - 30px);
       }
 
       .rb-title h1 {
-        font-size: clamp(2.42rem, 11.2vw, 3.72rem);
-        line-height: .82;
-        letter-spacing: -0.058em;
+        font-size: clamp(2.18rem, 10.2vw, 3.55rem);
+        line-height: .84;
+        letter-spacing: -.055em;
       }
 
       .rb-title p {
-        margin-top: 9px;
+        margin-top: 8px;
         color: #f7d972;
-        font-size: .53rem;
-        letter-spacing: .155em;
+        font-size: .5rem;
+        letter-spacing: .13em;
       }
 
       .rb-left-panel,
@@ -827,46 +839,49 @@
       }
 
       .rb-stars {
-        opacity: 0.2;
+        opacity: .18;
       }
 
       .hotspot {
-        padding: 8px 10px;
-        border-radius: 15px;
-        background: rgba(0, 0, 0, 0.38);
+        padding: 7px 9px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, .38);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
 
       .hotspot strong {
-        font-size: .52rem;
+        font-size: .47rem;
         line-height: 1.05;
-        letter-spacing: .12em;
+        letter-spacing: .115em;
       }
 
       .hotspot span {
-        font-size: .42rem;
-        letter-spacing: .115em;
+        margin-top: 5px;
+        font-size: .38rem;
+        letter-spacing: .105em;
       }
 
       .gallery {
         left: 7%;
-        top: 30%;
+        top: 31.2%;
       }
 
       .podcast {
         left: 27%;
-        top: 34.8%;
+        top: 35.6%;
       }
 
       .live {
         left: auto;
-        right: 10%;
-        top: 42.4%;
+        right: 9%;
+        top: 43.4%;
       }
 
       .gaming {
         left: 7%;
-        top: 63.8%;
-        width: min(72vw, 330px);
+        top: 64.7%;
+        width: min(68vw, 300px);
       }
 
       .music,
@@ -878,14 +893,17 @@
       }
 
       .rb-bottom {
-        bottom: max(15px, calc(var(--safeBottom) + 13px));
-        width: calc(100vw - 28px);
-        height: 70px;
-        grid-template-columns: repeat(11, 56px);
-        justify-content: flex-start;
+        left: 50%;
+        bottom: max(12px, calc(var(--safeBottom) + 10px));
+        width: calc(100vw - 22px);
+        height: 64px;
+        padding: 6px 8px;
+        display: flex;
+        gap: 7px;
         overflow-x: auto;
         overflow-y: hidden;
-        padding: 7px 9px;
+        border-radius: 18px;
+        scroll-snap-type: x mandatory;
         scrollbar-width: none;
       }
 
@@ -894,49 +912,59 @@
       }
 
       .rb-bottom button {
-        width: 56px;
-        min-width: 56px;
-        height: 54px;
-        font-size: .49rem;
+        flex: 0 0 54px;
+        width: 54px;
+        min-width: 54px;
+        height: 52px;
+        border-radius: 13px;
+        font-size: .47rem;
+        scroll-snap-align: start;
       }
 
       .rb-bottom button b {
-        font-size: 1.02rem;
+        font-size: 1rem;
       }
     }
 
     @media (max-width: 430px) {
+      .rb-world-art {
+        background-size: auto 100dvh;
+        background-position: center center;
+      }
+
       .rb-title {
-        top: max(106px, calc(var(--safeTop) + 98px));
+        top: max(106px, calc(var(--safeTop) + 96px));
       }
 
       .rb-title h1 {
-        font-size: clamp(2.34rem, 10.8vw, 3.5rem);
+        font-size: clamp(2.05rem, 9.8vw, 3.25rem);
+        line-height: .84;
       }
 
       .rb-title p {
-        font-size: .51rem;
-        letter-spacing: .13em;
+        font-size: .47rem;
+        letter-spacing: .115em;
       }
 
       .gallery {
         left: 7%;
-        top: 30.5%;
+        top: 31.4%;
       }
 
       .podcast {
         left: 27%;
-        top: 35%;
+        top: 35.9%;
       }
 
       .live {
-        right: 9%;
-        top: 42.5%;
+        right: 8%;
+        top: 43.7%;
       }
 
       .gaming {
         left: 7%;
-        top: 64%;
+        top: 65%;
+        width: min(68vw, 292px);
       }
     }
   </style>
