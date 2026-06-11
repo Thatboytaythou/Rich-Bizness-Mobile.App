@@ -54,24 +54,22 @@
       position: fixed;
       inset: 0;
       overflow: hidden;
-      background:
-        radial-gradient(circle at 72% 18%, rgba(33, 150, 243, 0.32), transparent 22%),
-        radial-gradient(circle at 50% 42%, rgba(49, 255, 99, 0.28), transparent 34%),
-        radial-gradient(circle at 18% 64%, rgba(174, 0, 255, 0.18), transparent 26%),
-        linear-gradient(180deg, #06110f 0%, #010302 100%);
+      background: #020402;
     }
 
     .rb-world-art {
       position: absolute;
       inset: 0;
       z-index: 0;
-      background:
-        linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.2) 65%, rgba(0, 0, 0, 0.55)),
-        url("/images/brand/rich-bizness-universe-home.png");
+      background-image:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.18) 66%, rgba(0, 0, 0, 0.48)),
+        url("/images/brand/IMG_5997.png"),
+        url("/images/0E886281-8F03-4288-B3CA-C45369B7B58E.png");
       background-size: cover;
-      background-position: center;
-      filter: saturate(1.18) contrast(1.05) brightness(0.92);
-      transform: scale(1.01);
+      background-position: center center;
+      background-repeat: no-repeat;
+      filter: saturate(1.15) contrast(1.04) brightness(0.98);
+      transform: scale(1.002);
     }
 
     .rb-world-art::before {
@@ -79,20 +77,8 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at 50% 44%, transparent 0 28%, rgba(0, 0, 0, 0.16) 52%, rgba(0, 0, 0, 0.58) 100%),
-        linear-gradient(90deg, rgba(0, 0, 0, 0.32), transparent 22%, transparent 76%, rgba(0, 0, 0, 0.36));
-      pointer-events: none;
-    }
-
-    .rb-world-art::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 50% 45%, rgba(49, 255, 99, 0.12), transparent 28%),
-        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 8px);
-      mix-blend-mode: screen;
-      opacity: 0.35;
+        linear-gradient(90deg, rgba(0, 0, 0, 0.24), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.28)),
+        radial-gradient(circle at 50% 48%, transparent 0 34%, rgba(0, 0, 0, 0.18) 68%, rgba(0, 0, 0, 0.42) 100%);
       pointer-events: none;
     }
 
@@ -101,30 +87,14 @@
       inset: 0;
       z-index: 1;
       background:
-        radial-gradient(circle at 12% 16%, rgba(255,255,255,.8) 0 1px, transparent 2px),
-        radial-gradient(circle at 23% 8%, rgba(255,255,255,.5) 0 1px, transparent 2px),
-        radial-gradient(circle at 68% 10%, rgba(255,255,255,.7) 0 1px, transparent 2px),
-        radial-gradient(circle at 78% 19%, rgba(255,255,255,.5) 0 1px, transparent 2px),
-        radial-gradient(circle at 91% 12%, rgba(255,255,255,.6) 0 1px, transparent 2px),
-        radial-gradient(circle at 31% 22%, rgba(255,255,255,.45) 0 1px, transparent 2px);
-      opacity: 0.68;
+        radial-gradient(circle at 12% 16%, rgba(255,255,255,.55) 0 1px, transparent 2px),
+        radial-gradient(circle at 23% 8%, rgba(255,255,255,.35) 0 1px, transparent 2px),
+        radial-gradient(circle at 68% 10%, rgba(255,255,255,.45) 0 1px, transparent 2px),
+        radial-gradient(circle at 78% 19%, rgba(255,255,255,.32) 0 1px, transparent 2px),
+        radial-gradient(circle at 91% 12%, rgba(255,255,255,.36) 0 1px, transparent 2px),
+        radial-gradient(circle at 31% 22%, rgba(255,255,255,.28) 0 1px, transparent 2px);
+      opacity: 0.44;
       animation: starDrift 18s linear infinite;
-      pointer-events: none;
-    }
-
-    .rb-orbit-ring {
-      position: absolute;
-      left: 50%;
-      top: 48%;
-      z-index: 2;
-      width: min(94vw, 1320px);
-      height: min(94vw, 1320px);
-      transform: translate(-50%, -50%) rotate(-8deg);
-      border-radius: 50%;
-      border: 2px solid rgba(49, 255, 99, 0.28);
-      box-shadow:
-        0 0 38px rgba(49, 255, 99, 0.18),
-        inset 0 0 48px rgba(49, 255, 99, 0.08);
       pointer-events: none;
     }
 
@@ -306,16 +276,6 @@
       text-shadow: 0 0 20px rgba(49,255,99,.35);
     }
 
-    .rb-left-panel {
-      position: absolute;
-      left: 28px;
-      top: 96px;
-      z-index: 12;
-      width: 300px;
-      display: grid;
-      gap: 18px;
-    }
-
     .rb-card {
       position: relative;
       overflow: hidden;
@@ -328,6 +288,16 @@
       box-shadow:
         0 20px 80px rgba(0,0,0,.38),
         inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .rb-left-panel {
+      position: absolute;
+      left: 28px;
+      top: 96px;
+      z-index: 12;
+      width: 300px;
+      display: grid;
+      gap: 18px;
     }
 
     .rb-live-card {
@@ -711,16 +681,18 @@
     @media (max-width: 900px) {
       .rb-world-art {
         background-image:
-          linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.3) 66%, rgba(0, 0, 0, 0.64)),
-          url("/images/brand/rich-bizness-universe-home-mobile.png"),
-          url("/images/brand/rich-bizness-universe-home.png");
-        background-position: center top;
-        background-size: cover;
+          linear-gradient(180deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.12) 56%, rgba(0, 0, 0, 0.54)),
+          url("/images/brand/IMG_5997.png"),
+          url("/images/0E886281-8F03-4288-B3CA-C45369B7B58E.png");
+        background-size: auto 100%;
+        background-position: center center;
+        background-repeat: no-repeat;
       }
 
       .rb-topbar {
         left: 16px;
         right: 16px;
+        top: max(18px, calc(var(--safeTop) + 12px));
       }
 
       .rb-brand-copy strong {
@@ -757,21 +729,21 @@
       }
 
       .rb-title {
-        top: max(112px, calc(var(--safeTop) + 104px));
+        top: max(104px, calc(var(--safeTop) + 96px));
         width: calc(100vw - 26px);
       }
 
       .rb-title h1 {
-        font-size: clamp(4rem, 17vw, 6.5rem);
-        line-height: .78;
-        letter-spacing: -0.09em;
+        font-size: clamp(2.65rem, 11.8vw, 4.1rem);
+        line-height: .82;
+        letter-spacing: -0.065em;
       }
 
       .rb-title p {
-        margin-top: 18px;
+        margin-top: 10px;
         color: #f7d972;
-        font-size: .75rem;
-        letter-spacing: .34em;
+        font-size: .58rem;
+        letter-spacing: .19em;
       }
 
       .rb-left-panel,
@@ -783,43 +755,48 @@
         display: none;
       }
 
-      .rb-orbit-ring {
-        top: 48%;
-        width: 94vw;
-        height: 94vw;
+      .rb-stars {
+        opacity: 0.24;
       }
 
       .hotspot {
-        padding: 11px 13px;
-        border-radius: 18px;
+        padding: 9px 11px;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.43);
       }
 
       .hotspot strong {
-        font-size: .66rem;
+        font-size: .55rem;
         line-height: 1.05;
       }
 
       .hotspot span {
-        font-size: .52rem;
+        font-size: .44rem;
         letter-spacing: .12em;
       }
 
-      .gallery { left: 8%; top: 26%; }
-      .podcast { left: 27%; top: 31%; }
-      .live { left: 58%; top: 39%; }
-      .music { left: 27%; top: 48%; display: none; }
-      .meta { left: 50%; top: 19%; transform: translateX(-50%); display: none; }
-      .gaming { left: 7%; top: 64%; right: auto; }
-      .sports { right: 8%; top: 28%; display: none; }
-      .store { right: 9%; top: 58%; display: none; }
-      .upload { right: 9%; top: 62%; display: none; }
+      .gallery { left: 7%; top: 28%; }
+      .podcast { left: 27%; top: 33%; }
+      .live { left: auto; right: 11%; top: 40%; }
+      .gaming { left: 7%; top: 62%; }
+
+      .music,
+      .meta,
+      .sports,
+      .store,
+      .upload {
+        display: none;
+      }
 
       .rb-bottom {
-        bottom: max(15px, calc(var(--safeBottom) + 14px));
+        bottom: max(16px, calc(var(--safeBottom) + 14px));
         width: calc(100vw - 28px);
-        height: 74px;
-        grid-template-columns: repeat(6, 1fr);
+        height: 72px;
+        grid-template-columns: repeat(11, 58px);
+        justify-content: flex-start;
         overflow-x: auto;
+        overflow-y: hidden;
+        padding: 8px 10px;
         scrollbar-width: none;
       }
 
@@ -828,33 +805,35 @@
       }
 
       .rb-bottom button {
+        width: 58px;
         min-width: 58px;
-        font-size: .54rem;
+        height: 56px;
+        font-size: .5rem;
       }
 
       .rb-bottom button b {
-        font-size: 1.2rem;
+        font-size: 1.08rem;
       }
     }
 
     @media (max-width: 430px) {
+      .rb-title {
+        top: max(108px, calc(var(--safeTop) + 100px));
+      }
+
       .rb-title h1 {
-        font-size: clamp(3.6rem, 17vw, 5rem);
+        font-size: clamp(2.45rem, 11.4vw, 3.85rem);
       }
 
       .rb-title p {
-        font-size: .68rem;
-        letter-spacing: .25em;
+        font-size: .55rem;
+        letter-spacing: .16em;
       }
 
-      .hotspot strong {
-        font-size: .62rem;
-      }
-
-      .gallery { left: 8%; top: 25%; }
-      .podcast { left: 27%; top: 30%; }
-      .live { left: 58%; top: 39%; }
-      .gaming { left: 7%; top: 64%; }
+      .gallery { left: 7%; top: 28%; }
+      .podcast { left: 27%; top: 33%; }
+      .live { right: 10%; top: 40%; }
+      .gaming { left: 7%; top: 62%; }
     }
   </style>
 </head>
@@ -863,7 +842,6 @@
   <main class="rb-universe" aria-label="Rich Bizness Universe">
     <div class="rb-world-art" aria-hidden="true"></div>
     <div class="rb-stars" aria-hidden="true"></div>
-    <div class="rb-orbit-ring" aria-hidden="true"></div>
 
     <header class="rb-topbar">
       <a class="rb-brand" href="/">
