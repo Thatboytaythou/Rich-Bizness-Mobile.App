@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
+
   <title>Rich Bizness Universe</title>
   <meta name="theme-color" content="#050805" />
 
@@ -16,6 +18,9 @@
       --red: #ff3b30;
       --safeTop: env(safe-area-inset-top);
       --safeBottom: env(safe-area-inset-bottom);
+      --worldW: 100vw;
+      --worldH: 100dvh;
+      --uiScale: 1;
     }
 
     * {
@@ -612,6 +617,9 @@
     .hotspot {
       position: absolute;
       z-index: 22;
+      left: calc(var(--x, 50) * 1%);
+      top: calc(var(--y, 50) * 1%);
+      transform: translate(-50%, -50%) scale(var(--uiScale));
       border: 1px solid rgba(255,255,255,.15);
       border-radius: 14px;
       background: rgba(0,0,0,.52);
@@ -625,6 +633,7 @@
       box-shadow:
         0 12px 36px rgba(0,0,0,.36),
         0 0 22px rgba(49,255,99,.12);
+      transform-origin: center;
     }
 
     .hotspot strong {
@@ -633,6 +642,7 @@
       line-height: 1;
       letter-spacing: .05em;
       font-weight: 1000;
+      white-space: nowrap;
     }
 
     .hotspot span {
@@ -642,6 +652,7 @@
       font-size: .65rem;
       letter-spacing: .12em;
       font-weight: 1000;
+      white-space: nowrap;
     }
 
     .purple {
@@ -669,61 +680,18 @@
       box-shadow: 0 0 28px rgba(34,211,238,.22);
     }
 
-    .gallery {
-      left: 20%;
-      top: 22%;
-    }
-
-    .podcast {
-      left: 3%;
-      top: 34%;
-    }
-
-    .live {
-      left: 4%;
-      top: 54%;
-    }
-
-    .music {
-      left: 25%;
-      top: 47%;
-    }
-
-    .meta {
-      left: 50%;
-      top: 16%;
-      transform: translateX(-50%);
-    }
-
-    .gaming {
-      right: 21%;
-      top: 22%;
-    }
-
-    .sports {
-      right: 4%;
-      top: 30%;
-    }
-
-    .store {
-      right: 23%;
-      top: 49%;
-    }
-
-    .upload {
-      right: 5%;
-      top: 60%;
-    }
-
     .hotspot:hover,
     .rb-bottom button:hover,
     .rb-icon:hover,
     .rb-quick button:hover {
-      transform: translateY(-2px);
       border-color: rgba(49,255,99,.62);
       box-shadow:
         0 0 28px rgba(49,255,99,.24),
         0 0 44px rgba(247,201,72,.12);
+    }
+
+    .hotspot:hover {
+      transform: translate(-50%, -54%) scale(var(--uiScale));
     }
 
     @keyframes wave {
@@ -750,14 +718,13 @@
     }
 
     @media (max-width: 900px) {
+      :root {
+        --uiScale: 0.72;
+      }
+
       .rb-world-art {
-        background-image:
-          linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.08) 52%, rgba(0, 0, 0, 0.42)),
-          url("/images/brand/IMG_5997.png"),
-          url("/images/0E886281-8F03-4288-B3CA-C45369B7B58E.png");
         background-size: auto 100dvh;
         background-position: center center;
-        background-repeat: no-repeat;
       }
 
       .rb-topbar {
@@ -813,12 +780,12 @@
       }
 
       .rb-title {
-        top: max(104px, calc(var(--safeTop) + 94px));
+        top: max(106px, calc(var(--safeTop) + 96px));
         width: calc(100vw - 30px);
       }
 
       .rb-title h1 {
-        font-size: clamp(2.18rem, 10.2vw, 3.55rem);
+        font-size: clamp(2.05rem, 9.8vw, 3.25rem);
         line-height: .84;
         letter-spacing: -.055em;
       }
@@ -826,8 +793,8 @@
       .rb-title p {
         margin-top: 8px;
         color: #f7d972;
-        font-size: .5rem;
-        letter-spacing: .13em;
+        font-size: .47rem;
+        letter-spacing: .115em;
       }
 
       .rb-left-panel,
@@ -862,34 +829,16 @@
         letter-spacing: .105em;
       }
 
-      .gallery {
-        left: 7%;
-        top: 31.2%;
-      }
-
-      .podcast {
-        left: 27%;
-        top: 35.6%;
-      }
-
-      .live {
-        left: auto;
-        right: 9%;
-        top: 43.4%;
-      }
-
-      .gaming {
-        left: 7%;
-        top: 64.7%;
-        width: min(68vw, 300px);
-      }
-
       .music,
       .meta,
       .sports,
       .store,
       .upload {
         display: none;
+      }
+
+      .gaming {
+        min-width: 292px;
       }
 
       .rb-bottom {
@@ -927,9 +876,8 @@
     }
 
     @media (max-width: 430px) {
-      .rb-world-art {
-        background-size: auto 100dvh;
-        background-position: center center;
+      :root {
+        --uiScale: 0.68;
       }
 
       .rb-title {
@@ -944,27 +892,6 @@
       .rb-title p {
         font-size: .47rem;
         letter-spacing: .115em;
-      }
-
-      .gallery {
-        left: 7%;
-        top: 31.4%;
-      }
-
-      .podcast {
-        left: 27%;
-        top: 35.9%;
-      }
-
-      .live {
-        right: 8%;
-        top: 43.7%;
-      }
-
-      .gaming {
-        left: 7%;
-        top: 65%;
-        width: min(68vw, 292px);
       }
     }
   </style>
@@ -1047,47 +974,47 @@
       </div>
     </article>
 
-    <button class="hotspot purple gallery" data-route="gallery">
+    <button class="hotspot purple gallery" data-route="gallery" data-world="gallery">
       <strong>GALLERY DISTRICT</strong>
       <span>VISUAL DROPS</span>
     </button>
 
-    <button class="hotspot purple podcast" data-route="podcast">
+    <button class="hotspot purple podcast" data-route="podcast" data-world="podcast">
       <strong>PODCAST ARENA</strong>
       <span>REAL CONVERSATIONS</span>
     </button>
 
-    <button class="hotspot red live" data-route="live">
+    <button class="hotspot red live" data-route="live" data-world="live">
       <strong>LIVE UNIVERSE</strong>
       <span>BROADCAST SOUND</span>
     </button>
 
-    <button class="hotspot blue music" data-route="music">
+    <button class="hotspot blue music" data-route="music" data-world="music">
       <strong>MUSIC DISTRICT</strong>
       <span>UNLIMITED SOUND</span>
     </button>
 
-    <button class="hotspot meta" data-route="meta">
+    <button class="hotspot meta" data-route="meta" data-world="meta">
       <strong>META WORLD</strong>
       <span>ENTER THE METAVERSE</span>
     </button>
 
-    <button class="hotspot gaming" data-route="gaming">
+    <button class="hotspot gaming" data-route="gaming" data-world="gaming">
       <strong>GAMING ZONE</strong>
       <span>PLAY. COMPETE. WIN.</span>
     </button>
 
-    <button class="hotspot orange sports" data-route="sports">
+    <button class="hotspot orange sports" data-route="sports" data-world="sports">
       <strong>SPORTS ARENA</strong>
       <span>LIVE THE GAME</span>
     </button>
 
-    <button class="hotspot orange store" data-route="store">
+    <button class="hotspot orange store" data-route="store" data-world="store">
       <strong>STORE MARKET</strong>
       <span>BUY. SELL. SUPPORT</span>
     </button>
 
-    <button class="hotspot cyan upload" data-route="upload">
+    <button class="hotspot cyan upload" data-route="upload" data-world="upload">
       <strong>UPLOAD ZONE</strong>
       <span>SHARE YOUR CONTENT</span>
     </button>
@@ -1110,9 +1037,7 @@
         <span>WELCOME BACK</span>
         <strong>RICH BIZNESS ELITE</strong>
         <small>LEVEL 7</small>
-
         <div class="rb-xp"><i></i></div>
-
         <small>7,250 / 10,000 XP</small>
       </div>
 
@@ -1162,6 +1087,51 @@
       search: "/feed.html"
     };
 
+    const WORLD_LAYOUTS = {
+      desktop: {
+        gallery: [29, 26],
+        podcast: [14, 38],
+        live: [16, 57],
+        music: [32, 49],
+        meta: [50, 18],
+        gaming: [72, 26],
+        sports: [88, 34],
+        store: [72, 52],
+        upload: [87, 63]
+      },
+
+      portrait: {
+        gallery: [20, 32],
+        podcast: [42, 37],
+        live: [76, 45],
+        gaming: [38, 66],
+        music: [34, 50],
+        meta: [50, 20],
+        sports: [84, 35],
+        store: [70, 55],
+        upload: [82, 63]
+      }
+    };
+
+    function applyWorldLayout() {
+      const isPortrait =
+        window.innerWidth <= 900 ||
+        window.matchMedia("(orientation: portrait)").matches;
+
+      const layout = isPortrait ? WORLD_LAYOUTS.portrait : WORLD_LAYOUTS.desktop;
+
+      document.documentElement.style.setProperty("--worldW", `${window.innerWidth}px`);
+      document.documentElement.style.setProperty("--worldH", `${window.innerHeight}px`);
+
+      Object.entries(layout).forEach(([key, point]) => {
+        const el = document.querySelector(`[data-world="${key}"]`);
+        if (!el) return;
+
+        el.style.setProperty("--x", point[0]);
+        el.style.setProperty("--y", point[1]);
+      });
+    }
+
     document.querySelectorAll("[data-route]").forEach((el) => {
       el.addEventListener("click", () => {
         const key = el.dataset.route;
@@ -1169,6 +1139,11 @@
         window.location.href = href;
       });
     });
+
+    window.addEventListener("resize", applyWorldLayout);
+    window.addEventListener("orientationchange", applyWorldLayout);
+
+    applyWorldLayout();
   </script>
 </body>
 </html>
