@@ -568,7 +568,7 @@
       border-radius: 14px;
       background: rgba(0,0,0,.52);
       color: #fff;
-      padding: 13px 17px;
+      padding: 10px 13px;
       text-align: left;
       text-transform: uppercase;
       cursor: pointer;
@@ -581,9 +581,9 @@
 
     .hotspot strong {
       display: block;
-      font-size: clamp(.78rem, 1vw, 1.35rem);
+      font-size: clamp(.66rem, .85vw, 1rem);
       line-height: 1;
-      letter-spacing: .05em;
+      letter-spacing: .08em;
       font-weight: 1000;
       white-space: nowrap;
     }
@@ -592,21 +592,61 @@
       display: block;
       margin-top: 6px;
       color: var(--green);
-      font-size: .65rem;
-      letter-spacing: .12em;
+      font-size: .56rem;
+      letter-spacing: .13em;
       font-weight: 1000;
       white-space: nowrap;
     }
 
-    .hotspot[data-world="gallery"] { --x: 11; --y: 33; }
-    .hotspot[data-world="music"] { --x: 27; --y: 35; }
-    .hotspot[data-world="live"] { --x: 50; --y: 33; }
-    .hotspot[data-world="gaming"] { --x: 70; --y: 36; }
-    .hotspot[data-world="sports"] { --x: 88; --y: 34; }
-    .hotspot[data-world="store"] { --x: 14; --y: 53; }
-    .hotspot[data-world="upload"] { --x: 72; --y: 55; }
-    .hotspot[data-world="meta"] { --x: 88; --y: 62; }
-    .hotspot[data-world="podcast"] { --x: 50; --y: 43; }
+    /* =========================
+       DESKTOP / TABLET HOTSPOTS
+       Centered on actual image districts
+    ========================= */
+
+    .hotspot[data-world="gallery"] {
+      --x: 17;
+      --y: 36;
+    }
+
+    .hotspot[data-world="music"] {
+      --x: 31;
+      --y: 38;
+    }
+
+    .hotspot[data-world="live"] {
+      --x: 50;
+      --y: 41;
+    }
+
+    .hotspot[data-world="gaming"] {
+      --x: 68;
+      --y: 39;
+    }
+
+    .hotspot[data-world="sports"] {
+      --x: 84;
+      --y: 37;
+    }
+
+    .hotspot[data-world="store"] {
+      --x: 22;
+      --y: 56;
+    }
+
+    .hotspot[data-world="upload"] {
+      --x: 69;
+      --y: 56;
+    }
+
+    .hotspot[data-world="meta"] {
+      --x: 84;
+      --y: 64;
+    }
+
+    .hotspot[data-world="podcast"] {
+      --x: 50;
+      --y: 48;
+    }
 
     .purple {
       border-color: rgba(192,132,252,.55);
@@ -737,7 +777,7 @@
 
     @media (max-width: 900px) {
       :root {
-        --uiScale: 0.68;
+        --uiScale: 0.72;
       }
 
       .rb-world-art {
@@ -828,45 +868,81 @@
       }
 
       .hotspot {
-        padding: 7px 9px;
-        border-radius: 14px;
-        background: rgba(0, 0, 0, .38);
+        padding: 6px 8px;
+        border-radius: 13px;
+        background: rgba(0, 0, 0, .42);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
       }
 
       .hotspot strong {
-        font-size: .47rem;
+        font-size: .43rem;
         line-height: 1.05;
-        letter-spacing: .115em;
+        letter-spacing: .105em;
       }
 
       .hotspot span {
         margin-top: 5px;
-        font-size: .38rem;
+        font-size: .34rem;
         letter-spacing: .105em;
       }
 
-      .hotspot[data-world="gallery"] { --x: 13; --y: 31; }
-      .hotspot[data-world="music"] { --x: 28; --y: 33; }
-      .hotspot[data-world="live"] { --x: 50; --y: 31; }
-      .hotspot[data-world="gaming"] { --x: 70; --y: 34; }
-      .hotspot[data-world="sports"] { --x: 87; --y: 33; }
-      .hotspot[data-world="store"] { --x: 19; --y: 52; }
-      .hotspot[data-world="upload"] { --x: 70; --y: 53; }
-      .hotspot[data-world="meta"] { --x: 86; --y: 61; }
-      .hotspot[data-world="podcast"] { --x: 50; --y: 42; }
+      /* =========================
+         MOBILE HOTSPOTS
+         Centered to image districts
+      ========================= */
 
-      .podcast,
-      .music,
-      .store,
-      .upload,
-      .meta {
+      .hotspot[data-world="gallery"] {
+        --x: 19;
+        --y: 37;
+      }
+
+      .hotspot[data-world="music"] {
+        --x: 33;
+        --y: 39;
+      }
+
+      .hotspot[data-world="live"] {
+        --x: 50;
+        --y: 44;
+      }
+
+      .hotspot[data-world="gaming"] {
+        --x: 67;
+        --y: 40;
+      }
+
+      .hotspot[data-world="sports"] {
+        --x: 83;
+        --y: 38;
+      }
+
+      .hotspot[data-world="store"] {
+        --x: 24;
+        --y: 57;
+      }
+
+      .hotspot[data-world="upload"] {
+        --x: 69;
+        --y: 57;
+      }
+
+      .hotspot[data-world="meta"] {
+        --x: 84;
+        --y: 65;
+      }
+
+      .hotspot[data-world="podcast"] {
+        --x: 50;
+        --y: 49;
+      }
+
+      .podcast {
         display: none;
       }
 
       .gaming {
-        min-width: 292px;
+        min-width: 250px;
       }
 
       .rb-bottom {
@@ -905,7 +981,7 @@
 
     @media (max-width: 430px) {
       :root {
-        --uiScale: 0.64;
+        --uiScale: 0.66;
       }
 
       .rb-title {
@@ -920,6 +996,46 @@
       .rb-title p {
         font-size: .47rem;
         letter-spacing: .115em;
+      }
+
+      .hotspot[data-world="gallery"] {
+        --x: 19;
+        --y: 36.5;
+      }
+
+      .hotspot[data-world="music"] {
+        --x: 33;
+        --y: 38.5;
+      }
+
+      .hotspot[data-world="live"] {
+        --x: 50;
+        --y: 43.5;
+      }
+
+      .hotspot[data-world="gaming"] {
+        --x: 67;
+        --y: 40;
+      }
+
+      .hotspot[data-world="sports"] {
+        --x: 83;
+        --y: 37.5;
+      }
+
+      .hotspot[data-world="store"] {
+        --x: 24;
+        --y: 56.5;
+      }
+
+      .hotspot[data-world="upload"] {
+        --x: 69;
+        --y: 56.5;
+      }
+
+      .hotspot[data-world="meta"] {
+        --x: 84;
+        --y: 64.5;
       }
     }
   </style>
