@@ -8,6 +8,11 @@
    Avatar + Banner Sync Ready
    XP Gauge + Meta World Entry Ready
    Profile Lock + XP Energy Sync Enabled
+
+   Phone-safe:
+   - No fullscreen lock
+   - No global avatar takeover
+   - Profile avatar owned by #profileAvatar only
 ========================================= */
 
 .rb-profile-page,
@@ -20,7 +25,9 @@
   position: relative;
   min-height: 100svh;
   overflow-x: hidden;
+
   color: var(--rb-white, #ffffff);
+
   background:
     radial-gradient(circle at 18% 8%, rgba(16, 185, 129, 0.16), transparent 34%),
     radial-gradient(circle at 86% 12%, rgba(250, 204, 21, 0.13), transparent 30%),
@@ -38,8 +45,10 @@
 .rb-notifications-page .rb-section-shell {
   position: relative;
   z-index: 3;
+
   width: min(1180px, calc(100% - 28px));
   margin: 0 auto;
+
   padding:
     calc(18px + env(safe-area-inset-top))
     0
@@ -50,13 +59,18 @@
 
 .rb-profile-hero {
   position: relative;
+
   min-height: 420px;
+
   overflow: hidden;
   isolation: isolate;
+
   border-radius: 38px;
   border: 1px solid rgba(250, 204, 21, 0.16);
+
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.88));
+
   box-shadow:
     0 40px 120px rgba(0, 0, 0, 0.52),
     0 0 60px rgba(16, 185, 129, 0.12),
@@ -64,22 +78,30 @@
 }
 
 .rb-profile-banner,
-[data-rb-banner] {
+.rb-profile-page [data-rb-banner] {
   position: absolute;
   inset: 0;
   z-index: 0;
+
   background-image: url("/images/brand/hero-banner.png");
   background-size: cover;
   background-position: center;
+
   transform: scale(1.06);
-  filter: saturate(1.18) contrast(1.08) brightness(0.88);
+
+  filter:
+    saturate(1.18)
+    contrast(1.08)
+    brightness(0.88);
 }
 
 .rb-profile-banner::after,
-[data-rb-banner]::after {
+.rb-profile-page [data-rb-banner]::after {
   content: "";
+
   position: absolute;
   inset: 0;
+
   background:
     radial-gradient(circle at 22% 28%, rgba(16, 185, 129, 0.2), transparent 36%),
     radial-gradient(circle at 78% 34%, rgba(250, 204, 21, 0.16), transparent 34%),
@@ -88,26 +110,36 @@
 
 .rb-profile-hero::before {
   content: "";
+
   position: absolute;
   left: 50%;
   bottom: -160px;
+
   width: 720px;
   height: 720px;
+
   transform: translateX(-50%);
+
   border-radius: 50%;
+
   background:
     radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(250, 204, 21, 0.13) 28%, transparent 68%);
+
   filter: blur(30px);
   opacity: 0.88;
+
   pointer-events: none;
+
   animation: rbProfileAura 9s ease-in-out infinite;
 }
 
 .rb-profile-hero::after {
   content: "";
+
   position: absolute;
   inset: 0;
   z-index: 2;
+
   background:
     repeating-linear-gradient(
       90deg,
@@ -116,18 +148,23 @@
       transparent 1px,
       transparent 9px
     );
+
   mix-blend-mode: soft-light;
   opacity: 0.4;
+
   pointer-events: none;
 }
 
 .rb-profile-inner {
   position: relative;
   z-index: 4;
+
   min-height: 420px;
+
   display: flex;
   align-items: flex-end;
   gap: 34px;
+
   padding: clamp(24px, 4vw, 48px);
 }
 
@@ -140,9 +177,12 @@
 
 .rb-profile-avatar-wrap::before {
   content: "";
+
   position: absolute;
   inset: -14px;
+
   border-radius: 50%;
+
   background:
     conic-gradient(
       from 0deg,
@@ -151,39 +191,48 @@
       rgba(168, 85, 247, 0.46),
       rgba(16, 185, 129, 0.88)
     );
+
   filter: blur(14px);
   opacity: 0.66;
+
   animation: rbProfileSpin 14s linear infinite;
 }
 
 .rb-profile-avatar-wrap::after {
   content: "";
+
   position: absolute;
   inset: -22px;
+
   border-radius: 50%;
   border: 1px solid rgba(250, 204, 21, 0.18);
+
   box-shadow:
     0 0 42px rgba(16, 185, 129, 0.18),
     inset 0 0 28px rgba(250, 204, 21, 0.08);
+
   pointer-events: none;
 }
 
 .rb-profile-avatar,
-[data-rb-avatar],
-[data-rb-auth-avatar],
-#messages-user-avatar,
-#creator-user-avatar {
+#profileAvatar {
   position: relative;
   z-index: 2;
+
   width: clamp(130px, 20vw, 190px);
   height: clamp(130px, 20vw, 190px);
+
   object-fit: cover;
+  object-position: center;
+
   border-radius: 50%;
   border: 4px solid rgba(255, 255, 255, 0.2);
+
   background:
     #050505
     url("/images/brand/Avatar-hero-Banner.png.jpeg")
     center / cover no-repeat;
+
   box-shadow:
     0 0 0 10px rgba(16, 185, 129, 0.1),
     0 30px 70px rgba(0, 0, 0, 0.62),
@@ -195,14 +244,19 @@
   right: 12px;
   bottom: 12px;
   z-index: 4;
+
   width: 26px;
   height: 26px;
+
   border-radius: 50%;
   border: 3px solid #041008;
+
   background: #66ff99;
+
   box-shadow:
     0 0 22px rgba(102, 255, 153, 0.9),
     0 0 44px rgba(16, 185, 129, 0.35);
+
   animation: rbOnlinePulse 1.8s ease-in-out infinite;
 }
 
@@ -216,21 +270,27 @@
 .rb-profile-kicker,
 .rb-kicker {
   margin: 0 0 10px;
+
   color: #8effcb;
+
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+
   text-shadow: 0 0 16px rgba(16, 185, 129, 0.42);
 }
 
 .rb-profile-copy h1,
 .rb-profile-card h1 {
   margin: 0;
+
   color: #ffffff;
+
   font-size: clamp(2.4rem, 6vw, 5rem);
   line-height: 0.88;
   letter-spacing: -0.06em;
+
   text-shadow:
     0 0 24px rgba(255, 255, 255, 0.1),
     0 0 50px rgba(16, 185, 129, 0.12);
@@ -238,9 +298,11 @@
 
 .rb-profile-username,
 .rb-profile-handle,
-[data-rb-profile-handle] {
+.rb-profile-page [data-rb-profile-handle] {
   margin-top: 12px;
+
   color: #8effcb;
+
   font-size: 0.95rem;
   font-weight: 900;
   letter-spacing: 0.16em;
@@ -248,10 +310,12 @@
 }
 
 .rb-profile-bio,
-[data-rb-profile-bio] {
+.rb-profile-page [data-rb-profile-bio] {
   margin-top: 18px;
   max-width: 760px;
+
   color: rgba(255, 255, 255, 0.85);
+
   line-height: 1.75;
   font-size: 1rem;
 }
@@ -260,27 +324,37 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+
   margin-top: 18px;
   padding: 10px 16px;
+
   border-radius: 999px;
   border: 1px solid rgba(102, 255, 153, 0.18);
+
   background:
     linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(0, 0, 0, 0.34));
+
   color: #8effcb;
+
   font-size: 0.82rem;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+
   box-shadow: 0 0 18px rgba(16, 185, 129, 0.14);
 }
 
 .rb-profile-status::before {
   content: "";
+
   width: 10px;
   height: 10px;
+
   border-radius: 50%;
+
   background: #66ff99;
   box-shadow: 0 0 18px rgba(102, 255, 153, 0.9);
 }
@@ -296,6 +370,7 @@ body[data-rb-profile-locked="true"] .rb-edit-card {
 
 body.rb-orbit-xp-energy .rb-profile-hero {
   border-color: rgba(250, 204, 21, 0.3);
+
   box-shadow:
     0 40px 120px rgba(0, 0, 0, 0.52),
     0 0 74px rgba(16, 185, 129, 0.18),
@@ -305,21 +380,28 @@ body.rb-orbit-xp-energy .rb-profile-hero {
 
 body.rb-orbit-xp-energy .rb-profile-hero::before {
   opacity: 1;
-  filter: blur(34px) saturate(1.32) brightness(1.08);
+
+  filter:
+    blur(34px)
+    saturate(1.32)
+    brightness(1.08);
 }
 
 body.rb-orbit-xp-energy .rb-profile-avatar-wrap::before {
   opacity: 0.86;
-  filter: blur(16px) saturate(1.34) brightness(1.06);
+
+  filter:
+    blur(16px)
+    saturate(1.34)
+    brightness(1.06);
+
   animation-duration: 9s;
 }
 
 body.rb-orbit-xp-energy .rb-profile-avatar,
-body.rb-orbit-xp-energy [data-rb-avatar],
-body.rb-orbit-xp-energy [data-rb-auth-avatar],
-body.rb-orbit-xp-energy #messages-user-avatar,
-body.rb-orbit-xp-energy #creator-user-avatar {
+body.rb-orbit-xp-energy #profileAvatar {
   border-color: rgba(250, 204, 21, 0.34);
+
   box-shadow:
     0 0 0 10px rgba(16, 185, 129, 0.12),
     0 30px 70px rgba(0, 0, 0, 0.62),
@@ -331,14 +413,18 @@ body.rb-orbit-xp-energy #creator-user-avatar {
 
 .rb-profile-xp-gauge {
   position: relative;
-  margin-top: 22px;
+
   width: min(560px, 100%);
+  margin-top: 22px;
   padding: 16px;
+
   border-radius: 24px;
   border: 1px solid rgba(250, 204, 21, 0.18);
+
   background:
     radial-gradient(circle at 12% 10%, rgba(16, 185, 129, 0.18), transparent 42%),
     linear-gradient(145deg, rgba(0, 0, 0, 0.42), rgba(5, 8, 5, 0.72));
+
   box-shadow:
     0 0 34px rgba(16, 185, 129, 0.1),
     inset 0 0 28px rgba(255, 255, 255, 0.025);
@@ -355,6 +441,7 @@ body.rb-orbit-xp-energy #creator-user-avatar {
 .rb-profile-xp-head span,
 .rb-profile-xp-row span {
   color: rgba(255, 255, 255, 0.68);
+
   font-size: 0.68rem;
   font-weight: 1000;
   letter-spacing: 0.15em;
@@ -363,9 +450,11 @@ body.rb-orbit-xp-energy #creator-user-avatar {
 
 .rb-profile-xp-head strong {
   color: #facc15;
+
   font-size: 0.85rem;
   font-weight: 1000;
   letter-spacing: 0.08em;
+
   text-shadow: 0 0 18px rgba(250, 204, 21, 0.28);
 }
 
@@ -373,11 +462,15 @@ body.rb-orbit-xp-energy #creator-user-avatar {
 #profileXpGauge,
 #profile-xp-gauge {
   position: relative;
+
   height: 14px;
-  overflow: hidden;
   margin: 12px 0;
+
+  overflow: hidden;
+
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
 }
@@ -387,13 +480,18 @@ body.rb-orbit-xp-energy #creator-user-avatar {
 #profile-xp-gauge-fill {
   position: absolute;
   inset: 0 auto 0 0;
+
   width: 0%;
+
   border-radius: inherit;
+
   background:
     linear-gradient(90deg, #22c55e, #8effcb, #facc15);
+
   box-shadow:
     0 0 18px rgba(16, 185, 129, 0.44),
     0 0 32px rgba(250, 204, 21, 0.18);
+
   transition: width 0.55s ease;
 }
 
@@ -401,8 +499,10 @@ body.rb-orbit-xp-energy #creator-user-avatar {
 #profileXpGaugeFill::after,
 #profile-xp-gauge-fill::after {
   content: "";
+
   position: absolute;
   inset: 0;
+
   background:
     repeating-linear-gradient(
       115deg,
@@ -411,12 +511,15 @@ body.rb-orbit-xp-energy #creator-user-avatar {
       transparent 8px,
       transparent 16px
     );
+
   opacity: 0.22;
+
   animation: rbXpStripe 1.2s linear infinite;
 }
 
 body.rb-orbit-xp-energy .rb-profile-xp-gauge {
   border-color: rgba(250, 204, 21, 0.32);
+
   box-shadow:
     0 0 38px rgba(16, 185, 129, 0.16),
     0 0 48px rgba(250, 204, 21, 0.1),
@@ -433,17 +536,23 @@ body.rb-orbit-xp-energy .rb-profile-xp-gauge {
 .rb-creator-card,
 .rb-profile-world-entry {
   position: relative;
+
   overflow: hidden;
   isolation: isolate;
+
   padding: clamp(22px, 4vw, 34px);
+
   border-radius: 34px;
   border: 1px solid rgba(250, 204, 21, 0.16);
+
   background:
     radial-gradient(circle at 20% 12%, rgba(16, 185, 129, 0.16), transparent 34%),
     radial-gradient(circle at 82% 88%, rgba(250, 204, 21, 0.11), transparent 34%),
     linear-gradient(145deg, rgba(5, 8, 5, 0.88), rgba(0, 0, 0, 0.78));
+
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+
   box-shadow:
     0 32px 90px rgba(0, 0, 0, 0.48),
     0 0 44px rgba(16, 185, 129, 0.11),
@@ -458,6 +567,7 @@ body.rb-orbit-xp-energy .rb-admin-card,
 body.rb-orbit-xp-energy .rb-creator-card,
 body.rb-orbit-xp-energy .rb-profile-world-entry {
   border-color: rgba(250, 204, 21, 0.26);
+
   box-shadow:
     0 32px 90px rgba(0, 0, 0, 0.48),
     0 0 50px rgba(16, 185, 129, 0.14),
@@ -513,21 +623,28 @@ body.rb-orbit-xp-energy .rb-profile-world-entry {
 
 .rb-meta-pill {
   padding: 11px 18px;
+
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+
   color: #ffffff;
+
   font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0.08em;
+
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+
   box-shadow: 0 0 18px rgba(16, 185, 129, 0.07);
 }
 
 body.rb-orbit-xp-energy .rb-meta-pill {
   border-color: rgba(250, 204, 21, 0.2);
+
   box-shadow:
     0 0 18px rgba(16, 185, 129, 0.1),
     0 0 24px rgba(250, 204, 21, 0.06);
@@ -541,20 +658,28 @@ body.rb-orbit-xp-energy .rb-meta-pill {
 .rb-profile-editor-actions button,
 .rb-profile-editor-actions a {
   min-height: 48px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   padding: 0 18px;
+
   border-radius: 999px;
   border: 1px solid rgba(250, 204, 21, 0.22);
+
   background:
     linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(250, 204, 21, 0.08));
+
   color: #fefce8;
+
   font-weight: 1000;
   letter-spacing: 0.08em;
   text-decoration: none;
   text-transform: uppercase;
+
   cursor: pointer;
+
   transition:
     transform 0.22s ease,
     box-shadow 0.22s ease,
@@ -565,9 +690,13 @@ body.rb-orbit-xp-energy .rb-meta-pill {
 .rb-profile-socials a,
 #profileWebsite {
   min-height: 44px;
+
   border-color: rgba(255, 255, 255, 0.1);
+
   background: rgba(255, 255, 255, 0.04);
+
   color: #ffffff;
+
   font-size: 0.78rem;
 }
 
@@ -580,9 +709,12 @@ body.rb-orbit-xp-energy .rb-meta-pill {
 .rb-profile-editor-actions button:hover,
 .rb-profile-editor-actions a:hover {
   transform: translateY(-2px);
+
   border-color: rgba(16, 185, 129, 0.52);
+
   background:
     linear-gradient(135deg, rgba(16, 185, 129, 0.26), rgba(250, 204, 21, 0.16));
+
   box-shadow:
     0 0 22px rgba(16, 185, 129, 0.2),
     0 0 42px rgba(250, 204, 21, 0.1);
@@ -594,21 +726,29 @@ body.rb-orbit-xp-energy .rb-meta-pill {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+
   margin: 22px 0;
 }
 
 .rb-profile-tabs button,
 [data-profile-tab] {
   min-height: 44px;
+
   padding: 0 16px;
+
   border-radius: 999px;
   border: 1px solid rgba(250, 204, 21, 0.16);
+
   background: rgba(255, 255, 255, 0.04);
+
   color: rgba(255, 255, 255, 0.76);
+
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+
   cursor: pointer;
+
   transition:
     transform 0.22s ease,
     border-color 0.22s ease,
@@ -620,9 +760,12 @@ body.rb-orbit-xp-energy .rb-meta-pill {
 [data-profile-tab]:hover,
 [data-profile-tab].is-active {
   color: #ffffff;
+
   border-color: rgba(16, 185, 129, 0.46);
+
   background:
     linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(250, 204, 21, 0.08));
+
   transform: translateY(-2px);
 }
 
@@ -654,10 +797,13 @@ body.rb-orbit-xp-energy [data-profile-tab].is-active {
 .rb-notification-card {
   border-radius: 24px;
   border: 1px solid rgba(250, 204, 21, 0.14);
+
   background:
     linear-gradient(145deg, rgba(5, 8, 5, 0.84), rgba(0, 0, 0, 0.72));
+
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+
   box-shadow:
     0 0 28px rgba(0, 0, 0, 0.28),
     inset 0 0 20px rgba(255, 255, 255, 0.02);
@@ -678,20 +824,26 @@ body.rb-orbit-xp-energy .rb-notification-card {
 .rb-feed-card .rb-card-body {
   display: grid;
   gap: 10px;
+
   padding: 14px;
 }
 
 .rb-feed-card p {
   margin: 0;
+
   color: rgba(255, 255, 255, 0.86);
+
   line-height: 1.5;
 }
 
 .rb-feed-card img,
 .rb-feed-card video {
   width: 100%;
+
   border-radius: 18px;
+
   object-fit: cover;
+
   background: #000;
 }
 
@@ -704,6 +856,7 @@ body.rb-orbit-xp-energy .rb-notification-card {
 #profileEmpty,
 .rb-notification-card {
   padding: 18px;
+
   color: rgba(255, 255, 255, 0.74);
 }
 
@@ -711,13 +864,16 @@ body.rb-orbit-xp-energy .rb-notification-card {
 .rb-mini-card strong,
 .rb-notification-card strong {
   display: block;
+
   margin: 0 0 8px;
+
   color: #facc15;
 }
 
 .rb-mini-card span,
 .rb-mini-card small {
   display: block;
+
   color: rgba(255, 255, 255, 0.74);
 }
 
@@ -725,19 +881,26 @@ body.rb-orbit-xp-energy .rb-notification-card {
 
 .rb-profile-meta-avatar-card {
   grid-column: 1 / -1;
+
   position: relative;
+
   display: grid;
   grid-template-columns: minmax(220px, 320px) 1fr;
-  gap: 22px;
   align-items: center;
+  gap: 22px;
+
   overflow: hidden;
+
   padding: clamp(18px, 3vw, 28px);
+
   border-radius: 30px;
   border: 1px solid rgba(16, 185, 129, 0.2);
+
   background:
     radial-gradient(circle at 18% 22%, rgba(16, 185, 129, 0.22), transparent 40%),
     radial-gradient(circle at 86% 74%, rgba(250, 204, 21, 0.15), transparent 34%),
     linear-gradient(145deg, rgba(0, 0, 0, 0.66), rgba(5, 8, 5, 0.88));
+
   box-shadow:
     0 0 46px rgba(16, 185, 129, 0.14),
     inset 0 0 44px rgba(255, 255, 255, 0.02);
@@ -745,6 +908,7 @@ body.rb-orbit-xp-energy .rb-notification-card {
 
 body.rb-orbit-xp-energy .rb-profile-meta-avatar-card {
   border-color: rgba(250, 204, 21, 0.28);
+
   box-shadow:
     0 0 52px rgba(16, 185, 129, 0.18),
     0 0 54px rgba(250, 204, 21, 0.1),
@@ -753,12 +917,17 @@ body.rb-orbit-xp-energy .rb-profile-meta-avatar-card {
 
 .rb-profile-meta-avatar-stage {
   position: relative;
+
   min-height: 280px;
+
   display: grid;
   place-items: center;
+
   overflow: hidden;
+
   border-radius: 26px;
   border: 1px solid rgba(250, 204, 21, 0.16);
+
   background:
     radial-gradient(circle, rgba(16, 185, 129, 0.18), transparent 62%),
     rgba(0, 0, 0, 0.36);
@@ -768,14 +937,18 @@ body.rb-orbit-xp-energy .rb-profile-meta-avatar-card {
 .rb-profile-meta-avatar-stage model-viewer {
   position: relative;
   z-index: 3;
+
   width: min(230px, 80%);
   height: min(250px, 72vw);
+
   object-fit: cover;
+
   border-radius: 24px;
 }
 
 .rb-profile-meta-avatar-stage model-viewer {
   min-height: 260px;
+
   background: transparent;
 }
 
@@ -783,24 +956,31 @@ body.rb-orbit-xp-energy .rb-profile-meta-avatar-card {
 .rb-profile-meta-aura {
   position: absolute;
   inset: 50% auto auto 50%;
-  pointer-events: none;
+
   transform: translate(-50%, -50%);
+
   border-radius: 50%;
+
+  pointer-events: none;
 }
 
 .rb-profile-meta-orbit {
   width: 220px;
   height: 220px;
+
   border: 1px solid rgba(250, 204, 21, 0.24);
+
   box-shadow:
     0 0 34px rgba(16, 185, 129, 0.16),
     inset 0 0 24px rgba(250, 204, 21, 0.08);
+
   animation: rbProfileSpin 18s linear infinite;
 }
 
 .rb-profile-meta-aura {
   width: 260px;
   height: 260px;
+
   background:
     conic-gradient(
       from 0deg,
@@ -808,8 +988,10 @@ body.rb-orbit-xp-energy .rb-profile-meta-avatar-card {
       rgba(250, 204, 21, 0.16),
       rgba(16, 185, 129, 0.1)
     );
+
   filter: blur(18px);
   opacity: 0.72;
+
   animation: rbMetaAura 5s ease-in-out infinite;
 }
 
@@ -820,12 +1002,18 @@ body.rb-orbit-xp-energy .rb-profile-meta-orbit {
 
 body.rb-orbit-xp-energy .rb-profile-meta-aura {
   opacity: 0.88;
-  filter: blur(20px) saturate(1.22) brightness(1.05);
+
+  filter:
+    blur(20px)
+    saturate(1.22)
+    brightness(1.05);
 }
 
 .rb-profile-meta-avatar-copy h3 {
   margin: 0;
+
   color: #ffffff;
+
   font-size: clamp(1.8rem, 4vw, 3.4rem);
   line-height: 0.95;
   letter-spacing: -0.04em;
@@ -833,7 +1021,9 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
 
 .rb-profile-meta-avatar-copy p {
   max-width: 640px;
+
   color: rgba(255, 255, 255, 0.78);
+
   line-height: 1.65;
 }
 
@@ -841,15 +1031,20 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+
   margin: 16px 0;
 }
 
 .rb-profile-meta-badges span {
   padding: 9px 13px;
+
   border-radius: 999px;
   border: 1px solid rgba(250, 204, 21, 0.16);
+
   background: rgba(255, 255, 255, 0.055);
+
   color: #fefce8;
+
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.08em;
@@ -858,6 +1053,7 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
 
 .rb-notification-card.is-unread {
   border-color: rgba(102, 255, 153, 0.34);
+
   box-shadow:
     0 0 28px rgba(16, 185, 129, 0.14),
     inset 0 0 22px rgba(16, 185, 129, 0.05);
@@ -877,7 +1073,9 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
 .rb-settings-form label {
   display: grid;
   gap: 8px;
+
   color: rgba(255, 255, 255, 0.72);
+
   font-size: 0.72rem;
   font-weight: 1000;
   letter-spacing: 0.13em;
@@ -895,12 +1093,17 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
 .rb-settings-form select {
   width: 100%;
   min-height: 48px;
+
+  padding: 12px 14px;
+
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
+
   outline: none;
+
   background: rgba(0, 0, 0, 0.42);
+
   color: #fff;
-  padding: 12px 14px;
 }
 
 #rb-profile-editor-form textarea,
@@ -920,13 +1123,19 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
 [data-rb-profile-message],
 #rb-profile-message {
   min-height: 42px;
+
   display: grid;
   align-items: center;
+
   padding: 10px 14px;
+
   border-radius: 16px;
-  background: rgba(0, 0, 0, 0.38);
   border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(0, 0, 0, 0.38);
+
   color: rgba(255, 255, 255, 0.74);
+
   font-size: 0.84rem;
   font-weight: 800;
 }
@@ -969,7 +1178,9 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
 .rb-page-error .rb-profile-status,
 .rb-page-error #profileStatus {
   color: #fca5a5;
+
   border-color: rgba(239, 68, 68, 0.28);
+
   background: rgba(239, 68, 68, 0.12);
 }
 
@@ -1116,10 +1327,7 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
   }
 
   .rb-profile-avatar,
-  [data-rb-avatar],
-  [data-rb-auth-avatar],
-  #messages-user-avatar,
-  #creator-user-avatar {
+  #profileAvatar {
     width: 124px;
     height: 124px;
   }
@@ -1170,5 +1378,18 @@ body.rb-orbit-xp-energy .rb-profile-meta-aura {
   .rb-profile-meta-avatar-stage model-viewer {
     width: min(210px, 82%);
     height: 230px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-profile-hero::before,
+  .rb-profile-avatar-wrap::before,
+  .rb-profile-online,
+  .rb-profile-xp-fill::after,
+  #profileXpGaugeFill::after,
+  #profile-xp-gauge-fill::after,
+  .rb-profile-meta-orbit,
+  .rb-profile-meta-aura {
+    animation: none !important;
   }
 }
