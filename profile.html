@@ -20,8 +20,8 @@
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/sections.css" />
   <link rel="stylesheet" href="/styles/cards.css" />
-  <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/forms.css" />
+  <link rel="stylesheet" href="/styles/profile.css" />
   <link rel="stylesheet" href="/styles/omni-fx.css" />
 
   <script
@@ -83,9 +83,7 @@
             class="rb-profile-avatar"
             src="/images/brand/Avatar-hero-Banner.png.jpeg"
             alt="Profile Avatar"
-            data-rb-avatar
             data-rb-profile-avatar
-            data-rb-avatar-link
           />
 
           <div class="rb-profile-online" aria-hidden="true"></div>
@@ -100,7 +98,12 @@
             Rich Bizness User
           </h1>
 
-          <p id="profileUsername" class="rb-profile-username" data-rb-handle data-rb-username>
+          <p
+            id="profileUsername"
+            class="rb-profile-username"
+            data-rb-handle
+            data-rb-username
+          >
             @richbizness
           </p>
 
@@ -144,7 +147,7 @@
               <div
                 id="profileXpGaugeFill"
                 class="rb-profile-xp-fill"
-                style="width:0%;"
+                style="width: 0%;"
               ></div>
             </div>
 
@@ -152,18 +155,35 @@
               <span>Level Progress</span>
               <span id="profileXpGaugeNext">1000 XP TO LVL 2</span>
             </div>
+
+            <div class="rb-profile-xp-row">
+              <span id="profile-xp-level">LVL 1</span>
+              <span id="profile-xp-rank">Member</span>
+            </div>
           </section>
 
           <div class="rb-profile-actions">
-            <button id="profileEditBtn" class="rb-btn primary" type="button" data-route="edit">
+            <button
+              id="profileEditBtn"
+              class="rb-btn primary"
+              type="button"
+            >
               Edit Profile
             </button>
 
-            <button id="profileFollowBtn" class="rb-btn gold" type="button">
+            <button
+              id="profileFollowBtn"
+              class="rb-btn gold"
+              type="button"
+            >
               Follow
             </button>
 
-            <button id="profileMessageBtn" class="rb-btn ghost" type="button" data-route="messages">
+            <button
+              id="profileMessageBtn"
+              class="rb-btn ghost"
+              type="button"
+            >
               Message
             </button>
 
@@ -186,7 +206,7 @@
               href="#"
               target="_blank"
               rel="noopener noreferrer"
-              style="display:none;"
+              style="display: none;"
             >
               Website
             </a>
@@ -295,7 +315,7 @@
 
     <section class="rb-profile-panels">
       <div class="rb-profile-panel is-active" data-profile-panel="feed">
-        <div id="profileEmpty" class="rb-empty" style="display:none;">
+        <div id="profileEmpty" class="rb-empty" style="display: none;">
           No posts yet. Upload something and build the universe.
         </div>
 
@@ -305,7 +325,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="creator"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -326,7 +346,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="store"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -347,7 +367,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="gaming"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -368,7 +388,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="sports"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -389,7 +409,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="music"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -410,7 +430,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="podcast"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -431,7 +451,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="radio"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -452,7 +472,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="meta"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -473,7 +493,7 @@
       <div
         class="rb-profile-panel"
         data-profile-panel="admin"
-        style="display:none;"
+        style="display: none;"
       >
         <div class="rb-panel rb-profile-module">
           <div class="rb-module-head">
@@ -514,7 +534,6 @@
 
   <script type="module">
     import { bindGlobalNavigation } from "/core/shared/rb-navigation.js";
-
     bindGlobalNavigation();
   </script>
 
