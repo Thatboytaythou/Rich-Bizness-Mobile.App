@@ -3,7 +3,7 @@
    /core/pages/profile.js
 
    PROFILE PAGE CONTROLLER
-   Full page-owned profile render
+   Page-owned profile render
    Supabase connected
    Meta world connected
    XP Gauge Enabled
@@ -36,7 +36,6 @@ import {
   profileBadge,
   profileLevel,
   getProfileIdentity,
-  bindProfileShell,
   buildProfileUrl
 } from "/core/shared/rb-profile.js";
 
@@ -147,6 +146,14 @@ function money(cents = 0) {
   return `$${(num(cents) / 100).toFixed(2)}`;
 }
 
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function formatMetaCount(label, value) {
+  return `${label}: ${formatNumber(value)}`;
+}
+
 function escapeHtml(value = "") {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -182,11 +189,15 @@ function safePath(value = "") {
 }
 
 function setText(el, value = "") {
-  if (el) el.textContent = value ?? "";
+  if (el) {
+    el.textContent = value ?? "";
+  }
 }
 
 function setDisplay(el, show = true, display = "block") {
-  if (el) el.style.display = show ? display : "none";
+  if (el) {
+    el.style.display = show ? display : "none";
+  }
 }
 
 function setImageOnce(img, src, alt = "Profile") {
@@ -248,23 +259,34 @@ function lockedProfileBanner(profile = {}, extras = {}) {
 ========================= */
 
 function syncProfileLock() {
-  const user = getUser();
-  state.identity = getProfileIdentity?.(state.profile) || state.identity || null;
+  const user = getUser?.() || null;
+
+  state.identity =
+    getProfileIdentity?.(state.profile) ||
+    state.identity ||
+    null;
+
+  const profileId =
+    state.identity?.id ||
+    state.profile?.id ||
+    "";
 
   document.body.dataset.rbPage = "profile";
   document.body.dataset.rbRoute = "profile";
   document.body.dataset.rbUserId = user?.id || "";
-  document.body.dataset.rbProfileId = state.identity?.id || state.profile?.id || "";
-  document.body.dataset.rbProfileLocked = state.identity?.id || state.profile?.id ? "true" : "false";
-
-  bindProfileShell?.();
+  document.body.dataset.rbProfileId = profileId;
+  document.body.dataset.rbProfileLocked = profileId ? "true" : "false";
+  document.body.dataset.rbProfileLock = profileId ? "true" : "false";
 
   document.querySelectorAll("[data-rb-profile-link]").forEach((el) => {
-    el.href = buildProfileUrl?.(state.profile) || RB_ROUTES?.profile || "/profile";
+    el.href =
+      buildProfileUrl?.(state.profile) ||
+      RB_ROUTES?.profile ||
+      "/profile";
   });
 
   document.querySelectorAll("[data-rb-current-avatar]").forEach((el) => {
-    const avatar = lockedProfileAvatar(state.profile);
+    const avatar = lockedProfileAvatar(state.profile || {});
     const name = profileName(state.profile || {});
 
     if (el.tagName === "IMG") {
@@ -287,7 +309,10 @@ async function loadBrandAssets() {
     .eq("is_default", true);
 
   if (error || !Array.isArray(data)) {
-    if (error) console.warn("[RB BRAND ASSETS WARNING]", error.message);
+    if (error) {
+      console.warn("[RB BRAND ASSETS WARNING]", error.message);
+    }
+
     return brandAssets;
   }
 
@@ -320,7 +345,7 @@ async function loadBrandAssets() {
 ========================= */
 
 async function loadProfileDirect() {
-  const user = getUser();
+  const user = getUser?.() || null;
   const target = routeTarget();
 
   state.identity = user || null;
@@ -482,7 +507,7 @@ async function fetchPosts(profileId) {
 }
 
 async function fetchFollowing(profileId) {
-  const user = getUser();
+  const user = getUser?.() || null;
 
   if (!user?.id || !profileId || user.id === profileId) {
     state.isFollowing = false;
@@ -580,6 +605,7 @@ function xpModel(profile = state.profile || {}, extras = state.extras || {}) {
   const xp =
     num(meta.xp) ||
     num(gamer.xp) ||
+    num(levelRow.xp_total) ||
     num(levelRow.xp) ||
     num(levelRow.rich_points) ||
     num(profile.xp) ||
@@ -614,6 +640,16 @@ function xpModel(profile = state.profile || {}, extras = state.extras || {}) {
 
 function renderXpGauge() {
   const xp = xpModel();
+
+  document.documentElement.style.setProperty(
+    "--rb-xp-percent",
+    `${xp.progress}%`
+  );
+
+  document.body.dataset.rbXp = String(xp.xp);
+  document.body.dataset.rbLevel = String(xp.level);
+  document.body.dataset.rbRank = xp.rank;
+  document.body.dataset.rbXpPercent = String(Math.round(xp.progress));
 
   if (els.xpGauge) {
     els.xpGauge.dataset.level = String(xp.level);
@@ -687,7 +723,10 @@ function renderProfile() {
   const avatar = lockedProfileAvatar(profile);
   const banner = lockedProfileBanner(profile, extras);
 
-  setText(els.status, state.isMine ? "Your Universe Profile" : "Universe Profile");
+  setText(
+    els.status,
+    state.isMine ? "Your Universe Profile" : "Universe Profile"
+  );
 
   setBackground(els.banner, banner);
 
@@ -723,7 +762,7 @@ function renderProfile() {
 function renderFollowButton() {
   if (!els.followBtn) return;
 
-  if (state.isMine || !getUser()?.id) {
+  if (state.isMine || !getUser?.()?.id) {
     setDisplay(els.followBtn, false);
     return;
   }
@@ -878,14 +917,6 @@ function renderMetaPanel() {
   `;
 }
 
-function formatMetaCount(label, value) {
-  return `${label}: ${formatNumber(value)}`;
-}
-
-function formatNumber(value) {
-  return Number(value || 0).toLocaleString();
-}
-
 function renderExtras() {
   const creator = state.extras.creator;
   const seller = state.extras.seller;
@@ -959,7 +990,7 @@ function renderPosts() {
 ========================= */
 
 async function toggleFollow() {
-  const user = getUser();
+  const user = getUser?.() || null;
   const profileId = state.profile?.id;
 
   if (!user?.id || !profileId || state.isMine || !els.followBtn) return;
@@ -1150,7 +1181,7 @@ async function loadEverything() {
 
   const isPublicRoute = hasPublicProfileRoute();
 
-  if (!isPublicRoute && getUser()?.id) {
+  if (!isPublicRoute && getUser?.()?.id) {
     await ensureMyProfile();
   }
 
@@ -1181,12 +1212,13 @@ function markReady() {
   document.body.classList.remove("rb-page-error");
   document.body.dataset.rbPage = "profile";
   document.body.dataset.rbRoute = "profile";
-  document.body.dataset.rbProfileLock = state.identity?.id || state.profile?.id ? "true" : "false";
+  document.body.dataset.rbProfileLock =
+    state.identity?.id || state.profile?.id ? "true" : "false";
 
   renderXpGauge();
 
   console.log("RB PROFILE PAGE READY", {
-    profileLocked: !!state.identity?.id || !!state.profile?.id,
+    profileLocked: Boolean(state.identity?.id || state.profile?.id),
     route: "profile",
     xpGauge: true
   });
