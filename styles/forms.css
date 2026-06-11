@@ -1,41 +1,39 @@
 /* =========================================
    RICH BIZNESS LLC
    /styles/forms.css
-   LAYER 9 / 22
 
    AUTH + FORM SYSTEM
-   Base-safe polished form layer
-
-   Updates:
-   - Supports #edit-status from edit.js
-   - Supports form status data-type states
-   - Supports XP/profile lock energy states
-   - Keeps auth/edit/settings/upload form styling aligned
+   Phone-safe Auth / Edit / Settings / Upload
+   No main.css or mobile.css required for auth
 ========================================= */
+
+.rb-auth-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(0, 255, 157, 0.18), transparent 32%),
+    radial-gradient(circle at 82% 24%, rgba(250, 204, 21, 0.12), transparent 28%),
+    linear-gradient(180deg, #020402, #050805 52%, #000);
+}
 
 .rb-auth-shell {
   position: relative;
   z-index: 2;
 
   width: min(100%, 980px);
-  min-height: 100svh;
+  min-height: 100dvh;
 
   margin: 0 auto;
 
   padding:
-    max(28px, env(safe-area-inset-top))
-    16px
-    max(28px, env(safe-area-inset-bottom));
+    max(22px, env(safe-area-inset-top))
+    14px
+    calc(28px + env(safe-area-inset-bottom));
 
   display: grid;
   align-content: center;
-  gap: 22px;
-}
-
-.rb-edit-shell,
-.rb-settings-shell,
-.rb-upload-shell {
-  display: grid;
   gap: 18px;
 }
 
@@ -46,57 +44,34 @@
   overflow: hidden;
   isolation: isolate;
 
-  padding: clamp(22px, 4vw, 30px);
+  padding: clamp(22px, 5vw, 34px);
 
   border-radius: 34px;
-  border: 1px solid rgba(250, 204, 21, 0.26);
+  border: 1px solid rgba(250, 204, 21, 0.28);
 
   background:
-    radial-gradient(circle at 18% 18%, rgba(16, 185, 129, 0.16), transparent 34%),
-    radial-gradient(circle at 82% 72%, rgba(250, 204, 21, 0.14), transparent 38%),
-    linear-gradient(135deg, rgba(8, 18, 10, 0.9), rgba(0, 0, 0, 0.86));
+    radial-gradient(circle at 18% 18%, rgba(0, 255, 157, 0.18), transparent 34%),
+    radial-gradient(circle at 82% 72%, rgba(250, 204, 21, 0.15), transparent 38%),
+    linear-gradient(135deg, rgba(8, 18, 10, 0.92), rgba(0, 0, 0, 0.88));
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
 
   box-shadow:
-    0 0 44px rgba(16, 185, 129, 0.18),
-    0 0 80px rgba(0, 0, 0, 0.36),
+    0 0 44px rgba(16, 185, 129, 0.2),
+    0 0 80px rgba(0, 0, 0, 0.42),
     inset 0 0 80px rgba(250, 204, 21, 0.06);
 }
 
 .rb-auth-hero::before {
   content: "";
-
   position: absolute;
   inset: 0;
   z-index: 0;
 
   background:
-    url("/images/brand/hero-logo.png.jpeg")
-    center / cover
-    no-repeat;
-
-  opacity: 0.13;
-  transform: scale(1.08);
-
-  filter:
-    saturate(1.25)
-    contrast(1.12)
-    brightness(0.92);
-
-  pointer-events: none;
-}
-
-.rb-auth-hero::after {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.54));
+    radial-gradient(circle at 50% 38%, rgba(0, 255, 157, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 56%);
 
   pointer-events: none;
 }
@@ -106,18 +81,27 @@
   z-index: 2;
 }
 
+.rb-kicker {
+  margin: 0 0 12px;
+  color: var(--rb-green, #00ff9d);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
 .rb-auth-hero h1 {
   margin: 0;
 
   color: var(--rb-gold, #facc15);
 
-  font-size: clamp(2.5rem, 10vw, 5.8rem);
+  font-size: clamp(2.45rem, 10vw, 5.8rem);
   line-height: 0.88;
   letter-spacing: -0.07em;
 
   text-shadow:
     0 0 26px rgba(250, 204, 21, 0.25),
-    0 0 48px rgba(16, 185, 129, 0.1);
+    0 0 48px rgba(16, 185, 129, 0.14);
 }
 
 .rb-auth-hero p {
@@ -127,6 +111,98 @@
   color: var(--rb-muted, rgba(255, 255, 255, 0.72));
 
   line-height: 1.55;
+}
+
+/* AUTH AVATAR PREVIEW */
+
+.rb-auth-avatar-preview {
+  position: absolute;
+  right: 22px;
+  bottom: 16px;
+
+  width: 104px;
+  height: 128px;
+
+  display: grid;
+  place-items: end center;
+
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.rb-auth-avatar-ring {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+
+  width: 112px;
+  height: 34px;
+
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 157, 0.34);
+
+  background:
+    radial-gradient(circle at center, rgba(0, 255, 157, 0.26), transparent 64%);
+
+  filter: blur(0.2px);
+  box-shadow:
+    0 0 24px rgba(0, 255, 157, 0.22),
+    0 0 38px rgba(250, 204, 21, 0.1);
+}
+
+.rb-auth-avatar-body {
+  position: relative;
+
+  width: 66px;
+  height: 98px;
+
+  display: grid;
+  justify-items: center;
+  align-content: end;
+
+  animation: rbAuthAvatarFloat 3.4s ease-in-out infinite;
+}
+
+.rb-auth-avatar-head {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle at 44% 25%, rgba(255, 255, 255, 0.45), transparent 18%),
+    linear-gradient(145deg, #7a4a22, #2d180c);
+
+  border: 1px solid rgba(250, 204, 21, 0.28);
+
+  box-shadow:
+    0 0 18px rgba(0, 255, 157, 0.22);
+}
+
+.rb-auth-avatar-chest {
+  width: 52px;
+  height: 58px;
+
+  margin-top: -2px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 22px 22px 18px 18px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+
+  background:
+    radial-gradient(circle at 50% 18%, rgba(0, 255, 157, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(4, 47, 28, 0.96), rgba(2, 12, 6, 0.98));
+
+  color: var(--rb-gold, #facc15);
+  font-weight: 1000;
+
+  box-shadow:
+    0 0 22px rgba(0, 255, 157, 0.18),
+    inset 0 0 18px rgba(255, 255, 255, 0.04);
 }
 
 /* PANEL */
@@ -156,7 +232,6 @@
 
 .rb-auth-panel::before {
   content: "";
-
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -172,7 +247,7 @@
   z-index: 2;
 }
 
-/* XP / PROFILE ENERGY */
+/* XP ENERGY */
 
 body.rb-orbit-xp-energy .rb-auth-hero,
 body.rb-orbit-xp-energy .rb-auth-panel,
@@ -186,11 +261,6 @@ body.rb-orbit-xp-energy .rb-upload-shell .rb-panel {
     0 0 72px rgba(250, 204, 21, 0.12),
     0 0 80px rgba(0, 0, 0, 0.42),
     inset 0 0 54px rgba(250, 204, 21, 0.08);
-}
-
-body[data-rb-profile-locked="true"] .rb-auth-panel,
-body[data-rb-profile-locked="true"] .rb-form {
-  border-color: rgba(0, 255, 157, 0.34);
 }
 
 /* TABS */
@@ -253,15 +323,6 @@ body[data-auth-mode="signup"] [data-auth-mode="signup"],
   box-shadow:
     0 0 24px rgba(16, 185, 129, 0.35),
     inset 0 0 18px rgba(255, 255, 255, 0.14);
-}
-
-body.rb-orbit-xp-energy .rb-auth-tabs button.is-active,
-body.rb-orbit-xp-energy body[data-auth-mode="signin"] [data-auth-mode="signin"],
-body.rb-orbit-xp-energy body[data-auth-mode="signup"] [data-auth-mode="signup"] {
-  box-shadow:
-    0 0 28px rgba(16, 185, 129, 0.38),
-    0 0 42px rgba(250, 204, 21, 0.18),
-    inset 0 0 18px rgba(255, 255, 255, 0.16);
 }
 
 /* FORMS */
@@ -377,20 +438,6 @@ body.rb-orbit-xp-energy body[data-auth-mode="signup"] [data-auth-mode="signup"] 
   transform: translateY(-1px);
 }
 
-body.rb-orbit-xp-energy .rb-auth-form input:focus,
-body.rb-orbit-xp-energy .rb-auth-form textarea:focus,
-body.rb-orbit-xp-energy .rb-auth-form select:focus,
-body.rb-orbit-xp-energy .rb-form input:focus,
-body.rb-orbit-xp-energy .rb-form textarea:focus,
-body.rb-orbit-xp-energy .rb-form select:focus {
-  border-color: rgba(250, 204, 21, 0.52);
-
-  box-shadow:
-    0 0 22px rgba(16, 185, 129, 0.25),
-    0 0 34px rgba(250, 204, 21, 0.12),
-    inset 0 0 22px rgba(16, 185, 129, 0.1);
-}
-
 .rb-auth-form input:-webkit-autofill,
 .rb-form input:-webkit-autofill {
   -webkit-text-fill-color: #ffffff;
@@ -419,6 +466,8 @@ body.rb-orbit-xp-energy .rb-form select:focus {
 
   margin-top: 6px;
 }
+
+/* STATUS NOTES */
 
 .rb-form-note,
 #edit-status,
@@ -477,16 +526,7 @@ body.rb-orbit-xp-energy .rb-form select:focus {
   background: rgba(250, 204, 21, 0.09);
 }
 
-body.rb-orbit-xp-energy .rb-form-note[data-type="success"],
-body.rb-orbit-xp-energy #edit-status[data-type="success"],
-body.rb-orbit-xp-energy #settings-sync-status[data-type="success"],
-body.rb-orbit-xp-energy #upload-status[data-type="success"] {
-  box-shadow:
-    0 0 18px rgba(16, 185, 129, 0.16),
-    0 0 28px rgba(250, 204, 21, 0.08);
-}
-
-/* MESSAGES */
+/* AUTH MESSAGE */
 
 .rb-auth-message {
   min-height: 22px;
@@ -502,33 +542,21 @@ body.rb-orbit-xp-energy #upload-status[data-type="success"] {
 
 .rb-auth-message[data-type="success"] {
   color: #34d399;
-
-  text-shadow:
-    0 0 14px rgba(16, 185, 129, 0.3);
 }
 
 .rb-auth-message[data-type="error"] {
   color: #fca5a5;
-
-  text-shadow:
-    0 0 14px rgba(239, 68, 68, 0.24);
 }
 
 .rb-auth-message[data-type="info"] {
   color: #bae6fd;
-
-  text-shadow:
-    0 0 14px rgba(56, 189, 248, 0.22);
 }
 
 .rb-auth-message[data-type="warning"] {
   color: #fde68a;
-
-  text-shadow:
-    0 0 14px rgba(250, 204, 21, 0.22);
 }
 
-/* BUTTON OVERRIDES */
+/* BUTTONS */
 
 .rb-main-launch {
   min-height: 56px;
@@ -574,11 +602,17 @@ body.rb-orbit-xp-energy #upload-status[data-type="success"] {
   transform: none;
 }
 
-body.rb-orbit-xp-energy .rb-main-launch {
-  box-shadow:
-    0 0 28px rgba(16, 185, 129, 0.36),
-    0 0 46px rgba(250, 204, 21, 0.2),
-    inset 0 0 18px rgba(255, 255, 255, 0.2);
+.rb-btn.ghost {
+  min-height: 46px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+
+  color: rgba(255, 255, 255, 0.72);
+
+  background: rgba(0, 0, 0, 0.26);
+
+  font-weight: 900;
 }
 
 /* LINKS */
@@ -636,6 +670,15 @@ body.rb-orbit-xp-energy .rb-main-launch {
   cursor: pointer;
 }
 
+/* SHARED SHELLS */
+
+.rb-edit-shell,
+.rb-settings-shell,
+.rb-upload-shell {
+  display: grid;
+  gap: 18px;
+}
+
 /* LOADING */
 
 .rb-auth-page:not(.rb-auth-ready) .rb-auth-panel,
@@ -652,26 +695,40 @@ body.rb-orbit-xp-energy .rb-main-launch {
 
 @media (max-width: 720px) {
   .rb-auth-shell {
-    padding:
-      max(18px, env(safe-area-inset-top))
-      12px
-      calc(24px + env(safe-area-inset-bottom));
+    min-height: 100dvh;
 
-    gap: 16px;
+    padding:
+      max(16px, env(safe-area-inset-top))
+      12px
+      calc(22px + env(safe-area-inset-bottom));
+
+    align-content: start;
+    gap: 14px;
   }
 
   .rb-auth-hero {
     border-radius: 26px;
-    padding: 22px 18px;
+    padding: 22px 18px 84px;
+  }
+
+  .rb-auth-hero h1 {
+    font-size: clamp(2.35rem, 12vw, 4.4rem);
+  }
+
+  .rb-auth-hero p {
+    font-size: 0.94rem;
+  }
+
+  .rb-auth-avatar-preview {
+    right: 14px;
+    bottom: 8px;
+    transform: scale(0.84);
+    transform-origin: right bottom;
   }
 
   .rb-auth-panel {
     border-radius: 24px;
     padding: 14px;
-  }
-
-  .rb-auth-hero h1 {
-    font-size: clamp(2.3rem, 12vw, 4.4rem);
   }
 
   .rb-auth-tabs button {
@@ -708,5 +765,50 @@ body.rb-orbit-xp-energy .rb-main-launch {
   #upload-status,
   .rb-auth-message {
     font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .rb-auth-hero {
+    padding-bottom: 78px;
+  }
+
+  .rb-auth-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .rb-auth-tabs {
+    gap: 6px;
+  }
+
+  .rb-auth-tabs button {
+    font-size: 0.76rem;
+  }
+}
+
+/* ANIMATIONS */
+
+@keyframes rbAuthAvatarFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-auth-avatar-body {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
   }
 }
