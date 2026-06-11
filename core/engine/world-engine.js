@@ -14,8 +14,8 @@ const ROUTES = {
   feed: "/feed.html",
   live: "/live.html",
   music: "/music.html",
-  podcast: "/podcast.html",
-  radio: "/radio.html",
+  podcast: "/music.html?tab=podcast",
+  radio: "/music.html?tab=radio",
   gaming: "/gaming.html",
   sports: "/sports.html",
   store: "/store.html",
@@ -34,27 +34,27 @@ const ROUTES = {
 
 const WORLD_LAYOUTS = {
   desktop: {
-    gallery: [29, 26],
-    podcast: [14, 38],
-    live: [16, 57],
-    music: [32, 49],
-    meta: [50, 18],
-    gaming: [72, 26],
-    sports: [88, 34],
-    store: [72, 52],
-    upload: [87, 63]
+    gallery: [16.2, 36.4],
+    music: [31.8, 49.4],
+    live: [50, 48.2],
+    gaming: [67.8, 36.6],
+    sports: [84.2, 36.4],
+    store: [24.5, 56.2],
+    upload: [70.8, 56.3],
+    meta: [84.4, 63.8],
+    podcast: [50, 48]
   },
 
   portrait: {
-    gallery: [20, 32],
-    podcast: [42, 37],
-    live: [76, 45],
-    gaming: [38, 66],
-    music: [34, 50],
-    meta: [50, 20],
-    sports: [84, 35],
-    store: [70, 55],
-    upload: [82, 63]
+    gallery: [18.8, 36.7],
+    music: [34, 52.5],
+    live: [50, 50.4],
+    gaming: [68.8, 37.3],
+    sports: [84.4, 36.8],
+    store: [25.5, 56.8],
+    upload: [71, 56.8],
+    meta: [84.2, 64.2],
+    podcast: [50, 49]
   }
 };
 
@@ -86,9 +86,17 @@ function applyWorldLayout() {
 
 function bindRoutes() {
   document.querySelectorAll("[data-route]").forEach((el) => {
-    el.addEventListener("click", () => {
+    if (el.dataset.routeBound === "true") return;
+
+    el.dataset.routeBound = "true";
+
+    el.addEventListener("click", (event) => {
       const key = el.dataset.route;
-      const href = ROUTES[key] || "/";
+      const href = ROUTES[key];
+
+      if (!href) return;
+
+      event.preventDefault();
       window.location.href = href;
     });
   });
@@ -99,8 +107,9 @@ function bootWorldEngine() {
   applyWorldLayout();
 
   window.addEventListener("resize", applyWorldLayout);
+
   window.addEventListener("orientationchange", () => {
-    setTimeout(applyWorldLayout, 120);
+    setTimeout(applyWorldLayout, 160);
   });
 }
 
