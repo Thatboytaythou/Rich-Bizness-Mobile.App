@@ -18,8 +18,6 @@
       --red: #ff3b30;
       --safeTop: env(safe-area-inset-top);
       --safeBottom: env(safe-area-inset-bottom);
-      --worldW: 100vw;
-      --worldH: 100dvh;
       --uiScale: 1;
     }
 
@@ -620,6 +618,7 @@
       left: calc(var(--x, 50) * 1%);
       top: calc(var(--y, 50) * 1%);
       transform: translate(-50%, -50%) scale(var(--uiScale));
+      transform-origin: center;
       border: 1px solid rgba(255,255,255,.15);
       border-radius: 14px;
       background: rgba(0,0,0,.52);
@@ -633,7 +632,6 @@
       box-shadow:
         0 12px 36px rgba(0,0,0,.36),
         0 0 22px rgba(49,255,99,.12);
-      transform-origin: center;
     }
 
     .hotspot strong {
@@ -719,7 +717,7 @@
 
     @media (max-width: 900px) {
       :root {
-        --uiScale: 0.72;
+        --uiScale: 0.68;
       }
 
       .rb-world-art {
@@ -877,7 +875,7 @@
 
     @media (max-width: 430px) {
       :root {
-        --uiScale: 0.68;
+        --uiScale: 0.64;
       }
 
       .rb-title {
@@ -915,9 +913,7 @@
         <span class="rb-stat-pill"><i></i> LIVE NOW <strong>1,248</strong></span>
         <span class="rb-stat-pill red"><i></i> ONLINE <strong>24,893</strong></span>
 
-        <button class="rb-icon" data-route="search" aria-label="Search">
-          🔎
-        </button>
+        <button class="rb-icon" data-route="search" aria-label="Search">🔎</button>
 
         <button class="rb-icon" data-route="notifications" aria-label="Notifications">
           🔔<em>5</em>
@@ -974,17 +970,17 @@
       </div>
     </article>
 
-    <button class="hotspot purple gallery" data-route="gallery" data-world="gallery">
+    <button class="hotspot purple" data-route="gallery" data-world="gallery">
       <strong>GALLERY DISTRICT</strong>
       <span>VISUAL DROPS</span>
     </button>
 
-    <button class="hotspot purple podcast" data-route="podcast" data-world="podcast">
+    <button class="hotspot purple" data-route="podcast" data-world="podcast">
       <strong>PODCAST ARENA</strong>
       <span>REAL CONVERSATIONS</span>
     </button>
 
-    <button class="hotspot red live" data-route="live" data-world="live">
+    <button class="hotspot red" data-route="live" data-world="live">
       <strong>LIVE UNIVERSE</strong>
       <span>BROADCAST SOUND</span>
     </button>
@@ -1063,87 +1059,6 @@
     </div>
   </main>
 
-  <script>
-    const ROUTES = {
-      home: "/",
-      feed: "/feed.html",
-      live: "/live.html",
-      music: "/music.html",
-      podcast: "/podcast.html",
-      radio: "/radio.html",
-      gaming: "/gaming.html",
-      sports: "/sports.html",
-      store: "/store.html",
-      meta: "/meta.html",
-      profile: "/profile.html",
-      messages: "/messages.html",
-      notifications: "/notifications.html",
-      watch: "/watch.html",
-      settings: "/settings.html",
-      creator: "/creator.html",
-      admin: "/admin.html",
-      upload: "/upload.html",
-      gallery: "/gallery.html",
-      search: "/feed.html"
-    };
-
-    const WORLD_LAYOUTS = {
-      desktop: {
-        gallery: [29, 26],
-        podcast: [14, 38],
-        live: [16, 57],
-        music: [32, 49],
-        meta: [50, 18],
-        gaming: [72, 26],
-        sports: [88, 34],
-        store: [72, 52],
-        upload: [87, 63]
-      },
-
-      portrait: {
-        gallery: [20, 32],
-        podcast: [42, 37],
-        live: [76, 45],
-        gaming: [38, 66],
-        music: [34, 50],
-        meta: [50, 20],
-        sports: [84, 35],
-        store: [70, 55],
-        upload: [82, 63]
-      }
-    };
-
-    function applyWorldLayout() {
-      const isPortrait =
-        window.innerWidth <= 900 ||
-        window.matchMedia("(orientation: portrait)").matches;
-
-      const layout = isPortrait ? WORLD_LAYOUTS.portrait : WORLD_LAYOUTS.desktop;
-
-      document.documentElement.style.setProperty("--worldW", `${window.innerWidth}px`);
-      document.documentElement.style.setProperty("--worldH", `${window.innerHeight}px`);
-
-      Object.entries(layout).forEach(([key, point]) => {
-        const el = document.querySelector(`[data-world="${key}"]`);
-        if (!el) return;
-
-        el.style.setProperty("--x", point[0]);
-        el.style.setProperty("--y", point[1]);
-      });
-    }
-
-    document.querySelectorAll("[data-route]").forEach((el) => {
-      el.addEventListener("click", () => {
-        const key = el.dataset.route;
-        const href = ROUTES[key] || "/";
-        window.location.href = href;
-      });
-    });
-
-    window.addEventListener("resize", applyWorldLayout);
-    window.addEventListener("orientationchange", applyWorldLayout);
-
-    applyWorldLayout();
-  </script>
+  <script type="module" src="/core/engine/world-engine.js"></script>
 </body>
 </html>
