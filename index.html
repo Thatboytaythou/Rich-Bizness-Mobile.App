@@ -118,6 +118,40 @@
       pointer-events: none;
     }
 
+    .rb-portal {
+      position: absolute;
+      left: 50%;
+      top: 43%;
+      z-index: 2;
+      width: min(46vw, 430px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      border-radius: 50%;
+      opacity: .82;
+      mix-blend-mode: screen;
+      filter: drop-shadow(0 0 34px rgba(49,255,99,.48));
+      background:
+        radial-gradient(circle, rgba(49,255,99,.46) 0 8%, transparent 9%),
+        radial-gradient(circle, transparent 0 34%, rgba(49,255,99,.9) 35% 37%, transparent 39%),
+        radial-gradient(circle, transparent 0 48%, rgba(247,201,72,.72) 49% 51%, transparent 53%),
+        conic-gradient(from 0deg, transparent, rgba(49,255,99,.85), rgba(247,201,72,.75), transparent);
+      animation: portalSpin 8s linear infinite;
+    }
+
+    .rb-portal-core {
+      position: absolute;
+      inset: 18%;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, rgba(255,255,255,.75) 0 5%, rgba(49,255,99,.55) 6% 18%, transparent 42%),
+        conic-gradient(from 180deg, rgba(247,201,72,.7), rgba(49,255,99,.9), transparent, rgba(247,201,72,.7));
+      box-shadow:
+        0 0 45px rgba(49,255,99,.65),
+        inset 0 0 36px rgba(247,201,72,.35);
+      animation: portalPulse 2.6s ease-in-out infinite;
+    }
+
     .rb-topbar {
       position: absolute;
       top: max(18px, calc(var(--safeTop) + 12px));
@@ -627,74 +661,21 @@
       white-space: nowrap;
     }
 
-    .hotspot[data-world="gallery"] {
-      --x: 16.2;
-      --y: 36.4;
-    }
+    .hotspot[data-world="gallery"] { --x: 16.2; --y: 36.4; }
+    .hotspot[data-world="music"] { --x: 31.8; --y: 46.8; }
+    .hotspot[data-world="live"] { --x: 50; --y: 45.7; }
+    .hotspot[data-world="gaming"] { --x: 67.8; --y: 36.6; }
+    .hotspot[data-world="sports"] { --x: 84.2; --y: 36.4; }
+    .hotspot[data-world="store"] { --x: 24.5; --y: 56.2; }
+    .hotspot[data-world="upload"] { --x: 70.8; --y: 56.3; }
+    .hotspot[data-world="meta"] { --x: 84.4; --y: 63.8; }
+    .hotspot[data-world="podcast"] { display: none; }
 
-    .hotspot[data-world="music"] {
-      --x: 31.8;
-      --y: 46.8;
-    }
-
-    .hotspot[data-world="live"] {
-      --x: 50;
-      --y: 45.7;
-    }
-
-    .hotspot[data-world="gaming"] {
-      --x: 67.8;
-      --y: 36.6;
-    }
-
-    .hotspot[data-world="sports"] {
-      --x: 84.2;
-      --y: 36.4;
-    }
-
-    .hotspot[data-world="store"] {
-      --x: 24.5;
-      --y: 56.2;
-    }
-
-    .hotspot[data-world="upload"] {
-      --x: 70.8;
-      --y: 56.3;
-    }
-
-    .hotspot[data-world="meta"] {
-      --x: 84.4;
-      --y: 63.8;
-    }
-
-    .hotspot[data-world="podcast"] {
-      display: none;
-    }
-
-    .purple {
-      border-color: rgba(192,132,252,.55);
-      box-shadow: 0 0 24px rgba(192,132,252,.18);
-    }
-
-    .blue {
-      border-color: rgba(56,189,248,.55);
-      box-shadow: 0 0 24px rgba(56,189,248,.18);
-    }
-
-    .red {
-      border-color: rgba(255,59,48,.55);
-      box-shadow: 0 0 24px rgba(255,59,48,.18);
-    }
-
-    .orange {
-      border-color: rgba(255,159,26,.58);
-      box-shadow: 0 0 24px rgba(255,159,26,.18);
-    }
-
-    .cyan {
-      border-color: rgba(34,211,238,.55);
-      box-shadow: 0 0 24px rgba(34,211,238,.18);
-    }
+    .purple { border-color: rgba(192,132,252,.55); box-shadow: 0 0 24px rgba(192,132,252,.18); }
+    .blue { border-color: rgba(56,189,248,.55); box-shadow: 0 0 24px rgba(56,189,248,.18); }
+    .red { border-color: rgba(255,59,48,.55); box-shadow: 0 0 24px rgba(255,59,48,.18); }
+    .orange { border-color: rgba(255,159,26,.58); box-shadow: 0 0 24px rgba(255,159,26,.18); }
+    .cyan { border-color: rgba(34,211,238,.55); box-shadow: 0 0 24px rgba(34,211,238,.18); }
 
     .hotspot:hover,
     .rb-bottom button:hover,
@@ -776,26 +757,22 @@
     }
 
     @keyframes wave {
-      0%,
-      100% {
-        transform: scaleY(.45);
-        opacity: .55;
-      }
-
-      50% {
-        transform: scaleY(1);
-        opacity: 1;
-      }
+      0%, 100% { transform: scaleY(.45); opacity: .55; }
+      50% { transform: scaleY(1); opacity: 1; }
     }
 
     @keyframes starDrift {
-      from {
-        transform: translate3d(0, 0, 0);
-      }
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-30px, 18px, 0); }
+    }
 
-      to {
-        transform: translate3d(-30px, 18px, 0);
-      }
+    @keyframes portalSpin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes portalPulse {
+      0%, 100% { transform: scale(.94); opacity: .72; }
+      50% { transform: scale(1.04); opacity: 1; }
     }
 
     @media (max-width: 900px) {
@@ -808,15 +785,19 @@
         background-position: center center;
       }
 
+      .rb-portal {
+        top: 43%;
+        width: 64vw;
+        opacity: .76;
+      }
+
       .rb-topbar {
         left: 14px;
         right: 14px;
         top: max(14px, calc(var(--safeTop) + 8px));
       }
 
-      .rb-brand {
-        gap: 9px;
-      }
+      .rb-brand { gap: 9px; }
 
       .rb-logo {
         width: 46px;
@@ -825,9 +806,7 @@
         font-size: .95rem;
       }
 
-      .rb-brand-copy strong {
-        font-size: .95rem;
-      }
+      .rb-brand-copy strong { font-size: .95rem; }
 
       .rb-brand-copy span {
         margin-top: 5px;
@@ -835,13 +814,9 @@
         letter-spacing: .34em;
       }
 
-      .rb-top-actions {
-        gap: 8px;
-      }
+      .rb-top-actions { gap: 8px; }
 
-      .rb-stat-pill {
-        display: none;
-      }
+      .rb-stat-pill { display: none; }
 
       .rb-icon {
         width: 46px;
@@ -886,9 +861,7 @@
         display: none;
       }
 
-      .rb-stars {
-        opacity: .14;
-      }
+      .rb-stars { opacity: .14; }
 
       .hotspot {
         padding: 4px 7px;
@@ -908,53 +881,17 @@
         letter-spacing: .095em;
       }
 
-      .hotspot[data-world="gallery"] {
-        --x: 18.7;
-        --y: 36.6;
-      }
+      .hotspot[data-world="gallery"] { --x: 18.7; --y: 36.6; }
+      .hotspot[data-world="music"] { --x: 34.2; --y: 49.4; }
+      .hotspot[data-world="live"] { --x: 50; --y: 47.2; }
+      .hotspot[data-world="gaming"] { --x: 69.2; --y: 37.3; }
+      .hotspot[data-world="sports"] { --x: 84.5; --y: 36.8; }
+      .hotspot[data-world="store"] { --x: 25.8; --y: 56.8; }
+      .hotspot[data-world="upload"] { --x: 71.2; --y: 56.8; }
+      .hotspot[data-world="meta"] { --x: 84.2; --y: 64.2; }
+      .hotspot[data-world="podcast"] { display: none; }
 
-      .hotspot[data-world="music"] {
-        --x: 34.2;
-        --y: 49.4;
-      }
-
-      .hotspot[data-world="live"] {
-        --x: 50;
-        --y: 47.2;
-      }
-
-      .hotspot[data-world="gaming"] {
-        --x: 69.2;
-        --y: 37.3;
-      }
-
-      .hotspot[data-world="sports"] {
-        --x: 84.5;
-        --y: 36.8;
-      }
-
-      .hotspot[data-world="store"] {
-        --x: 25.8;
-        --y: 56.8;
-      }
-
-      .hotspot[data-world="upload"] {
-        --x: 71.2;
-        --y: 56.8;
-      }
-
-      .hotspot[data-world="meta"] {
-        --x: 84.2;
-        --y: 64.2;
-      }
-
-      .hotspot[data-world="podcast"] {
-        display: none;
-      }
-
-      .gaming {
-        min-width: auto;
-      }
+      .gaming { min-width: auto; }
 
       .rb-bottom {
         left: 50%;
@@ -971,9 +908,7 @@
         scrollbar-width: none;
       }
 
-      .rb-bottom::-webkit-scrollbar {
-        display: none;
-      }
+      .rb-bottom::-webkit-scrollbar { display: none; }
 
       .rb-bottom button {
         flex: 0 0 54px;
@@ -985,9 +920,7 @@
         scroll-snap-align: start;
       }
 
-      .rb-bottom button b {
-        font-size: 1rem;
-      }
+      .rb-bottom button b { font-size: 1rem; }
     }
 
     @media (max-width: 430px) {
@@ -1009,45 +942,14 @@
         letter-spacing: .115em;
       }
 
-      .hotspot[data-world="gallery"] {
-        --x: 18.8;
-        --y: 36.7;
-      }
-
-      .hotspot[data-world="music"] {
-        --x: 34;
-        --y: 49.5;
-      }
-
-      .hotspot[data-world="live"] {
-        --x: 50;
-        --y: 47.4;
-      }
-
-      .hotspot[data-world="gaming"] {
-        --x: 68.8;
-        --y: 37.3;
-      }
-
-      .hotspot[data-world="sports"] {
-        --x: 84.4;
-        --y: 36.8;
-      }
-
-      .hotspot[data-world="store"] {
-        --x: 25.5;
-        --y: 56.8;
-      }
-
-      .hotspot[data-world="upload"] {
-        --x: 71;
-        --y: 56.8;
-      }
-
-      .hotspot[data-world="meta"] {
-        --x: 84.2;
-        --y: 64.2;
-      }
+      .hotspot[data-world="gallery"] { --x: 18.8; --y: 36.7; }
+      .hotspot[data-world="music"] { --x: 34; --y: 49.5; }
+      .hotspot[data-world="live"] { --x: 50; --y: 47.4; }
+      .hotspot[data-world="gaming"] { --x: 68.8; --y: 37.3; }
+      .hotspot[data-world="sports"] { --x: 84.4; --y: 36.8; }
+      .hotspot[data-world="store"] { --x: 25.5; --y: 56.8; }
+      .hotspot[data-world="upload"] { --x: 71; --y: 56.8; }
+      .hotspot[data-world="meta"] { --x: 84.2; --y: 64.2; }
     }
   </style>
 </head>
@@ -1056,6 +958,10 @@
   <main class="rb-universe" aria-label="Rich Bizness Universe">
     <div class="rb-world-art" aria-hidden="true"></div>
     <div class="rb-stars" aria-hidden="true"></div>
+
+    <div class="rb-portal" aria-hidden="true">
+      <div class="rb-portal-core"></div>
+    </div>
 
     <header class="rb-topbar">
       <a class="rb-brand" href="/">
