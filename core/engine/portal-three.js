@@ -3,18 +3,15 @@
    /core/engine/portal-three.js
 
    Three.js Portal Layer
+   - Smooth cinematic portal
    - Mounts inside #threePortal
-   - Does NOT handle routes
-   - Does NOT move hotspots
-   - Pure visual engine only
+   - Visual only
 ========================= */
 
 (() => {
   const mount = document.getElementById("threePortal");
 
-  if (!mount || !window.THREE) {
-    return;
-  }
+  if (!mount || !window.THREE) return;
 
   const THREE = window.THREE;
 
@@ -25,8 +22,9 @@
   let camera;
   let portalGroup;
   let ringOuter;
-  let ringMid;
+  let ringGold;
   let ringInner;
+  let glowDisc;
   let core;
   let particles;
   let animationId = 0;
@@ -36,18 +34,19 @@
     y: 0
   };
 
-  function getPortalPosition() {
-    const portrait =
+  function isPortraitView() {
+    return (
       window.innerWidth <= 900 ||
-      window.matchMedia("(orientation: portrait)").matches;
-
-    return portrait
-      ? { x: 0, y: -0.18, scale: 0.86 }
-      : { x: 0, y: -0.06, scale: 1.0 };
+      window.matchMedia("(orientation: portrait)").matches
+    );
   }
 
-  function makeRingGeometry(radius, tube, radialSegments = 96, tubularSegments = 14) {
-    return new THREE.TorusGeometry(radius, tube, radialSegments, tubularSegments);
+  function getPortalPosition() {
+    const portrait = isPortraitView();
+
+    return portrait
+      ? { x: 0, y: -0.4, scale: 0.72 }
+      : { x: 0, y: -0.12, scale: 0.92 };
   }
 
   function makeGlowMaterial(color, opacity) {
@@ -56,11 +55,28 @@
       transparent: true,
       opacity,
       blending: THREE.AdditiveBlending,
-      depthWrite: false
+      depthWrite: false,
+      depthTest: false
     });
   }
 
-  function makeSpriteTexture() {
+  function makeRing(radius, tube, color, opacity) {
+    const geometry = new THREE.TorusGeometry(
+      radius,
+      tube,
+      128,
+      256
+    );
+
+    const material = makeGlowMaterial(color, opacity);
+    const mesh = new THREE.Mesh(geometry, material);
+
+    portalGroup.add(mesh);
+
+    return mesh;
+  }
+
+  function makeParticleTexture() {
     const canvas = document.createElement("canvas");
     canvas.width = 96;
     canvas.height = 96;
@@ -69,23 +85,21 @@
     const gradient = ctx.createRadialGradient(48, 48, 0, 48, 48, 48);
 
     gradient.addColorStop(0, "rgba(255,255,255,1)");
-    gradient.addColorStop(0.18, "rgba(49,255,99,.95)");
-    gradient.addColorStop(0.52, "rgba(247,201,72,.38)");
+    gradient.addColorStop(0.22, "rgba(49,255,99,.95)");
+    gradient.addColorStop(0.58, "rgba(247,201,72,.35)");
     gradient.addColorStop(1, "rgba(49,255,99,0)");
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 96, 96);
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    return texture;
+    return new THREE.CanvasTexture(canvas);
   }
 
   function createScene() {
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 100);
-    camera.position.set(0, 0, 6);
+    camera.position.set(0, 0, 7);
 
     renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -93,9 +107,9 @@
       powerPreference: "high-performance"
     });
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height, false);
     renderer.domElement.setAttribute("aria-hidden", "true");
 
     mount.innerHTML = "";
@@ -104,71 +118,79 @@
     portalGroup = new THREE.Group();
     scene.add(portalGroup);
 
-    const outerMat = makeGlowMaterial(0x31ff63, 0.92);
-    const midMat = makeGlowMaterial(0xf7c948, 0.78);
-    const innerMat = makeGlowMaterial(0x9bff9c, 0.88);
-    const coreMat = makeGlowMaterial(0x31ff63, 0.72);
+    ringOuter = makeRing(1.95, 0.012, 0x31ff63, 0.58);
+    ringGold = makeRing(1.35, 0.01, 0xf7c948, 0.36);
+    ringInner = makeRing(0.82, 0.009, 0x9bff9c, 0.42);
 
-    ringOuter = new THREE.Mesh(makeRingGeometry(1.72, 0.035), outerMat);
-    ringMid = new THREE.Mesh(makeRingGeometry(1.28, 0.026), midMat);
-    ringInner = new THREE.Mesh(makeRingGeometry(0.86, 0.022), innerMat);
+    ringOuter.rotation.x = 0.04;
+    ringGold.rotation.x = -0.03;
+    ringInner.rotation.x = 0.02;
 
-    ringOuter.rotation.x = Math.PI * 0.08;
-    ringMid.rotation.x = -Math.PI * 0.09;
-    ringInner.rotation.x = Math.PI * 0.06;
+    const glowGeometry = new THREE.CircleGeometry(1.85, 192);
+    const glowMaterial = makeGlowMaterial(0x31ff63, 0.075);
 
-    portalGroup.add(ringOuter);
-    portalGroup.add(ringMid);
-    portalGroup.add(ringInner);
+    glowDisc = new THREE.Mesh(glowGeometry, glowMaterial);
+    portalGroup.add(glowDisc);
 
-    const coreGeo = new THREE.SphereGeometry(0.26, 48, 48);
-    core = new THREE.Mesh(coreGeo, coreMat);
+    const coreGeometry = new THREE.CircleGeometry(0.22, 128);
+    const coreMaterial = makeGlowMaterial(0x31ff63, 0.36);
+
+    core = new THREE.Mesh(coreGeometry, coreMaterial);
     portalGroup.add(core);
 
-    const particleCount = 260;
+    const particleCount = 420;
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
 
     for (let i = 0; i < particleCount; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 0.45 + Math.random() * 1.85;
-      const z = (Math.random() - 0.5) * 0.8;
+      const radius = 0.45 + Math.random() * 2.2;
+      const z = (Math.random() - 0.5) * 0.35;
 
       positions[i * 3] = Math.cos(angle) * radius;
       positions[i * 3 + 1] = Math.sin(angle) * radius;
       positions[i * 3 + 2] = z;
 
-      const greenBias = Math.random();
+      const gold = Math.random() > 0.78;
 
-      colors[i * 3] = greenBias > 0.35 ? 0.19 : 0.96;
-      colors[i * 3 + 1] = greenBias > 0.35 ? 1.0 : 0.78;
-      colors[i * 3 + 2] = greenBias > 0.35 ? 0.39 : 0.28;
+      colors[i * 3] = gold ? 0.97 : 0.19;
+      colors[i * 3 + 1] = gold ? 0.79 : 1.0;
+      colors[i * 3 + 2] = gold ? 0.28 : 0.39;
     }
 
-    const particleGeo = new THREE.BufferGeometry();
-    particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    particleGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
-    const particleMat = new THREE.PointsMaterial({
-      size: 0.035,
-      map: makeSpriteTexture(),
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.018,
+      map: makeParticleTexture(),
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.62,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
-      depthWrite: false
+      depthWrite: false,
+      depthTest: false
     });
 
-    particles = new THREE.Points(particleGeo, particleMat);
+    particles = new THREE.Points(particleGeometry, particleMaterial);
     portalGroup.add(particles);
 
+    applyLayout();
+  }
+
+  function applyLayout() {
+    if (!portalGroup) return;
+
     const pos = getPortalPosition();
+
     portalGroup.position.set(pos.x, pos.y, 0);
     portalGroup.scale.setScalar(pos.scale);
   }
 
   function resize() {
     const rect = mount.getBoundingClientRect();
+
     width = Math.max(1, rect.width || window.innerWidth || 1);
     height = Math.max(1, rect.height || window.innerHeight || 1);
 
@@ -180,38 +202,37 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(width, height, false);
 
-    const pos = getPortalPosition();
-    portalGroup.position.set(pos.x, pos.y, 0);
-    portalGroup.scale.setScalar(pos.scale);
+    applyLayout();
   }
 
   function animate(time = 0) {
     const t = time * 0.001;
 
-    const pulse = 1 + Math.sin(t * 2.2) * 0.035;
-    const corePulse = 1 + Math.sin(t * 4.2) * 0.18;
+    portalGroup.rotation.x = pointer.y * 0.025;
+    portalGroup.rotation.y = pointer.x * 0.03;
 
-    portalGroup.rotation.x = pointer.y * 0.035;
-    portalGroup.rotation.y = pointer.x * 0.045;
+    ringOuter.rotation.z = t * 0.28;
+    ringGold.rotation.z = -t * 0.4;
+    ringInner.rotation.z = t * 0.62;
 
-    ringOuter.rotation.z = t * 0.36;
-    ringMid.rotation.z = -t * 0.52;
-    ringInner.rotation.z = t * 0.78;
+    ringOuter.scale.setScalar(1 + Math.sin(t * 1.8) * 0.018);
+    ringGold.scale.setScalar(1 + Math.sin(t * 2.4 + 1.2) * 0.022);
+    ringInner.scale.setScalar(1 + Math.cos(t * 2.9) * 0.026);
 
-    ringOuter.scale.setScalar(pulse);
-    ringMid.scale.setScalar(1 + Math.sin(t * 2.8) * 0.045);
-    ringInner.scale.setScalar(1 + Math.cos(t * 3.1) * 0.055);
+    glowDisc.scale.setScalar(1 + Math.sin(t * 1.5) * 0.045);
+    glowDisc.material.opacity = 0.055 + Math.sin(t * 1.7) * 0.018;
 
-    core.scale.setScalar(corePulse);
+    core.scale.setScalar(1 + Math.sin(t * 4.2) * 0.12);
+    core.material.opacity = 0.25 + Math.sin(t * 3.8) * 0.08;
 
-    particles.rotation.z = -t * 0.24;
-    particles.rotation.x = Math.sin(t * 0.6) * 0.12;
+    particles.rotation.z = -t * 0.16;
+    particles.rotation.x = Math.sin(t * 0.55) * 0.06;
 
     renderer.render(scene, camera);
     animationId = requestAnimationFrame(animate);
   }
 
-  function bindMotion() {
+  function bindEvents() {
     window.addEventListener(
       "pointermove",
       (event) => {
@@ -239,7 +260,7 @@
     height = Math.max(1, rect.height || window.innerHeight || 1);
 
     createScene();
-    bindMotion();
+    bindEvents();
     resize();
     animate();
   }
@@ -251,14 +272,12 @@
       renderer.dispose();
     }
 
-    if (mount) {
-      mount.innerHTML = "";
-    }
+    mount.innerHTML = "";
   }
 
   window.RichBiznessPortalThree = {
-    destroy,
-    resize
+    resize,
+    destroy
   };
 
   boot();
