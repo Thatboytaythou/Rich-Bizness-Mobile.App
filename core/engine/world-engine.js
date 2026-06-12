@@ -1,12 +1,6 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/engine/world-engine.js
-
-   Controls:
-   - route clicks
-   - iPhone portrait world coordinates
-   - desktop world coordinates
-   - resize/orientation relayout
 ========================= */
 
 const ROUTES = {
@@ -35,8 +29,8 @@ const ROUTES = {
 const WORLD_LAYOUTS = {
   desktop: {
     gallery: [16.2, 36.4],
-    music: [31.8, 49.4],
-    live: [50, 48.2],
+    music: [31.8, 46.8],
+    live: [50, 45.7],
     gaming: [67.8, 36.6],
     sports: [84.2, 36.4],
     store: [24.5, 56.2],
@@ -47,8 +41,8 @@ const WORLD_LAYOUTS = {
 
   portrait: {
     gallery: [18.8, 36.7],
-    music: [34, 52.5],
-    live: [50, 50.4],
+    music: [34, 49.5],
+    live: [50, 47.4],
     gaming: [68.8, 37.3],
     sports: [84.4, 36.8],
     store: [25.5, 56.8],
