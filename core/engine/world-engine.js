@@ -1,6 +1,12 @@
 /* =========================
    RICH BIZNESS MOBILE
    /core/engine/world-engine.js
+
+   World Engine
+   - Handles route clicks
+   - Handles hotspot positions
+   - Handles resize/orientation layout
+   - Does NOT render Three.js portal
 ========================= */
 
 const ROUTES = {
@@ -10,20 +16,20 @@ const ROUTES = {
   music: "/music.html",
   podcast: "/music.html?tab=podcast",
   radio: "/music.html?tab=radio",
+  gallery: "/gallery.html",
   gaming: "/gaming.html",
   sports: "/sports.html",
   store: "/store.html",
+  upload: "/upload.html",
   meta: "/meta.html",
   profile: "/profile.html",
   messages: "/messages.html",
   notifications: "/notifications.html",
+  search: "/search.html",
   watch: "/watch.html",
   settings: "/settings.html",
   creator: "/creator.html",
-  admin: "/admin.html",
-  upload: "/upload.html",
-  gallery: "/gallery.html",
-  search: "/feed.html"
+  admin: "/admin.html"
 };
 
 const WORLD_LAYOUTS = {
@@ -60,11 +66,14 @@ function isPortraitView() {
 }
 
 function setWorldPoint(key, x, y) {
-  const el = document.querySelector(`[data-world="${key}"]`);
-  if (!el) return;
+  const element = document.querySelector(`[data-world="${key}"]`);
 
-  el.style.setProperty("--x", String(x));
-  el.style.setProperty("--y", String(y));
+  if (!element) {
+    return;
+  }
+
+  element.style.setProperty("--x", String(x));
+  element.style.setProperty("--y", String(y));
 }
 
 function applyWorldLayout() {
@@ -78,33 +87,92 @@ function applyWorldLayout() {
   });
 }
 
+function getRouteHref(routeKey) {
+  if (!routeKey) {
+    return null;
+  }
+
+  return ROUTES[routeKey] || null;
+}
+
+function goToRoute(routeKey) {
+  const href = getRouteHref(routeKey);
+
+  if (!href) {
+    return;
+  }
+
+  window.location.href = href;
+}
+
 function bindRoutes() {
-  document.querySelectorAll("[data-route]").forEach((el) => {
-    if (el.dataset.routeBound === "true") return;
+  document.querySelectorAll("[data-route]").forEach((element) => {
+    if (element.dataset.routeBound === "true") {
+      return;
+    }
 
-    el.dataset.routeBound = "true";
+    element.dataset.routeBound = "true";
 
-    el.addEventListener("click", (event) => {
-      const key = el.dataset.route;
-      const href = ROUTES[key];
+    element.addEventListener("click", (event) => {
+      const routeKey = element.dataset.route;
+      const href = getRouteHref(routeKey);
 
-      if (!href) return;
+      if (!href) {
+        return;
+      }
 
       event.preventDefault();
-      window.location.href = href;
+      goToRoute(routeKey);
+    });
+  });
+}
+
+function bindKeyboardRoutes() {
+  document.querySelectorAll("button[data-route]").forEach((element) => {
+    if (element.dataset.keyboardBound === "true") {
+      return;
+    }
+
+    element.dataset.keyboardBound = "true";
+
+    element.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+
+      const routeKey = element.dataset.route;
+      const href = getRouteHref(routeKey);
+
+      if (!href) {
+        return;
+      }
+
+      event.preventDefault();
+      goToRoute(routeKey);
     });
   });
 }
 
 function bootWorldEngine() {
   bindRoutes();
+  bindKeyboardRoutes();
   applyWorldLayout();
 
-  window.addEventListener("resize", applyWorldLayout);
+  window.addEventListener(
+    "resize",
+    () => {
+      applyWorldLayout();
+    },
+    { passive: true }
+  );
 
-  window.addEventListener("orientationchange", () => {
-    setTimeout(applyWorldLayout, 160);
-  });
+  window.addEventListener(
+    "orientationchange",
+    () => {
+      setTimeout(applyWorldLayout, 180);
+    },
+    { passive: true }
+  );
 }
 
 if (document.readyState === "loading") {
