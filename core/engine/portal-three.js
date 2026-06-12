@@ -111,22 +111,22 @@
     portalGroup = new THREE.Group();
     scene.add(portalGroup);
 
-    ringOuter = makeRing(1.78, 0.006, 0x31ff63, 0.34);
-    ringGold = makeRing(1.18, 0.005, 0xf7c948, 0.22);
-    ringInner = makeRing(0.58, 0.0045, 0x9bff9c, 0.24);
+    ringOuter = makeRing(1.78, 0.0035, 0x31ff63, 0.18);
+    ringGold = makeRing(1.18, 0.003, 0xf7c948, 0.12);
+    ringInner = makeRing(0.58, 0.0025, 0x9bff9c, 0.12);
 
     ringOuter.rotation.x = 0.04;
     ringGold.rotation.x = -0.03;
     ringInner.rotation.x = 0.02;
 
     const glowGeometry = new THREE.CircleGeometry(1.45, 192);
-    const glowMaterial = makeGlowMaterial(0x31ff63, 0.028);
+    const glowMaterial = makeGlowMaterial(0x31ff63, 0.018);
 
     glowDisc = new THREE.Mesh(glowGeometry, glowMaterial);
     portalGroup.add(glowDisc);
 
-    const coreGeometry = new THREE.CircleGeometry(0.11, 128);
-    const coreMaterial = makeGlowMaterial(0x31ff63, 0.18);
+    const coreGeometry = new THREE.CircleGeometry(0.08, 128);
+    const coreMaterial = makeGlowMaterial(0x31ff63, 0.1);
 
     core = new THREE.Mesh(coreGeometry, coreMaterial);
     portalGroup.add(core);
@@ -213,10 +213,10 @@
     ringInner.scale.setScalar(1 + Math.cos(t * 2.6) * 0.018);
 
     glowDisc.scale.setScalar(1 + Math.sin(t * 1.3) * 0.035);
-    glowDisc.material.opacity = 0.022 + Math.sin(t * 1.5) * 0.008;
+    glowDisc.material.opacity = 0.012 + Math.sin(t * 1.5) * 0.004;
 
     core.scale.setScalar(1 + Math.sin(t * 4.2) * 0.1);
-    core.material.opacity = 0.14 + Math.sin(t * 3.8) * 0.04;
+    core.material.opacity = 0.08 + Math.sin(t * 3.8) * 0.025;
 
     particles.rotation.z = -t * 0.12;
     particles.rotation.x = Math.sin(t * 0.5) * 0.035;
