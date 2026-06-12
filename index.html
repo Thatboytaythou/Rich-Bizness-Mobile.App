@@ -634,12 +634,12 @@
 
     .hotspot[data-world="music"] {
       --x: 31.8;
-      --y: 49.4;
+      --y: 46.8;
     }
 
     .hotspot[data-world="live"] {
       --x: 50;
-      --y: 48.2;
+      --y: 45.7;
     }
 
     .hotspot[data-world="gaming"] {
@@ -915,12 +915,12 @@
 
       .hotspot[data-world="music"] {
         --x: 34.2;
-        --y: 52.4;
+        --y: 49.4;
       }
 
       .hotspot[data-world="live"] {
         --x: 50;
-        --y: 50.2;
+        --y: 47.2;
       }
 
       .hotspot[data-world="gaming"] {
@@ -1016,12 +1016,12 @@
 
       .hotspot[data-world="music"] {
         --x: 34;
-        --y: 52.5;
+        --y: 49.5;
       }
 
       .hotspot[data-world="live"] {
         --x: 50;
-        --y: 50.4;
+        --y: 47.4;
       }
 
       .hotspot[data-world="gaming"] {
@@ -1257,6 +1257,34 @@
       }
 
       window.location.href = href;
+    });
+
+    function lockMusicLiveHotspots() {
+      const portrait = window.innerWidth <= 900 || window.matchMedia("(orientation: portrait)").matches;
+
+      const points = portrait
+        ? {
+            music: [34, 49.5],
+            live: [50, 47.4]
+          }
+        : {
+            music: [31.8, 46.8],
+            live: [50, 45.7]
+          };
+
+      Object.entries(points).forEach(([key, point]) => {
+        const el = document.querySelector(`[data-world="${key}"]`);
+        if (!el) return;
+
+        el.style.setProperty("--x", String(point[0]));
+        el.style.setProperty("--y", String(point[1]));
+      });
+    }
+
+    window.addEventListener("load", lockMusicLiveHotspots);
+    window.addEventListener("resize", lockMusicLiveHotspots);
+    window.addEventListener("orientationchange", () => {
+      setTimeout(lockMusicLiveHotspots, 180);
     });
   </script>
 
