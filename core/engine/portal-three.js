@@ -3,7 +3,7 @@
    /core/engine/portal-three.js
 
    Three.js Portal Layer
-   - Smooth cinematic portal
+   - Smooth cinematic energy portal
    - Mounts inside #threePortal
    - Visual only
 ========================= */
@@ -45,8 +45,8 @@
     const portrait = isPortraitView();
 
     return portrait
-      ? { x: 0, y: -0.4, scale: 0.72 }
-      : { x: 0, y: -0.12, scale: 0.92 };
+      ? { x: 0, y: 0.18, scale: 0.52 }
+      : { x: 0, y: 0.05, scale: 0.68 };
   }
 
   function makeGlowMaterial(color, opacity) {
@@ -61,18 +61,11 @@
   }
 
   function makeRing(radius, tube, color, opacity) {
-    const geometry = new THREE.TorusGeometry(
-      radius,
-      tube,
-      128,
-      256
-    );
-
+    const geometry = new THREE.TorusGeometry(radius, tube, 160, 320);
     const material = makeGlowMaterial(color, opacity);
     const mesh = new THREE.Mesh(geometry, material);
 
     portalGroup.add(mesh);
-
     return mesh;
   }
 
@@ -85,8 +78,8 @@
     const gradient = ctx.createRadialGradient(48, 48, 0, 48, 48, 48);
 
     gradient.addColorStop(0, "rgba(255,255,255,1)");
-    gradient.addColorStop(0.22, "rgba(49,255,99,.95)");
-    gradient.addColorStop(0.58, "rgba(247,201,72,.35)");
+    gradient.addColorStop(0.22, "rgba(49,255,99,.85)");
+    gradient.addColorStop(0.58, "rgba(247,201,72,.28)");
     gradient.addColorStop(1, "rgba(49,255,99,0)");
 
     ctx.fillStyle = gradient;
@@ -118,40 +111,40 @@
     portalGroup = new THREE.Group();
     scene.add(portalGroup);
 
-    ringOuter = makeRing(1.95, 0.012, 0x31ff63, 0.58);
-    ringGold = makeRing(1.35, 0.01, 0xf7c948, 0.36);
-    ringInner = makeRing(0.82, 0.009, 0x9bff9c, 0.42);
+    ringOuter = makeRing(1.78, 0.006, 0x31ff63, 0.34);
+    ringGold = makeRing(1.18, 0.005, 0xf7c948, 0.22);
+    ringInner = makeRing(0.58, 0.0045, 0x9bff9c, 0.24);
 
     ringOuter.rotation.x = 0.04;
     ringGold.rotation.x = -0.03;
     ringInner.rotation.x = 0.02;
 
-    const glowGeometry = new THREE.CircleGeometry(1.85, 192);
-    const glowMaterial = makeGlowMaterial(0x31ff63, 0.075);
+    const glowGeometry = new THREE.CircleGeometry(1.45, 192);
+    const glowMaterial = makeGlowMaterial(0x31ff63, 0.028);
 
     glowDisc = new THREE.Mesh(glowGeometry, glowMaterial);
     portalGroup.add(glowDisc);
 
-    const coreGeometry = new THREE.CircleGeometry(0.22, 128);
-    const coreMaterial = makeGlowMaterial(0x31ff63, 0.36);
+    const coreGeometry = new THREE.CircleGeometry(0.11, 128);
+    const coreMaterial = makeGlowMaterial(0x31ff63, 0.18);
 
     core = new THREE.Mesh(coreGeometry, coreMaterial);
     portalGroup.add(core);
 
-    const particleCount = 420;
+    const particleCount = 320;
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
 
     for (let i = 0; i < particleCount; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 0.45 + Math.random() * 2.2;
-      const z = (Math.random() - 0.5) * 0.35;
+      const radius = 0.35 + Math.random() * 1.85;
+      const z = (Math.random() - 0.5) * 0.24;
 
       positions[i * 3] = Math.cos(angle) * radius;
       positions[i * 3 + 1] = Math.sin(angle) * radius;
       positions[i * 3 + 2] = z;
 
-      const gold = Math.random() > 0.78;
+      const gold = Math.random() > 0.82;
 
       colors[i * 3] = gold ? 0.97 : 0.19;
       colors[i * 3 + 1] = gold ? 0.79 : 1.0;
@@ -163,10 +156,10 @@
     particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
     const particleMaterial = new THREE.PointsMaterial({
-      size: 0.018,
+      size: 0.014,
       map: makeParticleTexture(),
       transparent: true,
-      opacity: 0.62,
+      opacity: 0.46,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -208,25 +201,25 @@
   function animate(time = 0) {
     const t = time * 0.001;
 
-    portalGroup.rotation.x = pointer.y * 0.025;
-    portalGroup.rotation.y = pointer.x * 0.03;
+    portalGroup.rotation.x = pointer.y * 0.018;
+    portalGroup.rotation.y = pointer.x * 0.022;
 
-    ringOuter.rotation.z = t * 0.28;
-    ringGold.rotation.z = -t * 0.4;
-    ringInner.rotation.z = t * 0.62;
+    ringOuter.rotation.z = t * 0.22;
+    ringGold.rotation.z = -t * 0.34;
+    ringInner.rotation.z = t * 0.48;
 
-    ringOuter.scale.setScalar(1 + Math.sin(t * 1.8) * 0.018);
-    ringGold.scale.setScalar(1 + Math.sin(t * 2.4 + 1.2) * 0.022);
-    ringInner.scale.setScalar(1 + Math.cos(t * 2.9) * 0.026);
+    ringOuter.scale.setScalar(1 + Math.sin(t * 1.6) * 0.014);
+    ringGold.scale.setScalar(1 + Math.sin(t * 2.1 + 1.2) * 0.016);
+    ringInner.scale.setScalar(1 + Math.cos(t * 2.6) * 0.018);
 
-    glowDisc.scale.setScalar(1 + Math.sin(t * 1.5) * 0.045);
-    glowDisc.material.opacity = 0.055 + Math.sin(t * 1.7) * 0.018;
+    glowDisc.scale.setScalar(1 + Math.sin(t * 1.3) * 0.035);
+    glowDisc.material.opacity = 0.022 + Math.sin(t * 1.5) * 0.008;
 
-    core.scale.setScalar(1 + Math.sin(t * 4.2) * 0.12);
-    core.material.opacity = 0.25 + Math.sin(t * 3.8) * 0.08;
+    core.scale.setScalar(1 + Math.sin(t * 4.2) * 0.1);
+    core.material.opacity = 0.14 + Math.sin(t * 3.8) * 0.04;
 
-    particles.rotation.z = -t * 0.16;
-    particles.rotation.x = Math.sin(t * 0.55) * 0.06;
+    particles.rotation.z = -t * 0.12;
+    particles.rotation.x = Math.sin(t * 0.5) * 0.035;
 
     renderer.render(scene, camera);
     animationId = requestAnimationFrame(animate);
