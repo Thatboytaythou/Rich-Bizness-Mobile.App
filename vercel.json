@@ -69,6 +69,9 @@
     { "source": "/avatar", "destination": "/avatar.html" },
     { "source": "/avatar.html", "destination": "/avatar.html" },
 
+    { "source": "/search", "destination": "/search.html" },
+    { "source": "/search.html", "destination": "/search.html" },
+
     { "source": "/rb-secret-door", "destination": "/secret-door.html" },
     { "source": "/secret-door", "destination": "/secret-door.html" },
     { "source": "/secret-door.html", "destination": "/secret-door.html" },
