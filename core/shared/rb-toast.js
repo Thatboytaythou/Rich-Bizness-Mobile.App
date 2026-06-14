@@ -3,66 +3,19 @@
    /core/shared/rb-toast.js
 
    GLOBAL TOAST / ALERT ENGINE
-   FINAL LOCKED VERSION
+
+   Locked purpose:
+   - Compatibility wrapper around rb-ui.js toast system
+   - rb-ui.js owns the actual toast DOM engine
 ========================= */
 
-let toastRoot = null;
-
-const ACTIVE_TOASTS = new Set();
-const MAX_TOASTS = 5;
-
-/* =========================
-   ESCAPE
-========================= */
-
-function escapeHtml(value = "") {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-/* =========================
-   ROOT
-========================= */
-
-function ensureToastRoot() {
-  if (toastRoot?.isConnected) return toastRoot;
-
-  toastRoot = document.getElementById("rb-toast-root");
-
-  if (toastRoot) return toastRoot;
-
-  toastRoot = document.createElement("div");
-  toastRoot.id = "rb-toast-root";
-  toastRoot.className = "rb-toast-root";
-
-  toastRoot.setAttribute("aria-live", "polite");
-  toastRoot.setAttribute("aria-atomic", "true");
-
-  const mount = document.body || document.documentElement;
-  mount.appendChild(toastRoot);
-
-  return toastRoot;
-}
-
-/* =========================
-   REMOVE EXCESS
-========================= */
-
-function trimToasts() {
-  const active = Array.from(ACTIVE_TOASTS);
-
-  if (active.length <= MAX_TOASTS) return;
-
-  const overflow = active.length - MAX_TOASTS;
-
-  for (let i = 0; i < overflow; i += 1) {
-    active[i]?.close?.();
-  }
-}
+import {
+  toast as uiToast,
+  success as uiSuccess,
+  error as uiError,
+  warning as uiWarning,
+  info as uiInfo
+} from "/core/shared/rb-ui.js";
 
 /* =========================
    MAIN TOAST
@@ -74,85 +27,26 @@ export function toast({
   type = "info",
   duration = 3200
 } = {}) {
-  const root = ensureToastRoot();
-  const item = document.createElement("div");
+  const finalMessage = message || title || "";
 
-  const cleanType = String(type || "info").replace(/[^a-z0-9_-]/gi, "");
-
-  item.className = `rb-toast rb-toast-${cleanType}`;
-  item.setAttribute("data-toast-type", cleanType);
-  item.setAttribute("role", cleanType === "error" ? "alert" : "status");
-
-  item.innerHTML = `
-    <div class="rb-toast-orb" aria-hidden="true"></div>
-
-    <div class="rb-toast-copy">
-      <strong>${escapeHtml(title)}</strong>
-
-      ${
-        message
-          ? `<span>${escapeHtml(message)}</span>`
-          : ""
-      }
-    </div>
-
-    <button
-      class="rb-toast-close"
-      type="button"
-      aria-label="Close"
-    >
-      ×
-    </button>
-  `;
-
-  root.appendChild(item);
-
-  requestAnimationFrame(() => {
-    item.classList.add("is-visible");
+  const node = uiToast(finalMessage, {
+    type,
+    duration,
+    icon:
+      type === "success"
+        ? "✅"
+        : type === "error"
+          ? "❌"
+          : type === "warning"
+            ? "⚠️"
+            : type === "loading"
+              ? "⏳"
+              : "💨"
   });
 
-  let closed = false;
-  let timer = null;
-
-  const api = {
-    element: item,
-    close: () => {}
+  return () => {
+    node?.remove?.();
   };
-
-  const close = () => {
-    if (closed) return;
-
-    closed = true;
-
-    if (timer) {
-      window.clearTimeout(timer);
-      timer = null;
-    }
-
-    ACTIVE_TOASTS.delete(api);
-
-    item.classList.remove("is-visible");
-    item.classList.add("is-leaving");
-
-    window.setTimeout(() => {
-      item.remove();
-    }, 260);
-  };
-
-  api.close = close;
-
-  item
-    .querySelector(".rb-toast-close")
-    ?.addEventListener("click", close);
-
-  if (duration > 0) {
-    timer = window.setTimeout(close, duration);
-  }
-
-  ACTIVE_TOASTS.add(api);
-  trimToasts();
-
-  return close;
 }
 
 /* =========================
@@ -160,39 +54,19 @@ export function toast({
 ========================= */
 
 export function toastSuccess(message, title = "Success") {
-  return toast({
-    title,
-    message,
-    type: "success",
-    duration: 3200
-  });
+  return uiSuccess(message || title);
 }
 
 export function toastError(message, title = "Error") {
-  return toast({
-    title,
-    message,
-    type: "error",
-    duration: 5200
-  });
+  return uiError(message || title);
 }
 
 export function toastInfo(message, title = "Rich Bizness") {
-  return toast({
-    title,
-    message,
-    type: "info",
-    duration: 3200
-  });
+  return uiInfo(message || title);
 }
 
 export function toastWarn(message, title = "Heads up") {
-  return toast({
-    title,
-    message,
-    type: "warning",
-    duration: 4200
-  });
+  return uiWarning(message || title);
 }
 
 export function toastLoading(message = "Loading...", title = "Rich Bizness") {
@@ -209,18 +83,24 @@ export function toastLoading(message = "Loading...", title = "Rich Bizness") {
 ========================= */
 
 export function clearToasts() {
-  Array.from(ACTIVE_TOASTS).forEach((toastRef) => {
-    toastRef.close();
-  });
+  if (typeof document === "undefined") return;
 
-  ACTIVE_TOASTS.clear();
+  document
+    .querySelectorAll("#rb-toast-root .rb-toast")
+    .forEach((node) => node.remove());
 }
 
-window.RBToast = toast;
-window.RBToastSuccess = toastSuccess;
-window.RBToastError = toastError;
-window.RBToastInfo = toastInfo;
-window.RBToastWarn = toastWarn;
-window.RBClearToasts = clearToasts;
+/* =========================
+   GLOBAL COMPAT
+========================= */
+
+if (typeof window !== "undefined") {
+  window.RBToast = toast;
+  window.RBToastSuccess = toastSuccess;
+  window.RBToastError = toastError;
+  window.RBToastInfo = toastInfo;
+  window.RBToastWarn = toastWarn;
+  window.RBClearToasts = clearToasts;
+}
 
 console.log("RB TOAST ENGINE READY");
