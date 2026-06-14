@@ -18,6 +18,10 @@
    - profiles.avatar_url = profile chip image
    - profiles.banner_url = profile banner
    - meta_avatars = 3D/avatar universe row synced from profile
+
+   Source-of-truth rule:
+   - getProfileIdentity() lives here only
+   - rb-profile.js should import identity from here
 ========================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -27,7 +31,8 @@ import {
   RB_AUTH,
   RB_SUPABASE,
   RB_TABLES,
-  RB_BRAND_ASSETS
+  RB_BRAND_ASSETS,
+  RB_UNIVERSE
 } from "/core/shared/rb-config.js";
 
 const DEFAULT_AVATAR =
@@ -48,6 +53,10 @@ const APP_URL =
   window.location.origin;
 
 const AUTH_REDIRECT_URL = `${APP_URL}/auth`;
+
+const LEVEL_STEP =
+  RB_UNIVERSE?.xp?.levelStep ||
+  1000;
 
 export const supabase = createClient(
   RB_SUPABASE.url,
@@ -78,8 +87,14 @@ export const supabase = createClient(
 let currentSession = null;
 let currentUser = null;
 let currentProfile = null;
+let currentLevel = null;
+let currentMetaAvatar = null;
 let authBooted = false;
 let authBooting = null;
+
+/* =========================
+   BASIC HELPERS
+========================= */
 
 function nowIso() {
   return new Date().toISOString();
@@ -99,6 +114,11 @@ function cleanUsername(value = "") {
     .replace(/[^a-z0-9._-]/g, "_")
     .replace(/_+/g, "_")
     .slice(0, 32);
+}
+
+function safeNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.floor(number) : fallback;
 }
 
 function userMetadata(user) {
@@ -152,6 +172,84 @@ function bannerFromUser(user, existingProfile = null) {
   );
 }
 
+function getLevelFromXp(totalXp = 0) {
+  const xp = Math.max(0, safeNumber(totalXp, 0));
+  return Math.max(1, Math.floor(xp / LEVEL_STEP) + 1);
+}
+
+function getXpProgress(totalXp = 0) {
+  const xpTotal = Math.max(0, safeNumber(totalXp, 0));
+  const level = getLevelFromXp(xpTotal);
+  const levelFloor = level <= 1 ? 0 : (level - 1) * LEVEL_STEP;
+  const xpCurrent = Math.max(0, xpTotal - levelFloor);
+
+  return {
+    level,
+    xp_total: xpTotal,
+    xp_current: xpCurrent,
+    xp_next: LEVEL_STEP
+  };
+}
+
+function getLevelNumber(profile = null, levelRow = null) {
+  return safeNumber(
+    levelRow?.level ||
+      profile?.rich_level ||
+      profile?.level,
+    1
+  );
+}
+
+function getXpNumber(profile = null, levelRow = null) {
+  return safeNumber(
+    levelRow?.xp_total ||
+      profile?.rich_points ||
+      profile?.xp ||
+      profile?.xp_total,
+    0
+  );
+}
+
+function getRichPointsNumber(profile = null, levelRow = null) {
+  return safeNumber(
+    levelRow?.rich_points ||
+      profile?.rich_points,
+    0
+  );
+}
+
+function getRankTitle(profile = null, levelRow = null, metaAvatar = null) {
+  return (
+    levelRow?.rank_title ||
+    profile?.rank_title ||
+    metaAvatar?.rank ||
+    profile?.rank ||
+    "Biz Legend"
+  );
+}
+
+function getStarterAvatarConfig(profile) {
+  return {
+    style: "rich_bizness_portal_city",
+    body: "starter",
+    outfit: "black_green_gold",
+    aura: "emerald_gold",
+    movement: {
+      idle: true,
+      walk: true,
+      run: false
+    },
+    unlocked_worlds: ["index"],
+    current_world: "index",
+    profile_avatar_url: profile?.avatar_url || DEFAULT_AVATAR,
+    meta_avatar_url: DEFAULT_META_AVATAR
+  };
+}
+
+/* =========================
+   LOW-LEVEL LOADERS
+========================= */
+
 async function getExistingProfile(userId) {
   if (!userId) return null;
 
@@ -163,6 +261,40 @@ async function getExistingProfile(userId) {
 
   if (error) {
     console.warn("[RB EXISTING PROFILE WARNING]", error.message);
+    return null;
+  }
+
+  return data || null;
+}
+
+async function getExistingLevel(userId) {
+  if (!userId || !RB_TABLES.userLevels) return null;
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.userLevels)
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB EXISTING LEVEL WARNING]", error.message);
+    return null;
+  }
+
+  return data || null;
+}
+
+async function getExistingMetaAvatar(userId) {
+  if (!userId || !RB_TABLES.metaAvatars) return null;
+
+  const { data, error } = await supabase
+    .from(RB_TABLES.metaAvatars)
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[RB EXISTING META AVATAR WARNING]", error.message);
     return null;
   }
 
@@ -191,9 +323,13 @@ async function safeUpsert(table, payload, onConflict = "user_id") {
   }
 }
 
+/* =========================
+   PAYLOAD BUILDERS
+========================= */
+
 function profilePayloadFromUser(user, existingProfile = null) {
   const metadata = userMetadata(user);
-  const now = nowIso();
+  const stamp = nowIso();
 
   return {
     id: user.id,
@@ -219,8 +355,8 @@ function profilePayloadFromUser(user, existingProfile = null) {
       "user",
 
     online_status: "online",
-    last_seen_at: now,
-    updated_at: now,
+    last_seen_at: stamp,
+    updated_at: stamp,
 
     metadata: {
       ...(existingProfile?.metadata || {}),
@@ -234,33 +370,103 @@ function profilePayloadFromUser(user, existingProfile = null) {
   };
 }
 
-function getLevelNumber(profile) {
-  return Number(profile?.rich_level || profile?.level || 1) || 1;
-}
+function userLevelPayload(profile, existingLevel = null) {
+  const stamp = nowIso();
 
-function getXpNumber(profile) {
-  return Number(profile?.rich_points || profile?.xp || profile?.xp_total || 0) || 0;
-}
+  const xpSeed = safeNumber(
+    existingLevel?.xp_total ??
+      profile?.rich_points ??
+      0,
+    0
+  );
 
-function getRankTitle(profile) {
-  return profile?.rank_title || profile?.rank || "Biz Legend";
-}
+  const progress = getXpProgress(xpSeed);
 
-function getStarterAvatarConfig(profile) {
   return {
-    style: "rich_bizness_portal_city",
-    body: "starter",
-    outfit: "black_green_gold",
-    aura: "emerald_gold",
-    movement: {
-      idle: true,
-      walk: true,
-      run: false
+    user_id: profile.id,
+    level: safeNumber(existingLevel?.level, progress.level),
+    xp_total: safeNumber(existingLevel?.xp_total, progress.xp_total),
+    xp_current: safeNumber(existingLevel?.xp_current, progress.xp_current),
+    xp_next: safeNumber(existingLevel?.xp_next, progress.xp_next),
+    rank_title:
+      existingLevel?.rank_title ||
+      profile?.rank_title ||
+      "Biz Legend",
+    rank_style:
+      existingLevel?.rank_style ||
+      "smoke-cloud",
+    rich_points: safeNumber(
+      existingLevel?.rich_points ??
+        profile?.rich_points,
+      0
+    ),
+    coins: safeNumber(existingLevel?.coins, 0),
+    trust_score: safeNumber(existingLevel?.trust_score, 100),
+    metadata: {
+      ...(existingLevel?.metadata || {}),
+      source: "rb-supabase.js",
+      synced_from_profile: true
     },
-    unlocked_worlds: ["index"],
-    current_world: "index",
-    profile_avatar_url: profile?.avatar_url || DEFAULT_AVATAR,
-    meta_avatar_url: DEFAULT_META_AVATAR
+    updated_at: stamp
+  };
+}
+
+function metaAvatarPayload(profile, existingMetaAvatar = null, existingLevel = null) {
+  const stamp = nowIso();
+  const level = getLevelNumber(profile, existingLevel);
+  const xp = getXpNumber(profile, existingLevel);
+  const rankTitle = getRankTitle(profile, existingLevel, existingMetaAvatar);
+  const starterAvatarConfig = getStarterAvatarConfig(profile);
+
+  return {
+    user_id: profile.id,
+    display_name:
+      profile.display_name ||
+      profile.username ||
+      "Rich User",
+
+    avatar_url:
+      existingMetaAvatar?.avatar_url ||
+      profile.avatar_url ||
+      DEFAULT_AVATAR,
+
+    model_url:
+      existingMetaAvatar?.model_url ||
+      DEFAULT_META_AVATAR,
+
+    aura:
+      existingMetaAvatar?.aura ||
+      "emerald_gold",
+
+    rank: rankTitle,
+    level,
+    xp,
+
+    current_world_id:
+      existingMetaAvatar?.current_world_id ||
+      null,
+
+    position:
+      existingMetaAvatar?.position || {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+
+    is_active:
+      existingMetaAvatar?.is_active ?? true,
+
+    metadata: {
+      ...(existingMetaAvatar?.metadata || {}),
+      source: "rb-supabase.js",
+      synced_from_profile: true,
+      index_portal_avatar: true,
+      presence_state: "online",
+      avatar_config:
+        existingMetaAvatar?.metadata?.avatar_config ||
+        starterAvatarConfig,
+      updated_at: stamp
+    }
   };
 }
 
@@ -284,11 +490,21 @@ export function getProfile() {
   return currentProfile;
 }
 
+export function getCurrentLevel() {
+  return currentLevel;
+}
+
+export function getMetaAvatar() {
+  return currentMetaAvatar;
+}
+
 export function getCurrentUserState() {
   return {
     session: currentSession,
     user: currentUser,
     profile: currentProfile,
+    level: currentLevel,
+    metaAvatar: currentMetaAvatar,
     authed: Boolean(currentUser),
     isAuthed: Boolean(currentUser)
   };
@@ -326,18 +542,51 @@ export function getProfileIdentity() {
       currentProfile?.banner_url ||
       DEFAULT_BANNER,
 
+    profile_avatar_url:
+      currentProfile?.avatar_url ||
+      DEFAULT_AVATAR,
+
+    meta_avatar_url:
+      currentMetaAvatar?.avatar_url ||
+      currentProfile?.avatar_url ||
+      DEFAULT_AVATAR,
+
+    meta_model_url:
+      currentMetaAvatar?.model_url ||
+      DEFAULT_META_AVATAR,
+
     role:
       currentProfile?.role ||
       "user",
 
     rich_level:
-      getLevelNumber(currentProfile),
+      getLevelNumber(currentProfile, currentLevel),
 
     rich_points:
-      getXpNumber(currentProfile),
+      getRichPointsNumber(currentProfile, currentLevel),
+
+    xp_total:
+      getXpNumber(currentProfile, currentLevel),
+
+    coins:
+      safeNumber(currentLevel?.coins, 0),
+
+    trust_score:
+      safeNumber(currentLevel?.trust_score, 100),
 
     rank_title:
-      getRankTitle(currentProfile)
+      getRankTitle(currentProfile, currentLevel, currentMetaAvatar),
+
+    avatar_aura:
+      currentMetaAvatar?.aura ||
+      "emerald_gold",
+
+    avatar_rank:
+      currentMetaAvatar?.rank ||
+      getRankTitle(currentProfile, currentLevel, currentMetaAvatar),
+
+    character:
+      currentMetaAvatar || null
   };
 }
 
@@ -380,81 +629,52 @@ export async function ensureProfile(user = currentUser) {
 export async function ensureProfileIdentityRows(profile = currentProfile) {
   if (!profile?.id) return null;
 
-  const now = nowIso();
-  const level = getLevelNumber(profile);
-  const xp = getXpNumber(profile);
-  const rankTitle = getRankTitle(profile);
-  const starterAvatarConfig = getStarterAvatarConfig(profile);
+  const stamp = nowIso();
+
+  const existingLevel = await getExistingLevel(profile.id);
+  const existingMetaAvatar = await getExistingMetaAvatar(profile.id);
 
   const baseIdentity = {
     user_id: profile.id,
     username: profile.username || null,
     display_name: profile.display_name || profile.username || "Rich User",
-    updated_at: now
+    updated_at: stamp
   };
 
   const jobs = [
     {
+      key: "userSettings",
       table: RB_TABLES.userSettings,
       payload: {
         user_id: profile.id,
-        updated_at: now
+        updated_at: stamp
       }
     },
 
     {
+      key: "userLevels",
       table: RB_TABLES.userLevels,
-      payload: {
-        user_id: profile.id,
-        level,
-        xp_total: xp,
-        xp_current: xp,
-        xp_next: Math.max(100, (level + 1) * 100),
-        rank_title: rankTitle,
-        rich_points: profile.rich_points || 0,
-        coins: 0,
-        updated_at: now
-      }
+      payload: userLevelPayload(profile, existingLevel)
     },
 
     {
+      key: "profileThemeSettings",
       table: RB_TABLES.profileThemeSettings,
       payload: {
         user_id: profile.id,
         background_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
+        updated_at: stamp
       }
     },
 
     {
+      key: "metaAvatars",
       table: RB_TABLES.metaAvatars,
-      payload: {
-        user_id: profile.id,
-        display_name: profile.display_name || profile.username || "Rich User",
-        avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        model_url: DEFAULT_META_AVATAR,
-        aura: "emerald_gold",
-        rank: rankTitle,
-        level,
-        xp,
-        position: {
-          x: 0,
-          y: 0,
-          z: 0
-        },
-        is_active: true,
-        metadata: {
-          source: "rb-supabase.js",
-          synced_from_profile: true,
-          index_portal_avatar: true,
-          presence_state: "online",
-          avatar_config: starterAvatarConfig,
-          updated_at: now
-        }
-      }
+      payload: metaAvatarPayload(profile, existingMetaAvatar, existingLevel)
     },
 
     {
+      key: "gamerProfiles",
       table: RB_TABLES.gamerProfiles,
       payload: {
         ...baseIdentity,
@@ -464,6 +684,7 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     },
 
     {
+      key: "sportsProfiles",
       table: RB_TABLES.sportsProfiles,
       payload: {
         ...baseIdentity
@@ -471,6 +692,7 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     },
 
     {
+      key: "storeSellerProfiles",
       table: RB_TABLES.storeSellerProfiles,
       payload: {
         ...baseIdentity,
@@ -480,11 +702,12 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     },
 
     {
+      key: "creatorPageSettings",
       table: RB_TABLES.creatorPageSettings,
       payload: {
         user_id: profile.id,
         hero_background_url: profile.banner_url || DEFAULT_BANNER,
-        updated_at: now
+        updated_at: stamp
       }
     }
   ];
@@ -495,7 +718,36 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
       .map((job) => safeUpsert(job.table, job.payload, "user_id"))
   );
 
-  return results;
+  const resultMap = {};
+  results.forEach((result, index) => {
+    const job = jobs.filter((item) => Boolean(item.table))[index];
+    resultMap[job.key] = result;
+  });
+
+  currentLevel =
+    resultMap.userLevels?.value ||
+    existingLevel ||
+    currentLevel ||
+    null;
+
+  currentMetaAvatar =
+    resultMap.metaAvatars?.value ||
+    existingMetaAvatar ||
+    currentMetaAvatar ||
+    null;
+
+  window.dispatchEvent(
+    new CustomEvent("rb:identity-rows-synced", {
+      detail: {
+        profile,
+        level: currentLevel,
+        metaAvatar: currentMetaAvatar,
+        results: resultMap
+      }
+    })
+  );
+
+  return resultMap;
 }
 
 /* =========================
@@ -526,6 +778,8 @@ export async function bootAuth() {
       await ensureProfile(currentUser);
     } else {
       currentProfile = null;
+      currentLevel = null;
+      currentMetaAvatar = null;
     }
 
     authBooted = true;
@@ -555,6 +809,8 @@ export async function refreshSession() {
     await ensureProfile(currentUser);
   } else {
     currentProfile = null;
+    currentLevel = null;
+    currentMetaAvatar = null;
   }
 
   authBooted = true;
@@ -584,6 +840,9 @@ export async function loadProfile(userId) {
 
   if (currentProfile?.id) {
     await ensureProfileIdentityRows(currentProfile);
+  } else {
+    currentLevel = null;
+    currentMetaAvatar = null;
   }
 
   return currentProfile;
@@ -594,6 +853,8 @@ export async function refreshProfile() {
 
   if (!currentUser?.id) {
     currentProfile = null;
+    currentLevel = null;
+    currentMetaAvatar = null;
     return null;
   }
 
@@ -615,7 +876,8 @@ export async function signUp({ email, password, metadata = {} }) {
         display_name: metadata.display_name || metadata.name || metadata.username,
         avatar_url: metadata.avatar_url || DEFAULT_AVATAR,
         banner_url: metadata.banner_url || DEFAULT_BANNER,
-        starter_avatar: true
+        starter_avatar: true,
+        avatar_source: "auth"
       },
       emailRedirectTo: AUTH_REDIRECT_URL
     }
@@ -670,6 +932,8 @@ export async function signOut() {
   currentSession = null;
   currentUser = null;
   currentProfile = null;
+  currentLevel = null;
+  currentMetaAvatar = null;
   authBooted = false;
   authBooting = null;
 }
@@ -692,6 +956,8 @@ supabase.auth.onAuthStateChange((_event, session) => {
     }, 0);
   } else {
     currentProfile = null;
+    currentLevel = null;
+    currentMetaAvatar = null;
   }
 
   authBooted = true;
