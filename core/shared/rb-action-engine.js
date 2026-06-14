@@ -5,18 +5,19 @@
    GLOBAL ACTION ENGINE
    One event system for XP + money + analytics + notifications
    XP Gauge Bridge Enabled
+
+   Source-of-truth rule:
+   - rb-supabase.js owns identity
+   - rb-action-engine.js routes actions into rb-xp.js
 ========================= */
 
 import { RB_TABLES } from "/core/shared/rb-config.js";
 
 import {
   getUser,
+  getProfileIdentity,
   rbInsert
 } from "/core/shared/rb-supabase.js";
-
-import {
-  getProfileIdentity
-} from "/core/shared/rb-profile.js";
 
 import {
   awardXp
@@ -62,11 +63,13 @@ function safeIdentity() {
 
 function getXpValue(xpResult = null, fallbackXp = 0) {
   const value =
+    xpResult?.progress?.xp_total ??
+    xpResult?.level?.xp_total ??
+    xpResult?.profile?.rich_points ??
+    xpResult?.xp_total ??
     xpResult?.xp ??
     xpResult?.total_xp ??
     xpResult?.new_xp ??
-    xpResult?.profile?.xp ??
-    xpResult?.profile?.rich_points ??
     fallbackXp ??
     0;
 
@@ -75,10 +78,11 @@ function getXpValue(xpResult = null, fallbackXp = 0) {
 
 function getLevelValue(xpResult = null, fallbackLevel = 1) {
   const value =
+    xpResult?.progress?.level ??
+    xpResult?.level?.level ??
+    xpResult?.profile?.rich_level ??
     xpResult?.level ??
     xpResult?.new_level ??
-    xpResult?.profile?.rich_level ??
-    xpResult?.profile?.level ??
     fallbackLevel ??
     1;
 
@@ -87,9 +91,11 @@ function getLevelValue(xpResult = null, fallbackLevel = 1) {
 
 function getRankValue(xpResult = null, fallbackRank = "Member") {
   return (
+    xpResult?.progress?.rank_title ||
+    xpResult?.level?.rank_title ||
+    xpResult?.profile?.rank_title ||
     xpResult?.rank ||
     xpResult?.rank_title ||
-    xpResult?.profile?.rank_title ||
     xpResult?.profile?.rank ||
     fallbackRank ||
     "Member"
