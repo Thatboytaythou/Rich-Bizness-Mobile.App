@@ -234,6 +234,18 @@ function profilePayloadFromUser(user, existingProfile = null) {
   };
 }
 
+function getLevelNumber(profile) {
+  return Number(profile?.rich_level || profile?.level || 1) || 1;
+}
+
+function getXpNumber(profile) {
+  return Number(profile?.rich_points || profile?.xp || profile?.xp_total || 0) || 0;
+}
+
+function getRankTitle(profile) {
+  return profile?.rank_title || profile?.rank || "Biz Legend";
+}
+
 function getStarterAvatarConfig(profile) {
   return {
     style: "rich_bizness_portal_city",
@@ -319,19 +331,13 @@ export function getProfileIdentity() {
       "user",
 
     rich_level:
-      currentProfile?.rich_level ||
-      currentProfile?.level ||
-      1,
+      getLevelNumber(currentProfile),
 
     rich_points:
-      currentProfile?.rich_points ||
-      currentProfile?.xp ||
-      0,
+      getXpNumber(currentProfile),
 
     rank_title:
-      currentProfile?.rank_title ||
-      currentProfile?.rank ||
-      "Biz Legend"
+      getRankTitle(currentProfile)
   };
 }
 
@@ -375,6 +381,10 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
   if (!profile?.id) return null;
 
   const now = nowIso();
+  const level = getLevelNumber(profile);
+  const xp = getXpNumber(profile);
+  const rankTitle = getRankTitle(profile);
+  const starterAvatarConfig = getStarterAvatarConfig(profile);
 
   const baseIdentity = {
     user_id: profile.id,
@@ -382,8 +392,6 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     display_name: profile.display_name || profile.username || "Rich User",
     updated_at: now
   };
-
-  const starterAvatarConfig = getStarterAvatarConfig(profile);
 
   const jobs = [
     {
@@ -398,9 +406,13 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
       table: RB_TABLES.userLevels,
       payload: {
         user_id: profile.id,
-        level: profile.rich_level || profile.level || 1,
-        xp: profile.rich_points || profile.xp || 0,
-        rank_title: profile.rank_title || profile.rank || "Biz Legend",
+        level,
+        xp_total: xp,
+        xp_current: xp,
+        xp_next: Math.max(100, (level + 1) * 100),
+        rank_title: rankTitle,
+        rich_points: profile.rich_points || 0,
+        coins: 0,
         updated_at: now
       }
     },
@@ -417,16 +429,27 @@ export async function ensureProfileIdentityRows(profile = currentProfile) {
     {
       table: RB_TABLES.metaAvatars,
       payload: {
-        ...baseIdentity,
+        user_id: profile.id,
+        display_name: profile.display_name || profile.username || "Rich User",
         avatar_url: profile.avatar_url || DEFAULT_AVATAR,
-        presence_state: "online",
+        model_url: DEFAULT_META_AVATAR,
         aura: "emerald_gold",
-        level: profile.rich_level || profile.level || 1,
-        avatar_config: starterAvatarConfig,
+        rank: rankTitle,
+        level,
+        xp,
+        position: {
+          x: 0,
+          y: 0,
+          z: 0
+        },
+        is_active: true,
         metadata: {
           source: "rb-supabase.js",
           synced_from_profile: true,
-          index_portal_avatar: true
+          index_portal_avatar: true,
+          presence_state: "online",
+          avatar_config: starterAvatarConfig,
+          updated_at: now
         }
       }
     },
