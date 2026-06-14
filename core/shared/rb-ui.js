@@ -10,6 +10,10 @@
    Alerts
    Confirmations
    Status System
+
+   Rule:
+   - UI-only
+   - No auth/profile/Supabase/XP state
 ========================= */
 
 import { RB_VISUALS } from "/core/shared/rb-config.js";
@@ -62,6 +66,17 @@ function ensureRoots() {
   loaderRoot = loaderRoot || getOrCreateRoot("rb-loader-root");
 }
 
+function nextFrame(callback) {
+  if (!hasDOM() || typeof callback !== "function") return;
+
+  if (typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(callback);
+    return;
+  }
+
+  window.setTimeout(callback, 16);
+}
+
 /* =========================
    TOASTS
 ========================= */
@@ -91,16 +106,16 @@ export function toast(
 
   toastRoot.appendChild(node);
 
-  requestAnimationFrame(() => {
+  nextFrame(() => {
     node.classList.add("show", "is-visible");
   });
 
   const timeout = Math.max(800, Number(duration || 3500));
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     node.classList.remove("show", "is-visible");
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       node.remove();
     }, 250);
   }, timeout);
@@ -142,7 +157,7 @@ export function info(message) {
 
 export function showLoader(text = "Loading...") {
   ensureRoots();
-  if (!loaderRoot) return;
+  if (!loaderRoot || !hasDOM()) return;
 
   loaderRoot.innerHTML = `
     <div class="rb-loader-backdrop">
@@ -180,11 +195,11 @@ export function openModal({
   closeOnBackdrop = true
 } = {}) {
   ensureRoots();
-  if (!modalRoot) return null;
+  if (!modalRoot || !hasDOM()) return null;
 
   const safeTitle = unsafeHtml ? title : escapeHtml(title);
   const safeContent = unsafeHtml ? content : escapeHtml(content);
-  const safeFooter = unsafeHtml ? footer : footer;
+  const safeFooter = unsafeHtml ? footer : escapeHtml(footer);
 
   modalRoot.innerHTML = `
     <div class="rb-modal-backdrop" data-rb-modal-backdrop>
@@ -310,7 +325,7 @@ export function openDrawer({
   closeOnBackdrop = true
 } = {}) {
   ensureRoots();
-  if (!drawerRoot) return null;
+  if (!drawerRoot || !hasDOM()) return null;
 
   drawerRoot.innerHTML = `
     <div class="rb-drawer-backdrop" data-rb-drawer-backdrop>
@@ -418,6 +433,8 @@ export function statusBadge(text = "", type = "default") {
 ========================= */
 
 export async function copyText(text = "") {
+  if (!hasDOM()) return false;
+
   const value = String(text || "");
 
   try {
@@ -452,6 +469,8 @@ export async function share({
   text = "",
   url = hasDOM() ? window.location.href : ""
 } = {}) {
+  if (!hasDOM()) return false;
+
   try {
     if (navigator.share) {
       await navigator.share({ title, text, url });
