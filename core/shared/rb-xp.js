@@ -15,6 +15,10 @@
    Rule:
    XP can support future USD/monetization,
    but this file does not directly convert XP to cash.
+
+   Source-of-truth rule:
+   - getProfileIdentity() comes from rb-supabase.js only
+   - rb-profile.js should not own identity state
 ========================= */
 
 import {
@@ -24,14 +28,11 @@ import {
 
 import {
   getUser,
+  getProfileIdentity,
   rbInsert,
   rbUpdate,
   rbSelect
 } from "/core/shared/rb-supabase.js";
-
-import {
-  getProfileIdentity
-} from "/core/shared/rb-profile.js";
 
 const LEVEL_STEP =
   RB_UNIVERSE?.xp?.levelStep ||
@@ -123,6 +124,28 @@ function cleanKey(value = "unknown_event") {
 function safeNumber(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.floor(number) : fallback;
+}
+
+function getStoredXpTotal(row = {}) {
+  const xpTotal = Number(row?.xp_total);
+  if (Number.isFinite(xpTotal)) {
+    return Math.max(0, Math.floor(xpTotal));
+  }
+
+  const legacyXp = Number(row?.xp);
+  if (Number.isFinite(legacyXp)) {
+    return Math.max(0, Math.floor(legacyXp));
+  }
+
+  return 0;
+}
+
+function getStoredRichPoints(row = {}) {
+  return Math.max(0, safeNumber(row?.rich_points, 0));
+}
+
+function getStoredCoins(row = {}) {
+  return Math.max(0, safeNumber(row?.coins, 0));
 }
 
 export function xpRequiredForLevel(level = 1) {
@@ -235,8 +258,8 @@ export async function ensureUserLevel(userId = null) {
         trust_score: 100,
         metadata: {
           source: "rb-xp.js",
-          username: identity.username,
-          display_name: identity.display_name
+          username: identity.username || null,
+          display_name: identity.display_name || null
         },
         created_at: stamp,
         updated_at: stamp
@@ -295,15 +318,9 @@ export async function awardXp({
 
   const levelState = await ensureUserLevel(id);
 
-  const oldXpTotal =
-    safeNumber(levelState?.xp_total, null) ??
-    safeNumber(levelState?.xp, 0);
-
-  const oldRichPoints =
-    safeNumber(levelState?.rich_points, 0);
-
-  const oldCoins =
-    safeNumber(levelState?.coins, 0);
+  const oldXpTotal = getStoredXpTotal(levelState);
+  const oldRichPoints = getStoredRichPoints(levelState);
+  const oldCoins = getStoredCoins(levelState);
 
   const newXpTotal = Math.max(0, oldXpTotal + xpAmount);
   const progress = buildXpProgress(newXpTotal);
@@ -476,15 +493,9 @@ export async function syncProfileXp(userId = null) {
   if (!id) return null;
 
   const levelState = await ensureUserLevel(id);
-
-  const xpTotal =
-    safeNumber(levelState?.xp_total, null) ??
-    safeNumber(levelState?.xp, 0);
-
+  const xpTotal = getStoredXpTotal(levelState);
   const progress = buildXpProgress(xpTotal);
-
-  const richPoints =
-    safeNumber(levelState?.rich_points, 0);
+  const richPoints = getStoredRichPoints(levelState);
 
   try {
     const rows = await rbUpdate({
@@ -512,11 +523,7 @@ export async function getXpSummary(userId = null) {
   if (!id) return null;
 
   const levelState = await ensureUserLevel(id);
-
-  const xpTotal =
-    safeNumber(levelState?.xp_total, null) ??
-    safeNumber(levelState?.xp, 0);
-
+  const xpTotal = getStoredXpTotal(levelState);
   const progress = buildXpProgress(xpTotal);
 
   return {
@@ -528,8 +535,8 @@ export async function getXpSummary(userId = null) {
     xp_percent: progress.xp_percent,
     xp_to_next: progress.xp_to_next,
     rank_title: levelState?.rank_title || progress.rank_title || DEFAULT_RANK,
-    rich_points: safeNumber(levelState?.rich_points, 0),
-    coins: safeNumber(levelState?.coins, 0),
+    rich_points: getStoredRichPoints(levelState),
+    coins: getStoredCoins(levelState),
     trust_score: safeNumber(levelState?.trust_score, 100)
   };
 }
