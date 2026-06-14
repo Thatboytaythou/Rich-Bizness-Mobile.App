@@ -3,109 +3,83 @@
    /core/engine/world-engine.js
 
    World Engine
-   - Handles route clicks
-   - Handles hotspot positions
-   - Handles resize/orientation layout
+   - Handles route clicks only
+   - Does NOT force hotspot positions
+   - Does NOT fight portrait-fit CSS
    - Does NOT render Three.js portal
 ========================= */
 
 const ROUTES = {
-  home: "/",
-  feed: "/feed.html",
-  live: "/live.html",
-  music: "/music.html",
-  podcast: "/music.html?tab=podcast",
-  radio: "/music.html?tab=radio",
-  gallery: "/gallery.html",
-  gaming: "/gaming.html",
-  sports: "/sports.html",
-  store: "/store.html",
-  upload: "/upload.html",
-  meta: "/meta.html",
-  profile: "/profile.html",
-  messages: "/messages.html",
-  notifications: "/notifications.html",
-  search: "/search.html",
-  watch: "/watch.html",
-  settings: "/settings.html",
-  creator: "/creator.html",
-  admin: "/admin.html"
+  home: "./index.html",
+  portal: "./index.html",
+  index: "./index.html",
+
+  auth: "./auth.html",
+  login: "./auth.html",
+  signup: "./auth.html",
+
+  feed: "./feed.html",
+  live: "./live.html",
+  music: "./music.html",
+  podcast: "./music.html?tab=podcast",
+  radio: "./music.html?tab=radio",
+  gallery: "./gallery.html",
+  gaming: "./gaming.html",
+  sports: "./sports.html",
+  store: "./store.html",
+  upload: "./upload.html",
+  meta: "./meta.html",
+  profile: "./profile.html",
+  messages: "./messages.html",
+  notifications: "./notifications.html",
+  search: "./feed.html",
+  watch: "./watch.html",
+  settings: "./settings.html",
+  creator: "./creator.html",
+  admin: "./admin.html"
 };
 
-const WORLD_LAYOUTS = {
-  desktop: {
-    gallery: [16.2, 36.4],
-    music: [31.8, 46.8],
-    live: [50, 45.7],
-    gaming: [67.8, 36.6],
-    sports: [84.2, 36.4],
-    store: [24.5, 56.2],
-    upload: [70.8, 56.3],
-    meta: [84.4, 63.8],
-    podcast: [50, 48]
-  },
+let worldEngineBooted = false;
 
-  portrait: {
-    gallery: [18.8, 36.7],
-    music: [34, 49.5],
-    live: [50, 47.4],
-    gaming: [68.8, 37.3],
-    sports: [84.4, 36.8],
-    store: [25.5, 56.8],
-    upload: [71, 56.8],
-    meta: [84.2, 64.2],
-    podcast: [50, 49]
-  }
-};
+function hasDOM() {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
 
-function isPortraitView() {
+function shouldIgnoreRoute(raw = "") {
   return (
-    window.innerWidth <= 900 ||
-    window.matchMedia("(orientation: portrait)").matches
+    raw.startsWith("http://") ||
+    raw.startsWith("https://") ||
+    raw.startsWith("mailto:") ||
+    raw.startsWith("tel:") ||
+    raw.startsWith("sms:") ||
+    raw.startsWith("#")
   );
 }
 
-function setWorldPoint(key, x, y) {
-  const element = document.querySelector(`[data-world="${key}"]`);
-
-  if (!element) {
-    return;
-  }
-
-  element.style.setProperty("--x", String(x));
-  element.style.setProperty("--y", String(y));
-}
-
-function applyWorldLayout() {
-  const portrait = isPortraitView();
-  const layout = portrait ? WORLD_LAYOUTS.portrait : WORLD_LAYOUTS.desktop;
-
-  document.body.dataset.worldMode = portrait ? "portrait" : "desktop";
-
-  Object.entries(layout).forEach(([key, point]) => {
-    setWorldPoint(key, point[0], point[1]);
-  });
-}
-
 function getRouteHref(routeKey) {
-  if (!routeKey) {
-    return null;
+  const raw = String(routeKey || "").trim();
+
+  if (!raw) return null;
+
+  if (shouldIgnoreRoute(raw)) {
+    return raw;
   }
 
-  return ROUTES[routeKey] || null;
+  return ROUTES[raw] || raw;
 }
 
 function goToRoute(routeKey) {
   const href = getRouteHref(routeKey);
 
-  if (!href) {
-    return;
-  }
+  if (!href) return false;
 
   window.location.href = href;
+  return true;
 }
 
 function bindRoutes() {
+  if (!hasDOM()) return;
+
   document.querySelectorAll("[data-route]").forEach((element) => {
     if (element.dataset.routeBound === "true") {
       return;
@@ -117,9 +91,7 @@ function bindRoutes() {
       const routeKey = element.dataset.route;
       const href = getRouteHref(routeKey);
 
-      if (!href) {
-        return;
-      }
+      if (!href) return;
 
       event.preventDefault();
       goToRoute(routeKey);
@@ -128,6 +100,8 @@ function bindRoutes() {
 }
 
 function bindKeyboardRoutes() {
+  if (!hasDOM()) return;
+
   document.querySelectorAll("button[data-route]").forEach((element) => {
     if (element.dataset.keyboardBound === "true") {
       return;
@@ -143,9 +117,7 @@ function bindKeyboardRoutes() {
       const routeKey = element.dataset.route;
       const href = getRouteHref(routeKey);
 
-      if (!href) {
-        return;
-      }
+      if (!href) return;
 
       event.preventDefault();
       goToRoute(routeKey);
@@ -153,15 +125,30 @@ function bindKeyboardRoutes() {
   });
 }
 
+function setWorldMode() {
+  if (!hasDOM()) return;
+
+  const portrait =
+    window.innerWidth <= 900 ||
+    window.matchMedia("(orientation: portrait)").matches;
+
+  document.body.dataset.worldMode = portrait ? "portrait" : "desktop";
+}
+
 function bootWorldEngine() {
+  if (!hasDOM()) return;
+  if (worldEngineBooted) return;
+
+  worldEngineBooted = true;
+
   bindRoutes();
   bindKeyboardRoutes();
-  applyWorldLayout();
+  setWorldMode();
 
   window.addEventListener(
     "resize",
     () => {
-      applyWorldLayout();
+      setWorldMode();
     },
     { passive: true }
   );
@@ -169,14 +156,18 @@ function bootWorldEngine() {
   window.addEventListener(
     "orientationchange",
     () => {
-      setTimeout(applyWorldLayout, 180);
+      window.setTimeout(setWorldMode, 180);
     },
     { passive: true }
   );
+
+  console.log("RB WORLD ENGINE READY");
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootWorldEngine);
-} else {
-  bootWorldEngine();
+if (hasDOM()) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootWorldEngine);
+  } else {
+    bootWorldEngine();
+  }
 }
