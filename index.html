@@ -757,8 +757,8 @@
       }
 
       .rb-world-art {
-        background-size: auto 100dvh;
-        background-position: center center;
+        background-size: contain;
+        background-position: center top;
       }
 
       .rb-topbar {
@@ -893,6 +893,180 @@
       .rb-bottom button b { font-size: 1rem; }
     }
 
+    @media (max-width: 900px) and (orientation: portrait) {
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        position: fixed;
+        inset: 0;
+      }
+
+      .rb-universe {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100dvh;
+        overflow: hidden;
+      }
+
+      .rb-world-art {
+        inset: 0;
+        background-size: contain;
+        background-position: center top;
+        background-repeat: no-repeat;
+        transform: none;
+      }
+
+      .rb-world-art::before {
+        background:
+          linear-gradient(
+            180deg,
+            rgba(0,0,0,.08) 0%,
+            rgba(0,0,0,.02) 18%,
+            rgba(0,0,0,.03) 66%,
+            rgba(0,0,0,.62) 100%
+          ),
+          linear-gradient(
+            90deg,
+            rgba(0,0,0,.45),
+            transparent 16%,
+            transparent 84%,
+            rgba(0,0,0,.45)
+          );
+      }
+
+      .rb-three-portal {
+        display: none;
+      }
+
+      .rb-stars {
+        opacity: .08;
+      }
+
+      .rb-topbar {
+        left: 12px;
+        right: 12px;
+        top: max(12px, calc(var(--safeTop) + 8px));
+        gap: 8px;
+      }
+
+      .rb-brand-copy strong {
+        font-size: .92rem;
+        letter-spacing: .06em;
+      }
+
+      .rb-brand-copy span {
+        font-size: .5rem;
+        letter-spacing: .32em;
+      }
+
+      .rb-logo {
+        width: 43px;
+        height: 43px;
+        border-radius: 13px;
+        font-size: .9rem;
+      }
+
+      .rb-top-actions {
+        gap: 7px;
+      }
+
+      .rb-icon {
+        width: 43px;
+        height: 43px;
+        font-size: .95rem;
+      }
+
+      .rb-avatar-chip {
+        width: 45px;
+        height: 45px;
+      }
+
+      .rb-title {
+        top: max(104px, calc(var(--safeTop) + 92px));
+        width: calc(100vw - 28px);
+      }
+
+      .rb-title h1 {
+        font-size: clamp(2rem, 10.5vw, 3.15rem);
+        line-height: .83;
+        letter-spacing: -.06em;
+      }
+
+      .rb-title p {
+        margin-top: 8px;
+        font-size: .46rem;
+        letter-spacing: .105em;
+      }
+
+      .hotspot {
+        z-index: 26;
+        padding: 4px 7px;
+        border-radius: 10px;
+        transform: translate(-50%, -50%) scale(.62);
+        background: rgba(0,0,0,.50);
+      }
+
+      .hotspot:hover {
+        transform: translate(-50%, -54%) scale(.62);
+      }
+
+      .hotspot strong {
+        font-size: .36rem;
+        letter-spacing: .1em;
+      }
+
+      .hotspot span {
+        font-size: .27rem;
+        letter-spacing: .08em;
+      }
+
+      .hotspot[data-world="gallery"] { --x: 19.2; --y: 37.1; }
+      .hotspot[data-world="music"] { --x: 34.2; --y: 49.4; }
+      .hotspot[data-world="live"] { --x: 50; --y: 47.6; }
+      .hotspot[data-world="gaming"] { --x: 68.4; --y: 38.1; }
+      .hotspot[data-world="sports"] { --x: 83.8; --y: 37.3; }
+      .hotspot[data-world="store"] { --x: 25.5; --y: 57.2; }
+      .hotspot[data-world="upload"] { --x: 70.8; --y: 57.3; }
+      .hotspot[data-world="meta"] { --x: 83.2; --y: 64.4; }
+
+      .rb-bottom {
+        left: 12px;
+        right: 12px;
+        bottom: max(12px, calc(var(--safeBottom) + 10px));
+        transform: none;
+        width: auto;
+        height: 66px;
+        padding: 6px;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 4px;
+        overflow: hidden;
+      }
+
+      .rb-bottom button {
+        width: auto;
+        min-width: 0;
+        height: 54px;
+        flex: unset;
+        font-size: .43rem;
+        border-radius: 13px;
+      }
+
+      .rb-bottom button b {
+        font-size: .92rem;
+      }
+
+      .rb-bottom button:nth-child(n + 9) {
+        display: none;
+      }
+    }
+
     @media (max-width: 430px) {
       :root {
         --uiScale: 0.68;
@@ -920,6 +1094,29 @@
       .hotspot[data-world="store"] { --x: 25.5; --y: 56.8; }
       .hotspot[data-world="upload"] { --x: 71; --y: 56.8; }
       .hotspot[data-world="meta"] { --x: 84.2; --y: 64.2; }
+    }
+
+    @media (max-width: 430px) and (orientation: portrait) {
+      .rb-world-art {
+        background-size: contain;
+        background-position: center top;
+      }
+
+      .rb-title {
+        top: max(104px, calc(var(--safeTop) + 92px));
+      }
+
+      .hotspot {
+        transform: translate(-50%, -50%) scale(.58);
+      }
+
+      .hotspot:hover {
+        transform: translate(-50%, -54%) scale(.58);
+      }
+
+      .rb-bottom {
+        grid-template-columns: repeat(8, 1fr);
+      }
     }
   </style>
 </head>
