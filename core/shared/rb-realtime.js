@@ -6,6 +6,12 @@
    Synced To rb-config.js
    Table Channels + Presence + Broadcast
    Uses locked rb-supabase.js client only
+
+   Rule:
+   - Realtime subscribes + dispatches only
+   - No XP writes here
+   - No profile writes here
+   - No duplicate identity state here
 ========================= */
 
 import {
@@ -55,12 +61,32 @@ export function isRealtimeEnabled() {
 }
 
 export function isRealtimeTable(table) {
+  if (!table) return false;
   if (!RB_REALTIME?.tables?.length) return true;
+
   return RB_REALTIME.tables.includes(table);
 }
 
 function safeStatusLog(type, key, status) {
   console.log(`[RB ${type}] ${key}: ${status}`);
+}
+
+function safeRandomId(prefix = "guest") {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function dispatchRealtimeEvent(name, detail = {}) {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent(name, {
+      detail
+    })
+  );
 }
 
 function buildPostgresConfig({
@@ -80,6 +106,14 @@ function buildPostgresConfig({
   }
 
   return config;
+}
+
+function assertTable(table, label = "realtime table") {
+  if (!table) {
+    throw new Error(`Missing ${label}.`);
+  }
+
+  return table;
 }
 
 /* =========================
@@ -122,6 +156,14 @@ export function subscribeToTable({
     }),
     (payload) => {
       try {
+        dispatchRealtimeEvent("rb:realtime-change", {
+          key,
+          table,
+          event,
+          filter,
+          payload
+        });
+
         onChange(payload);
       } catch (error) {
         console.warn(`[RB REALTIME HANDLER ERROR: ${key}]`, error);
@@ -131,6 +173,12 @@ export function subscribeToTable({
 
   channel.subscribe((status) => {
     safeStatusLog("REALTIME", key, status);
+
+    dispatchRealtimeEvent("rb:realtime-status", {
+      key,
+      table,
+      status
+    });
 
     if (typeof onStatus === "function") {
       onStatus(status);
@@ -199,7 +247,7 @@ export function subscribeToStream({
 }) {
   return subscribeToTableById({
     key: rbChannelName("live-stream", streamId),
-    table: RB_TABLES.liveStreams,
+    table: assertTable(RB_TABLES.liveStreams, "live streams table"),
     id: streamId,
     onChange,
     onStatus
@@ -213,7 +261,7 @@ export function subscribeToLiveChat({
 }) {
   return subscribeToTable({
     key: rbChannelName("live-chat", streamId),
-    table: RB_TABLES.liveChatMessages,
+    table: assertTable(RB_TABLES.liveChatMessages, "live chat messages table"),
     event: "*",
     filter: `stream_id=eq.${streamId}`,
     onChange,
@@ -228,7 +276,7 @@ export function subscribeToLiveReactions({
 }) {
   return subscribeToTable({
     key: rbChannelName("live-reactions", streamId),
-    table: RB_TABLES.liveReactions,
+    table: assertTable(RB_TABLES.liveReactions, "live reactions table"),
     event: "INSERT",
     filter: `stream_id=eq.${streamId}`,
     onChange,
@@ -243,7 +291,7 @@ export function subscribeToLiveTips({
 }) {
   return subscribeToTable({
     key: rbChannelName("live-tips", streamId),
-    table: RB_TABLES.liveTips,
+    table: assertTable(RB_TABLES.liveTips, "live tips table"),
     event: "*",
     filter: `stream_id=eq.${streamId}`,
     onChange,
@@ -258,7 +306,7 @@ export function subscribeToMessagesThread({
 }) {
   return subscribeToTable({
     key: rbChannelName("dm-thread", threadId),
-    table: RB_TABLES.dmMessages,
+    table: assertTable(RB_TABLES.dmMessages, "dm messages table"),
     event: "*",
     filter: `thread_id=eq.${threadId}`,
     onChange,
@@ -271,10 +319,13 @@ export function subscribeToNotifications({
   onChange,
   onStatus = null
 }) {
+  const activeUserId = userId || getUser()?.id;
+  const table = RB_TABLES.richNotifications || RB_TABLES.notifications;
+
   return subscribeToUserRows({
-    key: rbChannelName("notifications", userId || getUser()?.id),
-    table: RB_TABLES.richNotifications || RB_TABLES.notifications,
-    userId,
+    key: rbChannelName("notifications", activeUserId),
+    table: assertTable(table, "notifications table"),
+    userId: activeUserId,
     userColumn: "user_id",
     event: "*",
     onChange,
@@ -283,13 +334,15 @@ export function subscribeToNotifications({
 }
 
 export function subscribeToFeed({
+  section = null,
   onChange,
   onStatus = null
 }) {
   return subscribeToTable({
-    key: rbChannelName("feed-posts"),
-    table: RB_TABLES.feedPosts,
+    key: rbChannelName("feed-posts", section || "all"),
+    table: assertTable(RB_TABLES.feedPosts, "feed posts table"),
     event: "*",
+    filter: section ? `section=eq.${section}` : null,
     onChange,
     onStatus
   });
@@ -308,8 +361,40 @@ export function subscribeToProfile({
 
   return subscribeToTableById({
     key: rbChannelName("profile", activeUserId),
-    table: RB_TABLES.profiles,
+    table: assertTable(RB_TABLES.profiles, "profiles table"),
     id: activeUserId,
+    onChange,
+    onStatus
+  });
+}
+
+export function subscribeToUserLevel({
+  userId = null,
+  onChange,
+  onStatus = null
+}) {
+  return subscribeToUserRows({
+    key: rbChannelName("user-level", userId || getUser()?.id),
+    table: assertTable(RB_TABLES.userLevels, "user levels table"),
+    userId,
+    userColumn: "user_id",
+    event: "*",
+    onChange,
+    onStatus
+  });
+}
+
+export function subscribeToMetaAvatar({
+  userId = null,
+  onChange,
+  onStatus = null
+}) {
+  return subscribeToUserRows({
+    key: rbChannelName("meta-avatar", userId || getUser()?.id),
+    table: assertTable(RB_TABLES.metaAvatars, "meta avatars table"),
+    userId,
+    userColumn: "user_id",
+    event: "*",
     onChange,
     onStatus
   });
@@ -322,7 +407,7 @@ export function subscribeToUploads({
 }) {
   return subscribeToUserRows({
     key: rbChannelName("uploads", userId || getUser()?.id),
-    table: RB_TABLES.uploads,
+    table: assertTable(RB_TABLES.uploads, "uploads table"),
     userId,
     userColumn: "user_id",
     event: "*",
@@ -353,8 +438,7 @@ export function subscribeToPresence({
 
   const presenceKey =
     activeUser?.id ||
-    globalThis.crypto?.randomUUID?.() ||
-    `guest-${Date.now()}`;
+    safeRandomId("guest");
 
   const channel = supabase.channel(key, {
     config: {
@@ -367,25 +451,47 @@ export function subscribeToPresence({
   channel.on("presence", { event: "sync" }, () => {
     const state = channel.presenceState();
 
+    dispatchRealtimeEvent("rb:presence-sync", {
+      key,
+      state
+    });
+
     if (typeof onSync === "function") {
       onSync(state);
     }
   });
 
-  channel.on("presence", { event: "join" }, ({ key, newPresences }) => {
+  channel.on("presence", { event: "join" }, ({ key: joinedKey, newPresences }) => {
+    dispatchRealtimeEvent("rb:presence-join", {
+      key,
+      joinedKey,
+      newPresences
+    });
+
     if (typeof onJoin === "function") {
-      onJoin({ key, newPresences });
+      onJoin({ key: joinedKey, newPresences });
     }
   });
 
-  channel.on("presence", { event: "leave" }, ({ key, leftPresences }) => {
+  channel.on("presence", { event: "leave" }, ({ key: leftKey, leftPresences }) => {
+    dispatchRealtimeEvent("rb:presence-leave", {
+      key,
+      leftKey,
+      leftPresences
+    });
+
     if (typeof onLeave === "function") {
-      onLeave({ key, leftPresences });
+      onLeave({ key: leftKey, leftPresences });
     }
   });
 
   channel.subscribe(async (status) => {
     safeStatusLog("PRESENCE", key, status);
+
+    dispatchRealtimeEvent("rb:presence-status", {
+      key,
+      status
+    });
 
     if (typeof onStatus === "function") {
       onStatus(status);
@@ -429,6 +535,12 @@ export function subscribeToBroadcast({
 
   channel.on("broadcast", { event }, (payload) => {
     try {
+      dispatchRealtimeEvent("rb:broadcast-message", {
+        key,
+        event,
+        payload
+      });
+
       onMessage(payload);
     } catch (error) {
       console.warn(`[RB BROADCAST HANDLER ERROR: ${key}]`, error);
@@ -437,6 +549,12 @@ export function subscribeToBroadcast({
 
   channel.subscribe((status) => {
     safeStatusLog("BROADCAST", key, status);
+
+    dispatchRealtimeEvent("rb:broadcast-status", {
+      key,
+      event,
+      status
+    });
 
     if (typeof onStatus === "function") {
       onStatus(status);
@@ -498,22 +616,40 @@ export async function unsubscribeAllChannels() {
   activeChannels.clear();
 }
 
-window.RBRealtime = {
-  rbChannelName,
-  getActiveRealtimeChannels,
-  hasActiveChannel,
-  subscribeToTable,
-  subscribeToTableById,
-  subscribeToUserRows,
-  subscribeToPresence,
-  subscribeToBroadcast,
-  sendBroadcast,
-  unsubscribeChannel,
-  unsubscribeAllChannels
-};
+/* =========================
+   GLOBAL DEBUG HOOK
+========================= */
 
-window.addEventListener("beforeunload", () => {
-  unsubscribeAllChannels();
-});
+if (typeof window !== "undefined") {
+  window.RBRealtime = {
+    rbChannelName,
+    getActiveRealtimeChannels,
+    getActiveRealtimeChannel,
+    hasActiveChannel,
+    subscribeToTable,
+    subscribeToTableById,
+    subscribeToUserRows,
+    subscribeToStream,
+    subscribeToLiveChat,
+    subscribeToLiveReactions,
+    subscribeToLiveTips,
+    subscribeToMessagesThread,
+    subscribeToNotifications,
+    subscribeToFeed,
+    subscribeToProfile,
+    subscribeToUserLevel,
+    subscribeToMetaAvatar,
+    subscribeToUploads,
+    subscribeToPresence,
+    subscribeToBroadcast,
+    sendBroadcast,
+    unsubscribeChannel,
+    unsubscribeAllChannels
+  };
+
+  window.addEventListener("beforeunload", () => {
+    unsubscribeAllChannels();
+  });
+}
 
 console.log("RB REALTIME READY");
