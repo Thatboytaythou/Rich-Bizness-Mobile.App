@@ -5,12 +5,20 @@
    SECTION STATE ENGINE
    Shared active-section controller
    Synced to rb-config routes/modules
+
+   Source-of-truth rule:
+   - rb-router.js owns path normalization
+   - rb-section-state.js owns active section state only
 ========================= */
 
 import {
   RB_MODULES,
   RB_ROUTES
 } from "/core/shared/rb-config.js";
+
+import {
+  normalizePath
+} from "/core/shared/rb-router.js";
 
 const FALLBACK_SECTION_MAP = {
   feed: {
@@ -174,24 +182,17 @@ const FALLBACK_SECTION_MAP = {
   }
 };
 
+function isBrowser() {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
 function normalizeSectionKey(key = "") {
   return String(key || "")
     .trim()
-    .replace("/", "")
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "")
     .replace(".html", "")
     .toLowerCase();
-}
-
-function normalizePath(path = "") {
-  if (!path) return "/";
-
-  return (
-    String(path)
-      .replace(window.location.origin, "")
-      .replace(/\/index\.html$/, "/")
-      .replace(/\.html$/, "")
-      .replace(/\/$/, "") || "/"
-  );
 }
 
 function moduleToSection(module = {}) {
@@ -235,9 +236,7 @@ const SECTION_MAP = {
   )
 };
 
-let activeSectionKey =
-  getSectionKeyByPath(window.location.pathname) ||
-  "live";
+let activeSectionKey = "live";
 
 const listeners = new Set();
 
@@ -260,8 +259,12 @@ export function getSectionByRoute(route = "") {
   );
 }
 
-export function getSectionKeyByPath(path = window.location.pathname) {
-  return getSectionByRoute(path)?.key || null;
+export function getSectionKeyByPath(path = null) {
+  if (!path && isBrowser()) {
+    path = window.location.pathname;
+  }
+
+  return getSectionByRoute(path || "/")?.key || null;
 }
 
 export function getActiveSection() {
@@ -273,13 +276,24 @@ export function getActiveSectionKey() {
 }
 
 export function setActiveSection(key = "live", options = {}) {
+  const previous = activeSectionKey;
   const next = getSection(key);
 
   activeSectionKey = next.key;
 
-  if (document.body) {
+  if (isBrowser()) {
     document.body.dataset.activeSection = next.key;
     document.body.dataset.rbSection = next.key;
+
+    window.dispatchEvent(
+      new CustomEvent("rb:section-change", {
+        detail: {
+          ...next,
+          previous: options.previous || previous || null,
+          source: options.source || "rb-section-state"
+        }
+      })
+    );
   }
 
   listeners.forEach((callback) => {
@@ -290,21 +304,15 @@ export function setActiveSection(key = "live", options = {}) {
     }
   });
 
-  window.dispatchEvent(
-    new CustomEvent("rb:section-change", {
-      detail: {
-        ...next,
-        previous: options.previous || null,
-        source: options.source || "rb-section-state"
-      }
-    })
-  );
-
   return next;
 }
 
-export function syncSectionFromRoute(path = window.location.pathname) {
-  const key = getSectionKeyByPath(path);
+export function syncSectionFromRoute(path = null) {
+  const activePath =
+    path ||
+    (isBrowser() ? window.location.pathname : "/");
+
+  const key = getSectionKeyByPath(activePath);
 
   if (!key) {
     return getActiveSection();
@@ -375,10 +383,20 @@ export function isActiveSection(key = "") {
   return getActiveSectionKey() === normalizeSectionKey(key);
 }
 
-window.addEventListener("popstate", () => {
-  syncSectionFromRoute();
-});
+if (isBrowser()) {
+  activeSectionKey =
+    getSectionKeyByPath(window.location.pathname) ||
+    "live";
 
-syncSectionFromRoute();
+  window.addEventListener("popstate", () => {
+    syncSectionFromRoute();
+  });
+
+  window.addEventListener("pageshow", () => {
+    syncSectionFromRoute();
+  });
+
+  syncSectionFromRoute();
+}
 
 console.log("RB SECTION STATE READY");
