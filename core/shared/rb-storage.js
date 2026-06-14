@@ -5,6 +5,10 @@
    STORAGE + MEDIA ENGINE
    Synced To rb-config.js
    Buckets + Upload Routes Locked
+
+   Rule:
+   - This file uploads + logs upload records only.
+   - rb-upload-router.js handles table routing + XP/action awards.
 ========================= */
 
 import {
@@ -67,10 +71,6 @@ export const bucketFor = Object.freeze({
   storeDigital: RB_BUCKETS.storeDigital
 });
 
-function cleanText(value, fallback = "") {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
-
 function cleanFileName(fileName = "file") {
   const name = String(fileName || "file")
     .replace(/\s+/g, "-")
@@ -87,6 +87,11 @@ function cleanFolder(folder = "general") {
     .toLowerCase();
 }
 
+function safeNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
 export function isPrivateBucket(bucket) {
   return PRIVATE_BUCKETS.has(bucket);
 }
@@ -101,12 +106,14 @@ export function createStoragePath({
   userId = null
 }) {
   const activeUser = userId || getUser()?.id || "anonymous";
+
   return `${activeUser}/${cleanFolder(folder)}/${Date.now()}-${cleanFileName(fileName)}`;
 }
 
 export function getBucketPublicUrl(bucket, path) {
   if (!bucket || !path) return null;
   if (isPrivateBucket(bucket)) return null;
+
   return getPublicFileUrl(bucket, path);
 }
 
@@ -139,7 +146,7 @@ export function validateFile({
 }) {
   if (!file) throw new Error("Missing file.");
 
-  const sizeMb = Number(file.size || 0) / 1024 / 1024;
+  const sizeMb = safeNumber(file.size, 0) / 1024 / 1024;
 
   if (sizeMb > maxFileSizeMb) {
     throw new Error(`File is too large. Max allowed is ${maxFileSizeMb}MB.`);
@@ -190,7 +197,6 @@ export async function rbUpload({
 
   const identity = getProfileIdentity();
   const finalMediaType = mediaType || detectMediaType(file);
-
   const finalVisibility = isPrivateBucket(bucket) ? "private" : visibility;
 
   const path = createStoragePath({
@@ -243,8 +249,11 @@ export async function rbUpload({
   return {
     bucket,
     path,
+    file_path: path,
     publicUrl,
+    public_url: publicUrl,
     mediaType: finalMediaType,
+    media_type: finalMediaType,
     visibility: finalVisibility,
     upload: inserted?.[0] || null
   };
@@ -263,15 +272,18 @@ export async function rbRouteUpload({
   values = {}
 }) {
   const route = resolveUploadRoute(routeKey);
+  const routeBucket = route.bucket;
+  const routeVisibility = isPrivateBucket(routeBucket) ? "private" : "public";
 
   const result = await rbUpload({
-    bucket: route.bucket,
+    bucket: routeBucket,
     file,
     folder: folder || routeKey,
-    section: routeKey,
+    section: route.feedSection || route.section || routeKey,
     category: routeKey,
     title,
     description,
+    visibility: routeVisibility,
     metadata: {
       upload_route: routeKey,
       target_table: route.table,
