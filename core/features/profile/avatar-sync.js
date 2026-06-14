@@ -6,10 +6,16 @@
    Profiles table + storage buckets
    Profile avatar stays profile avatar
    Meta avatar stays meta avatar
+
+   Source-of-truth rule:
+   - rb-supabase.js owns client/user/profile
+   - rb-profile.js owns profile helpers/update
+   - profile-state.js mirrors page profile state
 ========================= */
 
 import {
-  RB_BUCKETS
+  RB_BUCKETS,
+  RB_TABLES
 } from "/core/shared/rb-config.js";
 
 import {
@@ -17,7 +23,7 @@ import {
   getUser,
   getProfile,
   loadProfile
-} from "/core/shared/rb-auth.js";
+} from "/core/shared/rb-supabase.js";
 
 import {
   updateMyProfile,
@@ -30,6 +36,10 @@ import {
   refreshProfileState,
   notifyProfileListeners
 } from "/core/features/profile/profile-state.js";
+
+import {
+  toastError
+} from "/core/shared/rb-toast.js";
 
 const supabase = getSupabase();
 
@@ -50,6 +60,18 @@ let avatarSyncBooted = false;
 /* =========================
    HELPERS
 ========================= */
+
+function hasDOM() {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+function getBucket(type = "avatar") {
+  if (type === "banner") {
+    return RB_BUCKETS.profileBanners || "profile-banners";
+  }
+
+  return RB_BUCKETS.avatars || "avatars";
+}
 
 function createSafeFileName(file, prefix = "image") {
   const user = getUser();
@@ -93,6 +115,8 @@ function dispatchProfileUpdated({
   profile,
   url
 }) {
+  if (!hasDOM()) return;
+
   window.dispatchEvent(
     new CustomEvent("rb:profile-updated", {
       detail: {
@@ -142,9 +166,7 @@ export async function uploadProfileImage({
 
   const isBanner = type === "banner";
 
-  const bucket = isBanner
-    ? RB_BUCKETS.profileBanners
-    : RB_BUCKETS.avatars;
+  const bucket = getBucket(type);
 
   const column = isBanner
     ? "banner_url"
@@ -241,6 +263,8 @@ export async function resetBanner() {
 ========================= */
 
 export function syncAvatarDom(profile = getProfile()) {
+  if (!hasDOM()) return;
+
   document
     .querySelectorAll("[data-rb-avatar], [data-rb-profile-avatar], [data-rb-auth-avatar]")
     .forEach((el) => {
@@ -259,6 +283,8 @@ export function syncAvatarDom(profile = getProfile()) {
 }
 
 export function syncBannerDom(profile = getProfile()) {
+  if (!hasDOM()) return;
+
   document
     .querySelectorAll("[data-rb-banner], [data-rb-profile-banner]")
     .forEach((el) => {
@@ -299,8 +325,10 @@ export async function syncAvatarToUniverse() {
     }
   };
 
+  const table = RB_TABLES.metaAvatars || "meta_avatars";
+
   const { data, error } = await supabase
-    .from("meta_avatars")
+    .from(table)
     .upsert(payload, {
       onConflict: "user_id"
     })
@@ -312,14 +340,16 @@ export async function syncAvatarToUniverse() {
     return null;
   }
 
-  window.dispatchEvent(
-    new CustomEvent("rb:avatar-synced", {
-      detail: {
-        profile,
-        metaAvatar: data
-      }
-    })
-  );
+  if (hasDOM()) {
+    window.dispatchEvent(
+      new CustomEvent("rb:avatar-synced", {
+        detail: {
+          profile,
+          metaAvatar: data
+        }
+      })
+    );
+  }
 
   return data;
 }
@@ -334,6 +364,8 @@ export function bindAvatarInputs({
   resetAvatarButton = "[data-rb-reset-avatar]",
   resetBannerButton = "[data-rb-reset-banner]"
 } = {}) {
+  if (!hasDOM()) return;
+
   document.querySelectorAll(avatarInput).forEach((input) => {
     if (input.dataset.rbAvatarInputBound === "true") return;
 
@@ -351,7 +383,7 @@ export function bindAvatarInputs({
         syncProfileDom(result.profile);
       } catch (error) {
         console.warn("[RB AVATAR UPLOAD FAILED]", error);
-        alert(error?.message || "Avatar upload failed.");
+        toastError(error?.message || "Avatar upload failed.");
       } finally {
         input.value = "";
         input.disabled = false;
@@ -375,7 +407,7 @@ export function bindAvatarInputs({
         syncProfileDom(result.profile);
       } catch (error) {
         console.warn("[RB BANNER UPLOAD FAILED]", error);
-        alert(error?.message || "Banner upload failed.");
+        toastError(error?.message || "Banner upload failed.");
       } finally {
         input.value = "";
         input.disabled = false;
@@ -397,7 +429,7 @@ export function bindAvatarInputs({
         syncProfileDom(profile);
       } catch (error) {
         console.warn("[RB AVATAR RESET FAILED]", error);
-        alert(error?.message || "Avatar reset failed.");
+        toastError(error?.message || "Avatar reset failed.");
       } finally {
         button.disabled = false;
       }
@@ -417,7 +449,7 @@ export function bindAvatarInputs({
         syncProfileDom(profile);
       } catch (error) {
         console.warn("[RB BANNER RESET FAILED]", error);
-        alert(error?.message || "Banner reset failed.");
+        toastError(error?.message || "Banner reset failed.");
       } finally {
         button.disabled = false;
       }
@@ -430,6 +462,7 @@ export function bindAvatarInputs({
 ========================= */
 
 export function bootAvatarSync() {
+  if (!hasDOM()) return;
   if (avatarSyncBooted) return;
 
   avatarSyncBooted = true;
@@ -450,8 +483,10 @@ export function resetAvatarSyncBoot() {
   avatarSyncBooted = false;
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootAvatarSync);
-} else {
-  bootAvatarSync();
+if (hasDOM()) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootAvatarSync);
+  } else {
+    bootAvatarSync();
+  }
 }
