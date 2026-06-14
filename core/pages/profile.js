@@ -590,34 +590,32 @@ async function fetchExtras(profileId) {
 ========================= */
 
 function xpModel(profile = state.profile || {}, extras = state.extras || {}) {
+  const levelRow = extras.level || {};
   const meta = extras.meta || {};
   const gamer = extras.gamer || {};
-  const levelRow = extras.level || {};
+
+  const xp =
+    num(levelRow.xp_total) ||
+    num(profile.rich_points) ||
+    num(profile.xp) ||
+    num(profile.points) ||
+    num(meta.xp) ||
+    num(gamer.xp) ||
+    0;
 
   const level =
-    num(meta.level) ||
-    num(gamer.rank_level) ||
     num(levelRow.level) ||
     num(profile.rich_level) ||
     num(profileLevel(profile)) ||
+    num(meta.level) ||
+    num(gamer.rank_level) ||
     1;
 
-  const xp =
-    num(meta.xp) ||
-    num(gamer.xp) ||
-    num(levelRow.xp_total) ||
-    num(levelRow.xp) ||
-    num(levelRow.rich_points) ||
-    num(profile.xp) ||
-    num(profile.rich_points) ||
-    num(profile.points) ||
-    0;
-
   const rank =
-    meta.rank ||
-    gamer.rank_title ||
     levelRow.rank_title ||
     profile.rank_title ||
+    meta.rank ||
+    gamer.rank_title ||
     profileBadge(profile) ||
     "Member";
 
