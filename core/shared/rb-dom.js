@@ -3,27 +3,42 @@
    /core/shared/rb-dom.js
 
    DOM + UI HELPERS
+
+   Rule:
+   - Pure DOM utilities only
+   - No auth/profile/router/Supabase/XP imports
 ========================= */
 
 const hasDOM = () =>
   typeof window !== "undefined" && typeof document !== "undefined";
 
-const resolve = (target, root = document) => {
+const getRoot = (root = null) => {
   if (!hasDOM()) return null;
-  if (!target) return null;
-  return typeof target === "string" ? root.querySelector(target) : target;
+  return root || document;
 };
 
-export const $ = (selector, root = document) =>
-  hasDOM() && selector ? root.querySelector(selector) : null;
+const resolve = (target, root = null) => {
+  const base = getRoot(root);
+  if (!base) return null;
+  if (!target) return null;
 
-export const $$ = (selector, root = document) =>
-  hasDOM() && selector ? Array.from(root.querySelectorAll(selector)) : [];
+  return typeof target === "string" ? base.querySelector(target) : target;
+};
+
+export const $ = (selector, root = null) => {
+  const base = getRoot(root);
+  return base && selector ? base.querySelector(selector) : null;
+};
+
+export const $$ = (selector, root = null) => {
+  const base = getRoot(root);
+  return base && selector ? Array.from(base.querySelectorAll(selector)) : [];
+};
 
 export const byId = (id) =>
   hasDOM() && id ? document.getElementById(id) : null;
 
-export function exists(selector, root = document) {
+export function exists(selector, root = null) {
   return !!$(selector, root);
 }
 
@@ -242,7 +257,16 @@ export function safeImage(
   url,
   fallback = "/images/brand/Avatar-hero-Banner.png.jpeg"
 ) {
-  return url || fallback;
+  const src = String(url || "").trim();
+
+  if (
+    !src ||
+    src.includes("project-avatar")
+  ) {
+    return fallback;
+  }
+
+  return src;
 }
 
 export function lockBodyScroll() {
