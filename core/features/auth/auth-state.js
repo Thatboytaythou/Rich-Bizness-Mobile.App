@@ -3,8 +3,12 @@
    /core/features/auth/auth-state.js
 
    UNIVERSAL AUTH STATE
-   Schema Locked
-   Profile Identity Only
+   Compatibility wrapper only
+
+   Source-of-truth rule:
+   - rb-supabase.js owns session/user/profile/identity
+   - rb-auth.js wraps auth actions
+   - auth-state.js only mirrors current state for older imports
 ========================= */
 
 import {
@@ -16,9 +20,10 @@ import {
   getSession,
   getUser,
   getProfile,
+  getProfileIdentity,
   loadProfile,
-  ensureMyProfile
-} from "/core/shared/rb-auth.js";
+  refreshProfile
+} from "/core/shared/rb-supabase.js";
 
 const DEFAULT_AUTH_AVATAR =
   RB_BRAND_ASSETS?.defaultProfileAvatar ||
@@ -28,11 +33,33 @@ const DEFAULT_AUTH_BANNER =
   RB_BRAND_ASSETS?.defaultProfileBanner ||
   "/images/brand/hero-banner.png";
 
+const listeners = new Set();
+
 let authReady = false;
 let authBooting = null;
 let refreshRunning = false;
 
-const listeners = new Set();
+/* =========================
+   STATE BUILDERS
+========================= */
+
+function hasWindow() {
+  return typeof window !== "undefined";
+}
+
+function roleValue(profile = {}, identity = {}) {
+  return (
+    profile?.role ||
+    profile?.role_key ||
+    identity?.role ||
+    identity?.role_key ||
+    "guest"
+  );
+}
+
+function truthyFlag(...values) {
+  return values.some(Boolean);
+}
 
 export async function initAuthState() {
   if (authReady) {
@@ -46,10 +73,9 @@ export async function initAuthState() {
   }
 
   authBooting = (async () => {
-    await bootAuth();
+    await bootAuth?.();
 
     if (getUser()?.id) {
-      await ensureMyProfile();
       await refreshAuthProfile();
     }
 
@@ -65,20 +91,32 @@ export async function initAuthState() {
 }
 
 export function getAuthState() {
-  const session = getSession();
-  const user = getUser();
-  const profile = getProfile();
+  const session = getSession?.() || null;
+  const user = getUser?.() || null;
+  const profile = getProfile?.() || null;
+  const identity = getProfileIdentity?.() || {};
 
-  const profileId = profile?.id || user?.id || null;
+  const profileId =
+    identity?.profile_id ||
+    identity?.user_id ||
+    identity?.id ||
+    profile?.id ||
+    user?.id ||
+    null;
+
+  const flags = getAuthFlags();
 
   return {
     ready: authReady,
     session,
     user,
     profile,
+    identity,
 
-    isAuthed: !!user?.id,
-    authed: !!user?.id,
+    isAuthed: Boolean(user?.id),
+    authed: Boolean(user?.id),
+    isSignedIn: Boolean(user?.id),
+    isGuest: !user?.id,
 
     id: profileId,
     user_id: profileId,
@@ -90,12 +128,12 @@ export function getAuthState() {
     avatar_url: getAuthAvatar(),
     banner_url: getAuthBanner(),
     role: getAuthRole(),
-    flags: getAuthFlags()
+    flags
   };
 }
 
 export async function refreshAuthProfile() {
-  const user = getUser();
+  const user = getUser?.();
 
   if (!user?.id) {
     notifyAuthListeners();
@@ -103,23 +141,31 @@ export async function refreshAuthProfile() {
   }
 
   if (refreshRunning) {
-    return getProfile();
+    return getProfile?.() || null;
   }
 
   refreshRunning = true;
 
   try {
-    const profile = await loadProfile(user.id);
+    const profile =
+      typeof refreshProfile === "function"
+        ? await refreshProfile()
+        : await loadProfile?.(user.id);
+
     notifyAuthListeners();
     return profile;
   } catch (error) {
     console.warn("[RB AUTH PROFILE REFRESH SKIPPED]", error?.message || error);
     notifyAuthListeners();
-    return getProfile();
+    return getProfile?.() || null;
   } finally {
     refreshRunning = false;
   }
 }
+
+/* =========================
+   LISTENERS
+========================= */
 
 export function onAuthState(callback) {
   if (typeof callback !== "function") {
@@ -150,12 +196,20 @@ export function notifyAuthListeners() {
     }
   });
 
-  window.dispatchEvent(
-    new CustomEvent("rb:auth-state", {
-      detail: state
-    })
-  );
+  if (hasWindow()) {
+    window.dispatchEvent(
+      new CustomEvent("rb:auth-state", {
+        detail: state
+      })
+    );
+  }
+
+  return state;
 }
+
+/* =========================
+   REQUIRE HELPERS
+========================= */
 
 export function requireAuthState() {
   const state = getAuthState();
@@ -172,30 +226,40 @@ export function authIsReady() {
 }
 
 export function isAuthed() {
-  return !!getUser()?.id;
+  return Boolean(getUser?.()?.id);
 }
 
 export function getAuthUserId() {
-  return getUser()?.id || null;
+  return getUser?.()?.id || null;
 }
 
 export function getAuthEmail() {
-  return getUser()?.email || "";
+  return getUser?.()?.email || "";
 }
 
 export function getAuthProfileId() {
-  return getProfile()?.id || getUser()?.id || null;
+  const identity = getProfileIdentity?.() || {};
+  return (
+    identity?.profile_id ||
+    identity?.user_id ||
+    identity?.id ||
+    getProfile?.()?.id ||
+    getUser?.()?.id ||
+    null
+  );
 }
 
 export function getAuthRole() {
-  return getProfile()?.role || "guest";
+  return roleValue(getProfile?.() || {}, getProfileIdentity?.() || {});
 }
 
 export function getAuthUsername() {
-  const profile = getProfile();
-  const user = getUser();
+  const profile = getProfile?.() || {};
+  const user = getUser?.() || {};
+  const identity = getProfileIdentity?.() || {};
 
   return (
+    identity?.username ||
     profile?.username ||
     user?.user_metadata?.username ||
     user?.email?.split("@")[0] ||
@@ -204,10 +268,12 @@ export function getAuthUsername() {
 }
 
 export function getAuthDisplayName() {
-  const profile = getProfile();
-  const user = getUser();
+  const profile = getProfile?.() || {};
+  const user = getUser?.() || {};
+  const identity = getProfileIdentity?.() || {};
 
   return (
+    identity?.display_name ||
     profile?.display_name ||
     profile?.full_name ||
     profile?.username ||
@@ -219,40 +285,79 @@ export function getAuthDisplayName() {
 }
 
 export function getAuthAvatar() {
-  const profile = getProfile();
+  const profile = getProfile?.() || {};
+  const identity = getProfileIdentity?.() || {};
 
-  return profile?.avatar_url || DEFAULT_AUTH_AVATAR;
+  return (
+    identity?.avatar_url ||
+    identity?.profile_avatar_url ||
+    profile?.avatar_url ||
+    DEFAULT_AUTH_AVATAR
+  );
 }
 
 export function getAuthBanner() {
-  const profile = getProfile();
+  const profile = getProfile?.() || {};
+  const identity = getProfileIdentity?.() || {};
 
-  return profile?.banner_url || DEFAULT_AUTH_BANNER;
+  return (
+    identity?.banner_url ||
+    profile?.banner_url ||
+    DEFAULT_AUTH_BANNER
+  );
 }
 
 export function getAuthFlags() {
-  const user = getUser();
-  const profile = getProfile();
-  const role = profile?.role || "guest";
+  const user = getUser?.() || null;
+  const profile = getProfile?.() || {};
+  const identity = getProfileIdentity?.() || {};
+  const role = roleValue(profile, identity);
 
   return {
     isGuest: !user?.id,
-    isAuthed: !!user?.id,
-    isCreator: !!profile?.is_creator,
-    isArtist: !!profile?.is_artist,
-    isSeller: !!profile?.is_seller,
-    isVerified: !!profile?.is_verified,
+    isAuthed: Boolean(user?.id),
+    isSignedIn: Boolean(user?.id),
+
+    isCreator: truthyFlag(
+      profile?.is_creator,
+      profile?.creator_enabled,
+      identity?.is_creator,
+      identity?.creator_enabled
+    ),
+
+    isArtist: truthyFlag(
+      profile?.is_artist,
+      profile?.artist_enabled,
+      identity?.is_artist,
+      identity?.artist_enabled
+    ),
+
+    isSeller: truthyFlag(
+      profile?.is_seller,
+      profile?.seller_enabled,
+      identity?.is_seller,
+      identity?.seller_enabled
+    ),
+
+    isVerified: truthyFlag(
+      profile?.is_verified,
+      profile?.verified,
+      identity?.is_verified,
+      identity?.verified
+    ),
 
     isAdmin: [
       "admin",
       "owner",
       "super_admin",
       "founder",
-      "rich_admin"
+      "rich_admin",
+      "elite_admin"
     ].includes(role),
 
     isModerator: [
       "moderator",
+      "mod",
       "elite_mod",
       "support"
     ].includes(role),
@@ -261,17 +366,29 @@ export function getAuthFlags() {
   };
 }
 
-if (!window.__RB_AUTH_STATE_FOCUS_BOUND__) {
+/* =========================
+   FOCUS REFRESH
+========================= */
+
+if (hasWindow() && !window.__RB_AUTH_STATE_FOCUS_BOUND__) {
   window.__RB_AUTH_STATE_FOCUS_BOUND__ = true;
 
   window.addEventListener("focus", async () => {
-    if (!getUser()?.id) return;
+    if (!getUser?.()?.id) return;
 
     try {
       await refreshAuthProfile();
     } catch (error) {
       console.warn("[RB AUTH FOCUS REFRESH SKIPPED]", error?.message || error);
     }
+  });
+
+  window.addEventListener("rb:profile-updated", () => {
+    notifyAuthListeners();
+  });
+
+  window.addEventListener("rb:auth-changed", () => {
+    notifyAuthListeners();
   });
 }
 
