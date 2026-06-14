@@ -41,6 +41,7 @@
     body {
       position: fixed;
       inset: 0;
+      min-height: 100svh;
       min-height: 100dvh;
       touch-action: manipulation;
     }
@@ -58,6 +59,9 @@
     .rb-universe {
       position: fixed;
       inset: 0;
+      width: 100vw;
+      height: 100svh;
+      height: 100dvh;
       overflow: hidden;
       isolation: isolate;
       background: #020402;
@@ -79,7 +83,8 @@
       background-position: center center;
       background-repeat: no-repeat;
       filter: saturate(1.12) contrast(1.04) brightness(0.98);
-      transform: scale(1.002);
+      transform: translateZ(0) scale(1.002);
+      will-change: transform;
     }
 
     .rb-world-art::before {
@@ -927,7 +932,7 @@
     <div id="threePortal" class="rb-three-portal" aria-hidden="true"></div>
 
     <header class="rb-topbar">
-      <a class="rb-brand" href="/">
+      <a class="rb-brand" href="./index.html">
         <span class="rb-logo"><small>♛</small>RB</span>
         <span class="rb-brand-copy">
           <strong>RICH BIZNESS</strong>
@@ -939,7 +944,7 @@
         <span class="rb-stat-pill"><i></i> LIVE NOW <strong>1,248</strong></span>
         <span class="rb-stat-pill red"><i></i> ONLINE <strong>24,893</strong></span>
 
-        <button class="rb-icon" data-route="search" aria-label="Search">🔎</button>
+        <button class="rb-icon" data-route="feed" aria-label="Search">🔎</button>
 
         <button class="rb-icon" data-route="notifications" aria-label="Notifications">
           🔔<em>5</em>
@@ -1085,8 +1090,79 @@
     </div>
   </main>
 
+  <script>
+    (function () {
+      const ROUTES = {
+        home: "./index.html",
+        portal: "./index.html",
+        index: "./index.html",
+
+        auth: "./auth.html",
+        login: "./auth.html",
+        signup: "./auth.html",
+
+        feed: "./feed.html",
+        search: "./feed.html",
+        live: "./live.html",
+        watch: "./watch.html",
+
+        music: "./music.html",
+        podcast: "./music.html?tab=podcast",
+        radio: "./music.html?tab=radio",
+
+        gaming: "./gaming.html",
+        games: "./gaming.html",
+        sports: "./sports.html",
+        gallery: "./gallery.html",
+
+        upload: "./upload.html",
+        store: "./store.html",
+        meta: "./meta.html",
+
+        avatar: "./avatar.html",
+        profile: "./profile.html",
+        edit: "./edit.html",
+        settings: "./settings.html",
+
+        messages: "./messages.html",
+        inbox: "./messages.html",
+        notifications: "./notifications.html",
+        alerts: "./notifications.html",
+
+        creator: "./creator.html",
+        admin: "./admin.html"
+      };
+
+      function go(route) {
+        const raw = String(route || "").trim();
+        if (!raw) return;
+
+        if (
+          raw.startsWith("http://") ||
+          raw.startsWith("https://") ||
+          raw.startsWith("mailto:") ||
+          raw.startsWith("tel:") ||
+          raw.startsWith("sms:") ||
+          raw.startsWith("#")
+        ) {
+          window.location.href = raw;
+          return;
+        }
+
+        window.location.href = ROUTES[raw] || raw;
+      }
+
+      document.addEventListener("click", function (event) {
+        const target = event.target.closest("[data-route]");
+        if (!target) return;
+
+        event.preventDefault();
+        go(target.dataset.route);
+      });
+    })();
+  </script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="/core/engine/portal-three.js"></script>
-  <script type="module" src="/core/engine/world-engine.js"></script>
 </body>
 </html>
