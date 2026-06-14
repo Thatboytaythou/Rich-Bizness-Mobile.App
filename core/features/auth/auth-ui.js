@@ -5,6 +5,11 @@
    CINEMATIC AUTH UI BINDINGS
    UI only: auth mode, auth identity paint,
    OAuth buttons, signout buttons
+
+   Source-of-truth rule:
+   - rb-supabase.js owns current user/profile/identity
+   - rb-auth.js owns auth actions
+   - auth-ui.js only paints + binds buttons
 ========================================= */
 
 import {
@@ -18,9 +23,12 @@ import {
 } from "/core/shared/rb-auth.js";
 
 import {
-  initAuthState,
-  onAuthState
-} from "/core/features/auth/auth-state.js";
+  bootAuth,
+  getUser,
+  getProfile,
+  getProfileIdentity,
+  refreshProfile
+} from "/core/shared/rb-supabase.js";
 
 import {
   profileAvatar,
@@ -38,10 +46,61 @@ const DEFAULT_AVATAR =
   RB_BRAND_ASSETS?.defaultProfileAvatar ||
   "/images/brand/Avatar-hero-Banner.png.jpeg";
 
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const $ = (selector) =>
+  typeof document !== "undefined" ? document.querySelector(selector) : null;
+
+const $$ = (selector) =>
+  typeof document !== "undefined"
+    ? Array.from(document.querySelectorAll(selector))
+    : [];
 
 let authUiBooted = false;
+const authUiListeners = new Set();
+
+/* =========================
+   HELPERS
+========================= */
+
+function hasDOM() {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+function buildAuthUiState() {
+  const user = getUser?.() || null;
+  const profile = getProfile?.() || null;
+  const identity = getProfileIdentity?.() || {};
+  const isAuthed = Boolean(user?.id);
+
+  return {
+    user,
+    profile,
+    identity,
+    isAuthed,
+    authed: isAuthed,
+    isGuest: !isAuthed,
+    id:
+      identity?.profile_id ||
+      identity?.user_id ||
+      identity?.id ||
+      profile?.id ||
+      user?.id ||
+      null
+  };
+}
+
+function notifyAuthUiListeners() {
+  const state = buildAuthUiState();
+
+  authUiListeners.forEach((callback) => {
+    try {
+      callback(state);
+    } catch (error) {
+      console.warn("[RB AUTH UI LISTENER ERROR]", error?.message || error);
+    }
+  });
+
+  return state;
+}
 
 function bindOnce(el, key) {
   if (!el) return false;
@@ -65,11 +124,17 @@ function setSelectedTab(mode = "signin") {
   });
 }
 
+function safeProfileForPaint(state = {}) {
+  return state?.profile || state?.identity || {};
+}
+
 /* =========================
    MODE SWITCH
 ========================= */
 
 export function switchMode(mode = "signin") {
+  if (!hasDOM()) return "signin";
+
   const nextMode = mode === "signup" ? "signup" : "signin";
 
   document.body.dataset.authMode = nextMode;
@@ -98,10 +163,12 @@ export function switchMode(mode = "signin") {
    IDENTITY PAINT
 ========================= */
 
-export function paintAuthIdentity(state = {}) {
+export function paintAuthIdentity(state = buildAuthUiState()) {
+  if (!hasDOM()) return;
+
   const user = state?.user || null;
-  const profile = state?.profile || null;
-  const isAuthed = !!user?.id;
+  const profile = safeProfileForPaint(state);
+  const isAuthed = Boolean(user?.id);
 
   document.body.classList.toggle("is-authed", isAuthed);
   document.body.classList.toggle("is-guest", !isAuthed);
@@ -139,6 +206,8 @@ export function paintAuthIdentity(state = {}) {
 ========================= */
 
 export function bindOAuthButtons() {
+  if (!hasDOM()) return;
+
   $$("[data-oauth-provider]").forEach((btn) => {
     if (!bindOnce(btn, "OAuth")) return;
 
@@ -160,6 +229,8 @@ export function bindOAuthButtons() {
 }
 
 export function bindSignOutButtons(selector = "[data-rb-signout]") {
+  if (!hasDOM()) return;
+
   $$(selector).forEach((btn) => {
     if (!bindOnce(btn, "Signout")) return;
 
@@ -181,6 +252,8 @@ export function bindSignOutButtons(selector = "[data-rb-signout]") {
 }
 
 export function bindAuthModeToggles() {
+  if (!hasDOM()) return;
+
   $$("[data-auth-mode]").forEach((btn) => {
     if (!bindOnce(btn, "Mode")) return;
 
@@ -193,6 +266,8 @@ export function bindAuthModeToggles() {
 export function bindForgotPasswordButtons(
   selector = "[data-auth-action='forgot-password']"
 ) {
+  if (!hasDOM()) return;
+
   $$(selector).forEach((btn) => {
     if (!bindOnce(btn, "Forgot")) return;
 
@@ -215,14 +290,41 @@ export function bindForgotPasswordButtons(
    STATE BINDING
 ========================= */
 
+export function onAuthUIState(callback) {
+  if (typeof callback !== "function") return () => {};
+
+  authUiListeners.add(callback);
+
+  try {
+    callback(buildAuthUiState());
+  } catch (error) {
+    console.warn("[RB AUTH UI LISTENER ERROR]", error?.message || error);
+  }
+
+  return () => {
+    authUiListeners.delete(callback);
+  };
+}
+
 export function bindAuthStatus() {
+  if (!hasDOM()) return;
+
   if (document.body.dataset.rbAuthStatusBound === "true") return;
 
   document.body.dataset.rbAuthStatusBound = "true";
 
-  onAuthState((state) => {
+  const repaint = () => {
+    const state = buildAuthUiState();
     paintAuthIdentity(state);
-  });
+    notifyAuthUiListeners();
+  };
+
+  window.addEventListener("rb:auth-changed", repaint);
+  window.addEventListener("rb:profile-updated", repaint);
+  window.addEventListener("rb:identity-rows-synced", repaint);
+  window.addEventListener("focus", repaint);
+
+  repaint();
 }
 
 /* =========================
@@ -232,14 +334,22 @@ export function bindAuthStatus() {
 export async function initAuthUI({
   showBootToast = false
 } = {}) {
+  if (!hasDOM()) return null;
+
   if (authUiBooted) {
-    return null;
+    return buildAuthUiState();
   }
 
   authUiBooted = true;
 
   try {
-    const state = await initAuthState();
+    await bootAuth?.();
+
+    if (getUser?.()?.id) {
+      await refreshProfile?.();
+    }
+
+    const state = buildAuthUiState();
 
     paintAuthIdentity(state);
     bindOAuthButtons();
@@ -273,10 +383,12 @@ export function resetAuthUIBoot() {
   authUiBooted = false;
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => initAuthUI());
-} else {
-  initAuthUI();
+if (hasDOM()) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => initAuthUI());
+  } else {
+    initAuthUI();
+  }
 }
 
 console.log("RB AUTH UI MODULE LOADED");
