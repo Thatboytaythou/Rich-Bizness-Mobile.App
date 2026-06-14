@@ -136,26 +136,27 @@ function cleanText(value = "") {
 
 function getProfileXpModel(profile = {}, identity = {}) {
   const rawXp =
-    profile?.xp ??
-    profile?.rich_points ??
-    profile?.points ??
+    identity?.xp_total ??
     identity?.xp ??
     identity?.rich_points ??
+    profile?.rich_points ??
+    profile?.xp ??
+    profile?.points ??
     0;
 
   const rawLevel =
-    profile?.rich_level ??
-    profile?.level ??
     identity?.rich_level ??
     identity?.level ??
+    profile?.rich_level ??
+    profile?.level ??
     1;
 
   const rank =
+    identity?.rank_title ||
+    identity?.rankTitle ||
+    identity?.rank ||
     profile?.rank_title ||
     profile?.rank ||
-    identity?.rankTitle ||
-    identity?.rank_title ||
-    identity?.rank ||
     "Member";
 
   const xp = Math.max(0, Number(rawXp) || 0);
