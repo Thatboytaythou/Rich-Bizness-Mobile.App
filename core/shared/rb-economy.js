@@ -4,6 +4,10 @@
 
    MONEY + CREATOR BALANCE ENGINE
    Shared economy system for tips, sales, live, music, store, games
+
+   Source-of-truth rule:
+   - rb-supabase.js owns identity/session/profile
+   - rb-economy.js owns balance movement only
 ========================= */
 
 import {
@@ -12,14 +16,17 @@ import {
 
 import {
   getUser,
+  getProfileIdentity,
   rbInsert,
   rbUpdate,
   rbSelect
 } from "/core/shared/rb-supabase.js";
 
-import {
-  getProfileIdentity
-} from "/core/shared/rb-profile.js";
+function firstRow(result) {
+  if (Array.isArray(result)) return result[0] || null;
+  if (Array.isArray(result?.data)) return result.data[0] || null;
+  return result || null;
+}
 
 function safeCents(value, fallback = 0) {
   const number = Number(value);
@@ -35,7 +42,10 @@ function safeText(value, fallback = "") {
 }
 
 function platformFee(amountCents = 0, bps = 1000) {
-  return Math.max(0, Math.round((safeCents(amountCents) * Number(bps || 0)) / 10000));
+  return Math.max(
+    0,
+    Math.round((safeCents(amountCents) * Number(bps || 0)) / 10000)
+  );
 }
 
 export async function getCreatorBalance(userId = null) {
@@ -77,7 +87,7 @@ export async function ensureCreatorBalance(userId = null) {
     }
   });
 
-  return rows?.[0] || null;
+  return firstRow(rows);
 }
 
 export async function creditCreator({
@@ -134,7 +144,7 @@ export async function creditCreator({
     amount_cents: amount,
     platform_fee_cents: fee,
     creator_amount_cents: creatorAmount,
-    balance: updated?.[0] || null
+    balance: firstRow(updated)
   };
 }
 
@@ -184,7 +194,7 @@ export async function debitCreatorPending({
     ok: true,
     creator_id: id,
     amount_cents: amount,
-    balance: updated?.[0] || null
+    balance: firstRow(updated)
   };
 }
 
@@ -230,7 +240,7 @@ export async function completeCreatorPayout({
     ok: true,
     creator_id: id,
     amount_cents: amount,
-    balance: updated?.[0] || null
+    balance: firstRow(updated)
   };
 }
 
@@ -249,7 +259,7 @@ export async function recordTipCredit({
   const amount = safeCents(amountCents);
   const fee = platformFee(amount);
   const creatorAmount = Math.max(0, amount - fee);
-  const identity = getProfileIdentity();
+  const identity = getProfileIdentity?.() || {};
 
   if (!toUserId) throw new Error("Missing tip receiver.");
   if (amount <= 0) throw new Error("Tip amount must be greater than 0.");
@@ -278,6 +288,8 @@ export async function recordTipCredit({
     }
   });
 
+  const tip = firstRow(rows);
+
   if (status === "paid") {
     await creditCreator({
       creatorId: toUserId,
@@ -285,13 +297,13 @@ export async function recordTipCredit({
       currency,
       source: "tip",
       sourceTable: RB_TABLES.liveTips,
-      sourceId: rows?.[0]?.id || null,
+      sourceId: tip?.id || null,
       platformFeeCents: fee,
       metadata
     });
   }
 
-  return rows?.[0] || null;
+  return tip;
 }
 
 export async function recordProductSaleCredit({
@@ -371,7 +383,7 @@ export async function syncProfileBalance(userId = null) {
     }
   });
 
-  return rows?.[0] || null;
+  return firstRow(rows);
 }
 
 export async function getEconomySummary(userId = null) {
@@ -420,7 +432,7 @@ export async function logEconomyEvent({
       }
     });
 
-    return rows?.[0] || null;
+    return firstRow(rows);
   } catch (error) {
     console.warn("[RB ECONOMY EVENT SKIPPED]", error?.message || error);
     return null;
